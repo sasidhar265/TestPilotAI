@@ -1,0 +1,93 @@
+import pytest
+
+from app.agents import AgentCapability, AgentDescriptor, AgentRegistry
+from app.memory import OrganizationalMemory
+from app.models import (
+    ExecutionMode,
+    GenerateRequest,
+    GenerationSource,
+)
+from app.models import (
+    TestCase as Case,
+)
+from app.models import (
+    TestCategory as Category,
+)
+from app.models import (
+    TestStep as Step,
+)
+from app.models import (
+    TestSuite as Suite,
+)
+from app.services.test_generation import TestGenerationService as GenerationService
+
+
+def suite() -> Suite:
+    return Suite(
+        feature_name="Login",
+        test_cases=[
+            Case(
+                id="TC-001",
+                title="Valid login",
+                objective="Confirm access",
+                category=Category.SMOKE,
+                priority="P0",
+                execution_mode=ExecutionMode.AUTOMATION,
+                feasibility_reason="Repeatable flow with an observable dashboard",
+                steps=[Step(action="Sign in", expected_result="Dashboard appears")],
+            )
+        ],
+    )
+
+
+def test_memory_reuses_normalized_exact_requirement(tmp_path) -> None:
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    original = GenerateRequest(description="As a user, I want secure SIGN IN.")
+    equivalent = GenerateRequest(description="  as a user,  i want secure sign in. ")
+
+    stored = memory.put(original, suite())
+    recalled = memory.get(equivalent)
+
+    assert stored.generation_source == GenerationSource.COPILOT
+    assert recalled is not None
+    assert recalled.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
+    assert recalled.memory_key == stored.memory_key
+    assert recalled.test_cases[0].title == "Valid login"
+    assert memory.count() == 1
+
+
+def test_memory_separates_normal_and_bdd_formats(tmp_path) -> None:
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    normal = GenerateRequest(description="As a user, I want secure sign in.")
+    bdd = GenerateRequest(description=normal.description, output_format="bdd")
+    memory.put(normal, suite())
+
+    assert memory.get(bdd) is None
+
+
+@pytest.mark.asyncio
+async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
+    class FakeCopilot:
+        descriptor = AgentDescriptor(
+            runtime_id="github-copilot",
+            display_name="Fake Copilot",
+            capabilities=frozenset({AgentCapability.TEST_DESIGN}),
+        )
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def generate(self, request, phase="initial", existing_titles=None) -> Suite:
+            self.calls += 1
+            return suite()
+
+    agent = FakeCopilot()
+    service = GenerationService(AgentRegistry(agent), OrganizationalMemory(tmp_path / "memory.db"))
+    request = GenerateRequest(description="As a user, I want secure sign in.")
+
+    first = await service.generate(request)
+    second = await service.generate(request)
+
+    assert agent.calls == 1
+    assert first.generation_source == GenerationSource.COPILOT
+    assert second.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY

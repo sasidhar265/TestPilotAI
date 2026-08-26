@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.copilot-runtime/
+.agent-memory/
+*.py[cod]
+.DS_Store
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
