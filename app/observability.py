@@ -16,9 +16,7 @@ request_id_context: contextvars.ContextVar[str] = contextvars.ContextVar("reques
 def format_safe_exception(exception_type: type[BaseException], trace: TracebackType) -> str:
     """Format exception type and call locations without messages or source payload literals."""
     frames = traceback.extract_tb(trace)
-    locations = "\n".join(
-        f"{frame.filename}:{frame.lineno} in {frame.name}" for frame in frames
-    )
+    locations = "\n".join(f"{frame.filename}:{frame.lineno} in {frame.name}" for frame in frames)
     return f"{exception_type.__name__}\n{locations}"
 
 
@@ -84,9 +82,7 @@ class JsonFormatter(logging.Formatter):
             payload["details"] = details
         if record.exc_info:
             if record.exc_info[0] and record.exc_info[2]:
-                payload["exception"] = format_safe_exception(
-                    record.exc_info[0], record.exc_info[2]
-                )
+                payload["exception"] = format_safe_exception(record.exc_info[0], record.exc_info[2])
         return json.dumps(payload, separators=(",", ":"))
 
 

@@ -65,6 +65,15 @@ def test_memory_separates_normal_and_bdd_formats(tmp_path) -> None:
     assert memory.get(bdd) is None
 
 
+def test_disabled_memory_does_not_store_suite(tmp_path) -> None:
+    memory = OrganizationalMemory(tmp_path / "memory.db", enabled=False)
+    request = GenerateRequest(description="As a user, I want secure sign in.")
+    generated = suite()
+
+    assert memory.put(request, generated) is generated
+    assert memory.count() == 0
+
+
 @pytest.mark.asyncio
 async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
     class FakeCopilot:

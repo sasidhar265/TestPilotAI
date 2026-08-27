@@ -106,6 +106,31 @@ def test_health_reports_configuration() -> None:
     assert isinstance(response.json()["organizational_memory_entries"], int)
 
 
+def test_health_reports_disabled_memory_and_configured_jira() -> None:
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        organizational_memory_enabled=False,
+        jira_base_url="https://example.atlassian.net",
+        jira_email="tester@example.com",
+        jira_api_token="test-token",
+    )
+    try:
+        response = client.get("/api/health")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["organizational_memory"] == "disabled"
+    assert response.json()["organizational_memory_entries"] == 0
+    assert response.json()["jira_configured"] is True
+
+
+def test_cancel_endpoint_reports_unknown_generation() -> None:
+    response = client.post("/api/generation/not-active/cancel")
+
+    assert response.status_code == 200
+    assert response.json() == {"request_id": "not-active", "cancelled": False}
+
+
 def test_http_baseline_security_and_correlation_headers() -> None:
     response = client.get("/api/health", headers={"X-Request-ID": "qe-check-123"})
 
