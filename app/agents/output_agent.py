@@ -29,6 +29,7 @@ class OutputAgent:
             "knowledge-source",
             "relevant-example-retrieval",
         ),
+        instruction_file=".github/agents/output.agent.md",
     )
 
     def __init__(self, path: Path, enabled: bool = True) -> None:

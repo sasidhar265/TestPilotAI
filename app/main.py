@@ -147,6 +147,7 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
         "active_agent": CopilotGenerator.descriptor.display_name,
         "agent_runtime_id": CopilotGenerator.descriptor.runtime_id,
         "copilot_model": settings.copilot_model or "organization-default",
+        "agent_profile": settings.agent_profile,
         "copilot_auth": "token" if settings.copilot_github_token else "signed-in-user",
         "organizational_memory": "enabled"
         if settings.organizational_memory_enabled

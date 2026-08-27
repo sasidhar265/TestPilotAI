@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import re
 from dataclasses import dataclass
 
 from openpyxl import Workbook
@@ -10,6 +11,13 @@ from openpyxl import Workbook
 from app.agents.roles import AgentKind, FunctionalAgentDescriptor
 from app.agents.test_case_validator import ValidationReport
 from app.models import ExportFormat, TestSuite
+
+
+def _short_step(value: str, limit: int = 100) -> str:
+    first_clause = re.split(r"[.;\n]", " ".join(value.split()), maxsplit=1)[0].strip()
+    if len(first_clause) <= limit:
+        return first_clause
+    return first_clause[: limit + 1].rsplit(" ", 1)[0].rstrip(",:") or first_clause[:limit]
 
 
 class ContextConversionError(ValueError):
@@ -37,6 +45,7 @@ class ContextConverterAgent:
             "gherkin-feature",
             "validated-input-only",
         ),
+        instruction_file=".github/agents/context-converter.agent.md",
     )
 
     _HEADERS = (
@@ -151,21 +160,40 @@ class ContextConverterAgent:
                 continue
             scenario = (case.gherkin or "").strip()
             if not scenario.startswith(("Scenario:", "Scenario Outline:")):
-                lines = [f"Scenario: {case.title}"]
-                if case.preconditions:
-                    lines.extend(
-                        f"  {'Given' if index == 0 else 'And'} {condition}"
-                        for index, condition in enumerate(case.preconditions)
-                    )
-                else:
-                    lines.append("  Given the feature preconditions are satisfied")
-                for index, step in enumerate(case.steps):
-                    lines.append(f"  {'When' if index == 0 else 'And'} {step.action}")
-                    lines.append(f"  {'Then' if index == 0 else 'And'} {step.expected_result}")
-                scenario = "\n".join(lines)
+                given = _short_step(
+                    case.preconditions[0] if case.preconditions else "prerequisites are satisfied"
+                )
+                when = _short_step(case.steps[0].action)
+                then = _short_step(case.steps[-1].expected_result)
+                scenario = "\n".join(
+                    [
+                        f"Scenario: {case.title}",
+                        f"  Given {given}",
+                        f"  When {when}",
+                        f"  Then {then}",
+                    ]
+                )
             if scenario.startswith("Scenario Outline:") and "Examples:" not in scenario:
                 raise ContextConversionError(
                     f"Automation scenario outline {case.id} is missing an Examples table."
+                )
+            step_count = sum(
+                line.strip().startswith(("Given ", "When ", "Then ", "And ", "But "))
+                for line in scenario.splitlines()
+            )
+            if step_count > 4:
+                raise ContextConversionError(
+                    f"Automation scenario {case.id} exceeds the four-step Gherkin limit."
+                )
+            long_steps = [
+                line.strip()
+                for line in scenario.splitlines()
+                if line.strip().startswith(("Given ", "When ", "Then ", "And ", "But "))
+                and len(line.strip().split(maxsplit=1)[1]) > 100
+            ]
+            if long_steps:
+                raise ContextConversionError(
+                    f"Automation scenario {case.id} contains Gherkin step text over 100 characters."
                 )
             scenarios.append(scenario)
         if not scenarios:

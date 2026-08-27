@@ -68,3 +68,51 @@ Examples:
     assert result.test_cases[0].gherkin == outline.gherkin
     assert "Scenario Outline:" in result.test_cases[0].gherkin
     assert "Examples:" in result.test_cases[0].gherkin
+
+
+def test_generated_gherkin_compacts_multiple_structured_steps_to_given_when_then() -> None:
+    multi_step = case("TC-001").model_copy(
+        update={
+            "preconditions": ["an authenticated consumer", "a valid PCP product"],
+            "steps": [
+                Step(action="submit a quote", expected_result="a quote ID is returned"),
+                Step(action="retrieve the quote", expected_result="the same quote is returned"),
+            ],
+        }
+    )
+
+    result = finalize_suite(
+        Suite(feature_name="Quotation", test_cases=[multi_step]),
+        GenerateRequest(description="Generate a valid quotation scenario.", output_format="bdd"),
+    )
+    steps = [
+        line.strip()
+        for line in result.test_cases[0].gherkin.splitlines()
+        if line.strip().startswith(("Given ", "When ", "Then ", "And ", "But "))
+    ]
+
+    assert len(steps) == 3
+    assert [line.split(maxsplit=1)[0] for line in steps] == ["Given", "When", "Then"]
+
+
+def test_generated_gherkin_keeps_each_step_text_within_100_characters() -> None:
+    long_case = case("TC-001").model_copy(
+        update={
+            "preconditions": ["an authenticated consumer " + "with valid permissions " * 8],
+            "steps": [
+                Step(
+                    action="submit a quotation request " + "with detailed finance inputs " * 8,
+                    expected_result="a generated quotation is returned "
+                    + "with all calculated finance values " * 8,
+                )
+            ],
+        }
+    )
+
+    result = finalize_suite(
+        Suite(feature_name="Quotation", test_cases=[long_case]),
+        GenerateRequest(description="Generate a quotation.", output_format="bdd"),
+    )
+
+    for line in result.test_cases[0].gherkin.splitlines()[1:]:
+        assert len(line.strip().split(maxsplit=1)[1]) <= 100

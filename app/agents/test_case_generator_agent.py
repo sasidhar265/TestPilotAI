@@ -24,6 +24,7 @@ class TestCaseGeneratorAgent:
         purpose="Inspect generation intent and delegate to the correct test specialist.",
         runtime="local-router",
         capabilities=("action-routing", "manual-tests", "automation-tests", "fan-out"),
+        instruction_file=".github/agents/specforge.agent.md",
     )
 
     def __init__(

@@ -104,6 +104,7 @@ def test_health_reports_configuration() -> None:
     assert response.json()["active_agent"] == "GitHub Copilot Test Designer"
     assert response.json()["agent_runtime_id"] == "github-copilot"
     assert response.json()["copilot_model"] == "organization-default"
+    assert response.json()["agent_profile"] == "auto-finance-quotation"
     assert response.json()["organizational_memory"] == "enabled"
     assert isinstance(response.json()["organizational_memory_entries"], int)
 
@@ -158,6 +159,8 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     ]
     assert agents[1]["runtime"] == "local-router"
     assert agents[2]["runtime"] == "github-copilot"
+    assert agents[1]["instruction_file"] == ".github/agents/specforge.agent.md"
+    assert agents[5]["instruction_file"] == ".github/agents/context-converter.agent.md"
     assert agents[7]["runtime"] == "local-sqlite"
 
 

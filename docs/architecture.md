@@ -8,7 +8,21 @@ improves testability, and makes capabilities explicit; it does not enable runtim
 
 ## Functional agents
 
-The application is coordinated as six explicit roles under `app/agents/`. SpecForge routes an
+The solution uses a hybrid agent architecture. Repository-owned `.github/agents/*.agent.md` files
+are the readable behavior and responsibility layer. `app/agent_instructions.py` loads only an
+allowlisted set of those files into Copilot sessions. Python remains the governed execution layer,
+so Markdown instructions cannot bypass typed schemas, quality gates, storage rules, or security
+boundaries.
+
+Team or project requirements are layered from `.github/agent-profiles/<AGENT_PROFILE>/profile.md`.
+Optional per-agent Markdown in the same directory adds domain-specific terminology, test risks,
+framework conventions, and output rules. Profile names are path-safe, the profile must exist, and
+base policies are always loaded first. An optional profile `knowledge/` directory supplies
+version-controlled domain baselines to the same Copilot session. The active Auto Finance profile
+uses a normalized Quotation Service BRD v1.0 baseline; it is grounding context rather than model
+fine-tuning.
+
+The application is coordinated as eight explicit roles under `app/agents/`. SpecForge routes an
 explicit `generation_target`, or infers intent from terms such as Playwright, automation,
 manual test, exploratory, and usability. Ambiguous or neutral requests fan out to both specialists.
 

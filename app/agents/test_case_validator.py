@@ -19,6 +19,7 @@ class ValidationDimension(StrEnum):
     CLARITY = "clarity"
     EXPECTED_RESULTS = "expected-results"
     EXECUTION_MODE = "execution-mode"
+    BDD_STRUCTURE = "bdd-structure"
 
 
 class ValidationFinding(BaseModel):
@@ -90,7 +91,9 @@ class TestCaseValidatorAgent:
             "clarity",
             "expected-results",
             "execution-mode",
+            "bdd-structure",
         ),
+        instruction_file=".github/agents/quality-gate.agent.md",
     )
 
     def validate(
@@ -116,6 +119,43 @@ class TestCaseValidatorAgent:
                         test_case_ids=[case.id],
                     )
                 )
+            if case.execution_mode == ExecutionMode.AUTOMATION and case.gherkin:
+                step_keywords = [
+                    line.strip().split(maxsplit=1)[0]
+                    for line in case.gherkin.splitlines()
+                    if line.strip().startswith(("Given ", "When ", "Then ", "And ", "But "))
+                ]
+                required = {"Given", "When", "Then"}
+                if len(step_keywords) > 4 or not required.issubset(step_keywords):
+                    findings.append(
+                        ValidationFinding(
+                            dimension=ValidationDimension.BDD_STRUCTURE,
+                            severity=ValidationSeverity.ERROR,
+                            message=(
+                                "Automation Gherkin must contain Given, When, and Then and no "
+                                "more than four executable step lines."
+                            ),
+                            test_case_ids=[case.id],
+                        )
+                    )
+                long_steps = [
+                    line.strip()
+                    for line in case.gherkin.splitlines()
+                    if line.strip().startswith(("Given ", "When ", "Then ", "And ", "But "))
+                    and len(line.strip().split(maxsplit=1)[1]) > 100
+                ]
+                if long_steps:
+                    findings.append(
+                        ValidationFinding(
+                            dimension=ValidationDimension.BDD_STRUCTURE,
+                            severity=ValidationSeverity.ERROR,
+                            message=(
+                                "Automation Gherkin step text must not exceed 100 characters; "
+                                "move detail to test data or Examples."
+                            ),
+                            test_case_ids=[case.id],
+                        )
+                    )
             if not case.acceptance_criteria_covered:
                 findings.append(
                     ValidationFinding(

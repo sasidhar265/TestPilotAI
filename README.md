@@ -18,6 +18,18 @@ Automation Test Case Generators, Validator, and Test Storage. `GET /api/agents` 
 runtimes, and capabilities. Only suites that pass independent validation are newly stored for
 future exact-match reuse.
 
+Agent behavior is defined in readable `.github/agents/*.agent.md` files. The FastAPI/Python layer
+loads the relevant SpecForge, specialist, and quality-gate policies into each Copilot session and
+retains deterministic enforcement for validation, conversion, storage, security, and the web UI.
+Team and project customization is layered through `.github/agent-profiles/<profile>/`. Set
+`AGENT_PROFILE` to select a profile; `profile.md` applies common rules and optional files named
+after an agent add role-specific conventions. The base safety and quality policies cannot be
+replaced by a profile.
+
+The active default is `auto-finance-quotation`. Its `knowledge/quotation-brd-baseline.md` is the
+reviewable BRD v1.0 knowledge source used by the agents. This is prompt-time grounded context, not
+irreversible model fine-tuning; updating or reverting the Markdown changes the baseline cleanly.
+
 At generation time, choose either manual test cases with numbered steps and expected results or BDD
 scenarios written as `Scenario / Given / When / Then`. Both formats retain category, priority,
 automation/manual feasibility, a decision rationale, test data, acceptance-criteria traceability,
@@ -129,6 +141,130 @@ Always review generated code and test cases. The AI output is a draft, not evide
 or a substitute for security, accessibility, performance, and domain-expert testing.
 
 ## Architecture
+
+### End-to-end agent flow
+
+```mermaid
+flowchart TD
+    A[User enters a requirement or uploads a BRD] --> B[Web UI and FastAPI]
+    B --> C[Input Agent extracts and normalizes text]
+    C --> D{Validated suite in local memory?}
+
+    D -->|Yes| Q[Quality Gate Agent revalidates the suite]
+    D -->|No| S[SpecForge Router classifies the request]
+
+    P[Markdown agent policies] --> S
+    K[Active project profile and BRD knowledge] --> S
+    O[Relevant approved organizational knowledge] --> S
+
+    S --> R{Generation route}
+    R -->|Manual| M[Manual Test Case Generator]
+    R -->|Automation| T[Automation Test Generator]
+    R -->|Both| M
+    R -->|Both| T
+
+    M --> MQ[Manual quality review]
+    T --> AQ[Automation quality review]
+    MQ -->|Revise once when needed| M
+    AQ -->|Revise once when needed| T
+    MQ -->|Passed| G[Merge approved test cases]
+    AQ -->|Passed| G
+    G --> Q
+
+    Q -->|Failed| E[Return actionable validation errors]
+    Q -->|Passed| TS[Test Storage Agent saves validated suite]
+    TS --> V[Display reviewable results in the UI]
+
+    V --> CC[Context Converter Agent]
+    CC --> CSV[Xray-ready CSV]
+    CC --> XLSX[Xray-ready Excel]
+    CC --> JSON[Xray-ready JSON]
+    CC --> FEATURE[BDD feature file]
+
+    CSV --> OA[Output Agent stores artifacts and scenarios]
+    XLSX --> OA
+    JSON --> OA
+    FEATURE --> OA
+    OA -. relevant approved context .-> O
+
+    V -->|Explicit user action| J[Jira Cloud attachment and comment]
+```
+
+SpecForge can select one specialist or both. BDD scenarios target exactly three concise steps
+(`Given`, `When`, and `Then`) and never exceed four steps. Generated content must pass the
+deterministic quality gate before it is stored, converted, reused, or offered for publication.
+
+### Architectural view
+
+```mermaid
+flowchart TB
+    subgraph CLIENT[Presentation layer]
+        UI[Browser UI]
+    end
+
+    subgraph APP[FastAPI application]
+        API[HTTP API and security middleware]
+        INGEST[Document ingestion and OCR]
+
+        subgraph ORCH[Agent orchestration]
+            INPUT[Input Agent]
+            ROUTER[SpecForge Router]
+            MANUAL[Manual Test Generator]
+            AUTO[Automation Test Generator]
+            GATE[Quality Gate Agent]
+            CONVERT[Context Converter Agent]
+            OUTPUT[Output Agent]
+            STORAGE[Test Storage Agent]
+        end
+
+        subgraph GOVERNANCE[Markdown-driven governance]
+            BASE[Base agent policies]
+            PROFILE[Team or project profile]
+            BRD[Versioned BRD knowledge]
+            LOADER[Instruction loader and allowlist]
+        end
+    end
+
+    subgraph LOCAL[Local persistence]
+        DB[(SQLite organizational memory)]
+        FILES[CSV, XLSX, JSON, and feature artifacts]
+    end
+
+    subgraph EXTERNAL[External services]
+        COPILOT[GitHub Copilot SDK and CLI service]
+        JIRA[Jira Cloud]
+    end
+
+    UI <--> API
+    API --> INGEST --> INPUT --> ROUTER
+    ROUTER --> MANUAL
+    ROUTER --> AUTO
+    MANUAL --> GATE
+    AUTO --> GATE
+    GATE --> STORAGE
+    GATE --> CONVERT --> OUTPUT
+
+    BASE --> LOADER
+    PROFILE --> LOADER
+    BRD --> LOADER
+    LOADER --> ROUTER
+    LOADER --> MANUAL
+    LOADER --> AUTO
+    LOADER --> GATE
+
+    ROUTER --> COPILOT
+    MANUAL --> COPILOT
+    AUTO --> COPILOT
+    STORAGE <--> DB
+    OUTPUT <--> DB
+    OUTPUT --> FILES
+    API -->|User-approved publish| JIRA
+```
+
+The Markdown files provide customizable instructions and domain context; Python retains the
+trusted runtime boundary for schema enforcement, deterministic validation, storage, conversion,
+security, and external integrations. Prompt-time knowledge grounding can be updated per project
+without retraining or changing the underlying model.
 
 - `app/agents/`: typed capability contract and fail-closed Copilot runtime registry.
 - `app/agents/test_case_validator.py`: independent deterministic test-suite validation agent.

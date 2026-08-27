@@ -146,3 +146,55 @@ BR-1: Lock the account after five failed sign-in attempts""",
     assert not report.passed
     assert ValidationDimension.COVERAGE in dimensions
     assert ValidationDimension.EXECUTION_MODE in dimensions
+
+
+def test_validator_rejects_automation_gherkin_with_more_than_four_steps() -> None:
+    automated = case(
+        "TC-001", "Create quote", "Verify quote creation", "BR-001", "A quote is returned"
+    ).model_copy(
+        update={
+            "gherkin": """Scenario: Create quote
+  Given an authenticated consumer
+  And a valid vehicle
+  When a quotation is requested
+  And the product rules are retrieved
+  Then a generated quote is returned"""
+        }
+    )
+
+    report = Validator().validate(
+        GenerateRequest(description="BR-001: Create a quotation"),
+        Suite(feature_name="Quotation", test_cases=[automated]),
+        expected_mode=ExecutionMode.AUTOMATION,
+    )
+
+    assert not report.passed
+    assert any(
+        finding.dimension == ValidationDimension.BDD_STRUCTURE for finding in report.findings
+    )
+
+
+def test_validator_rejects_overlong_gherkin_step_text() -> None:
+    automated = case(
+        "TC-001", "Create quote", "Verify quote creation", "BR-001", "A quote is returned"
+    ).model_copy(
+        update={
+            "gherkin": "\n".join(
+                [
+                    "Scenario: Create quote",
+                    "  Given " + "an authenticated consumer with valid quotation data " * 3,
+                    "  When the quotation request is submitted",
+                    "  Then a generated quote is returned",
+                ]
+            )
+        }
+    )
+
+    report = Validator().validate(
+        GenerateRequest(description="BR-001: Create a quotation"),
+        Suite(feature_name="Quotation", test_cases=[automated]),
+        expected_mode=ExecutionMode.AUTOMATION,
+    )
+
+    assert not report.passed
+    assert any("100 characters" in finding.message for finding in report.findings)

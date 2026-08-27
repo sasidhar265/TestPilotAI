@@ -25,3 +25,4 @@ class FunctionalAgentDescriptor(BaseModel):
     purpose: str
     runtime: str
     capabilities: tuple[str, ...]
+    instruction_file: str | None = None

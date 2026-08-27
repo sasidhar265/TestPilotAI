@@ -1,10 +1,12 @@
 import asyncio
 import json
+import re
 from collections.abc import Callable
 from typing import Any, Protocol
 
 from pydantic import ValidationError
 
+from app.agent_instructions import generation_agent_instructions
 from app.agents.contracts import AgentCapability, AgentDescriptor
 from app.config import Settings
 from app.models import GenerateRequest, GenerationTarget, TestCase, TestFormat, TestSuite
@@ -41,19 +43,31 @@ class CopilotGenerationError(RuntimeError):
     """A safe, user-facing failure produced by the generation adapter."""
 
 
+def system_prompt(request: GenerateRequest, profile: str = "auto-finance-quotation") -> str:
+    """Compose invariant safeguards with repository-owned Markdown agent policies."""
+    return (
+        SYSTEM_PROMPT
+        + "\n\nREPOSITORY MARKDOWN AGENT POLICIES\n"
+        + generation_agent_instructions(request.generation_target.value, profile)
+    )
+
+
 def _gherkin_from_case(case: TestCase) -> str:
-    lines = [f"Scenario: {case.title}"]
-    if case.preconditions:
-        lines.extend(
-            f"  {'Given' if index == 0 else 'And'} {condition}"
-            for index, condition in enumerate(case.preconditions)
-        )
-    else:
-        lines.append("  Given the feature preconditions are satisfied")
-    for index, step in enumerate(case.steps):
-        lines.append(f"  {'When' if index == 0 else 'And'} {step.action}")
-        lines.append(f"  {'Then' if index == 0 else 'And'} {step.expected_result}")
-    return "\n".join(lines)
+    given = _concise(case.preconditions[0] if case.preconditions else "prerequisites are satisfied")
+    when = _concise(case.steps[0].action)
+    then = _concise(case.steps[-1].expected_result)
+    return "\n".join(
+        [f"Scenario: {case.title}", f"  Given {given}", f"  When {when}", f"  Then {then}"]
+    )
+
+
+def _concise(value: str, limit: int = 100) -> str:
+    """Keep fallback Gherkin readable without changing structured test detail."""
+    first_clause = re.split(r"[.;\n]", " ".join(value.split()), maxsplit=1)[0].strip()
+    if len(first_clause) <= limit:
+        return first_clause
+    shortened = first_clause[: limit + 1].rsplit(" ", 1)[0].rstrip(",:")
+    return shortened or first_clause[:limit]
 
 
 def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
@@ -95,7 +109,9 @@ def user_prompt(
         GenerationTarget.AUTOMATION: (
             "Generate only automation cases. Every execution_mode must be automation. Focus on "
             "repeatable, deterministic scenarios observable through stable UI, API, or system "
-            "interfaces and suitable for continuous execution."
+            "interfaces and suitable for continuous execution. Use exactly Given, When, and Then "
+            "where possible and never exceed four executable Gherkin step lines. Keep each step's "
+            "text to 100 characters or fewer and move detailed values to Examples or test_data."
         ),
         GenerationTarget.BOTH: (
             "Generate a balanced suite with at least 2 automation and 2 genuinely manual cases."
@@ -128,6 +144,13 @@ def user_prompt(
 
 SPECIALIST ACTION
 {target_instructions[request.generation_target]}
+
+FIELD MAPPING
+Even if the source request asks for presentation labels, return only the canonical JSON schema
+below. Map Test Case ID to id, Requirement ID to acceptance_criteria_covered, Scenario to title and
+objective, HTTP Status to tags, Test Type to tags/category, and Automation Candidate to
+execution_mode plus feasibility_reason. Keep expected results inside each steps item. Do not use
+the presentation labels as JSON property names and do not return a Markdown table.
 
 OUTPUT FORMAT
 {format_instruction}
@@ -207,7 +230,10 @@ class CopilotGenerator:
 
         async with factory(**client_options) as client:
             session_options: dict[str, Any] = {
-                "system_message": {"mode": "append", "content": SYSTEM_PROMPT},
+                "system_message": {
+                    "mode": "append",
+                    "content": system_prompt(request, self.settings.agent_profile),
+                },
                 "streaming": False,
                 "infinite_sessions": {"enabled": False},
                 "available_tools": [],
@@ -244,7 +270,10 @@ class CopilotGenerator:
         if not content:
             raise CopilotGenerationError("GitHub Copilot did not return a test suite.")
         try:
-            return finalize_suite(TestSuite.model_validate_json(_json_object(content)), request)
+            payload = json.loads(_json_object(content))
+            return finalize_suite(
+                TestSuite.model_validate(_normalize_suite_payload(payload)), request
+            )
         except (ValidationError, ValueError) as error:
             raise CopilotGenerationError(
                 "GitHub Copilot returned output that did not match the test-suite schema."
@@ -262,6 +291,148 @@ def _json_object(content: str) -> str:
     if start < 0 or end < start:
         raise ValueError("No JSON object found")
     return value[start : end + 1]
+
+
+_KEY = re.compile(r"[^a-z0-9]+")
+
+
+def _key(value: object) -> str:
+    return _KEY.sub("", str(value).casefold())
+
+
+def _aliases(value: dict[str, Any]) -> dict[str, Any]:
+    return {_key(key): item for key, item in value.items()}
+
+
+def _list(value: Any) -> list[str]:
+    if value is None or value == "":
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return [item.strip() for item in re.split(r"[,;\n]", str(value)) if item.strip()]
+
+
+def _normalize_suite_payload(payload: Any) -> Any:
+    """Normalize common QA presentation labels before strict Pydantic validation."""
+    if isinstance(payload, list):
+        payload = {"feature_name": "Generated API test suite", "test_cases": payload}
+    if not isinstance(payload, dict):
+        return payload
+    top = _aliases(payload)
+    raw_cases = top.get("testcases", top.get("tests", []))
+    if not isinstance(raw_cases, list):
+        return payload
+    feature_name = top.get("featurename", top.get("feature", top.get("name", "API test suite")))
+    normalized_cases = [
+        _normalize_case(item, index) if isinstance(item, dict) else item
+        for index, item in enumerate(raw_cases, 1)
+    ]
+    normalized = dict(payload)
+    normalized["feature_name"] = feature_name
+    normalized["test_cases"] = normalized_cases
+    return normalized
+
+
+def _normalize_case(case: dict[str, Any], index: int) -> dict[str, Any]:
+    values = _aliases(case)
+    title = values.get("title", values.get("scenario", f"Generated scenario {index}"))
+    priority = str(values.get("priority", "P2")).upper()
+    test_type = str(values.get("testtype", "")).strip()
+    candidate = str(values.get("automationcandidate", values.get("executionmode", "automation")))
+    automation = candidate.casefold() not in {"false", "no", "manual", "n"}
+    mode = "automation" if automation else "manual"
+    category = values.get("category")
+    if _key(category) not in {"critical", "smoke", "sanity", "regression"}:
+        category = {"P0": "critical", "P1": "smoke", "P2": "sanity"}.get(priority, "regression")
+    requirements = values.get(
+        "acceptancecriteriacovered", values.get("requirementid", values.get("requirementids"))
+    )
+    tags = _list(values.get("tags"))
+    http_status = values.get("httpstatus", values.get("statuscode"))
+    if http_status not in (None, ""):
+        tags.append(f"http-status:{http_status}")
+    if test_type:
+        tags.append(f"test-type:{test_type}")
+    expected = values.get("expectedresult")
+    steps = _normalize_steps(values.get("steps", []), expected)
+    normalized = dict(case)
+    normalized.update(
+        {
+            "id": str(values.get("id", values.get("testcaseid", f"TC-{index:03d}"))),
+            "title": str(title),
+            "objective": str(values.get("objective", title)),
+            "category": category,
+            "priority": priority,
+            "execution_mode": mode,
+            "feasibility_reason": str(
+                values.get(
+                    "feasibilityreason",
+                    "Deterministic API behavior suitable for automation"
+                    if automation
+                    else "Requires human-led evaluation",
+                )
+            ),
+            "preconditions": _list(values.get("preconditions")),
+            "steps": steps,
+            "test_data": _normalize_test_data(values.get("testdata")),
+            "tags": list(dict.fromkeys(tags)),
+            "acceptance_criteria_covered": _list(requirements),
+            "gherkin": values.get("gherkin"),
+        }
+    )
+    return normalized
+
+
+def _normalize_steps(value: Any, case_expected: Any) -> Any:
+    if not isinstance(value, list):
+        return value
+    normalized: list[Any] = []
+    for item in value:
+        if not isinstance(item, dict):
+            normalized.append(item)
+            continue
+        fields = _aliases(item)
+        normalized.append(
+            {
+                "action": fields.get("action", fields.get("step", fields.get("description"))),
+                "expected_result": fields.get(
+                    "expectedresult", fields.get("result", case_expected)
+                ),
+            }
+        )
+    return normalized
+
+
+def _normalize_test_data(value: Any) -> Any:
+    if value in (None, ""):
+        return []
+    if isinstance(value, dict):
+        return [
+            {"name": str(name), "value": str(item), "purpose": "Generated scenario input"}
+            for name, item in value.items()
+        ]
+    if isinstance(value, list):
+        normalized = []
+        for index, item in enumerate(value, 1):
+            if isinstance(item, dict):
+                fields = _aliases(item)
+                normalized.append(
+                    {
+                        "name": str(fields.get("name", f"input-{index}")),
+                        "value": str(fields.get("value", fields.get("data", ""))),
+                        "purpose": str(fields.get("purpose", "Generated scenario input")),
+                    }
+                )
+            else:
+                normalized.append(
+                    {
+                        "name": f"input-{index}",
+                        "value": str(item),
+                        "purpose": "Generated scenario input",
+                    }
+                )
+        return normalized
+    return [{"name": "input", "value": str(value), "purpose": "Generated scenario input"}]
 
 
 def create_generator(settings: Settings) -> GeneratorProvider:

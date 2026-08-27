@@ -13,6 +13,7 @@ class ManualTestCaseGeneratorAgent:
         purpose="Generate human-led exploratory, usability, visual, and accessibility tests.",
         runtime="github-copilot",
         capabilities=("manual-tests", "exploratory-tests", "usability-tests"),
+        instruction_file=".github/agents/manual-test-generator.agent.md",
     )
 
     def __init__(self, registry: AgentRegistry) -> None:
@@ -37,6 +38,7 @@ class AutomationTestCaseGeneratorAgent:
             "integration-tests",
             "specflow-bdd",
         ),
+        instruction_file=".github/agents/automation-test-generator.agent.md",
     )
 
     def __init__(self, registry: AgentRegistry) -> None:
