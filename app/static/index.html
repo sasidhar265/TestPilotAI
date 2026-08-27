@@ -58,6 +58,24 @@
       <div class="cases" id="cases"></div>
       <div class="footer-grid"><details class="subpanel"><summary>Assumptions & coverage intelligence</summary><div id="notes"></div></details></div>
     </section>
+    <section class="panel agent-workspace hidden" id="agent-workspace" aria-labelledby="agent-workspace-title">
+      <div class="panel-head"><div class="panel-title" id="agent-workspace-title"><span class="step-number">02</span> Quality lifecycle agents</div><span class="secure">CONTROLLED ACTIONS</span></div>
+      <p class="agent-intro">Use the generated suite across the governed quality lifecycle. Actions are local and reviewable; execution results and defect drafts are never published automatically.</p>
+      <div class="agent-grid">
+        <article class="agent-card"><div class="flow-kicker">Business Rules Agent</div><h3>Requirement alignment</h3><p>Applies the rules entered above before knowledge lookup and generation, preserving BR traceability.</p><button class="secondary" id="show-rule-coverage">Review rule coverage</button></article>
+        <article class="agent-card"><div class="flow-kicker">Knowledge Agent</div><h3>Approved suite reuse</h3><p>Returns exact validated matches from organizational knowledge before contacting Copilot.</p><button class="secondary" id="show-knowledge">Inspect knowledge source</button></article>
+        <article class="agent-card"><div class="flow-kicker">Test Data Agent</div><h3>Synthetic test data</h3><p>Fills missing case-aligned data with privacy-safe synthetic values.</p><button class="secondary" id="generate-data">Generate test data</button></article>
+        <article class="agent-card"><div class="flow-kicker">Execution Agent</div><h3>Controlled result capture</h3><p>Use each case's result controls, then validate and summarize the run.</p><button class="secondary" id="summarize-execution">Summarize execution</button></article>
+        <article class="agent-card"><div class="flow-kicker">Bug Reporter Agent</div><h3>Defect drafts</h3><p>Creates review-required defect drafts for failed cases with expected-versus-actual evidence.</p><button class="secondary" id="draft-defects">Draft defects</button></article>
+        <article class="agent-card"><div class="flow-kicker">Metrics Agent</div><h3>Quality metrics</h3><p>Calculates manual and automation coverage, pass rate, defects, and defect density.</p><button class="secondary" id="generate-metrics">Generate metrics</button></article>
+      </div>
+      <div class="agent-output" id="agent-output">Select an agent action to inspect its result.</div>
+      <div class="lifecycle-dashboards" aria-label="Test lifecycle dashboards">
+        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Execution dashboard</span><span class="dashboard-state" id="execution-dashboard-state">NOT RUN</span></div><div id="execution-dashboard"><p>Set a result on each generated test case, then select <strong>Summarize execution</strong>.</p></div></article>
+        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Raised bugs</span><span class="dashboard-state" id="defects-dashboard-state">0 DRAFTS</span></div><div id="defects-dashboard"><p>Failed cases can be converted into review-required defect drafts.</p></div></article>
+        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Test metrics</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate metrics after recording execution results and reviewing defect drafts.</p></div></article>
+      </div>
+    </section>
     <section class="publish-panel hidden" id="publish-panel" aria-labelledby="publish-title">
       <div class="publish-layout"><div class="publish-copy"><div class="eyebrow">Jira Cloud delivery</div><h2 id="publish-title">Publish selected cases</h2><p>Review the generated suite, select the cases you want above, then attach only those cases to an existing Jira issue.</p></div><div class="publish-action"><div class="panel-title"><span class="step-number">02</span> Destination issue</div><div class="jira-row"><input id="jira-key" type="text" placeholder="Jira key · PROJ-123" aria-label="Jira issue key"><button class="primary" id="jira">Attach to Jira</button></div></div></div>
     </section>

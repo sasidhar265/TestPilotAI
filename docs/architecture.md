@@ -22,33 +22,41 @@ version-controlled domain baselines to the same Copilot session. The active Auto
 uses a normalized Quotation Service BRD v1.0 baseline; it is grounding context rather than model
 fine-tuning.
 
-The application is coordinated as eight explicit roles under `app/agents/`. SpecForge routes an
+The application is coordinated as fourteen explicit roles under `app/agents/`. SpecForge routes an
 explicit `generation_target`, or infers intent from terms such as Playwright, automation,
 manual test, exploratory, and usability. Ambiguous or neutral requests fan out to both specialists.
 
 1. `InputAgent` normalizes pasted text or extracts requirements from supported documents.
-2. `TestCaseGeneratorAgent` is the SpecForge router that resolves the requested action.
-3. `ManualTestCaseGeneratorAgent` creates human-led test scenarios.
-4. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
+2. `BusinessRulesAgent` grounds generation in explicit `BR-*` constraints and traceability.
+3. `KnowledgeAgent` checks for an exact validated match before any Copilot request.
+4. `TestCaseGeneratorAgent` is the SpecForge router that resolves the requested action.
+5. `ManualTestCaseGeneratorAgent` creates human-led test scenarios.
+6. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
    creates only repeatable deterministic UI, API, integration, or BDD automation scenarios. Its
    generation request always asks for executable Gherkin so scenarios can be packaged as a
    framework-compatible `.feature` file; parameterized outlines retain complete Examples tables.
-5. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
+7. `TestDataAgent` fills missing case-aligned values with privacy-safe synthetic data.
+8. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
    expected results, business-rule alignment, and specialist execution mode. Manual output is
    gated immediately after generation; both manual and automation output receive one
    findings-driven revision and cannot proceed if the revised suite still fails.
-6. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
+9. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
    CSV, Excel, JSON, or Gherkin `.feature` interchange files.
-7. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
+10. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
    organizational knowledge source. This is retrieval-augmented generation, not model training;
    current business requirements always take precedence over retrieved examples. Feature files
    are retained as artifacts, while each Scenario or Scenario Outline is also stored as an
    individually indexed record with its mode, Gherkin, and requirement mappings.
-8. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
+11. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
+12. `ExecutionAgent` validates results supplied by an approved manual or automation run.
+13. `BugReporterAgent` creates review-required defect drafts for failed tests.
+14. `MetricsAgent` calculates coverage, execution, and defect measures from reviewed evidence.
 
 `MultiAgentTestPipeline` owns their execution order. A newly generated suite is stored only
 when validation has no error findings. Retrieved suites are validated again before return.
 Agent metadata is discoverable through `GET /api/agents`.
+Execution remains controlled: the application does not run arbitrary commands, and defect drafts
+are not published automatically.
 
 ```mermaid
 flowchart LR

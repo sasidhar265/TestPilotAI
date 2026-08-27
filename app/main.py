@@ -9,6 +9,14 @@ from pydantic import BaseModel, Field
 from app.agent_runtime import AgentEvent
 from app.agents import TestStorageAgent
 from app.agents.context_converter_agent import ContextConversionError, ContextConverterAgent
+from app.agents.lifecycle_agents import (
+    BugReporterAgent,
+    BusinessRulesAgent,
+    ExecutionAgent,
+    KnowledgeAgent,
+    MetricsAgent,
+    TestDataAgent,
+)
 from app.agents.output_agent import OutputAgent
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
@@ -23,12 +31,18 @@ from app.generator import CopilotGenerationError, CopilotGenerator, copilot_erro
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
 from app.models import (
+    BusinessRule,
+    DefectDraft,
     DocumentSource,
+    ExecutionRequest,
+    ExecutionSummary,
     ExpandRequest,
     ExportFormat,
     GenerateRequest,
     JiraPublishRequest,
     JiraPublishResult,
+    MetricsReport,
+    SuiteRequest,
     TestFormat,
     TestSuite,
 )
@@ -83,6 +97,11 @@ class AgentRunResult(BaseModel):
 class ContextConversionRequest(BaseModel):
     suite: TestSuite
     validation: ValidationReport
+
+
+class MetricsRequest(SuiteRequest):
+    execution: ExecutionSummary | None = None
+    defects: list[DefectDraft] = Field(default_factory=list)
 
 
 class CompanyDocument(BaseModel):
@@ -169,6 +188,8 @@ async def list_agents() -> list[dict[str, object]]:
         agent.model_dump(mode="json")
         for agent in (
             InputAgent.descriptor,
+            BusinessRulesAgent.descriptor,
+            KnowledgeAgent.descriptor,
             TestCaseGeneratorAgent.descriptor,
             ManualTestCaseGeneratorAgent.descriptor,
             AutomationTestCaseGeneratorAgent.descriptor,
@@ -176,6 +197,10 @@ async def list_agents() -> list[dict[str, object]]:
             ContextConverterAgent.descriptor,
             OutputAgent.descriptor,
             TestStorageAgent.descriptor,
+            TestDataAgent.descriptor,
+            ExecutionAgent.descriptor,
+            BugReporterAgent.descriptor,
+            MetricsAgent.descriptor,
         )
     ]
 
@@ -203,6 +228,37 @@ async def generate(
     except Exception as error:
         log_operation_failure("generate", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
+
+
+@app.post("/api/test-data", response_model=TestSuite)
+async def generate_test_data(request: SuiteRequest) -> TestSuite:
+    """Fill missing case-aligned values with safe synthetic test data."""
+    return TestDataAgent().generate(request.suite)
+
+
+@app.post("/api/execution", response_model=ExecutionSummary)
+async def summarize_execution(request: ExecutionRequest) -> ExecutionSummary:
+    """Validate and summarize results supplied by an approved execution source."""
+    try:
+        return ExecutionAgent().summarize(request)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/api/defects", response_model=list[DefectDraft])
+async def draft_defects(request: ExecutionRequest) -> list[DefectDraft]:
+    """Create human-review-required defect drafts from failed test results."""
+    try:
+        ExecutionAgent().summarize(request)
+        return BugReporterAgent().draft(request.suite, request.results)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/api/metrics", response_model=MetricsReport)
+async def generate_metrics(request: MetricsRequest) -> MetricsReport:
+    """Calculate transparent coverage, execution, and defect metrics."""
+    return MetricsAgent().calculate(request.suite, request.execution, request.defects)
 
 
 @app.post("/api/agent/run", response_model=AgentRunResult)
@@ -235,6 +291,7 @@ async def generate_from_document(
     file: UploadFile = File(...),
     output_format: TestFormat = Form(TestFormat.NORMAL),
     additional_context: str = Form(""),
+    business_rules: str = Form(""),
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> DocumentGenerationResult:
     """Extract requirements, generate test cases, then independently validate them."""
@@ -242,8 +299,13 @@ async def generate_from_document(
     request_id = request_id_context.get()
     generation_cancellations.register(request_id, "document_test_case_generation")
     try:
+        rules = [
+            BusinessRule(id=f"BR-{index:03d}", description=line.strip())
+            for index, line in enumerate(business_rules.splitlines(), 1)
+            if line.strip()
+        ]
         result = await pipeline.run_document(
-            filename, await file.read(), additional_context, output_format
+            filename, await file.read(), additional_context, output_format, rules
         )
         document = result.document
         assert document is not None

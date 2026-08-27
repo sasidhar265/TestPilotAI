@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING
 
 from app.agent_runtime import AgentEvent, AgentRuntime
 from app.agents import AgentRegistry, TestStorageAgent
+from app.agents.lifecycle_agents import BusinessRulesAgent, KnowledgeAgent, TestDataAgent
 from app.memory import OrganizationalMemory
-from app.models import ExpandRequest, GenerateRequest, TestFormat, TestSuite
+from app.models import BusinessRule, ExpandRequest, GenerateRequest, TestFormat, TestSuite
 from app.services.document_ingestion import ExtractedDocument, InputAgent
 
 if TYPE_CHECKING:
@@ -43,10 +44,14 @@ class MultiAgentTestPipeline:
         self.generator = generator
         self.validator = validator
         self.storage = storage
+        self.business_rules = BusinessRulesAgent()
+        self.knowledge = KnowledgeAgent(storage)
+        self.test_data = TestDataAgent()
         self.runtime = runtime
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
-        known = self.storage.find(request)
+        request = self.business_rules.enrich(request)
+        known = self.knowledge.recall(request)
         if known is not None:
             logger.info(
                 "memory_lookup result=hit memory_key=%s copilot_contacted=false cases=%s",
@@ -70,9 +75,9 @@ class MultiAgentTestPipeline:
         if self.runtime is not None:
             outcome = await self.runtime.run(request)
             return PipelineResult(outcome.suite, outcome.validation, trace=tuple(outcome.trace))
-        generated = await self.generator.generate(request)
+        generated = self.test_data.generate(await self.generator.generate(request))
         validation = self.validator.validate(request, generated)
-        suite = self.storage.store(request, generated) if validation.passed else generated
+        suite = self.knowledge.remember(request, generated) if validation.passed else generated
         return PipelineResult(suite, validation)
 
     async def run_document(
@@ -81,10 +86,12 @@ class MultiAgentTestPipeline:
         content: bytes,
         additional_context: str = "",
         output_format: TestFormat = TestFormat.NORMAL,
+        business_rules: list[BusinessRule] | None = None,
     ) -> PipelineResult:
         document, request = self.input_agent.from_document(
             filename, content, additional_context, output_format
         )
+        request = request.model_copy(update={"business_rules": business_rules or []})
         result = await self.run(request)
         return PipelineResult(result.suite, result.validation, document, result.trace)
 

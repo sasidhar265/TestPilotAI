@@ -37,6 +37,14 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "↓ .feature" in response.text
     assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' in response.text
+    assert 'id="business-rules"' not in response.text
+    assert 'id="agent-workspace"' in response.text
+    assert 'id="execution-dashboard"' in response.text
+    assert 'id="defects-dashboard"' in response.text
+    assert 'id="metrics-dashboard"' in response.text
+    assert "Business Rules Agent" in response.text
+    assert "Bug Reporter Agent" in response.text
+    assert "Metrics Agent" in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/index.js"' in response.text
@@ -149,6 +157,8 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     agents = response.json()
     assert [agent["kind"] for agent in agents] == [
         "input",
+        "business-rules",
+        "knowledge",
         "specforge-router",
         "manual-test-generator",
         "automation-test-generator",
@@ -156,12 +166,16 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "context-converter",
         "output",
         "test-storage",
+        "test-data",
+        "execution",
+        "bug-reporter",
+        "metrics",
     ]
-    assert agents[1]["runtime"] == "local-router"
-    assert agents[2]["runtime"] == "github-copilot"
-    assert agents[1]["instruction_file"] == ".github/agents/specforge.agent.md"
-    assert agents[5]["instruction_file"] == ".github/agents/context-converter.agent.md"
-    assert agents[7]["runtime"] == "local-sqlite"
+    assert agents[3]["runtime"] == "local-router"
+    assert agents[4]["runtime"] == "github-copilot"
+    assert agents[3]["instruction_file"] == ".github/agents/specforge.agent.md"
+    assert agents[7]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[9]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:
@@ -265,7 +279,9 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
     from app.services.document_ingestion import ExtractedDocument
 
     class StubPipeline:
-        async def run_document(self, filename, content, additional_context, output_format):
+        async def run_document(
+            self, filename, content, additional_context, output_format, business_rules=None
+        ):
             request = type("Request", (), {"output_format": output_format})()
             return SimpleNamespace(
                 document=ExtractedDocument(

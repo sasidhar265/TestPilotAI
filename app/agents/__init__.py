@@ -56,6 +56,8 @@ class RequirementToTestCaseAgent(Protocol):
 
 class AgentKind(StrEnum):
     INPUT = "input"
+    BUSINESS_RULES = "business-rules"
+    KNOWLEDGE = "knowledge"
     ROUTER = "specforge-router"
     MANUAL_GENERATOR = "manual-test-generator"
     AUTOMATION_GENERATOR = "automation-test-generator"
@@ -63,6 +65,10 @@ class AgentKind(StrEnum):
     CONTEXT_CONVERTER = "context-converter"
     OUTPUT = "output"
     STORAGE = "test-storage"
+    TEST_DATA = "test-data"
+    EXECUTION = "execution"
+    BUG_REPORTER = "bug-reporter"
+    METRICS = "metrics"
 
 
 class FunctionalAgentDescriptor(BaseModel):

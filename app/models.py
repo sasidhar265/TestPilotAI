@@ -41,6 +41,18 @@ class ExportFormat(StrEnum):
     FEATURE = "feature"
 
 
+class ExecutionStatus(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    NOT_RUN = "not-run"
+
+
+class BusinessRule(BaseModel):
+    id: str = Field(pattern=r"^BR-[A-Za-z0-9_-]+$")
+    description: str = Field(min_length=3, max_length=2_000)
+
+
 class TestStep(BaseModel):
     action: str = Field(min_length=1)
     expected_result: str = Field(min_length=1)
@@ -89,6 +101,7 @@ class GenerateRequest(BaseModel):
     additional_context: str = Field(default="", max_length=10_000)
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
+    business_rules: list[BusinessRule] = Field(default_factory=list, max_length=100)
 
     @field_validator("description")
     @classmethod
@@ -121,3 +134,54 @@ class DocumentSource(BaseModel):
     filename: str
     media_type: str
     extracted_characters: int = Field(ge=1)
+
+
+class SuiteRequest(BaseModel):
+    suite: TestSuite
+
+
+class TestExecutionResult(BaseModel):
+    case_id: str
+    status: ExecutionStatus
+    actual_result: str = Field(default="", max_length=5_000)
+    duration_ms: int = Field(default=0, ge=0)
+
+
+class ExecutionRequest(SuiteRequest):
+    results: list[TestExecutionResult] = Field(min_length=1)
+
+
+class ExecutionSummary(BaseModel):
+    results: list[TestExecutionResult]
+    total: int
+    passed: int
+    failed: int
+    blocked: int
+    not_run: int
+    pass_rate: float
+
+
+class DefectDraft(BaseModel):
+    id: str
+    title: str
+    severity: str
+    test_case_id: str
+    expected_result: str
+    actual_result: str
+    requirement_mappings: list[str]
+    status: str = "draft-review-required"
+
+
+class MetricsReport(BaseModel):
+    total_tests: int
+    manual_tests: int
+    automated_tests: int
+    manual_coverage: float
+    automation_coverage: float
+    executed: int
+    passed: int
+    failed: int
+    blocked: int
+    pass_rate: float
+    total_defects: int
+    defect_density: float

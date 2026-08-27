@@ -8,12 +8,18 @@ AGENT_DIRECTORY = Path(__file__).parent.parent / ".github" / "agents"
 PROFILE_DIRECTORY = Path(__file__).parent.parent / ".github" / "agent-profiles"
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
+    "business-rules": "business-rules.agent.md",
     "specforge": "specforge.agent.md",
     "manual-test-generator": "manual-test-generator.agent.md",
     "automation-test-generator": "automation-test-generator.agent.md",
     "quality-gate": "quality-gate.agent.md",
     "context-converter": "context-converter.agent.md",
     "output": "output.agent.md",
+    "knowledge": "knowledge.agent.md",
+    "test-data": "test-data.agent.md",
+    "execution": "execution.agent.md",
+    "bug-reporter": "bug-reporter.agent.md",
+    "metrics": "metrics.agent.md",
 }
 
 
@@ -73,7 +79,10 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
         "manual": "manual-test-generator",
         "automation": "automation-test-generator",
     }.get(target)
-    sections = [load_agent_instructions("specforge")]
+    sections = [
+        load_agent_instructions("business-rules"),
+        load_agent_instructions("specforge"),
+    ]
     sections.append(load_profile_instructions(profile, "specforge"))
     if specialist:
         sections.append(load_agent_instructions(specialist))
@@ -81,6 +90,7 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
         if specialist_override.is_file():
             sections.append(_instruction_body(specialist_override))
     sections.append(load_agent_instructions("quality-gate"))
+    sections.append(load_agent_instructions("test-data"))
     quality_override = PROFILE_DIRECTORY / profile / "quality-gate.md"
     if quality_override.is_file():
         sections.append(_instruction_body(quality_override))
