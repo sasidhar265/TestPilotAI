@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from app.agent_runtime import AgentEvent, AgentRuntime
 from app.agents.input_agent import InputAgent
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
@@ -15,6 +16,7 @@ class PipelineResult:
     suite: TestSuite
     validation: ValidationReport
     document: ExtractedDocument | None = None
+    trace: tuple[AgentEvent, ...] = ()
 
 
 class MultiAgentTestPipeline:
@@ -26,13 +28,18 @@ class MultiAgentTestPipeline:
         generator: TestCaseGeneratorAgent,
         validator: TestCaseValidatorAgent,
         storage: TestStorageAgent,
+        runtime: AgentRuntime | None = None,
     ) -> None:
         self.input_agent = input_agent
         self.generator = generator
         self.validator = validator
         self.storage = storage
+        self.runtime = runtime
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
+        if self.runtime is not None:
+            outcome = await self.runtime.run(request)
+            return PipelineResult(outcome.suite, outcome.validation, trace=tuple(outcome.trace))
         known = self.storage.find(request)
         if known is not None:
             return PipelineResult(known, self.validator.validate(request, known))
@@ -52,4 +59,4 @@ class MultiAgentTestPipeline:
             filename, content, additional_context, output_format
         )
         result = await self.run(request)
-        return PipelineResult(result.suite, result.validation, document)
+        return PipelineResult(result.suite, result.validation, document, result.trace)

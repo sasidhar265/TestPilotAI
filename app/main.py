@@ -2,8 +2,10 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
+from app.agent_runtime import AgentEvent
 from app.agents.input_agent import InputAgent
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
@@ -38,6 +40,7 @@ app = FastAPI(
     description="Governed multi-agent conversion of product requirements into validated tests.",
 )
 app.add_middleware(OrganizationHttpMiddleware)
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
 
@@ -45,6 +48,13 @@ DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
 class DocumentGenerationResult(DocumentSource):
     suite: TestSuite
     validation: ValidationReport
+    trace: list[AgentEvent] = Field(default_factory=list)
+
+
+class AgentRunResult(BaseModel):
+    suite: TestSuite
+    validation: ValidationReport
+    trace: list[AgentEvent]
 
 
 class CompanyDocument(BaseModel):
@@ -139,6 +149,25 @@ async def generate(
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
 
 
+@app.post("/api/agent/run", response_model=AgentRunResult)
+async def run_agent(
+    request: GenerateRequest,
+    pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
+) -> AgentRunResult:
+    """Give the coordinator a goal and let it choose tools until validation passes."""
+    try:
+        result = await pipeline.run(request)
+        return AgentRunResult(
+            suite=result.suite,
+            validation=result.validation,
+            trace=list(getattr(result, "trace", ())),
+        )
+    except CopilotGenerationError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
+
+
 @app.post("/api/generate/document", response_model=DocumentGenerationResult)
 async def generate_from_document(
     file: UploadFile = File(...),
@@ -160,6 +189,7 @@ async def generate_from_document(
             extracted_characters=len(document.text),
             suite=result.suite,
             validation=result.validation,
+            trace=list(getattr(result, "trace", ())),
         )
     except DocumentIngestionError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

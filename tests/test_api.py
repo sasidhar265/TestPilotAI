@@ -12,6 +12,16 @@ from app.models import TestSuite as Suite
 client = TestClient(app)
 
 
+def test_frontend_assets_are_served() -> None:
+    stylesheet = client.get("/static/styles/index.css")
+    script = client.get("/static/scripts/index.js")
+
+    assert stylesheet.status_code == 200
+    assert "text/css" in stylesheet.headers["content-type"]
+    assert script.status_code == 200
+    assert "javascript" in script.headers["content-type"]
+
+
 def test_home_has_format_radios_and_generation_timer() -> None:
     response = client.get("/")
     assert response.status_code == 200
@@ -24,7 +34,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="publish-panel"' in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
-    assert "Copy scenario" in response.text
+    assert 'src="/static/scripts/index.js"' in response.text
     assert 'id="runtime-health"' in response.text
     assert 'id="server-location"' in response.text
     assert 'id="active-agent"' in response.text
