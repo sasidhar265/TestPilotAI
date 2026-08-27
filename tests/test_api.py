@@ -28,6 +28,10 @@ def test_frontend_assets_are_served() -> None:
 def test_home_has_format_radios_and_generation_timer() -> None:
     response = client.get("/")
     assert response.status_code == 200
+    assert "Risk categories" not in response.text
+    assert "Automation / manual" not in response.text
+    assert "Sole AI runtime" not in response.text
+    assert "Execution topology" not in response.text
     assert 'type="radio" name="format" value="normal"' in response.text
     assert "Manual test" in response.text
     assert "Normal steps" not in response.text

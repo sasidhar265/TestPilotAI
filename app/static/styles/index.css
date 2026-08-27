@@ -201,7 +201,7 @@ body:after {
     .hero {
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1.4fr) minmax(250px,.6fr);
+  grid-template-columns:minmax(0,1fr);
   gap:28px;
   align-items:end;
   margin-bottom:20px;
