@@ -1,4 +1,4 @@
-from app.errors import copilot_error_message
+from app.generator import copilot_error_message
 
 
 def test_authentication_error_has_actionable_message() -> None:

@@ -1,17 +1,18 @@
 from fastapi import Depends
 
-from app.agents import AgentRegistry
-from app.agents.input_agent import InputAgent
+from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.output_agent import OutputAgent
-from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings, get_settings
 from app.generator import CopilotGenerator
 from app.memory import OrganizationalMemory
-from app.services.multi_agent_pipeline import MultiAgentTestPipeline
-from app.services.requirement_to_test_cases import RequirementToTestCaseService
-from app.services.test_generation import TestGenerationService
+from app.services import (
+    MultiAgentTestPipeline,
+    RequirementToTestCaseService,
+    TestGenerationService,
+)
+from app.services.document_ingestion import InputAgent
 
 
 def get_agent_registry(settings: Settings = Depends(get_settings)) -> AgentRegistry:

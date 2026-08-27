@@ -71,8 +71,13 @@ flowchart LR
 
 - `app/main.py`: HTTP transport only.
 - `app/services/`: application use cases and orchestration.
-- `app/agents/contracts.py`: stable agent capability contract.
-- `app/agents/registry.py`: organization runtime allowlist and policy enforcement.
+- `app/agents/__init__.py`: stable agent contracts, discoverable metadata, and organization
+  runtime allowlist policy.
+- `app/services/__init__.py`: generation use cases and the multi-agent pipeline; legacy service
+  import paths remain available for compatibility.
+- `app/services/document_ingestion.py`: bounded document extraction and input-agent normalization.
+- `app/observability.py`: safe logging, request correlation, HTTP protections, and cancellation.
+- `app/agents/test_case_generator_agent.py`: specialist generation and SpecForge routing.
 - `app/generator.py`: GitHub Copilot SDK adapter, prompts, parsing, and quality gate.
 - `app/memory.py`: normalized fingerprinting and repository-local SQLite suite retrieval.
 - `app/models.py`: validated domain and API data contracts.

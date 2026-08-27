@@ -8,8 +8,8 @@ from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.context_converter_agent import ConvertedArtifact
-from app.agents.roles import AgentKind, FunctionalAgentDescriptor
 from app.models import ExportFormat, GenerateRequest, TestSuite
 
 _WORDS = re.compile(r"[a-z0-9]{3,}")

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from openpyxl import Workbook
 
-from app.agents.roles import AgentKind, FunctionalAgentDescriptor
+from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.test_case_validator import ValidationReport
 from app.models import ExportFormat, TestSuite
 

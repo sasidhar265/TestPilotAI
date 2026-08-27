@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from app.agents.roles import AgentKind, FunctionalAgentDescriptor
+from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.models import ExecutionMode, GenerateRequest, TestCase, TestSuite
 
 

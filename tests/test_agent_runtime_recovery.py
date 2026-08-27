@@ -1,7 +1,7 @@
 import pytest
 
 from app.agent_runtime import AgentRuntime
-from app.agents.storage_agent import TestStorageAgent as StorageAgent
+from app.agents import TestStorageAgent as StorageAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings
 from app.memory import OrganizationalMemory

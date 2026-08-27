@@ -9,6 +9,9 @@ from io import BytesIO
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
+from app.agents import AgentKind, FunctionalAgentDescriptor
+from app.models import GenerateRequest, TestFormat
+
 
 class DocumentIngestionError(ValueError):
     """Raised when an uploaded document cannot be safely converted to text."""
@@ -232,3 +235,41 @@ class DocumentIngestionService:
     def _normalize(text: str) -> str:
         lines = (" ".join(line.split()) for line in text.replace("\x00", "").splitlines())
         return "\n".join(line for line in lines if line).strip()
+
+
+class InputAgent:
+    """Normalize text and convert extracted documents into generation requests."""
+
+    descriptor = FunctionalAgentDescriptor(
+        id="input-agent",
+        name="Input Agent",
+        kind=AgentKind.INPUT,
+        purpose="Normalize pasted requirements and extract requirements from supported documents.",
+        runtime="local-deterministic",
+        capabilities=("text", "docx", "pdf", "xlsx", "pages", "numbers", "png-ocr", "jpeg-ocr"),
+    )
+
+    def __init__(self, documents: DocumentIngestionService | None = None) -> None:
+        self.documents = documents or DocumentIngestionService()
+
+    def from_text(
+        self,
+        description: str,
+        additional_context: str = "",
+        output_format: TestFormat = TestFormat.NORMAL,
+    ) -> GenerateRequest:
+        return GenerateRequest(
+            description=description,
+            additional_context=additional_context,
+            output_format=output_format,
+        )
+
+    def from_document(
+        self,
+        filename: str,
+        content: bytes,
+        additional_context: str = "",
+        output_format: TestFormat = TestFormat.NORMAL,
+    ) -> tuple[ExtractedDocument, GenerateRequest]:
+        document = self.documents.extract(filename, content)
+        return document, self.from_text(document.text, additional_context, output_format)

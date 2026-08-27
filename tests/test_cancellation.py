@@ -2,8 +2,7 @@ import asyncio
 
 import pytest
 
-from app.cancellation import GenerationCancellationRegistry
-from app.observability import request_id_context, ui_log_handler
+from app.observability import GenerationCancellationRegistry, request_id_context, ui_log_handler
 
 
 @pytest.mark.asyncio
