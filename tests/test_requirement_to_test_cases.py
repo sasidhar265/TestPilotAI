@@ -21,7 +21,7 @@ from app.models import (
 from app.models import (
     TestSuite as SuiteModel,
 )
-from app.services.requirement_to_test_cases import RequirementToTestCaseService
+from app.services import RequirementToTestCaseService
 
 
 def suite() -> SuiteModel:

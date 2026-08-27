@@ -19,7 +19,7 @@ from app.models import (
 from app.models import (
     TestSuite as Suite,
 )
-from app.services.test_generation import TestGenerationService as GenerationService
+from app.services import TestGenerationService as GenerationService
 
 
 def suite() -> Suite:
