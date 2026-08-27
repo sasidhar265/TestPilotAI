@@ -13,6 +13,7 @@
     <div class="nav-label">Workspace</div>
     <a class="nav-item active" href="/"><span class="nav-dot"></span> Test designer</a>
     <a class="nav-item" href="/documentation"><span class="nav-dot"></span> Documentation</a>
+    <a class="nav-item" href="/logs"><span class="nav-dot"></span> Logs</a>
     <div class="nav-label">Integrations</div>
     <a class="nav-item" href="/documentation#integrations"><span class="nav-dot"></span> Jira Cloud</a>
     <a class="nav-item" href="/documentation#outputs"><span class="nav-dot"></span> Export center</a>
@@ -48,12 +49,12 @@
           <span class="upload-copy" id="upload-copy"><span class="upload-title">Attach a requirements file</span><span class="upload-hint">Click or drag and drop · DOCX, PDF, XLSX, Pages, Numbers, images · max 15 MB</span></span>
           <span class="file-preview hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached file">×</button></span>
         </label>
-        <div class="controls"><fieldset><legend>Test-case format</legend><div class="format-options"><label class="format-option"><input type="radio" name="format" value="normal" checked><span>Manual test</span></label><label class="format-option"><input type="radio" name="format" value="bdd"><span>BDD / Gherkin</span></label></div></fieldset><button class="primary" id="generate" type="submit">Generate Test Scenarios <span class="arrow">→</span></button></div>
+        <div class="controls"><fieldset><legend>Test-case format</legend><div class="format-options"><label class="format-option"><input type="radio" name="format" value="normal" checked><span>Manual test</span></label><label class="format-option"><input type="radio" name="format" value="bdd"><span>BDD / Gherkin</span></label></div></fieldset><div class="generation-actions"><button class="stop hidden" id="stop-generation" type="button"><span class="stop-icon" aria-hidden="true"></span><span>Stop generation</span></button><button class="primary" id="generate" type="submit">Generate Test Scenarios <span class="arrow">→</span></button></div></div>
       </form><div class="run-state"><div class="status" id="status">Agent ready. Add requirements to begin.</div><div class="timer hidden" id="timer" role="timer">00:00</div></div>
     </section>
     <section class="panel results hidden" id="results">
       <div class="results-header"><div><div class="eyebrow">Generated suite</div><h2 id="feature"></h2><div class="summary" id="summary"></div></div><span class="secure">HUMAN REVIEW REQUIRED</span></div>
-      <div class="tools"><button id="select-all" class="secondary">Select all for Jira</button><button id="select-none" class="secondary">Clear selection</button><button id="copy-feature" class="secondary hidden">Copy BDD feature</button><button id="csv" class="secondary">↓ CSV</button><button id="json" class="secondary">↓ JSON</button></div>
+      <div class="tools"><button id="select-all" class="secondary">Select all for Jira</button><button id="select-none" class="secondary">Clear selection</button><button id="download-feature" class="secondary hidden">↓ .feature</button><button id="csv" class="secondary">↓ CSV</button><button id="json" class="secondary">↓ JSON</button></div>
       <div class="cases" id="cases"></div>
       <div class="footer-grid"><details class="subpanel"><summary>Assumptions & coverage intelligence</summary><div id="notes"></div></details></div>
     </section>

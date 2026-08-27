@@ -91,3 +91,38 @@ async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
     assert agent.calls == 1
     assert first.generation_source == GenerationSource.COPILOT
     assert second.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
+
+
+@pytest.mark.asyncio
+async def test_pipeline_memory_hit_does_not_start_agent_runtime(tmp_path) -> None:
+    class FakeCopilot:
+        descriptor = AgentDescriptor(
+            runtime_id="github-copilot",
+            display_name="Fake Copilot",
+            capabilities=frozenset({AgentCapability.TEST_DESIGN}),
+        )
+
+        async def generate(self, request, phase="initial", existing_titles=None) -> Suite:
+            raise AssertionError("Generator must not run for a memory hit")
+
+    class FakeRuntime:
+        calls = 0
+
+        async def run(self, request):
+            self.calls += 1
+            raise AssertionError("Copilot runtime must not start for a memory hit")
+
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    original = GenerateRequest(description="As a user, I want secure sign in.")
+    equivalent = GenerateRequest(description=" AS A USER,  I want secure sign in. ")
+    memory.put(original, suite())
+    service = GenerationService(AgentRegistry(FakeCopilot()), memory)
+    runtime = FakeRuntime()
+    service.pipeline.runtime = runtime  # type: ignore[assignment]
+
+    result = await service.pipeline.run(equivalent)
+
+    assert runtime.calls == 0
+    assert result.suite.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
+    assert result.trace[0].tool == "lookup_memory"
+    assert "Copilot was not contacted" in result.trace[0].summary

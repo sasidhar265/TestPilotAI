@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
@@ -10,6 +11,7 @@ from app.agents.input_agent import InputAgent
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
+from app.cancellation import generation_cancellations
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline, get_test_generation_service
 from app.errors import copilot_error_message
@@ -27,7 +29,7 @@ from app.models import (
     TestFormat,
     TestSuite,
 )
-from app.observability import configure_logging
+from app.observability import configure_logging, request_id_context, ui_log_handler
 from app.services.document_ingestion import DocumentIngestionError
 from app.services.multi_agent_pipeline import MultiAgentTestPipeline
 from app.services.test_generation import TestGenerationService
@@ -43,6 +45,19 @@ app.add_middleware(OrganizationHttpMiddleware)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
+LOGS = Path(__file__).parent / "static" / "logs.html"
+logger = logging.getLogger(__name__)
+
+
+def log_operation_failure(operation: str, status_code: int, error: Exception) -> None:
+    """Record actionable failure context and a payload-free traceback for diagnostics."""
+    logger.error(
+        "operation_failed operation=%s status=%s error_type=%s",
+        operation,
+        status_code,
+        type(error).__name__,
+        exc_info=(type(error), error, error.__traceback__),
+    )
 
 
 class DocumentGenerationResult(DocumentSource):
@@ -87,6 +102,11 @@ async def index() -> FileResponse:
 @app.get("/documentation", include_in_schema=False)
 async def documentation() -> FileResponse:
     return FileResponse(DOCUMENTATION)
+
+
+@app.get("/logs", include_in_schema=False)
+async def logs() -> FileResponse:
+    return FileResponse(LOGS)
 
 
 @app.get("/api/documentation/company/{document_id}", response_model=CompanyDocument)
@@ -136,6 +156,16 @@ async def list_agents() -> list[dict[str, object]]:
     ]
 
 
+@app.get("/api/logs")
+async def application_logs(request_id: str = "", limit: int = 100) -> dict[str, object]:
+    """Return bounded operational logs, optionally filtered by an exact correlation ID."""
+    if request_id and not request_id.isascii():
+        raise HTTPException(status_code=422, detail="Reference ID must contain ASCII characters")
+    safe_limit = max(1, min(limit, 200))
+    entries = ui_log_handler.search(request_id=request_id.strip(), limit=safe_limit)
+    return {"entries": entries, "count": len(entries)}
+
+
 @app.post("/api/generate", response_model=TestSuite)
 async def generate(
     request: GenerateRequest,
@@ -144,8 +174,10 @@ async def generate(
     try:
         return await service.generate(request)
     except CopilotGenerationError as error:
+        log_operation_failure("generate", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
+        log_operation_failure("generate", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
 
 
@@ -155,6 +187,8 @@ async def run_agent(
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> AgentRunResult:
     """Give the coordinator a goal and let it choose tools until validation passes."""
+    request_id = request_id_context.get()
+    generation_cancellations.register(request_id, "agent_test_case_generation")
     try:
         result = await pipeline.run(request)
         return AgentRunResult(
@@ -163,9 +197,13 @@ async def run_agent(
             trace=list(getattr(result, "trace", ())),
         )
     except CopilotGenerationError as error:
+        log_operation_failure("agent_run", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
+        log_operation_failure("agent_run", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
+    finally:
+        generation_cancellations.unregister(request_id)
 
 
 @app.post("/api/generate/document", response_model=DocumentGenerationResult)
@@ -177,6 +215,8 @@ async def generate_from_document(
 ) -> DocumentGenerationResult:
     """Extract requirements, generate test cases, then independently validate them."""
     filename = file.filename or "uploaded-document"
+    request_id = request_id_context.get()
+    generation_cancellations.register(request_id, "document_test_case_generation")
     try:
         result = await pipeline.run_document(
             filename, await file.read(), additional_context, output_format
@@ -192,11 +232,22 @@ async def generate_from_document(
             trace=list(getattr(result, "trace", ())),
         )
     except DocumentIngestionError as error:
+        log_operation_failure("document_generation", 422, error)
         raise HTTPException(status_code=422, detail=str(error)) from error
     except CopilotGenerationError as error:
+        log_operation_failure("document_generation", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
+        log_operation_failure("document_generation", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
+    finally:
+        generation_cancellations.unregister(request_id)
+
+
+@app.post("/api/generation/{request_id}/cancel")
+async def cancel_generation(request_id: str) -> dict[str, bool | str]:
+    cancelled = generation_cancellations.cancel(request_id)
+    return {"request_id": request_id, "cancelled": cancelled}
 
 
 @app.post("/api/generate/expand", response_model=TestSuite)
@@ -207,8 +258,10 @@ async def expand_generation(
     try:
         return await service.expand(expansion)
     except CopilotGenerationError as error:
+        log_operation_failure("expand_generation", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
+        log_operation_failure("expand_generation", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
 
 
@@ -241,6 +294,8 @@ async def publish_to_jira(
     except HTTPException:
         raise
     except RuntimeError as error:
+        log_operation_failure("jira_publish", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
+        log_operation_failure("jira_publish", 502, error)
         raise HTTPException(status_code=502, detail="Jira publish failed") from error

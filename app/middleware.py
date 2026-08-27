@@ -1,5 +1,6 @@
 """Cross-cutting HTTP controls shared by every route."""
 
+import asyncio
 import logging
 import re
 import time
@@ -26,7 +27,7 @@ class OrganizationHttpMiddleware:
 
         headers = dict(scope.get("headers", []))
         supplied = headers.get(b"x-request-id", b"").decode("ascii", "ignore")
-        request_id = supplied if _SAFE_REQUEST_ID.fullmatch(supplied) else uuid4().hex
+        request_id = supplied if _SAFE_REQUEST_ID.fullmatch(supplied) else str(uuid4())
         token = request_id_context.set(request_id)
         started = time.perf_counter()
         status_code = 500
@@ -50,9 +51,19 @@ class OrganizationHttpMiddleware:
 
         try:
             await self.app(scope, receive, send_with_headers)
+        except asyncio.CancelledError:
+            status_code = 499
+            raise
         finally:
             duration_ms = round((time.perf_counter() - started) * 1000, 2)
-            logger.info(
+            log = (
+                logger.error
+                if status_code >= 500
+                else logger.warning
+                if status_code >= 400
+                else logger.info
+            )
+            log(
                 "request_complete method=%s path=%s status=%s duration_ms=%s",
                 scope.get("method"),
                 scope.get("path"),

@@ -12,7 +12,7 @@ The demonstration shows how an automation tester can:
   automation and two manual cases;
 - choose manual test steps or SpecFlow-compatible BDD;
 - generate `Scenario Outline` and `Examples` tables for data-driven coverage;
-- copy individual scenarios or an entire `.feature` file;
+- copy individual scenarios or download an entire `.feature` file;
 - export results as CSV or JSON; and
 - explicitly publish selected scenarios to Jira when Jira is configured.
 
@@ -168,9 +168,9 @@ Examples:
   | valid      | short        | Password is invalid    |
 ```
 
-Use **Copy scenario** to copy one block. Use **Copy BDD feature** to copy all scenarios with a
-generated `Feature:` header. Explain that the copied content is designed to be pasted into a
-SpecFlow `.feature` file, after which the automation team implements or reuses the corresponding
+Use **Copy scenario** to copy one block. Use **↓ .feature** to download all scenarios with a
+generated `Feature:` header as a SpecFlow `.feature` file, after which the automation team
+implements or reuses the corresponding
 step definitions.
 
 Generated Gherkin must still be reviewed against the team's vocabulary, binding conventions,

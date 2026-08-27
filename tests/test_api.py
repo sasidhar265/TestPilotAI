@@ -2,12 +2,13 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline, get_test_generation_service
-from app.main import app
+from app.main import app, log_operation_failure
 from app.models import ExecutionMode
 from app.models import TestCase as Case
 from app.models import TestCategory as Category
 from app.models import TestStep as Step
 from app.models import TestSuite as Suite
+from app.observability import request_id_context, ui_log_handler
 
 client = TestClient(app)
 
@@ -30,7 +31,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Normal steps" not in response.text
     assert 'type="radio" name="format" value="bdd"' in response.text
     assert 'id="timer" role="timer"' in response.text
-    assert 'id="copy-feature"' in response.text
+    assert 'id="download-feature"' in response.text
+    assert "↓ .feature" in response.text
+    assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
@@ -44,6 +47,51 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="orchestration-details"' in response.text
     assert "TestGenerationService" in response.text
     assert "Copilot SDK + CLI" in response.text
+    assert 'href="/logs"' in response.text
+
+
+def test_logs_page_has_search_and_navigation() -> None:
+    response = client.get("/logs")
+    assert response.status_code == 200
+    assert 'id="log-reference"' in response.text
+    assert 'id="search-logs"' in response.text
+    assert 'href="/documentation"' in response.text
+
+
+def test_logs_can_be_searched_by_failure_reference_id() -> None:
+    reference_id = "test-failure-reference-guid"
+    failed = client.get("/api/not-found", headers={"X-Request-ID": reference_id})
+
+    assert failed.status_code == 404
+    assert failed.headers["x-request-id"] == reference_id
+
+    response = client.get("/api/logs", params={"request_id": reference_id})
+    assert response.status_code == 200
+    entries = response.json()["entries"]
+    assert len(entries) == 1
+    assert entries[0]["request_id"] == reference_id
+    assert entries[0]["level"] == "WARNING"
+    assert "status=404" in entries[0]["message"]
+
+
+def test_failure_logs_include_payload_free_technical_details() -> None:
+    reference_id = "detailed-failure-guid"
+    token = request_id_context.set(reference_id)
+    try:
+        try:
+            raise ValueError("private submitted requirement")
+        except ValueError as error:
+            log_operation_failure("test_operation", 502, error)
+    finally:
+        request_id_context.reset(token)
+
+    entry = ui_log_handler.search(request_id=reference_id)[0]
+    assert "operation=test_operation" in entry["message"]
+    assert "status=502" in entry["message"]
+    assert "error_type=ValueError" in entry["message"]
+    assert "ValueError" in entry["exception"]
+    assert "test_failure_logs_include_payload_free_technical_details" in entry["exception"]
+    assert "private submitted requirement" not in entry["exception"]
 
 
 def test_health_reports_configuration() -> None:
