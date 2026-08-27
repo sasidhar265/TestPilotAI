@@ -20,9 +20,9 @@ def test_json_object_rejects_non_json_output() -> None:
 
 def test_initial_prompt_requests_small_poc_suite_in_one_response() -> None:
     prompt = user_prompt(GenerateRequest(description="As a user, I want secure sign in."))
-    assert "4 to 5 concise, high-level scenarios in one response" in prompt
+    assert "2 to 3 concise, high-level scenarios in one response" in prompt
     assert "at least 2 automation" in prompt
-    assert "at least 2 genuinely manual" in prompt
+    assert "2 genuinely manual" in prompt
     assert "exactly the 2 highest-value cases" not in prompt
 
 
@@ -39,3 +39,14 @@ def test_prompt_requires_automation_feasibility_classification() -> None:
     prompt = user_prompt(GenerateRequest(description="As a user, I want secure sign in."))
     assert "execution_mode" in prompt
     assert "feasibility_reason" in prompt
+
+
+def test_manual_specialist_prompt_restricts_execution_mode() -> None:
+    prompt = user_prompt(
+        GenerateRequest(
+            description="Explore the sign-in experience manually.", generation_target="manual"
+        )
+    )
+
+    assert "Generate only manual cases" in prompt
+    assert "Every execution_mode must be manual" in prompt

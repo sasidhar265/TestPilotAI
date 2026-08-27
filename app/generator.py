@@ -7,14 +7,17 @@ from pydantic import ValidationError
 
 from app.agents.contracts import AgentCapability, AgentDescriptor
 from app.config import Settings
-from app.models import GenerateRequest, TestCase, TestFormat, TestSuite
+from app.models import GenerateRequest, GenerationTarget, TestCase, TestFormat, TestSuite
 
 SYSTEM_PROMPT = """You are a senior QA engineer. Turn product requirements into a concise,
 executable test suite. Classify every case as exactly one of critical, smoke, sanity, or
 regression. Include positive, negative, boundary, authorization, accessibility, and failure
 cases where relevant. Every step needs an observable expected result. Generate synthetic data
 only. List uncertainty as assumptions. Never contradict an explicit requirement. Do not repeat
-scenarios. Map each acceptance criterion to test cases.
+scenarios. Map each acceptance criterion to test cases. Treat explicitly labelled business rules
+(for example BR-1) like acceptance criteria: preserve their meaning and include each covered rule
+in acceptance_criteria_covered. Test steps must demonstrate the stated rule and must not invent
+conflicting behavior.
 
 Classify every case as `automation` or `manual`. Choose automation when execution is repeatable,
 deterministic, observable through stable UI/API/system interfaces, and valuable to rerun. Choose
@@ -22,11 +25,6 @@ manual for exploratory testing, subjective usability or visual judgment, one-off
 physical/hardware interaction, CAPTCHA/biometric challenges, or cases whose reliable automation
 cost clearly exceeds their repeat value. Do not mark a case manual merely because it is complex.
 Provide a concise, case-specific feasibility_reason for every decision.
-
-For each POC suite, include at least 2 automation scenarios and at least 2 manual scenarios. The
-manual scenarios must exercise meaningful human-dependent risks such as exploratory behavior,
-usability, visual clarity, accessibility experience, or subjective content quality. Do not take
-an otherwise deterministic automated scenario and relabel it as manual just to meet the mix.
 
 For BDD output, write executable Gherkin compatible with SpecFlow. Use `Scenario:` for a single
 flow. Use `Scenario Outline:` with `<parameter>` placeholders and a complete `Examples:` table
@@ -88,6 +86,24 @@ def user_prompt(
     phase: str = "initial",
     existing_titles: list[str] | None = None,
 ) -> str:
+    target_instructions = {
+        GenerationTarget.MANUAL: (
+            "Generate only manual cases. Every execution_mode must be manual. Focus on genuinely "
+            "human-dependent exploratory, usability, visual, accessibility-experience, subjective "
+            "quality, physical, CAPTCHA, or biometric risks."
+        ),
+        GenerationTarget.AUTOMATION: (
+            "Generate only automation cases. Every execution_mode must be automation. Focus on "
+            "repeatable, deterministic scenarios observable through stable UI, API, or system "
+            "interfaces and suitable for continuous execution."
+        ),
+        GenerationTarget.BOTH: (
+            "Generate a balanced suite with at least 2 automation and 2 genuinely manual cases."
+        ),
+        GenerationTarget.AUTO: (
+            "Generate a balanced suite with at least 2 automation and 2 genuinely manual cases."
+        ),
+    }
     format_instruction = (
         "Populate gherkin for every case with copy-ready SpecFlow syntax. Use Scenario for a "
         "single flow. Use Scenario Outline with <parameter> placeholders and an Examples table "
@@ -98,11 +114,10 @@ def user_prompt(
         else "Use structured manual-test steps and set gherkin to null."
     )
     coverage_instruction = (
-        "Generate 4 to 5 concise, high-level scenarios in one response: at least 2 automation "
-        "scenarios and at least 2 genuinely manual scenarios. Prioritize the critical business "
-        "path, one important negative case, and the highest risks. Use one or two short steps per "
-        "scenario and keep every field brief. This is a proof of concept, so do not attempt "
-        "exhaustive coverage."
+        "Generate 2 to 3 concise, high-level scenarios in one response. Prioritize the critical "
+        "business path, one important negative case, and the highest risks. Use one or two short "
+        "steps per scenario and keep every field brief. This is a proof of concept, so keep "
+        "coverage selective rather than exhaustive."
         if phase == "initial"
         else "Generate the remaining distinct regression, boundary, permissions, state, recovery, "
         "accessibility, integration-failure, and risk-based pairwise coverage."
@@ -110,6 +125,9 @@ def user_prompt(
     exclusions = "\n".join(f"- {title}" for title in (existing_titles or [])) or "None"
     schema = json.dumps(TestSuite.model_json_schema(), separators=(",", ":"))
     return f"""{coverage_instruction}
+
+SPECIALIST ACTION
+{target_instructions[request.generation_target]}
 
 OUTPUT FORMAT
 {format_instruction}

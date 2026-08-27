@@ -21,7 +21,8 @@ class OrganizationalMemory:
             "description": " ".join(request.description.casefold().split()),
             "additional_context": " ".join(request.additional_context.casefold().split()),
             "output_format": request.output_format.value,
-            "schema_version": 1,
+            "generation_target": request.generation_target.value,
+            "schema_version": 2,
         }
         value = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(value.encode("utf-8")).hexdigest()

@@ -65,6 +65,15 @@ def test_memory_separates_normal_and_bdd_formats(tmp_path) -> None:
     assert memory.get(bdd) is None
 
 
+def test_memory_separates_generation_targets(tmp_path) -> None:
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    both = GenerateRequest(description="As a user, I want secure sign in.")
+    manual = GenerateRequest(description=both.description, generation_target="manual")
+    memory.put(both, suite())
+
+    assert memory.get(manual) is None
+
+
 def test_disabled_memory_does_not_store_suite(tmp_path) -> None:
     memory = OrganizationalMemory(tmp_path / "memory.db", enabled=False)
     request = GenerateRequest(description="As a user, I want secure sign in.")
@@ -88,7 +97,18 @@ async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
 
         async def generate(self, request, phase="initial", existing_titles=None) -> Suite:
             self.calls += 1
-            return suite()
+            generated = suite()
+            if request.generation_target == "manual":
+                manual = generated.test_cases[0].model_copy(
+                    update={
+                        "title": "Explore unusual sign-in behavior",
+                        "objective": "Identify confusing recovery behavior",
+                        "execution_mode": ExecutionMode.MANUAL,
+                        "feasibility_reason": "Requires human exploratory judgment",
+                    }
+                )
+                return generated.model_copy(update={"test_cases": [manual]})
+            return generated
 
     agent = FakeCopilot()
     service = GenerationService(AgentRegistry(agent), OrganizationalMemory(tmp_path / "memory.db"))
@@ -97,7 +117,7 @@ async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
     first = await service.generate(request)
     second = await service.generate(request)
 
-    assert agent.calls == 1
+    assert agent.calls == 2
     assert first.generation_source == GenerationSource.COPILOT
     assert second.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
 

@@ -1,7 +1,7 @@
 /* Page behavior only. The matching HTML defines structure and CSS defines appearance. */
 
 const useCases= {
-  input:'Use case: turn pasted text or uploaded documents into one normalized requirement request.','test-case-generator':'Use case: create concise manual and automated scenarios from normalized product intent.',validator:'Use case: independently identify quality and traceability problems before reuse or publication.','test-storage':'Use case: reuse a previously validated suite when the same requirement is submitted again.'
+  input:'Use case: turn pasted text or uploaded documents into one normalized requirement request.','specforge-router':'Use case: choose manual generation, automation generation, or both from the requested action.','manual-test-generator':'Use case: create exploratory and human-judgment test scenarios.','automation-test-generator':'Use case: create repeatable UI, API, and integration test scenarios.',validator:'Use case: independently identify quality and traceability problems before reuse or publication.','context-converter':'Use case: convert approved tests into Xray-ready CSV, Excel, or JSON files.',output:'Use case: retain approved exports and supply relevant examples as organizational knowledge.','test-storage':'Use case: reuse a previously validated suite when the same requirement is submitted again.'
 };
 const esc=value=>String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 function inlineMarkdown(value){return esc(value).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}

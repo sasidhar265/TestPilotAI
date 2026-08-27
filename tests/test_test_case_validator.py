@@ -119,3 +119,30 @@ def test_free_form_requirements_still_check_case_traceability() -> None:
 
     assert report.acceptance_criteria_total == 0
     assert any(item.dimension == ValidationDimension.TRACEABILITY for item in report.findings)
+
+
+def test_manual_quality_gate_checks_business_rules_and_execution_mode() -> None:
+    request = GenerateRequest(
+        description="""Account lockout
+BR-1: Lock the account after five failed sign-in attempts""",
+        generation_target="manual",
+    )
+    suite = Suite(
+        feature_name="Account lockout",
+        test_cases=[
+            case(
+                "TC-001",
+                "Inspect account lockout",
+                "Verify the lockout threshold",
+                "",
+                "The account is locked after the fifth failed attempt",
+            )
+        ],
+    )
+
+    report = Validator().validate(request, suite, expected_mode=ExecutionMode.MANUAL)
+    dimensions = {finding.dimension for finding in report.findings}
+
+    assert not report.passed
+    assert ValidationDimension.COVERAGE in dimensions
+    assert ValidationDimension.EXECUTION_MODE in dimensions

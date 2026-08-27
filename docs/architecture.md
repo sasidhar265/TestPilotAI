@@ -8,14 +8,29 @@ improves testability, and makes capabilities explicit; it does not enable runtim
 
 ## Functional agents
 
-The application is coordinated as four explicit roles under `app/agents/`:
+The application is coordinated as six explicit roles under `app/agents/`. SpecForge routes an
+explicit `generation_target`, or infers intent from terms such as Playwright, automation,
+manual test, exploratory, and usability. Ambiguous or neutral requests fan out to both specialists.
 
 1. `InputAgent` normalizes pasted text or extracts requirements from supported documents.
-2. `TestCaseGeneratorAgent` uses the approved GitHub Copilot adapter to create both manual and
-   automation scenarios.
-3. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
-   and expected results.
-4. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
+2. `TestCaseGeneratorAgent` is the SpecForge router that resolves the requested action.
+3. `ManualTestCaseGeneratorAgent` creates human-led test scenarios.
+4. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
+   creates only repeatable deterministic UI, API, integration, or BDD automation scenarios. Its
+   generation request always asks for executable Gherkin so scenarios can be packaged as a
+   framework-compatible `.feature` file; parameterized outlines retain complete Examples tables.
+5. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
+   expected results, business-rule alignment, and specialist execution mode. Manual output is
+   gated immediately after generation; both manual and automation output receive one
+   findings-driven revision and cannot proceed if the revised suite still fails.
+6. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
+   CSV, Excel, JSON, or Gherkin `.feature` interchange files.
+7. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
+   organizational knowledge source. This is retrieval-augmented generation, not model training;
+   current business requirements always take precedence over retrieved examples. Feature files
+   are retained as artifacts, while each Scenario or Scenario Outline is also stored as an
+   individually indexed record with its mode, Gherkin, and requirement mappings.
+8. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
 
 `MultiAgentTestPipeline` owns their execution order. A newly generated suite is stored only
 when validation has no error findings. Retrieved suites are validated again before return.
@@ -58,12 +73,12 @@ explicit user operation.
 ## Request flow
 
 1. FastAPI validates the request with Pydantic.
-2. `TestGenerationService` fingerprints the normalized requirement, context, and format.
+2. `TestGenerationService` fingerprints the requirement, context, format, and generation target.
 3. A known exact match returns immediately from organizational memory without calling Copilot.
 4. Otherwise, the approved registry supplies the test-design agent and `CopilotGenerator` opens
    a restricted authenticated session.
-5. Copilot returns structured JSON containing 4–5 scenarios with at least two automation and two
-   manual cases.
+5. SpecForge calls the selected specialist, or both specialists concurrently, and combines their
+   structured suites.
 6. The quality gate validates automation/manual feasibility, deduplicates, caps, and formats the
    result.
 7. The suite is stored in organizational memory and rendered as manual test steps or SpecFlow Gherkin.

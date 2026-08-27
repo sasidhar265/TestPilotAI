@@ -2,7 +2,8 @@
 
 A local web application that turns a user story, feature description, or acceptance criteria
 into structured test cases. It classifies cases as critical, smoke, sanity, or regression,
-generates safe synthetic test data, exports CSV/JSON, and can attach the CSV to a Jira Cloud
+generates safe synthetic test data, exports Xray-ready CSV/Excel/JSON through the Context
+Converter Agent, and can attach the CSV to a Jira Cloud
 story with a summary comment.
 
 Requirements can be pasted or uploaded as Word (`.docx`), text PDF, Excel (`.xlsx`), Apple
@@ -12,8 +13,8 @@ from the Mac as PDF or XLSX. A document-ingestion component extracts normalized 
 agent generates the suite, and an independent validator reports coverage, traceability,
 duplicates, clarity, and expected-result quality. Image extraction uses local Tesseract OCR.
 
-The functional pipeline is split into four discoverable agents: Input, Manual & Automation Test
-Case Generator, Validator, and Test Storage. `GET /api/agents` lists their responsibilities,
+The functional pipeline uses discoverable agents: Input, SpecForge Router, focused Manual and
+Automation Test Case Generators, Validator, and Test Storage. `GET /api/agents` lists their responsibilities,
 runtimes, and capabilities. Only suites that pass independent validation are newly stored for
 future exact-match reuse.
 

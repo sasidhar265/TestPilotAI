@@ -1,8 +1,8 @@
 from fastapi import Depends
 
-from app.agent_runtime import AgentRuntime
 from app.agents import AgentRegistry
 from app.agents.input_agent import InputAgent
+from app.agents.output_agent import OutputAgent
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
@@ -49,8 +49,11 @@ def get_multi_agent_pipeline(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
     )
-    generator = TestCaseGeneratorAgent(registry)
     validator = TestCaseValidatorAgent()
+    knowledge_source = OutputAgent(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
+    generator = TestCaseGeneratorAgent(registry, validator, knowledge_source)
     storage = TestStorageAgent(memory)
-    runtime = AgentRuntime(settings, generator, validator, storage)
-    return MultiAgentTestPipeline(InputAgent(), generator, validator, storage, runtime)
+    return MultiAgentTestPipeline(InputAgent(), generator, validator, storage)

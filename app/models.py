@@ -20,9 +20,25 @@ class ExecutionMode(StrEnum):
     MANUAL = "manual"
 
 
+class GenerationTarget(StrEnum):
+    """Specialist generation route requested by the caller."""
+
+    AUTO = "auto"
+    MANUAL = "manual"
+    AUTOMATION = "automation"
+    BOTH = "both"
+
+
 class GenerationSource(StrEnum):
     COPILOT = "copilot"
     ORGANIZATIONAL_MEMORY = "organizational-memory"
+
+
+class ExportFormat(StrEnum):
+    CSV = "csv"
+    EXCEL = "xlsx"
+    JSON = "json"
+    FEATURE = "feature"
 
 
 class TestStep(BaseModel):
@@ -72,6 +88,7 @@ class GenerateRequest(BaseModel):
     description: str = Field(min_length=10, max_length=30_000)
     additional_context: str = Field(default="", max_length=10_000)
     output_format: TestFormat = TestFormat.NORMAL
+    generation_target: GenerationTarget = GenerationTarget.AUTO
 
     @field_validator("description")
     @classmethod

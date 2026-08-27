@@ -7,7 +7,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.agent_runtime import AgentEvent
+from app.agents.context_converter_agent import ContextConversionError, ContextConverterAgent
 from app.agents.input_agent import InputAgent
+from app.agents.output_agent import OutputAgent
+from app.agents.specialist_agents import (
+    AutomationTestCaseGeneratorAgent,
+    ManualTestCaseGeneratorAgent,
+)
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
@@ -23,6 +29,7 @@ from app.middleware import OrganizationHttpMiddleware
 from app.models import (
     DocumentSource,
     ExpandRequest,
+    ExportFormat,
     GenerateRequest,
     JiraPublishRequest,
     JiraPublishResult,
@@ -70,6 +77,11 @@ class AgentRunResult(BaseModel):
     suite: TestSuite
     validation: ValidationReport
     trace: list[AgentEvent]
+
+
+class ContextConversionRequest(BaseModel):
+    suite: TestSuite
+    validation: ValidationReport
 
 
 class CompanyDocument(BaseModel):
@@ -124,6 +136,10 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
     )
+    output_agent = OutputAgent(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
     return {
         "ok": True,
         "execution_host": "local-fastapi-uvicorn",
@@ -136,6 +152,8 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
         if settings.organizational_memory_enabled
         else "disabled",
         "organizational_memory_entries": memory.count(),
+        "approved_output_entries": output_agent.count(),
+        "approved_scenario_entries": output_agent.scenario_count(),
         "jira_configured": all(
             [settings.jira_base_url, settings.jira_email, settings.jira_api_token]
         ),
@@ -150,7 +168,11 @@ async def list_agents() -> list[dict[str, object]]:
         for agent in (
             InputAgent.descriptor,
             TestCaseGeneratorAgent.descriptor,
+            ManualTestCaseGeneratorAgent.descriptor,
+            AutomationTestCaseGeneratorAgent.descriptor,
             TestCaseValidatorAgent.descriptor,
+            ContextConverterAgent.descriptor,
+            OutputAgent.descriptor,
             TestStorageAgent.descriptor,
         )
     ]
@@ -186,7 +208,7 @@ async def run_agent(
     request: GenerateRequest,
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> AgentRunResult:
-    """Give the coordinator a goal and let it choose tools until validation passes."""
+    """Run the deterministic SpecForge coordinator and its governed specialists."""
     request_id = request_id_context.get()
     generation_cancellations.register(request_id, "agent_test_case_generation")
     try:
@@ -271,6 +293,28 @@ async def export_csv(suite: TestSuite) -> Response:
         suite_to_csv(suite),
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="test-cases.csv"'},
+    )
+
+
+@app.post("/api/context-converter/{output_format}")
+async def convert_validated_context(
+    output_format: ExportFormat,
+    request: ContextConversionRequest,
+    settings: Settings = Depends(get_settings),
+) -> Response:
+    """Convert only quality-gate-approved output into Xray/Jira interchange files."""
+    try:
+        artifact = ContextConverterAgent().convert(request.suite, request.validation, output_format)
+        OutputAgent(
+            settings.organizational_memory_path,
+            enabled=settings.organizational_memory_enabled,
+        ).store(request.suite, output_format, artifact)
+    except ContextConversionError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    return Response(
+        artifact.content,
+        media_type=artifact.media_type,
+        headers={"Content-Disposition": f'attachment; filename="{artifact.filename}"'},
     )
 
 

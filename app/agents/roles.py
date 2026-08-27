@@ -7,8 +7,12 @@ from pydantic import BaseModel, ConfigDict
 
 class AgentKind(StrEnum):
     INPUT = "input"
-    GENERATOR = "test-case-generator"
+    ROUTER = "specforge-router"
+    MANUAL_GENERATOR = "manual-test-generator"
+    AUTOMATION_GENERATOR = "automation-test-generator"
     VALIDATOR = "validator"
+    CONTEXT_CONVERTER = "context-converter"
+    OUTPUT = "output"
     STORAGE = "test-storage"
 
 

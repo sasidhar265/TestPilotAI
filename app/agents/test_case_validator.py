@@ -4,7 +4,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from app.agents.roles import AgentKind, FunctionalAgentDescriptor
-from app.models import GenerateRequest, TestCase, TestSuite
+from app.models import ExecutionMode, GenerateRequest, TestCase, TestSuite
 
 
 class ValidationSeverity(StrEnum):
@@ -18,6 +18,7 @@ class ValidationDimension(StrEnum):
     DUPLICATES = "duplicates"
     CLARITY = "clarity"
     EXPECTED_RESULTS = "expected-results"
+    EXECUTION_MODE = "execution-mode"
 
 
 class ValidationFinding(BaseModel):
@@ -37,7 +38,8 @@ class ValidationReport(BaseModel):
 
 
 _AC_LINE = re.compile(
-    r"^\s*(?:[-*]\s*)?((?:AC[-_ ]?\d+)|(?:acceptance criterion\s*\d*))\s*[:.)-]\s*(.+)$",
+    r"^\s*(?:[-*]\s*)?((?:AC|BR)[-_ ]?\d+|(?:acceptance criterion|business rule)\s*\d*)"
+    r"\s*[:.)-]\s*(.+)$",
     re.IGNORECASE,
 )
 _VAGUE = re.compile(
@@ -81,15 +83,39 @@ class TestCaseValidatorAgent:
         kind=AgentKind.VALIDATOR,
         purpose="Independently assess generated test cases before they are stored or published.",
         runtime="local-deterministic",
-        capabilities=("coverage", "traceability", "duplicates", "clarity", "expected-results"),
+        capabilities=(
+            "business-rule-coverage",
+            "traceability",
+            "duplicates",
+            "clarity",
+            "expected-results",
+            "execution-mode",
+        ),
     )
 
-    def validate(self, request: GenerateRequest, suite: TestSuite) -> ValidationReport:
+    def validate(
+        self,
+        request: GenerateRequest,
+        suite: TestSuite,
+        expected_mode: ExecutionMode | None = None,
+    ) -> ValidationReport:
         findings: list[ValidationFinding] = []
         criteria = _criteria(request.description)
         mappings: dict[str, set[str]] = {}
 
         for case in suite.test_cases:
+            if expected_mode is not None and case.execution_mode != expected_mode:
+                findings.append(
+                    ValidationFinding(
+                        dimension=ValidationDimension.EXECUTION_MODE,
+                        severity=ValidationSeverity.ERROR,
+                        message=(
+                            f"Case must be classified as {expected_mode.value} for this "
+                            "specialist route."
+                        ),
+                        test_case_ids=[case.id],
+                    )
+                )
             if not case.acceptance_criteria_covered:
                 findings.append(
                     ValidationFinding(

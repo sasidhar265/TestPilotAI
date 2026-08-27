@@ -1,5 +1,6 @@
 from app.agents import AgentRegistry
 from app.agents.input_agent import InputAgent
+from app.agents.output_agent import OutputAgent
 from app.agents.storage_agent import TestStorageAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
@@ -14,10 +15,12 @@ class TestGenerationService:
     def __init__(self, registry: AgentRegistry, memory: OrganizationalMemory) -> None:
         self.registry = registry
         self.memory = memory
+        validator = TestCaseValidatorAgent()
+        knowledge_source = OutputAgent(memory.path, memory.enabled)
         self.pipeline = MultiAgentTestPipeline(
             InputAgent(),
-            TestCaseGeneratorAgent(registry),
-            TestCaseValidatorAgent(),
+            TestCaseGeneratorAgent(registry, validator, knowledge_source),
+            validator,
             TestStorageAgent(memory),
         )
 

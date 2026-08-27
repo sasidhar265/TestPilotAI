@@ -226,5 +226,45 @@ class AgentRuntime:
                     raise CopilotGenerationError("The coordinator agent timed out.") from error
 
         if not finished or suite is None or validation is None:
-            raise CopilotGenerationError("The coordinator stopped before completing the goal.")
+            return await self._recover_incomplete_run(request, suite, validation, trace)
+        return AgentOutcome(suite=suite, validation=validation, trace=trace)
+
+    async def _recover_incomplete_run(
+        self,
+        request: GenerateRequest,
+        suite: TestSuite | None,
+        validation: ValidationReport | None,
+        trace: list[AgentEvent],
+    ) -> AgentOutcome:
+        """Complete safely when the model-directed coordinator idles prematurely."""
+
+        def record(tool: str, status: str, summary: str) -> None:
+            trace.append(
+                AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
+            )
+
+        record(
+            "coordinator_recovery",
+            "started",
+            "Coordinator became idle before completion; using the governed fallback workflow.",
+        )
+        if suite is None:
+            suite = await self.generator.generate(request)
+            record(
+                "design_test_suite",
+                "success",
+                f"Fallback designed {len(suite.test_cases)} cases through SpecForge.",
+            )
+        if validation is None:
+            validation = self.validator.validate(request, suite)
+            status = "passed" if validation.passed else "failed"
+            record("validate_test_suite", status, f"Quality score: {validation.score}/100.")
+        if not validation.passed:
+            raise CopilotGenerationError(
+                "The recovered test suite did not pass the quality gate. Try adding explicit "
+                "acceptance criteria to the requirement."
+            )
+        suite = self.storage.store(request, suite)
+        record("store_validated_suite", "success", "Saved the recovered approved suite.")
+        record("finish_run", "success", "Recovered coordinator run completed successfully.")
         return AgentOutcome(suite=suite, validation=validation, trace=trace)

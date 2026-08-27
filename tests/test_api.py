@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
@@ -146,12 +148,17 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     agents = response.json()
     assert [agent["kind"] for agent in agents] == [
         "input",
-        "test-case-generator",
+        "specforge-router",
+        "manual-test-generator",
+        "automation-test-generator",
         "validator",
+        "context-converter",
+        "output",
         "test-storage",
     ]
-    assert agents[1]["runtime"] == "github-copilot"
-    assert agents[3]["runtime"] == "local-sqlite"
+    assert agents[1]["runtime"] == "local-router"
+    assert agents[2]["runtime"] == "github-copilot"
+    assert agents[7]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:
@@ -317,3 +324,23 @@ def test_jira_rejects_unknown_selected_case_id_before_publish(monkeypatch) -> No
 
     assert response.status_code == 422
     assert "Unknown selected test case IDs" in response.json()["detail"]
+
+
+def test_context_converter_endpoint_requires_passing_validation() -> None:
+    suite = StubGenerationService()
+    generated = asyncio.run(suite.generate(type("Request", (), {"output_format": "normal"})()))
+    payload = {
+        "suite": generated.model_dump(mode="json"),
+        "validation": {
+            "passed": False,
+            "score": 70,
+            "acceptance_criteria_total": 1,
+            "acceptance_criteria_covered": 0,
+            "findings": [],
+        },
+    }
+
+    response = client.post("/api/context-converter/xlsx", json=payload)
+
+    assert response.status_code == 422
+    assert "quality-gate-approved" in response.json()["detail"]
