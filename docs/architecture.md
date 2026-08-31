@@ -14,6 +14,12 @@ allowlisted set of those files into Copilot sessions. Python remains the governe
 so Markdown instructions cannot bypass typed schemas, quality gates, storage rules, or security
 boundaries.
 
+All Copilot-backed agents use `app/agents/runner.py`. This shared runtime owns authentication,
+restricted session configuration, event handling, timeouts, JSON extraction, and Pydantic output
+validation. A small `StructuredAgentDefinition` declares each agent's output model and safe error
+messages. Agent-specific Python therefore supplies only typed contracts and request envelopes;
+behavior, domain rules, and generation policy stay in the corresponding Markdown files.
+
 Team or project requirements are layered from `.github/agent-profiles/<AGENT_PROFILE>/profile.md`.
 Optional per-agent Markdown in the same directory adds domain-specific terminology, test risks,
 framework conventions, and output rules. Profile names are path-safe, the profile must exist, and
@@ -86,7 +92,9 @@ flowchart LR
 - `app/services/document_ingestion.py`: bounded document extraction and input-agent normalization.
 - `app/observability.py`: safe logging, request correlation, HTTP protections, and cancellation.
 - `app/agents/test_case_generator_agent.py`: specialist generation and SpecForge routing.
-- `app/generator.py`: GitHub Copilot SDK adapter, prompts, parsing, and quality gate.
+- `app/agents/runner.py`: the single GitHub Copilot SDK session and structured-output runtime.
+- `app/generator.py`: test-suite request envelopes, normalization, and declarative agent contract.
+- `app/agents/reqnroll_step_definition_agent.py`: ReqnRoll schemas and a thin shared-runtime adapter.
 - `app/memory.py`: normalized fingerprinting and repository-local SQLite suite retrieval.
 - `app/models.py`: validated domain and API data contracts.
 - `app/jira.py` and `app/exporter.py`: outbound integrations.
@@ -104,7 +112,7 @@ explicit user operation.
 3. A known exact match returns immediately from organizational memory without calling Copilot.
 4. Otherwise, the approved registry supplies the test-design agent and `CopilotGenerator` opens
    a restricted authenticated session.
-5. SpecForge calls the selected specialist, or both specialists concurrently, and combines their
+5. SpecForge calls the selected specialist, or both specialists sequentially, and combines their
    structured suites.
 6. The quality gate validates automation/manual feasibility, deduplicates, caps, and formats the
    result.

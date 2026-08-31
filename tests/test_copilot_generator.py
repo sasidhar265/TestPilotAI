@@ -1,8 +1,8 @@
 import pytest
 
+from app.agents.runner import json_object
 from app.config import Settings
 from app.generator import (
-    _json_object,
     _normalize_suite_payload,
     create_generator,
     system_prompt,
@@ -17,46 +17,54 @@ def test_create_generator_always_returns_copilot() -> None:
 
 
 def test_json_object_accepts_accidental_markdown_fence() -> None:
-    assert _json_object('```json\n{"feature_name":"Login"}\n```') == '{"feature_name":"Login"}'
+    assert json_object('```json\n{"feature_name":"Login"}\n```') == '{"feature_name":"Login"}'
 
 
 def test_json_object_rejects_non_json_output() -> None:
     with pytest.raises(ValueError, match="No JSON object"):
-        _json_object("I could not generate the suite")
+        json_object("I could not generate the suite")
 
 
-def test_initial_prompt_requests_small_poc_suite_in_one_response() -> None:
+def test_request_prompt_contains_data_not_agent_policy() -> None:
     prompt = user_prompt(GenerateRequest(description="As a user, I want secure sign in."))
-    assert "2 to 3 concise, high-level scenarios in one response" in prompt
-    assert "at least 2 automation" in prompt
-    assert "2 genuinely manual" in prompt
-    assert "exactly the 2 highest-value cases" not in prompt
+
+    assert '"phase": "initial"' in prompt
+    assert '"generation_target": "auto"' in prompt
+    assert "As a user, I want secure sign in." in prompt
+    assert "Generate two or three" not in prompt
+    assert "Generate only manual cases" not in prompt
 
 
-def test_bdd_prompt_requests_specflow_outlines_and_examples() -> None:
-    prompt = user_prompt(
-        GenerateRequest(description="As a user, I want secure sign in.", output_format="bdd")
+def test_markdown_policy_requests_specflow_outlines_and_examples() -> None:
+    prompt = system_prompt(
+        GenerateRequest(
+            description="Automate secure sign in.",
+            output_format="bdd",
+            generation_target="automation",
+        ),
+        profile="testpilot",
     )
-    assert "copy-ready SpecFlow syntax" in prompt
+
+    assert "copy-ready SpecFlow Gherkin" in prompt
     assert "Scenario Outline" in prompt
-    assert "Examples table" in prompt
+    assert "complete `Examples`" in prompt
 
 
 def test_prompt_requires_automation_feasibility_classification() -> None:
-    prompt = user_prompt(GenerateRequest(description="As a user, I want secure sign in."))
+    prompt = system_prompt(GenerateRequest(description="As a user, I want secure sign in."))
     assert "execution_mode" in prompt
     assert "feasibility_reason" in prompt
 
 
 def test_manual_specialist_prompt_restricts_execution_mode() -> None:
-    prompt = user_prompt(
+    prompt = system_prompt(
         GenerateRequest(
             description="Explore the sign-in experience manually.", generation_target="manual"
-        )
+        ),
+        profile="testpilot",
     )
 
-    assert "Generate only manual cases" in prompt
-    assert "Every execution_mode must be manual" in prompt
+    assert "Produce only cases whose `execution_mode` is `manual`" in prompt
 
 
 def test_system_prompt_loads_repository_markdown_agent_policies() -> None:
@@ -84,24 +92,78 @@ def test_auto_finance_profile_feeds_brd_rules_to_generation() -> None:
         )
     )
 
-    assert "Auto Finance Quotation Service profile" in prompt
-    assert "BR-018 Deposit" in prompt
-    assert "NFR-005 Idempotency" in prompt
-    assert "INVALID_FINANCE_TERM" in prompt
-    assert "Amount financed normally equals" in prompt
+    assert "Quotation Services project profile" in prompt
+    assert "BR-QT-018" in prompt
+    assert "campaign contributions" in prompt
+    assert "INVALID_TERM" in prompt
+    assert "POST /api/v1/quotations" in prompt
+    assert "average response is under one second" in prompt
+    assert "P95 under two seconds" in prompt
+    assert "## Input model" in prompt
+    assert "## Output and error expectations" in prompt
+    assert "approved golden quotation" in prompt
+    assert "Product-specific calculation shape" in prompt
+    assert "Quotation Services supported catalogue" in prompt
+    assert "AUDI" in prompt
+    assert "VWPC" in prompt
+    assert "Mahindra" in prompt
+    assert "`PCP`, `HP`, `LP`, `PCH`, `BCH`, `PFL`, `BFL`" in prompt
+    assert "Maintenance codes are `S`, `SM`, and `SMT`" in prompt
+    assert "targeted/non-targeted solver modes" in prompt
+    assert "Avoid the full Cartesian product" in prompt
 
 
-def test_prompt_maps_requested_qa_labels_to_canonical_schema() -> None:
-    prompt = user_prompt(
+@pytest.mark.parametrize("target", ["manual", "automation"])
+def test_auto_finance_generators_receive_every_brd_validation(target: str) -> None:
+    prompt = system_prompt(
         GenerateRequest(
-            description="Generate API cases with Requirement ID and HTTP Status fields.",
-            generation_target="automation",
+            description="Generate complete BRD quotation validation coverage.",
+            generation_target=target,
         )
     )
 
-    assert "Map Test Case ID to id" in prompt
-    assert "HTTP Status to tags" in prompt
-    assert "do not return a Markdown table" in prompt
+    assert "## Mandatory validation inventory" in prompt
+    for error_code in (
+        "INVALID_BRAND",
+        "INVALID_PRODUCT",
+        "INVALID_CUSTOMER_TYPE",
+        "INVALID_VEHICLE",
+        "INVALID_VEHICLE_PRICE",
+        "INVALID_DEPOSIT",
+        "INVALID_TERM",
+        "INVALID_MILEAGE",
+        "INVALID_MAINTENANCE_OPTION",
+        "PRODUCT_NOT_AVAILABLE_FOR_BRAND",
+        "PRODUCT_NOT_AVAILABLE_FOR_CUSTOMER",
+        "CAMPAIGN_NOT_APPLICABLE",
+        "CAMPAIGN_EXPIRED",
+        "INTEREST_RATE_NOT_AVAILABLE",
+        "RESIDUAL_VALUE_NOT_AVAILABLE",
+        "MAINTENANCE_RATE_NOT_AVAILABLE",
+        "PRICING_CONFIGURATION_NOT_AVAILABLE",
+        "INVALID_CALCULATION_INPUT",
+        "CALCULATION_FAILED",
+    ):
+        assert error_code in prompt
+
+    if target == "manual":
+        assert "manually executable counterpart for every BRD validation" in prompt
+    else:
+        assert "every validation and all nineteen error codes" in prompt
+
+
+def test_prompt_maps_requested_qa_labels_to_canonical_schema() -> None:
+    prompt = system_prompt(
+        GenerateRequest(
+            description="Generate API cases with Requirement ID and HTTP Status fields.",
+            generation_target="automation",
+        ),
+        profile="testpilot",
+    )
+
+    assert "Test Case ID to `id`" in prompt
+    assert "HTTP Status to `tags`" in prompt
+    assert "Never return a Markdown table" in prompt
 
 
 def test_normalizer_accepts_common_api_test_case_presentation_labels() -> None:

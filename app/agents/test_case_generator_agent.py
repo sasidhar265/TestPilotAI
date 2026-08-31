@@ -4,8 +4,8 @@ import logging
 
 from app.agents import AgentKind, AgentRegistry, FunctionalAgentDescriptor
 from app.agents.output_agent import OutputAgent
+from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
-from app.generator import CopilotGenerationError
 from app.models import ExecutionMode, GenerateRequest, GenerationTarget, TestFormat, TestSuite
 
 logger = logging.getLogger(__name__)

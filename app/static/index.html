@@ -3,82 +3,196 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#06080f">
-  <title>TestPilot AI — Agentic Quality Engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>TestPilot AI — Quality workspace</title>
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260831-modern-workspace">
 </head>
-<body><div class="shell">
-  <aside class="sidebar">
-    <div class="brand"><span class="brand-mark">⌁</span> TestPilot AI</div>
-    <div class="nav-label">Workspace</div>
-    <a class="nav-item active" href="/"><span class="nav-dot"></span> Test designer</a>
-    <a class="nav-item" href="/documentation"><span class="nav-dot"></span> Documentation</a>
-    <a class="nav-item" href="/logs"><span class="nav-dot"></span> Logs</a>
-    <div class="nav-label">Integrations</div>
-    <a class="nav-item" href="/documentation#integrations"><span class="nav-dot"></span> Jira Cloud</a>
-    <a class="nav-item" href="/documentation#outputs"><span class="nav-dot"></span> Export center</a>
-    <div class="side-status"><div class="status-line"><span class="pulse"></span> Copilot agent ready</div><div class="model">GITHUB COPILOT</div></div>
-  </aside>
-  <main class="workspace">
-    <header class="topbar"><div class="eyebrow">Agentic quality engineering / v0.1</div><div class="top-actions"><button class="icon-button" type="button"><span class="live-orb"></span>Powered by GitHub Copilot</button></div></header>
-    <section class="hero"><div><div class="eyebrow">Human judgment · Agentic acceleration</div><h1>Quality engineering, <span class="gradient-text">reimagined.</span></h1><p>Transform product intent into risk-aware, automation-ready and manual test scenarios through a governed GitHub Copilot agent pipeline.</p><div class="hero-actions"><a class="hero-link" href="#test-studio">Launch test studio <span>→</span></a><span class="hero-note">COPILOT-ONLY · HUMAN REVIEWED</span></div></div></section>
-    <div class="tech-ribbon" aria-label="Technology stack"><span class="tech-label">Live stack</span><span class="tech-item"><span>◆</span>FastAPI</span><span class="tech-item"><span>◆</span>Pydantic</span><span class="tech-item"><span>◆</span>Copilot SDK</span><span class="tech-item"><span>◆</span>Copilot CLI</span><span class="tech-item"><span>◆</span>SpecFlow BDD</span><span class="tech-item"><span>◆</span>Jira Cloud</span><span class="tech-item"><span>◆</span>CSV / JSON</span></div>
-    <section class="panel runtime-panel" aria-labelledby="runtime-title">
-      <div class="panel-head"><div class="panel-title" id="runtime-title"><span class="step-number">LIVE</span> Execution flow</div><span class="secure">COPILOT-ONLY PIPELINE</span></div>
-      <div class="runtime-meta"><span class="runtime-pill" id="runtime-health">● Checking service…</span><span class="runtime-pill" id="server-location">Host · detecting…</span><span class="runtime-pill" id="active-agent">Agent · detecting…</span><span class="runtime-pill" id="runtime-id">Runtime · detecting…</span><span class="runtime-pill" id="model-name">Model · detecting…</span><span class="runtime-pill" id="auth-mode">Auth · detecting…</span><span class="runtime-pill" id="memory-status">Memory · detecting…</span></div>
-      <div class="flow" role="img" aria-label="Request flows from the browser to local FastAPI, application service, GitHub Copilot SDK and CLI, GitHub Copilot cloud, then validation and results">
-        <div class="flow-node"><div class="flow-kicker">01 · Input</div><div class="flow-name">Input Agent</div><div class="flow-detail">Text, Word, PDF, Excel and image requirements</div></div>
-        <div class="flow-node"><div class="flow-kicker">02 · Generate</div><div class="flow-name">Test Case Generator</div><div class="flow-detail" id="flow-server">Manual and automation via Copilot SDK + CLI</div></div>
-        <div class="flow-node"><div class="flow-kicker">03 · Validate</div><div class="flow-name">Validator Agent</div><div class="flow-detail">Coverage, traceability, clarity and duplicates</div></div>
-        <div class="flow-node"><div class="flow-kicker">04 · Remember</div><div class="flow-name">Test Storage Agent</div><div class="flow-detail">Validated suites stored for future reuse</div></div>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="TestPilot AI home">
+        <span class="brand-mark" aria-hidden="true">T</span>
+        <span><strong>TestPilot</strong><small>AI quality studio</small></span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <span class="nav-label">Workspace</span>
+        <a class="nav-item active" href="/"><span class="nav-icon">✦</span><span>Test designer</span></a>
+        <a class="nav-item" href="#agent-workspace"><span class="nav-icon">◎</span><span>Quality lifecycle</span></a>
+        <span class="nav-label">Explore</span>
+        <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
+        <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
+        <a class="nav-item" href="/documentation#integrations"><span class="nav-icon">↗</span><span>Jira Cloud</span></a>
+      </nav>
+
+      <div class="side-status">
+        <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
+        <div class="model">SECURE LOCAL WORKSPACE</div>
       </div>
-      <div class="runtime-details">
-        <article class="runtime-card" id="llm-details"><div class="flow-kicker">LLM layer</div><h3>GitHub-managed model</h3><dl><dt>Selection</dt><dd id="llm-model-detail">Organization default</dd><dt>Gateway</dt><dd>GitHub Copilot service</dd><dt>Entitlement</dt><dd>Authenticated organization account</dd><dt>Transparency</dt><dd>The exact base LLM is shown only when <code>COPILOT_MODEL</code> is configured.</dd></dl></article>
-        <article class="runtime-card" id="agent-details"><div class="flow-kicker">Agent layer</div><h3>GitHub Copilot Test Designer</h3><dl><dt>Role</dt><dd>Senior QA test-design agent</dd><dt>Capability</dt><dd>Manual test format and SpecFlow BDD</dd><dt>Output</dt><dd>4–5 scenarios: at least 2 automation and 2 manual</dd><dt>Restrictions</dt><dd>No tools, MCP, skills, memory, file writes, or Git operations</dd></dl></article>
-        <article class="runtime-card" id="orchestration-details"><div class="flow-kicker">Orchestration layer</div><h3>Local deterministic pipeline</h3><dl><dt>Transport</dt><dd>FastAPI + Uvicorn</dd><dt>Service</dt><dd><code>TestGenerationService</code></dd><dt>Memory</dt><dd>Repository-local SQLite exact-match retrieval before Copilot</dd><dt>Policy</dt><dd><code>AgentRegistry</code> allows only <code>github-copilot</code></dd><dt>Quality gate</dt><dd>Pydantic validation, deduplication, BDD formatting, five-case cap</dd></dl></article>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Quality engineering workspace</div>
+          <h1>Turn requirements into trusted tests.</h1>
+        </div>
+        <div class="top-actions">
+          <span class="runtime-pill" id="runtime-health">● Checking service…</span>
+          <span class="avatar" aria-label="Authenticated GitHub Copilot user">GH</span>
+        </div>
+      </header>
+
+      <div class="workflow-rail" aria-label="Test design workflow">
+        <a class="workflow-step active" href="#test-studio"><span>1</span><strong>Define</strong><small>Add requirements</small></a>
+        <a class="workflow-step" href="#results"><span>2</span><strong>Review</strong><small>Inspect generated tests</small></a>
+        <a class="workflow-step" href="#agent-workspace"><span>3</span><strong>Validate</strong><small>Run quality actions</small></a>
+        <a class="workflow-step" href="#publish-panel"><span>4</span><strong>Deliver</strong><small>Export or publish</small></a>
       </div>
-      <p class="flow-note">The UI and FastAPI application run locally. Only the restricted generation request is sent through the authenticated GitHub Copilot runtime. Jira runs only after an explicit publish action.</p>
-    </section>
-    <section class="panel composer" id="test-studio">
-      <div class="panel-head"><div class="panel-title"><span class="step-number">01</span> Describe the behaviour</div><span class="secure">● GITHUB COPILOT</span></div>
-      <form id="generate-form">
-        <textarea id="description" minlength="10" aria-label="Story or acceptance criteria" placeholder="Paste requirements here, or upload a document from Windows or Mac below…"></textarea>
-        <label class="upload-zone" id="upload-zone" for="requirement-file">
-          <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
-          <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></span>
-          <span class="upload-copy" id="upload-copy"><span class="upload-title">Attach a requirements file</span><span class="upload-hint">Click or drag and drop · DOCX, PDF, XLSX, Pages, Numbers, images · max 15 MB</span></span>
-          <span class="file-preview hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached file">×</button></span>
-        </label>
-        <div class="controls"><fieldset><legend>Test-case format</legend><div class="format-options"><label class="format-option"><input type="radio" name="format" value="normal" checked><span>Manual test</span></label><label class="format-option"><input type="radio" name="format" value="bdd"><span>BDD / Gherkin</span></label></div></fieldset><div class="generation-actions"><button class="stop hidden" id="stop-generation" type="button"><span class="stop-icon" aria-hidden="true"></span><span>Stop generation</span></button><button class="primary" id="generate" type="submit">Generate Test Scenarios <span class="arrow">→</span></button></div></div>
-      </form><div class="run-state"><div class="status" id="status">Agent ready. Add requirements to begin.</div><div class="timer hidden" id="timer" role="timer">00:00</div></div>
-    </section>
-    <section class="panel results hidden" id="results">
-      <div class="results-header"><div><div class="eyebrow">Generated suite</div><h2 id="feature"></h2><div class="summary" id="summary"></div></div><span class="secure">HUMAN REVIEW REQUIRED</span></div>
-      <div class="tools"><button id="select-all" class="secondary">Select all for Jira</button><button id="select-none" class="secondary">Clear selection</button><button id="download-feature" class="secondary hidden">↓ .feature</button><button id="csv" class="secondary">↓ Xray CSV</button><button id="xlsx" class="secondary">↓ Xray Excel</button><button id="json" class="secondary">↓ Xray JSON</button></div>
-      <div class="cases" id="cases"></div>
-      <div class="footer-grid"><details class="subpanel"><summary>Assumptions & coverage intelligence</summary><div id="notes"></div></details></div>
-    </section>
-    <section class="panel agent-workspace hidden" id="agent-workspace" aria-labelledby="agent-workspace-title">
-      <div class="panel-head"><div class="panel-title" id="agent-workspace-title"><span class="step-number">02</span> Quality lifecycle agents</div><span class="secure">CONTROLLED ACTIONS</span></div>
-      <p class="agent-intro">Use the generated suite across the governed quality lifecycle. Actions are local and reviewable; execution results and defect drafts are never published automatically.</p>
-      <div class="agent-grid">
-        <article class="agent-card"><div class="flow-kicker">Business Rules Agent</div><h3>Requirement alignment</h3><p>Applies the rules entered above before knowledge lookup and generation, preserving BR traceability.</p><button class="secondary" id="show-rule-coverage">Review rule coverage</button></article>
-        <article class="agent-card"><div class="flow-kicker">Knowledge Agent</div><h3>Approved suite reuse</h3><p>Returns exact validated matches from organizational knowledge before contacting Copilot.</p><button class="secondary" id="show-knowledge">Inspect knowledge source</button></article>
-        <article class="agent-card"><div class="flow-kicker">Test Data Agent</div><h3>Synthetic test data</h3><p>Fills missing case-aligned data with privacy-safe synthetic values.</p><button class="secondary" id="generate-data">Generate test data</button></article>
-        <article class="agent-card"><div class="flow-kicker">Execution Agent</div><h3>Controlled result capture</h3><p>Use each case's result controls, then validate and summarize the run.</p><button class="secondary" id="summarize-execution">Summarize execution</button></article>
-        <article class="agent-card"><div class="flow-kicker">Bug Reporter Agent</div><h3>Defect drafts</h3><p>Creates review-required defect drafts for failed cases with expected-versus-actual evidence.</p><button class="secondary" id="draft-defects">Draft defects</button></article>
-        <article class="agent-card"><div class="flow-kicker">Metrics Agent</div><h3>Quality metrics</h3><p>Calculates manual and automation coverage, pass rate, defects, and defect density.</p><button class="secondary" id="generate-metrics">Generate metrics</button></article>
-      </div>
-      <div class="agent-output" id="agent-output">Select an agent action to inspect its result.</div>
-      <div class="lifecycle-dashboards" aria-label="Test lifecycle dashboards">
-        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Execution dashboard</span><span class="dashboard-state" id="execution-dashboard-state">NOT RUN</span></div><div id="execution-dashboard"><p>Set a result on each generated test case, then select <strong>Summarize execution</strong>.</p></div></article>
-        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Raised bugs</span><span class="dashboard-state" id="defects-dashboard-state">0 DRAFTS</span></div><div id="defects-dashboard"><p>Failed cases can be converted into review-required defect drafts.</p></div></article>
-        <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Test metrics</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate metrics after recording execution results and reviewing defect drafts.</p></div></article>
-      </div>
-    </section>
-    <section class="publish-panel hidden" id="publish-panel" aria-labelledby="publish-title">
-      <div class="publish-layout"><div class="publish-copy"><div class="eyebrow">Jira Cloud delivery</div><h2 id="publish-title">Publish selected cases</h2><p>Review the generated suite, select the cases you want above, then attach only those cases to an existing Jira issue.</p></div><div class="publish-action"><div class="panel-title"><span class="step-number">02</span> Destination issue</div><div class="jira-row"><input id="jira-key" type="text" placeholder="Jira key · PROJ-123" aria-label="Jira issue key"><button class="primary" id="jira">Attach to Jira</button></div></div></div>
-    </section>
-  </main>
-</div>
-<script src="/static/scripts/index.js" defer></script></body></html>
+
+      <section class="studio-layout">
+        <section class="panel composer" id="test-studio">
+          <div class="panel-head">
+            <div>
+              <span class="section-kicker">New test suite</span>
+              <h2>What should we test?</h2>
+              <p>Paste a requirement or attach a BRD. TestPilot will generate traceable manual and automation coverage.</p>
+            </div>
+            <span class="secure">PRIVATE BY DESIGN</span>
+          </div>
+
+          <form id="generate-form">
+            <label class="field-label" for="description">Requirement or acceptance criteria</label>
+            <div class="textarea-wrap">
+              <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate complete positive, negative and boundary coverage for the quotation API…"></textarea>
+              <span class="character-count" id="character-count">0 characters</span>
+            </div>
+            <p class="field-help" id="description-help">Use business language. The active project profile supplies governed domain rules.</p>
+
+            <label class="upload-zone" id="upload-zone" for="requirement-file">
+              <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+              </span>
+              <span class="upload-copy" id="upload-copy">
+                <span class="upload-title">Drop a requirements file here</span>
+                <span class="upload-hint">or browse DOCX, PDF, XLSX, Pages, Numbers and images · max 15 MB</span>
+              </span>
+              <span class="file-preview hidden" id="file-preview">
+                <span class="file-badge" id="file-type"></span>
+                <span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span>
+                <button class="file-remove" id="file-remove" type="button" aria-label="Remove attached file">×</button>
+              </span>
+            </label>
+
+            <div class="controls">
+              <fieldset>
+                <legend>Output format</legend>
+                <div class="format-options">
+                  <label class="format-option"><input type="radio" name="format" value="normal"><span><b>Manual test</b><small>Structured review steps</small></span></label>
+                  <label class="format-option"><input type="radio" name="format" value="bdd" checked><span><b>BDD / Gherkin</b><small>Automation + C# bindings</small></span></label>
+                </div>
+              </fieldset>
+              <div class="generation-actions">
+                <button class="stop hidden" id="stop-generation" type="button"><span class="stop-icon"></span><span>Stop</span></button>
+                <button class="primary" id="generate" type="submit"><span>Generate test suite</span><span class="arrow">→</span></button>
+              </div>
+            </div>
+          </form>
+
+          <div class="run-state" aria-live="polite">
+            <div class="status" id="status"><span class="status-dot"></span>Agent ready. Add requirements to begin.</div>
+            <div class="timer hidden" id="timer" role="timer">00:00</div>
+          </div>
+        </section>
+
+        <aside class="context-panel" aria-label="Runtime context">
+          <div class="context-head"><span class="section-kicker">Active workspace</span><span class="live-badge">LIVE</span></div>
+          <h2>Auto Finance Quotation</h2>
+          <p>BRD-grounded test design with controlled Copilot execution.</p>
+          <dl class="context-list">
+            <div><dt>Host</dt><dd id="server-location">Detecting…</dd></div>
+            <div><dt>Agent</dt><dd id="active-agent">Detecting…</dd></div>
+            <div><dt>Runtime</dt><dd id="runtime-id">Detecting…</dd></div>
+            <div><dt>Model</dt><dd id="model-name">Detecting…</dd></div>
+            <div><dt>Authentication</dt><dd id="auth-mode">Detecting…</dd></div>
+            <div><dt>Knowledge</dt><dd id="memory-status">Detecting…</dd></div>
+          </dl>
+          <div class="trust-note"><span>✓</span><p><strong>Governed generation</strong>Requirements are validated against typed schemas and the active Quality Gate.</p></div>
+        </aside>
+      </section>
+
+      <details class="runtime-disclosure">
+        <summary><span><b>How this run is governed</b><small>Inspect the model, agent and orchestration boundaries</small></span><span class="summary-icon">＋</span></summary>
+        <div class="runtime-panel" aria-labelledby="runtime-title">
+          <div class="runtime-title" id="runtime-title">Restricted execution flow</div>
+          <div class="flow" role="img" aria-label="Request flows through input, generation, validation and storage">
+            <div class="flow-node"><span>01</span><div><b>Input Agent</b><small>Normalizes text, documents and images</small></div></div>
+            <div class="flow-node"><span>02</span><div><b>Test Generator</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
+            <div class="flow-node"><span>03</span><div><b>Quality Gate</b><small>Checks traceability and deterministic rules</small></div></div>
+            <div class="flow-node"><span>04</span><div><b>Test Storage</b><small>Retains approved exact-match suites</small></div></div>
+          </div>
+          <div class="runtime-details">
+            <article class="runtime-card" id="llm-details"><span>LLM layer</span><h3>GitHub-managed model</h3><p id="llm-model-detail">Organization default</p></article>
+            <article class="runtime-card" id="agent-details"><span>Agent layer</span><h3>Test Designer</h3><p>Markdown policies + active BRD profile</p></article>
+            <article class="runtime-card" id="orchestration-details"><span>Application layer</span><h3>Local deterministic pipeline</h3><p><code>TestGenerationService</code> · Pydantic · SQLite</p></article>
+          </div>
+        </div>
+      </details>
+
+      <section class="panel results hidden" id="results">
+        <div class="results-header">
+          <div><span class="section-kicker">Generated suite</span><h2 id="feature"></h2><div class="summary" id="summary"></div></div>
+          <span class="review-badge">Review required</span>
+        </div>
+        <div class="result-actions">
+          <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
+          <div class="tools">
+            <button id="download-feature" class="secondary hidden">↓ .feature</button>
+            <button id="generate-step-definitions" class="secondary hidden">&lt;/&gt; Generate C# bindings</button>
+            <button id="csv" class="secondary">↓ CSV</button>
+            <button id="xlsx" class="secondary">↓ Excel</button>
+            <button id="json" class="secondary">↓ JSON</button>
+          </div>
+        </div>
+        <div class="cases" id="cases"></div>
+        <section class="step-definitions hidden" id="step-definitions" aria-live="polite">
+          <div class="step-definitions-head"><div><span class="section-kicker">ReqnRoll automation</span><h3>Generated C# step definitions</h3><p>Review, copy or download the typed bindings for this suite.</p></div><button class="primary compact" id="download-step-definitions" type="button">↓ Download C#</button></div>
+          <div id="step-definition-files"></div>
+          <details><summary>Step coverage and generation notes</summary><div id="step-definition-coverage"></div></details>
+        </section>
+        <details class="subpanel"><summary>Assumptions and coverage intelligence</summary><div id="notes"></div></details>
+      </section>
+
+      <section class="panel agent-workspace" id="agent-workspace" aria-labelledby="agent-workspace-title">
+        <div class="panel-head compact-head">
+          <div><span class="section-kicker">Quality lifecycle</span><h2 id="agent-workspace-title">Turn a suite into evidence</h2><p id="lifecycle-guidance">Generate a test suite to activate controlled review, execution and reporting actions.</p></div>
+          <span class="secure">LOCAL ACTIONS</span>
+        </div>
+        <div class="agent-grid">
+          <article class="agent-card"><span class="agent-number">01</span><div><small>Business Rules Agent</small><h3>Requirement alignment</h3><p>Review traceability to BRD rules.</p></div><button class="secondary lifecycle-action" id="show-rule-coverage" disabled>Review coverage</button></article>
+          <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
+          <article class="agent-card"><span class="agent-number">03</span><div><small>Test Data Agent</small><h3>Synthetic test data</h3><p>Fill missing case-aligned values safely.</p></div><button class="secondary lifecycle-action" id="generate-data" disabled>Generate data</button></article>
+          <article class="agent-card"><span class="agent-number">04</span><div><small>Execution Agent</small><h3>Execution summary</h3><p>Summarize reviewed test results.</p></div><button class="secondary lifecycle-action" id="summarize-execution" disabled>Summarize</button></article>
+          <article class="agent-card"><span class="agent-number">05</span><div><small>Bug Reporter Agent</small><h3>Defect drafts</h3><p>Draft evidence-based defects for failures.</p></div><button class="secondary lifecycle-action" id="draft-defects" disabled>Draft defects</button></article>
+          <article class="agent-card"><span class="agent-number">06</span><div><small>Metrics Agent</small><h3>Quality metrics</h3><p>Calculate coverage and execution signals.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Generate metrics</button></article>
+        </div>
+        <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
+        <div class="lifecycle-dashboards" aria-label="Test lifecycle dashboards">
+          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Execution</span><span class="dashboard-state" id="execution-dashboard-state">NOT RUN</span></div><div id="execution-dashboard"><p>Record case outcomes, then summarize the run.</p></div></article>
+          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Defects</span><span class="dashboard-state" id="defects-dashboard-state">0 DRAFTS</span></div><div id="defects-dashboard"><p>Failed cases can become review-required defect drafts.</p></div></article>
+          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Metrics</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate metrics after recording reviewed evidence.</p></div></article>
+        </div>
+      </section>
+
+      <section class="publish-panel hidden" id="publish-panel" aria-labelledby="publish-title">
+        <div class="publish-layout">
+          <div class="publish-copy"><span class="section-kicker">Delivery</span><h2 id="publish-title">Ready to share?</h2><p>Attach only the reviewed and selected cases to an existing Jira issue.</p></div>
+          <div class="publish-action"><label for="jira-key">Destination Jira issue</label><div class="jira-row"><input id="jira-key" type="text" placeholder="PROJ-123" aria-label="Jira issue key"><button class="primary" id="jira">Attach selected cases</button></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/static/scripts/index.js?v=20260831-modern-workspace" defer></script>
+</body>
+</html>

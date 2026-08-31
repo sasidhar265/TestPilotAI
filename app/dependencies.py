@@ -2,6 +2,7 @@ from fastapi import Depends
 
 from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.output_agent import OutputAgent
+from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings, get_settings
@@ -18,6 +19,12 @@ from app.services.document_ingestion import InputAgent
 def get_agent_registry(settings: Settings = Depends(get_settings)) -> AgentRegistry:
     """Composition root: GitHub Copilot is intentionally the only registered runtime."""
     return AgentRegistry(CopilotGenerator(settings))
+
+
+def get_reqnroll_step_definition_agent(
+    settings: Settings = Depends(get_settings),
+) -> ReqnRollStepDefinitionAgent:
+    return ReqnRollStepDefinitionAgent(settings)
 
 
 def get_test_generation_service(

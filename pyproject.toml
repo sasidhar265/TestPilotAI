@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "httpx2>=2,<3",
   "mypy>=1.15,<2",
   "pip-audit>=2.8,<3",
   "pytest>=9.0.3,<10",
@@ -41,9 +42,6 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers --strict-config"
-filterwarnings = [
-  "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
-]
 
 [tool.coverage.run]
 branch = true

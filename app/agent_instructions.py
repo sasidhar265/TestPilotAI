@@ -10,8 +10,10 @@ _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
     "business-rules": "business-rules.agent.md",
     "specforge": "specforge.agent.md",
+    "testpilot-coordinator": "testpilot-coordinator.agent.md",
     "manual-test-generator": "manual-test-generator.agent.md",
     "automation-test-generator": "automation-test-generator.agent.md",
+    "reqnroll-step-definition-generator": "reqnroll-step-definition-generator.agent.md",
     "quality-gate": "quality-gate.agent.md",
     "context-converter": "context-converter.agent.md",
     "output": "output.agent.md",
@@ -95,3 +97,15 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
     if quality_override.is_file():
         sections.append(_instruction_body(quality_override))
     return "\n\n".join(sections)
+
+
+def step_definition_agent_instructions(
+    profile: str = "auto-finance-quotation",
+) -> str:
+    """Return the base ReqnRoll policy plus the selected project's BRD profile."""
+    return "\n\n".join(
+        [
+            load_agent_instructions("reqnroll-step-definition-generator"),
+            load_profile_instructions(profile, "reqnroll-step-definition-generator"),
+        ]
+    )

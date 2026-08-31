@@ -28,6 +28,7 @@ def test_frontend_assets_are_served() -> None:
 def test_home_has_format_radios_and_generation_timer() -> None:
     response = client.get("/")
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store, max-age=0"
     assert "Risk categories" not in response.text
     assert "Automation / manual" not in response.text
     assert "Sole AI runtime" not in response.text
@@ -38,11 +39,18 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'type="radio" name="format" value="bdd"' in response.text
     assert 'id="timer" role="timer"' in response.text
     assert 'id="download-feature"' in response.text
+    assert 'id="generate-step-definitions"' in response.text
+    assert 'id="step-definition-files"' in response.text
+    assert 'id="download-step-definitions"' in response.text
     assert "↓ .feature" in response.text
     assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' in response.text
     assert 'id="business-rules"' not in response.text
     assert 'id="agent-workspace"' in response.text
+    assert 'href="#agent-workspace"' in response.text
+    assert 'class="panel agent-workspace"' in response.text
+    assert 'class="panel agent-workspace hidden"' not in response.text
+    assert 'class="secondary lifecycle-action" id="generate-data" disabled' in response.text
     assert 'id="execution-dashboard"' in response.text
     assert 'id="defects-dashboard"' in response.text
     assert 'id="metrics-dashboard"' in response.text
@@ -51,7 +59,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Metrics Agent" in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/index.js"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260831-modern-workspace"' in response.text
     assert 'id="runtime-health"' in response.text
     assert 'id="server-location"' in response.text
     assert 'id="active-agent"' in response.text
@@ -70,6 +78,15 @@ def test_logs_page_has_search_and_navigation() -> None:
     assert 'id="log-reference"' in response.text
     assert 'id="search-logs"' in response.text
     assert 'href="/documentation"' in response.text
+
+
+def test_documentation_page_is_not_cached() -> None:
+    response = client.get("/documentation")
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store, max-age=0"
+    assert "Markdown-directed, Python-governed" in response.text
+    assert "/api/step-definitions/reqnroll" in response.text
 
 
 def test_logs_can_be_searched_by_failure_reference_id() -> None:

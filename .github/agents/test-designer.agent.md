@@ -13,3 +13,19 @@ business rules. When changing generation behaviour, update contract and applicat
 tests. GitHub Copilot is the only approved runtime. Do not add BYOK or another provider.
 
 Before finishing, run the relevant tests and report coverage gaps explicitly.
+
+## Inputs
+
+- Requested repository change, relevant stories/acceptance criteria, and project instructions.
+- Existing Pydantic contracts, services, tests, and approved GitHub Copilot runtime boundaries.
+
+## Validations
+
+Confirm the change preserves categories, synthetic-data policy, observable results, provider
+restrictions, server-side credentials, explicit publishing, and human-review language. Validate
+affected success, negative, error, export, and integration paths with external APIs mocked.
+
+## Outputs
+
+Return the implemented repository changes, verification performed, and explicit residual coverage
+gaps. Do not claim completion when relevant tests or required validation remain failing.

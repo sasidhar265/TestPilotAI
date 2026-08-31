@@ -347,13 +347,17 @@ knowledge are layered from `.github/agent-profiles/<profile>/`; the default prof
 
 ### Code map
 
-- `app/agents/`: typed capability contract and fail-closed Copilot runtime registry.
+- `app/agents/`: typed capability contracts, declarative agent definitions, and the shared
+  fail-closed Copilot runtime.
+- `app/agents/runner.py`: the sole owner of Copilot SDK sessions, restricted options, timeouts,
+  event handling, JSON extraction, and Pydantic structured-output validation.
 - `app/agents/lifecycle_agents.py`: business-rule, knowledge, test-data, execution, defect, and metrics agents.
 - `app/agents/test_case_validator.py`: independent deterministic test-suite validation agent.
 - `app/services/`: application use-case orchestration, independent of HTTP transport.
 - `app/services/document_ingestion.py`: bounded Word, PDF, Excel, and image text extraction.
 - `app/dependencies.py`: composition root for the approved runtime and application services.
-- `app/generator.py`: GitHub Copilot SDK generation, schema validation, and QA instructions.
+- `app/generator.py`: test-suite request/normalization logic using Markdown instructions and the
+  shared structured-agent runtime.
 - `app/models.py`: validated API and model-output contracts.
 - `app/jira.py`: Jira Cloud attachment/comment integration.
 - `app/exporter.py`: CSV export.

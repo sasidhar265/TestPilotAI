@@ -1,26 +1,18 @@
 """Model-directed Copilot agent runtime for test-design goals."""
 
-import asyncio
 import json
 from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.agent_instructions import load_agent_instructions
 from app.agents import TestStorageAgent
+from app.agents.runner import CopilotAgentRunner, CopilotGenerationError
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.config import Settings
-from app.generator import CopilotGenerationError
 from app.models import GenerateRequest, TestSuite
-
-AGENT_SYSTEM_PROMPT = """You are the TestPilot coordinator agent. Accomplish the user's test-design
-goal by choosing and calling the supplied tools. You—not application code—decide the next action.
-Always check organizational memory first. If no suite exists, design one and validate it. If
-validation fails, inspect the findings and call design_test_suite again with precise revision
-instructions, then validate again. Store only a passing suite. Call finish_run only after a suite
-has passed validation. Do not claim that a tool ran unless you called it. Do not answer with a
-test suite in prose: complete the goal through finish_run."""
 
 
 class AgentEvent(BaseModel):
@@ -61,8 +53,6 @@ class AgentRuntime:
 
     async def run(self, request: GenerateRequest) -> AgentOutcome:
         try:
-            from copilot import CopilotClient
-            from copilot.session_events import SessionIdleData
             from copilot.tools import ToolResult, define_tool
         except ImportError as error:
             raise CopilotGenerationError(
@@ -174,56 +164,14 @@ class AgentRuntime:
             store_validated_suite,
             finish_run,
         ]
-        factory = self.client_factory or CopilotClient
-        options: dict[str, Any] = {
-            "working_directory": str(self.settings.copilot_working_directory),
-            "use_logged_in_user": not bool(self.settings.copilot_github_token),
-            "mode": "copilot-cli",
-        }
-        if self.settings.copilot_github_token:
-            options["github_token"] = self.settings.copilot_github_token
-
-        idle = asyncio.Event()
-        async with factory(**options) as client:
-            session_options: dict[str, Any] = {
-                "system_message": {"mode": "append", "content": AGENT_SYSTEM_PROMPT},
-                "streaming": False,
-                "infinite_sessions": {"enabled": False},
-                "tools": tools,
-                "available_tools": [tool.name for tool in tools],
-                "skip_custom_instructions": True,
-                "enable_config_discovery": False,
-                "enable_skills": False,
-                "enable_session_store": False,
-                "memory": {"enabled": False},
-                "enable_file_hooks": False,
-                "enable_host_git_operations": False,
-                "mcp_servers": {},
-            }
-            if self.settings.copilot_model:
-                session_options["model"] = self.settings.copilot_model
-            async with await client.create_session(**session_options) as session:
-                session.on(
-                    lambda event: (
-                        idle.set()
-                        if isinstance(getattr(event, "data", None), SessionIdleData)
-                        else None
-                    )
-                )
-                await session.send(
-                    "Achieve this goal and use the tools until it is complete:\n\n"
-                    + request.description
-                    + (
-                        "\n\nContext:\n" + request.additional_context
-                        if request.additional_context
-                        else ""
-                    )
-                    + f"\n\nRequested output format: {request.output_format.value}"
-                )
-                try:
-                    await asyncio.wait_for(idle.wait(), self.settings.copilot_timeout_seconds)
-                except TimeoutError as error:
-                    raise CopilotGenerationError("The coordinator agent timed out.") from error
+        runner = CopilotAgentRunner(self.settings, self.client_factory)
+        await runner.invoke(
+            instructions=load_agent_instructions("testpilot-coordinator"),
+            prompt="REQUEST ENVELOPE\n" + request.model_dump_json(),
+            timeout_error="The coordinator agent timed out.",
+            tools=tools,
+            capture_response=False,
+        )
 
         if not finished or suite is None or validation is None:
             return await self._recover_incomplete_run(request, suite, validation, trace)

@@ -18,6 +18,12 @@ from app.agents.lifecycle_agents import (
     TestDataAgent,
 )
 from app.agents.output_agent import OutputAgent
+from app.agents.reqnroll_step_definition_agent import (
+    ReqnRollStepDefinitionAgent,
+    StepDefinitionArtifact,
+    StepDefinitionRequest,
+)
+from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
     ManualTestCaseGeneratorAgent,
@@ -25,9 +31,13 @@ from app.agents.test_case_generator_agent import (
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.config import Settings, get_settings
-from app.dependencies import get_multi_agent_pipeline, get_test_generation_service
+from app.dependencies import (
+    get_multi_agent_pipeline,
+    get_reqnroll_step_definition_agent,
+    get_test_generation_service,
+)
 from app.exporter import suite_to_csv
-from app.generator import CopilotGenerationError, CopilotGenerator, copilot_error_message
+from app.generator import CopilotGenerator, copilot_error_message
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
 from app.models import (
@@ -69,6 +79,7 @@ INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
 LOGS = Path(__file__).parent / "static" / "logs.html"
 logger = logging.getLogger(__name__)
+HTML_HEADERS = {"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"}
 
 
 def log_operation_failure(operation: str, status_code: int, error: Exception) -> None:
@@ -128,17 +139,17 @@ COMPANY_DOCUMENTS = {
 
 @app.get("/", include_in_schema=False)
 async def index() -> FileResponse:
-    return FileResponse(INDEX)
+    return FileResponse(INDEX, headers=HTML_HEADERS)
 
 
 @app.get("/documentation", include_in_schema=False)
 async def documentation() -> FileResponse:
-    return FileResponse(DOCUMENTATION)
+    return FileResponse(DOCUMENTATION, headers=HTML_HEADERS)
 
 
 @app.get("/logs", include_in_schema=False)
 async def logs() -> FileResponse:
-    return FileResponse(LOGS)
+    return FileResponse(LOGS, headers=HTML_HEADERS)
 
 
 @app.get("/api/documentation/company/{document_id}", response_model=CompanyDocument)
@@ -380,6 +391,21 @@ async def convert_validated_context(
         media_type=artifact.media_type,
         headers={"Content-Disposition": f'attachment; filename="{artifact.filename}"'},
     )
+
+
+@app.post("/api/step-definitions/reqnroll", response_model=StepDefinitionArtifact)
+async def generate_reqnroll_step_definitions(
+    request: StepDefinitionRequest,
+    agent: ReqnRollStepDefinitionAgent = Depends(get_reqnroll_step_definition_agent),
+) -> StepDefinitionArtifact:
+    """Generate reviewable C# bindings from Quality Gate-approved automation scenarios."""
+    try:
+        return await agent.generate(request)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except CopilotGenerationError as error:
+        log_operation_failure("generate_reqnroll_step_definitions", 503, error)
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 @app.post("/api/jira/publish", response_model=JiraPublishResult)

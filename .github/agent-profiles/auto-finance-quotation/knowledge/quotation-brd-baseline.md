@@ -1,130 +1,162 @@
-# Quotation Service BRD baseline v1.0
+# UK Automotive Quotation Services API BRD baseline v1.0
 
-Project: Auto Finance Platform. Component: Quotation Service APIs. Status: Draft.
+Source: `Business Requirements.pdf`, 31 pages. Version 1.0; example quote date 2026-08-31;
+status **Draft for Business, Product, Architecture and Compliance Review**. Preserve source IDs
+`BR-QT-001` through `BR-QT-028`. This supersedes profile material mentioning Conditional Sale,
+quote lifecycle endpoints, Lamborghini, or targeted APR modes.
 
-## Purpose and scope
+## Purpose, boundaries, and governing principle
 
-Provide centralized real-time indicative or formal vehicle-finance quotations consistently across
-web, mobile, dealer, partner, and downstream finance channels. Inputs include vehicle price,
-deposit, product, term, interest, mileage, final payment, fees, contributions, promotions,
-eligibility, and taxes. Outputs include monthly payment, deposit, amount financed, interest, APR,
-total payable, final payment, duration, identifiers, status, creation time, and expiry.
+The API is the authoritative centralized calculator for supported UK automotive finance and
+leasing quotations across dealer, web, mobile, digital retail, contact centre, partner, fleet,
+internal finance, comparison, and finance-application journeys. It authenticates consumers,
+validates requests, resolves effective configuration, calculates, and returns an auditable GBP
+quotation.
 
-Supported products include Hire Purchase (HP), Personal Contract Purchase (PCP), and Conditional
-Sale. In scope: create, recalculate, retrieve, cancel/status, validate, calculate, store, audit,
-authenticate, authorize, integrate with product/rate/promotion/residual/dealer/vehicle services,
-and return standardized errors. Credit checks, KYC, AML, affordability unless explicitly needed
-for quote eligibility, application submission, ordering, payments, account creation, signing,
-delivery, Direct Debit, and collections are out of scope.
+Keep product calculation, pricing configuration, tax treatment, regulatory classification, and
+customer presentation separate. Product availability, eligibility, rates, VAT, residual/GFV,
+maintenance, fees, campaigns, contributions, CAC, and regulatory treatment are configuration-led
+and effective-dated where applicable. Never infer regulatory treatment from a product code.
 
-## Authoritative business rules
+Out of scope unless separately required: credit searches, affordability, scoring/decisioning,
+KYC, AML, application submission, contract generation, e-signature, Direct Debit, vehicle
+ordering, payment collection, complaints/redress calculation, and account servicing.
 
-- BR-001 Create quotation: an authorized consumer can request a quote; generate a unique Quote ID
-  such as `QT-20260827-123456`.
-- BR-002 Vehicle information: support vehicle ID, optional VIN/registration, manufacturer, model,
-  variant, year, condition, new/used indicator, and cash price.
-- BR-003 Vehicle price: purchase price is mandatory and greater than zero.
-- BR-004 Customer deposit: support deposit and enforce configured product minimum/maximum rules.
-- BR-005 Part exchange: include it in total customer contribution where applicable.
-- BR-006 Dealer contribution: support it and reduce amount financed according to product rules.
-- BR-007 Manufacturer contribution: eligibility can depend on vehicle, product, term, campaign,
-  and quote date.
-- Amount financed normally equals vehicle price plus financed fees minus customer deposit, part
-  exchange, dealer contribution, and manufacturer contribution. Product-specific rules prevail.
-- BR-008 Interest rate: resolve from configurable rules/source using product, vehicle/age,
-  manufacturer, finance amount, term, campaign, dealer, and customer category where applicable.
-- BR-009 APR: calculate consistently using applicable interest, fees, charges, schedule, product,
-  and regulatory rules. Exact approved formulas are not supplied by this draft.
-- BR-010 Finance term: terms are configurable and product-dependent; reject unsupported terms.
-  Examples: HP 12–60 months and PCP 24–48 months.
-- BR-011 Annual mileage: PCP requires supported mileage and mileage may affect GFV.
-- BR-012 Final payment: PCP-like products may return optional final/balloon payment and GFV based
-  on vehicle, age, term, mileage, and expected future value.
-- BR-013 Monthly payment: calculate using amount financed, rate, term, fees, final payment, and
-  frequency; return payment count and final payment.
-- BR-014 Fees: support arrangement, option-to-purchase, documentation, and administration fees;
-  identify upfront, financed, or final-payment treatment.
-- BR-015 Promotions: enforce ID, dates, eligible vehicle/product, rate, contribution, and
-  conditions. Never apply expired promotions.
-- BR-016 Quote expiry: return creation and expiry timestamps; expired quotes may become `EXPIRED`
-  and may require a new quote if rates or products changed.
-- Quote statuses: `DRAFT`, `GENERATED`, `SAVED`, `ACCEPTED`, `EXPIRED`, `CANCELLED`, `SUPERSEDED`.
-- BR-017 Mandatory validation: vehicle ID, price, product, deposit, and term are mandatory.
-- BR-018 Deposit: non-negative, not above vehicle price, within configured product limits.
-- BR-019 Term: must be supported by the selected product; PCP 60 months is an invalid example.
-- BR-020 Mileage: required for mileage-based products and within configurable min/max.
-- BR-021 Price: greater than zero, supported currency, within product limits.
-- BR-022 Product eligibility: validate vehicle, dealer, market, amount, term, and campaign.
-- BR-023 Authentication: require an authenticated consumer using organizational OAuth 2.0, JWT,
-  or API Gateway standards as finalized by architecture.
-- BR-024 Authorization: enforce channel, dealer, partner, application, and role permissions.
-- BR-025 Encryption: HTTPS/TLS and enterprise-standard encryption for sensitive information.
+## Catalogue and classifications
 
-## API contracts and errors
+- Products: `PCP`, `HP`, `LP`, `PCH`, `BCH`, `PFL`, `BFL`.
+- Brands: `AUDI`, `SKODA`, `SEAT`, `CUPRA`, `VWPC`, `VWCV`, `TATA`, `MAHINDRA`,
+  `TOYOTA`, `PORSCHE`, `BENTLEY`.
+- Maintenance: `S`, `SM`, `SMT`; included services are configured, not hard-coded.
+- Customer types include private individual, sole trader, partnership, limited company, public
+  sector organisation, fleet customer, and other business customer.
+- Example regulatory classes: `REGULATED`, `UNREGULATED`, `EXEMPT`, `BUSINESS`,
+  `NOT_APPLICABLE`; definitions require Legal and Compliance approval.
 
-- `POST /api/v1/quotes`: create a quote, normally returning 201.
-- `GET /api/v1/quotes/{quoteId}`: retrieve an existing quote.
-- `POST /api/v1/quotes/{quoteId}/recalculate`: recalculate changed deposit, term, mileage, or
-  product and either version the quote or link original/recalculated quotes per final design.
-- Cancel using `DELETE /api/v1/quotes/{quoteId}` or `PATCH /api/v1/quotes/{quoteId}/status`, pending
-  final API design.
-- Standard error payload contains timestamp, HTTP status, errorCode, message, and correlationId.
-- Status expectations: 200 success, 201 created, 400 invalid request, 401 authentication, 403
-  authorization, 404 missing quote, 409 conflict, 422 business validation, 429 rate limit, 500
-  internal error, 502 downstream unavailable, 503 temporarily unavailable.
-- Business errors: `INVALID_VEHICLE_PRICE`, `INVALID_DEPOSIT`, `INVALID_FINANCE_TERM`,
-  `INVALID_MILEAGE`, `PRODUCT_NOT_AVAILABLE`, `RATE_NOT_AVAILABLE`, `PROMOTION_EXPIRED`,
-  `PROMOTION_NOT_ELIGIBLE`, `QUOTE_NOT_FOUND`, `QUOTE_EXPIRED`, `VEHICLE_NOT_ELIGIBLE`, and
-  `CALCULATION_ERROR`.
+Use `quotation-services-product-catalog.md` for canonical values and product distinctions.
 
-## Calculation, data, audit, and lifecycle rules
+## Request and flow
 
-The supplied worked PCP example uses vehicle price GBP 30,000, deposit 3,000, manufacturer
-contribution 1,000, 48 months, annual mileage 10,000, rate 5.49%, amount financed 26,000, 47
-monthly payments of 425.50, final payment 12,000, APR 5.9%, and total payable 35,998.50. Treat it
-as a reference example, not a complete formula specification. Official rounding belongs to the
-calculation engine; example 425.496 rounds to 425.50. Store a calculation version with every quote
-so historic results are reproducible. Initial currency is GBP; architecture must allow expansion.
+The core request supports `brand`, `productType`, `customerType`, `vehicleId`,
+`vehicleCashPrice`, `deposit`, `termMonths`, `annualMileage`, `maintenanceOption`, and
+`quoteDate`, plus product-specific inputs. Vehicle data may include manufacturer, model/year/
+derivative/type, fuel, transmission, condition, registration/current mileage, prices and VAT,
+options/accessories, delivery, registration, and other charges. Financial data may include
+deposit percentage, part exchange, negative equity, contributions, finance amount, rate/APR,
+mileage, residual/GFV/balloon, initial rental, payment profile, maintenance, and fees.
 
-Audit data includes Quote ID, timestamp, requesting application, dealer/user/system ID, product,
-status, calculation version, rate, promotion, and correlation ID. Operational monitoring includes
-volume, success/failure, validation and downstream failures, latency, rate/product failures, and
-calculation errors. Never expose sensitive customer or financial information in logs.
+The flow is authentication; structure and business validation; product/pricing/rate/residual/
+maintenance/campaign resolution; contribution application; finance/rental calculation; tax and
+regulatory processing; Quote ID; response. The endpoint example is `POST /api/v1/quotations`.
+The BRD does not define retrieval, recalculation, cancellation, expiry, or idempotency behavior.
 
-## Non-functional requirements
+## Product-specific calculation shape
 
-- NFR-001 Performance: normally respond within two seconds under expected production load,
-  excluding exceptional downstream delays; final target requires solution-design approval.
-- NFR-002 Availability: example target 99.9% monthly, subject to agreement.
-- NFR-003 Scalability: horizontal scaling for campaigns, launches, and dealer peaks.
-- NFR-004 Reliability: identical inputs produce consistent calculations while underlying rates,
-  products, promotions, and versions are unchanged.
-- NFR-005 Idempotency: where appropriate, `Idempotency-Key` prevents duplicate quotes on retries.
-- NFR-006 Traceability: accept or generate `X-Correlation-ID` across downstream calls.
-- Concurrent requests must remain isolated; one customer's quote cannot affect another's.
-- Resilience coverage includes unavailable/time-out Vehicle, Product, Rate, Promotion, Residual
-  Value, Dealer, database, gateway, IAM, monitoring, and logging dependencies.
+- PCP: amount of credit, term/rate/APR, regular instalments, GFV/optional final payment,
+  applicable option-to-purchase fee, total charge/payable, mileage and excess-mileage information.
+- HP: amount financed, term/rate/APR, instalment, fees/optional purchase fee, total charge/payable;
+  normally amortizes without a large GFV, subject to configured rules.
+- LP: finance amount, term/rate, instalment, balloon/final payment, fees, interest, total payable;
+  the balloon affects regular instalments.
+- PCH: initial/monthly rental, term, mileage, maintenance rental, VAT, excess-mileage rate, fees;
+  return inc-VAT and, where required, underlying ex-VAT values.
+- BCH: initial/regular rental, term, mileage, residual, maintenance, excess mileage, VAT; expose
+  rental net, VAT, and gross.
+- PFL: initial/monthly rental/payment, term, mileage, residual assumptions, maintenance, VAT,
+  fees and applicable final rental, using the approved PFL definition.
+- BFL: initial/regular rental, finance amount, term, residual/balloon, maintenance, VAT, fees and
+  applicable final rental; expose net, VAT and gross where required.
 
-## Regulatory and risk baseline
+## Cross-cutting financial and regulatory rules
 
-Customer disclosures may require representative APR, rate, credit amount, total payable, payment
-count/amount, final payment, fees, cash price, and deposit. Legal and Compliance must approve final
-wording and formulas. Highest risks are incorrect calculations/rates, expired promotions,
-downstream unavailability, duplicate quotes, changing calculation rules, slow responses, and
-unauthorized access.
+- VAT rate and treatment are configured by product, vehicle, customer type, payment component,
+  maintenance component, fee, and effective date. The noted current 20% rate is not hard-coded.
+- Applicable APR uses approved UK methodology and total-cost-of-credit elements. Return rate, APR,
+  charge for credit, amount of credit, and total payable. Representative APR is separate from an
+  individual quotation APR. Never invent either formula.
+- Maintenance price may depend on vehicle characteristics, term/mileage, package and date; return
+  ex-VAT, VAT and inc-VAT amounts where applicable.
+- Residual/GFV may depend on brand/model/derivative/fuel, vehicle age, term, mileage and quote date
+  and comes from approved configuration or a downstream service.
+- Contributions include manufacturer deposit, dealer, finance deposit allowance, campaign,
+  vehicle/customer/fleet discounts, and other incentives. Preserve type, amount, funding source,
+  campaign ID and effective date. Never apply expired campaigns.
+- Commission is separate from interest logic, traceable, and must not implement prohibited
+  discretionary commission arrangements.
+- CAC remains a configurable placeholder until Product/Finance confirms its definition, formula,
+  product applicability and visibility. Do not invent CAC behavior.
+- Use decimal arithmetic and enough internal precision. GBP display amounts normally have two
+  decimals. Round only at approved points using approved rules.
+- Reconcile cash price minus deposit/contributions to amount of credit and relevant deposit,
+  instalments, final payment and fees to total payable within approved tolerance. Exact payments,
+  rentals, APR and totals require approved golden examples or an approved independent oracle.
 
-## Business acceptance baseline
+## Response, validation, and errors
 
-Tests must demonstrate: valid quote generation; unique IDs; correct use of price, deposits, dealer
-and manufacturer contributions, interest, APR, monthly instalments, and PCP final payment;
-rejection of unsupported products, terms, mileage, and expired promotions; retrieval,
-recalculation, and expiry; unauthorized-request rejection; standardized errors; correlation-ID
-traceability; and agreement with Finance Product Team-approved reference calculations.
+An applicable success response includes Quote ID, GBP currency, brand/product/customer type,
+regulatory class, price/deposit/itemized contributions, amount of credit, term/mileage, rate/APR,
+monthly payment or rental, maintenance, final/balloon payment, total charge/payable, pricing
+version and calculation version. Every persisted quotation has a unique, auditable Quote ID.
 
-## Assumptions requiring explicit treatment
+Validate active brand/product, configured brand-product and customer-product eligibility, vehicle
+and price limits, deposit, approved term, mileage, permitted maintenance, required residual/rate,
+and campaign validity on `quoteDate`. Standard errors are `INVALID_BRAND`, `INVALID_PRODUCT`,
+`INVALID_CUSTOMER_TYPE`, `INVALID_VEHICLE`, `INVALID_VEHICLE_PRICE`, `INVALID_DEPOSIT`,
+`INVALID_TERM`, `INVALID_MILEAGE`, `INVALID_MAINTENANCE_OPTION`,
+`PRODUCT_NOT_AVAILABLE_FOR_BRAND`, `PRODUCT_NOT_AVAILABLE_FOR_CUSTOMER`,
+`CAMPAIGN_NOT_APPLICABLE`, `CAMPAIGN_EXPIRED`, `INTEREST_RATE_NOT_AVAILABLE`,
+`RESIDUAL_VALUE_NOT_AVAILABLE`, `MAINTENANCE_RATE_NOT_AVAILABLE`,
+`PRICING_CONFIGURATION_NOT_AVAILABLE`, `INVALID_CALCULATION_INPUT`, and `CALCULATION_FAILED`.
 
-Vehicle, product, rate, promotion, residual, and dealer data come from approved upstream sources.
-Promotion dates are configurable. The quotation service does not perform a full credit assessment.
-Final finance calculations, APR/regulatory formulas, disclosure wording, deposit/mileage/product
-limits, cancellation method, quote versioning strategy, availability target, and retry policy need
-approval from their named business, architecture, finance, legal, compliance, or operations owner.
+The error body has `status`, `code`, safe `message`, optional `field`, and `correlationId`.
+Never expose stack traces or confidential calculation details. Persisted audit trace covers quote
+identity/time, brand/product/customer, request/pricing, rate/APR, contributions, residual/GFV,
+maintenance, VAT, CAC/commission where applicable, versions, response, and correlation ID.
+
+## Core requirements
+
+| ID | Required capability |
+|---|---|
+| `BR-QT-001` | Generate supported UK automotive quotations |
+| `BR-QT-002` | Support all seven products |
+| `BR-QT-003` | Support all eleven named brands |
+| `BR-QT-004` | Support S, SM and SMT maintenance |
+| `BR-QT-005` | Validate brand/product eligibility |
+| `BR-QT-006` | Validate customer/product eligibility |
+| `BR-QT-007` | Calculate amount of credit where applicable |
+| `BR-QT-008` | Calculate monthly finance instalments |
+| `BR-QT-009` | Calculate monthly leasing rentals |
+| `BR-QT-010` | Calculate APR where applicable |
+| `BR-QT-011` | Calculate total charge for credit where applicable |
+| `BR-QT-012` | Calculate total amount payable |
+| `BR-QT-013` | Calculate GFV/final payments where applicable |
+| `BR-QT-014` | Incorporate residual values |
+| `BR-QT-015` | Calculate VAT where applicable |
+| `BR-QT-016` | Return ex-VAT and inc-VAT amounts where required |
+| `BR-QT-017` | Calculate maintenance payments |
+| `BR-QT-018` | Support campaign contributions |
+| `BR-QT-019` | Support manufacturer/dealer contributions |
+| `BR-QT-020` | Support configurable fees |
+| `BR-QT-021` | Support configurable CAC, subject to definition approval |
+| `BR-QT-022` | Provide calculation traceability |
+| `BR-QT-023` | Support effective-dated pricing |
+| `BR-QT-024` | Apply approved rounding rules |
+| `BR-QT-025` | Produce consistent output for identical input/configuration |
+| `BR-QT-026` | Return validation errors instead of invalid calculations |
+| `BR-QT-027` | Retain pricing/calculation versions for persisted quotes |
+| `BR-QT-028` | Support downstream regulated disclosures |
+
+## Non-functional and release gates
+
+Target average response is under one second and P95 under two seconds, excluding agreed exceptional
+downstream latency. Availability is 99.9% or agreed SLA, with horizontal scaling. Require TLS,
+authentication, application authorization, least privilege, financial-data restrictions and UK
+GDPR protections. Monitor volume, outcomes/failures, latency/timeouts and brand/product failures
+without unnecessary sensitive data. Breaking contracts require an API version; pricing changes
+normally use effective-dated configuration.
+
+Release needs approved scenarios for all products/brands/maintenance, UK APR and VAT reference
+agreement, contribution/residual reconciliation, expired configuration rejection, determinism,
+version traceability, and regulatory output. Compliance approves classification/APR/commission;
+Finance formulas; Tax VAT; Product rules; Pricing rates/campaigns. Approved golden quotations are
+required for automated financial regression values.
