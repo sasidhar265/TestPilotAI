@@ -5,32 +5,41 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>TestPilot AI — Product guide</title>
-  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260831-modern-docs">
+  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260831-shared-shell">
 </head>
 <body>
   <div class="docs-shell">
     <aside class="sidebar">
-      <a class="brand" href="/">
-        <span class="mark">T</span>
-        <span><strong>TestPilot</strong><small>Product guide</small></span>
+      <a class="brand" href="/" aria-label="TestPilot AI home">
+        <span class="brand-mark" aria-hidden="true">T</span>
+        <span><strong>TestPilot</strong><small>AI quality studio</small></span>
       </a>
-      <a class="back" href="/">← Back to Test Designer</a>
-      <nav class="nav" aria-label="Documentation sections">
-        <span class="nav-title">Start here</span>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <span class="nav-label">Workspace</span>
+        <a class="nav-item" href="/"><span class="nav-icon">✦</span><span>Test designer</span></a>
+        <a class="nav-item" href="/#agent-workspace"><span class="nav-icon">◎</span><span>Quality lifecycle</span></a>
+        <span class="nav-label">Explore</span>
+        <a class="nav-item active" href="#overview"><span class="nav-icon">□</span><span>Documentation</span></a>
+        <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
+        <a class="nav-item" href="#integrations"><span class="nav-icon">↗</span><span>Jira Cloud</span></a>
+      </nav>
+      <nav class="docs-nav" aria-label="On this page">
+        <span class="nav-label">On this page</span>
         <a class="active" href="#overview">Overview</a>
         <a href="#workflow">Product workflow</a>
         <a href="#architecture">Architecture</a>
-        <span class="nav-title">Capabilities</span>
-        <a href="#agents">Agents and responsibilities</a>
+        <a href="#agents">Agents</a>
         <a href="#test-standard">Generation standard</a>
-        <a href="#use-cases">Application use cases</a>
-        <a href="#inputs">Supported inputs</a>
-        <a href="#outputs">Outputs and delivery</a>
-        <span class="nav-title">Reference</span>
+        <a href="#use-cases">Use cases</a>
+        <a href="#inputs">Inputs</a>
+        <a href="#outputs">Outputs</a>
         <a href="#company-documents">Company requirements</a>
         <a href="#integrations">Integrations and API</a>
       </nav>
-      <div class="status" id="status"><span></span>Checking agent registry…</div>
+      <div class="side-status">
+        <div class="status-line" id="status"><span class="pulse"></span><span class="status-copy">Checking agent registry…</span></div>
+        <div class="model">SECURE LOCAL WORKSPACE</div>
+      </div>
     </aside>
 
     <main class="docs-main">
@@ -155,6 +164,6 @@
       </article>
     </main>
   </div>
-  <script src="/static/scripts/documentation.js?v=20260831-modern-docs" defer></script>
+  <script src="/static/scripts/documentation.js?v=20260831-shared-shell" defer></script>
 </body>
 </html>
