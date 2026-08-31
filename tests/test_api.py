@@ -59,7 +59,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Metrics Agent" in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/index.js?v=20260831-modern-workspace"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260831-input-state"' in response.text
+    assert 'id="generate" type="submit" disabled' in response.text
+    assert 'href="/static/styles/index.css?v=20260831-fluid-type"' in response.text
     assert 'id="runtime-health"' in response.text
     assert 'id="server-location"' in response.text
     assert 'id="active-agent"' in response.text
