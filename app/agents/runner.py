@@ -60,6 +60,7 @@ class CopilotAgentRunner:
         empty_error: str | None = None,
         tools: list[Any] | None = None,
         capture_response: bool = True,
+        timeout_seconds: float | None = None,
     ) -> str | None:
         """Run one isolated Markdown-directed Copilot session."""
         try:
@@ -115,7 +116,10 @@ class CopilotAgentRunner:
                 session.on(on_event)
                 await session.send(prompt)
                 try:
-                    await asyncio.wait_for(idle.wait(), self.settings.copilot_timeout_seconds)
+                    await asyncio.wait_for(
+                        idle.wait(),
+                        timeout_seconds or self.settings.copilot_timeout_seconds,
+                    )
                 except TimeoutError as error:
                     raise CopilotGenerationError(timeout_error) from error
 

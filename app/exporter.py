@@ -10,6 +10,7 @@ def suite_to_csv(suite: TestSuite) -> bytes:
     writer.writerow(
         [
             "ID",
+            "Scenario Group",
             "Title",
             "Category",
             "Priority",
@@ -34,6 +35,7 @@ def suite_to_csv(suite: TestSuite) -> bytes:
         writer.writerow(
             [
                 case.id,
+                case.scenario_group,
                 case.title,
                 case.category.value,
                 case.priority,

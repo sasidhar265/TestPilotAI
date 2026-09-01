@@ -74,7 +74,8 @@ def test_converter_creates_excel_workbook() -> None:
 
     assert artifact.filename.endswith(".xlsx")
     assert sheet["A1"].value == "Test Case Identifier"
-    assert sheet["H2"].value == "Submit an invalid password five times"
+    assert sheet["B1"].value == "Scenario Group"
+    assert sheet["I2"].value == "Submit an invalid password five times"
 
 
 def test_converter_creates_xray_json_test_objects() -> None:

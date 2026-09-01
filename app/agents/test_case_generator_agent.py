@@ -1,4 +1,4 @@
-"""SpecForge routing agent for focused test-generation actions."""
+"""QA Master orchestration and SpecForge test-case transformation."""
 
 import logging
 
@@ -7,6 +7,7 @@ from app.agents.output_agent import OutputAgent
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.models import ExecutionMode, GenerateRequest, GenerationTarget, TestFormat, TestSuite
+from app.observability import publish_lifecycle_event
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,21 @@ class ManualTestCaseGeneratorAgent:
         self.registry = registry
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
+        publish_lifecycle_event(
+            "Manual Test Generator",
+            "generate_manual",
+            "running",
+            "Generating human-led scenarios from the current governed request envelope.",
+        )
         targeted = request.model_copy(update={"generation_target": GenerationTarget.MANUAL})
-        return await self.registry.get_test_design_agent().generate(targeted)
+        suite = await self.registry.get_test_design_agent().generate(targeted)
+        publish_lifecycle_event(
+            "Manual Test Generator",
+            "generate_manual",
+            "success",
+            f"Generated {len(suite.test_cases)} manual candidate cases.",
+        )
+        return suite
 
 
 class AutomationTestCaseGeneratorAgent:
@@ -51,23 +65,36 @@ class AutomationTestCaseGeneratorAgent:
         self.registry = registry
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
+        publish_lifecycle_event(
+            "Automation Test Generator",
+            "generate_automation",
+            "running",
+            "Generating repeatable BDD scenarios from the current governed request envelope.",
+        )
         targeted = request.model_copy(
             update={
                 "generation_target": GenerationTarget.AUTOMATION,
                 "output_format": TestFormat.BDD,
             }
         )
-        return await self.registry.get_test_design_agent().generate(targeted)
+        suite = await self.registry.get_test_design_agent().generate(targeted)
+        publish_lifecycle_event(
+            "Automation Test Generator",
+            "generate_automation",
+            "success",
+            f"Generated {len(suite.test_cases)} automation candidate cases.",
+        )
+        return suite
 
 
-class TestCaseGeneratorAgent:
+class SpecForgeTransformerAgent:
     descriptor = FunctionalAgentDescriptor(
-        id="specforge-router-agent",
-        name="SpecForge Router",
-        kind=AgentKind.ROUTER,
-        purpose="Inspect generation intent and delegate to the correct test specialist.",
+        id="specforge-transformer-agent",
+        name="SpecForge Transformer",
+        kind=AgentKind.SPECFORGE,
+        purpose=("Transform QA Master scenarios into requested manual test cases or BDD Gherkin."),
         runtime="local-router",
-        capabilities=("action-routing", "manual-tests", "automation-tests", "fan-out"),
+        capabilities=("scenario-transformation", "manual-tests", "bdd-gherkin", "fan-out"),
         instruction_file=".github/agents/specforge.agent.md",
     )
 
@@ -82,22 +109,13 @@ class TestCaseGeneratorAgent:
         self.quality_gate = quality_gate or TestCaseValidatorAgent()
         self.knowledge_source = knowledge_source
 
-    def route(self, request: GenerateRequest) -> GenerationTarget:
-        if request.generation_target != GenerationTarget.AUTO:
-            return request.generation_target
-        text = f"{request.description}\n{request.additional_context}".casefold()
-        automation_markers = ("playwright", "selenium", "cypress", "automated", "automation")
-        manual_markers = ("manual test", "exploratory", "usability", "human review")
-        wants_automation = any(marker in text for marker in automation_markers)
-        wants_manual = any(marker in text for marker in manual_markers)
-        if wants_automation and not wants_manual:
-            return GenerationTarget.AUTOMATION
-        if wants_manual and not wants_automation:
-            return GenerationTarget.MANUAL
-        return GenerationTarget.BOTH
-
-    async def generate(self, request: GenerateRequest) -> TestSuite:
-        route = self.route(request)
+    async def transform(self, request: GenerateRequest, route: GenerationTarget) -> TestSuite:
+        publish_lifecycle_event(
+            "SpecForge Transformer",
+            "route_specialists",
+            "running",
+            f"Transforming scenario intent through the {route.value} specialist route.",
+        )
         request = self._with_organizational_knowledge(request)
         if route == GenerationTarget.MANUAL:
             return await self._generate_validated_manual(request)
@@ -207,3 +225,62 @@ class TestCaseGeneratorAgent:
             for finding in report.findings
             if finding.severity == "error"
         )
+
+
+class QAMasterAgent:
+    """Ingest normalized UI requirements, design scenario intent, and orchestrate SpecForge."""
+
+    descriptor = FunctionalAgentDescriptor(
+        id="qa-master-agent",
+        name="QA Master Agent",
+        kind=AgentKind.QA_MASTER,
+        purpose=(
+            "Read normalized UI or BRD input, design risk-based scenarios, and direct "
+            "SpecForge transformation."
+        ),
+        runtime="local-orchestrator",
+        capabilities=(
+            "ui-input-ingestion",
+            "requirement-analysis",
+            "scenario-design",
+            "specforge-orchestration",
+        ),
+        instruction_file=".github/agents/testpilot-coordinator.agent.md",
+    )
+
+    def __init__(
+        self,
+        registry: AgentRegistry,
+        quality_gate: TestCaseValidatorAgent | None = None,
+        knowledge_source: OutputAgent | None = None,
+    ) -> None:
+        self.specforge = SpecForgeTransformerAgent(registry, quality_gate, knowledge_source)
+
+    def route(self, request: GenerateRequest) -> GenerationTarget:
+        if request.generation_target != GenerationTarget.AUTO:
+            return request.generation_target
+        text = f"{request.description}\n{request.additional_context}".casefold()
+        automation_markers = ("playwright", "selenium", "cypress", "automated", "automation")
+        manual_markers = ("manual test", "exploratory", "usability", "human review")
+        wants_automation = any(marker in text for marker in automation_markers)
+        wants_manual = any(marker in text for marker in manual_markers)
+        if wants_automation and not wants_manual:
+            return GenerationTarget.AUTOMATION
+        if wants_manual and not wants_automation:
+            return GenerationTarget.MANUAL
+        return GenerationTarget.BOTH
+
+    async def generate(self, request: GenerateRequest) -> TestSuite:
+        """Treat the validated request as ingested UI data and send scenarios to SpecForge."""
+        route = self.route(request)
+        publish_lifecycle_event(
+            "QA Master Agent",
+            "analyze_and_route",
+            "success",
+            f"Analyzed normalized requirements and selected the {route.value} route.",
+        )
+        return await self.specforge.transform(request, route)
+
+
+# Preserve the former public name for callers while exposing the new responsibility explicitly.
+TestCaseGeneratorAgent = QAMasterAgent

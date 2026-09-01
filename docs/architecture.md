@@ -28,35 +28,40 @@ version-controlled domain baselines to the same Copilot session. The active Auto
 uses a normalized Quotation Service BRD v1.0 baseline; it is grounding context rather than model
 fine-tuning.
 
-The application is coordinated as fourteen explicit roles under `app/agents/`. SpecForge routes an
-explicit `generation_target`, or infers intent from terms such as Playwright, automation,
+The application is coordinated as fifteen explicit roles under `app/agents/`. QA Master consumes
+the normalized UI text or uploaded BRD, analyzes the requirement, and designs risk-based scenario
+intent. SpecForge transforms that intent according to the requested `output_format` and routes an
+explicit `generation_target`, or the target inferred from terms such as Playwright, automation,
 manual test, exploratory, and usability. Ambiguous or neutral requests fan out to both specialists.
 
 1. `InputAgent` normalizes pasted text or extracts requirements from supported documents.
 2. `BusinessRulesAgent` grounds generation in explicit `BR-*` constraints and traceability.
 3. `KnowledgeAgent` checks for an exact validated match before any Copilot request.
-4. `TestCaseGeneratorAgent` is the SpecForge router that resolves the requested action.
-5. `ManualTestCaseGeneratorAgent` creates human-led test scenarios.
-6. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
+4. `AgentRuntime` starts the Markdown-directed QA Master coordinator with governed lookup, design,
+   validation, storage, and completion tools; `QAMasterAgent` then defines specialist routing.
+5. `SpecForgeTransformerAgent` converts those scenarios to the requested manual or BDD test-case
+   representation and selects the applicable specialists.
+6. `ManualTestCaseGeneratorAgent` creates human-led test cases with structured observable steps.
+7. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
    creates only repeatable deterministic UI, API, integration, or BDD automation scenarios. Its
    generation request always asks for executable Gherkin so scenarios can be packaged as a
    framework-compatible `.feature` file; parameterized outlines retain complete Examples tables.
-7. `TestDataAgent` fills missing case-aligned values with privacy-safe synthetic data.
-8. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
+8. `TestDataAgent` fills missing case-aligned values with privacy-safe synthetic data.
+9. `TestCaseValidatorAgent` independently checks coverage, traceability, duplicates, clarity,
    expected results, business-rule alignment, and specialist execution mode. Manual output is
    gated immediately after generation; both manual and automation output receive one
    findings-driven revision and cannot proceed if the revised suite still fails.
-9. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
+10. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
    CSV, Excel, JSON, or Gherkin `.feature` interchange files.
-10. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
+11. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
    organizational knowledge source. This is retrieval-augmented generation, not model training;
    current business requirements always take precedence over retrieved examples. Feature files
    are retained as artifacts, while each Scenario or Scenario Outline is also stored as an
    individually indexed record with its mode, Gherkin, and requirement mappings.
-11. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
-12. `ExecutionAgent` validates results supplied by an approved manual or automation run.
-13. `BugReporterAgent` creates review-required defect drafts for failed tests.
-14. `MetricsAgent` calculates coverage, execution, and defect measures from reviewed evidence.
+12. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
+13. `ExecutionAgent` validates results supplied by an approved manual or automation run.
+14. `BugReporterAgent` creates review-required defect drafts for failed tests.
+15. `MetricsAgent` calculates coverage, execution, and defect measures from reviewed evidence.
 
 `MultiAgentTestPipeline` owns their execution order. A newly generated suite is stored only
 when validation has no error findings. Retrieved suites are validated again before return.
@@ -91,7 +96,8 @@ flowchart LR
   import paths remain available for compatibility.
 - `app/services/document_ingestion.py`: bounded document extraction and input-agent normalization.
 - `app/observability.py`: safe logging, request correlation, HTTP protections, and cancellation.
-- `app/agents/test_case_generator_agent.py`: specialist generation and SpecForge routing.
+- `app/agents/test_case_generator_agent.py`: QA Master orchestration, SpecForge transformation,
+  and specialist generation.
 - `app/agents/runner.py`: the single GitHub Copilot SDK session and structured-output runtime.
 - `app/generator.py`: test-suite request envelopes, normalization, and declarative agent contract.
 - `app/agents/reqnroll_step_definition_agent.py`: ReqnRoll schemas and a thin shared-runtime adapter.
@@ -112,8 +118,9 @@ explicit user operation.
 3. A known exact match returns immediately from organizational memory without calling Copilot.
 4. Otherwise, the approved registry supplies the test-design agent and `CopilotGenerator` opens
    a restricted authenticated session.
-5. SpecForge calls the selected specialist, or both specialists sequentially, and combines their
-   structured suites.
+5. QA Master derives scenario intent from the normalized UI or BRD request; SpecForge calls the
+   selected specialist, or both specialists sequentially, and combines their structured suites in
+   the requested manual or BDD format.
 6. The quality gate validates automation/manual feasibility, deduplicates, caps, and formats the
    result.
 7. The suite is stored in organizational memory and rendered as manual test steps or SpecFlow Gherkin.

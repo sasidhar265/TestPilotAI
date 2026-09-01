@@ -40,6 +40,10 @@ def test_reqnroll_generator_requires_reusable_http_client_api_scripts() -> None:
 def test_coordinator_workflow_is_loaded_from_markdown() -> None:
     body = load_agent_instructions("testpilot-coordinator")
 
+    assert "You are the QA Master Agent" in body
+    assert "input ingested\nfrom the UI" in body
+    assert "Design the risk-based test scenarios first" in body
+    assert "SpecForge" in body
     assert "Always check organizational memory first" in body
     assert "Store only a passing suite" in body
 
@@ -57,6 +61,8 @@ def test_markdown_defines_input_output_and_manual_bdd_formats() -> None:
 
     assert "## Input contract" in specforge
     assert "## Canonical output contract" in specforge
+    assert "scenario-to-test-case transformation agent" in specforge
+    assert "requested `output_format`" in specforge
     assert "## Manual test-case format" in manual
     assert '"gherkin": null' in manual
     assert "## Automation test-case and scenario format" in automation

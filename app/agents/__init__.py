@@ -58,7 +58,9 @@ class AgentKind(StrEnum):
     INPUT = "input"
     BUSINESS_RULES = "business-rules"
     KNOWLEDGE = "knowledge"
-    ROUTER = "specforge-router"
+    QA_MASTER = "qa-master"
+    SPECFORGE = "specforge"
+    ROUTER = "qa-master"  # Backward-compatible enum alias.
     MANUAL_GENERATOR = "manual-test-generator"
     AUTOMATION_GENERATOR = "automation-test-generator"
     VALIDATOR = "validator"

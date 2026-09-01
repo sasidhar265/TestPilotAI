@@ -77,7 +77,11 @@ def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
             gherkin: str | None = gherkin_text
         else:
             gherkin = None
-        unique_cases.append(case.model_copy(update={"gherkin": gherkin}))
+        scenario_group = case.scenario_group.strip() or suite.feature_name
+        unique_cases.append(
+            case.model_copy(update={"scenario_group": scenario_group, "gherkin": gherkin})
+        )
+    unique_cases.sort(key=lambda case: case.scenario_group.casefold())
     return suite.model_copy(
         update={
             "output_format": request.output_format,
@@ -220,6 +224,12 @@ def _normalize_case(case: dict[str, Any], index: int) -> dict[str, Any]:
     normalized.update(
         {
             "id": str(values.get("id", values.get("testcaseid", f"TC-{index:03d}"))),
+            "scenario_group": str(
+                values.get(
+                    "scenariogroup",
+                    values.get("businessscenario", values.get("feature", "General scenario")),
+                )
+            ),
             "title": str(title),
             "objective": str(values.get("objective", title)),
             "category": category,

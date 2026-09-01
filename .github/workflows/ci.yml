@@ -47,3 +47,31 @@ jobs:
         with:
           name: coverage
           path: coverage.xml
+
+  container:
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build immutable application image
+        run: docker build --tag story-to-tests-agent:${{ github.sha }} .
+      - name: Start container
+        run: >-
+          docker run --detach --name story-to-tests-smoke
+          --publish 127.0.0.1:8000:8000
+          story-to-tests-agent:${{ github.sha }}
+      - name: Verify container readiness
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/api/ready; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs story-to-tests-smoke
+          exit 1
+      - name: Stop container
+        if: always()
+        run: docker rm --force story-to-tests-smoke || true

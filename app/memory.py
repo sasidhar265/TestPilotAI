@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import sqlite3
 from contextlib import closing
 from datetime import UTC, datetime
@@ -57,6 +58,7 @@ class OrganizationalMemory:
         if not self.enabled:
             return suite
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._restrict_permissions(self.path.parent, 0o700)
         key = self.key_for(request)
         stored = suite.model_copy(
             update={
@@ -87,6 +89,10 @@ class OrganizationalMemory:
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=5)
+        self._restrict_permissions(self.path, 0o600)
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=NORMAL")
+        connection.execute("PRAGMA busy_timeout=5000")
         connection.execute(
             """CREATE TABLE IF NOT EXISTS test_suite_memory (
                  memory_key TEXT PRIMARY KEY,
@@ -97,6 +103,14 @@ class OrganizationalMemory:
                )"""
         )
         return connection
+
+    @staticmethod
+    def _restrict_permissions(path: Path, mode: int) -> None:
+        """Apply least-privilege modes where POSIX permissions are available."""
+        try:
+            os.chmod(path, mode)
+        except OSError:
+            pass
 
     @staticmethod
     def _now() -> str:

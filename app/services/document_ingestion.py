@@ -69,10 +69,14 @@ class DocumentIngestionService:
         *,
         max_file_bytes: int = 15 * 1024 * 1024,
         max_text_chars: int = 30_000,
+        max_archive_entries: int = 2000,
+        max_archive_uncompressed_bytes: int = 60 * 1024 * 1024,
         ocr: Callable[[object], str] | None = None,
     ) -> None:
         self.max_file_bytes = max_file_bytes
         self.max_text_chars = max_text_chars
+        self.max_archive_entries = max_archive_entries
+        self.max_archive_uncompressed_bytes = max_archive_uncompressed_bytes
         self._ocr = ocr
 
     def extract(self, filename: str, content: bytes) -> ExtractedDocument:
@@ -86,6 +90,8 @@ class DocumentIngestionService:
             raise DocumentIngestionError(
                 f"The uploaded document exceeds the {self.max_file_bytes}-byte limit."
             )
+        if suffix in {".docx", ".xlsx", ".pages", ".numbers"}:
+            self._validate_archive(content)
 
         extractor = {
             ".docx": self._extract_docx,
@@ -113,6 +119,30 @@ class DocumentIngestionService:
                 f"Extracted text exceeds the {self.max_text_chars}-character limit."
             )
         return ExtractedDocument(filename, self.MEDIA_TYPES[suffix], text)
+
+    def _validate_archive(self, content: bytes) -> None:
+        """Reject malformed or unexpectedly expansive Office/iWork ZIP containers."""
+        try:
+            with ZipFile(BytesIO(content)) as archive:
+                entries = archive.infolist()
+                if len(entries) > self.max_archive_entries:
+                    raise DocumentIngestionError("The document archive contains too many entries.")
+                expanded_size = sum(entry.file_size for entry in entries)
+                if expanded_size > self.max_archive_uncompressed_bytes:
+                    raise DocumentIngestionError(
+                        "The document expands beyond the safe processing limit."
+                    )
+                for entry in entries:
+                    if entry.file_size > 10 * 1024 * 1024 and entry.compress_size == 0:
+                        raise DocumentIngestionError(
+                            "The document contains an invalid compressed entry."
+                        )
+                    if entry.compress_size and entry.file_size / entry.compress_size > 200:
+                        raise DocumentIngestionError(
+                            "The document contains an unsafe compression ratio."
+                        )
+        except BadZipFile as error:
+            raise DocumentIngestionError("The document is not a valid archive.") from error
 
     @staticmethod
     def _extract_docx(content: bytes) -> str:

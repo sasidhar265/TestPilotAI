@@ -5,10 +5,14 @@ from app.config import Settings
 from app.generator import (
     _normalize_suite_payload,
     create_generator,
+    finalize_suite,
     system_prompt,
     user_prompt,
 )
 from app.models import GenerateRequest
+from app.models import TestCase as CaseModel
+from app.models import TestCategory as CategoryModel
+from app.models import TestStep as StepModel
 from app.models import TestSuite as SuiteModel
 
 
@@ -54,6 +58,47 @@ def test_prompt_requires_automation_feasibility_classification() -> None:
     prompt = system_prompt(GenerateRequest(description="As a user, I want secure sign in."))
     assert "execution_mode" in prompt
     assert "feasibility_reason" in prompt
+    assert "scenario_group" in prompt
+    assert "must not be emitted as a duplicated standalone case" in prompt
+
+
+def test_finalized_cases_are_grouped_and_common_duplicates_are_removed() -> None:
+    common = CaseModel(
+        id="TC-002",
+        scenario_group="Account sign in",
+        title="Reject invalid password",
+        objective="Verify invalid credentials are rejected",
+        category=CategoryModel.REGRESSION,
+        priority="P1",
+        execution_mode="automation",
+        feasibility_reason="Stable authentication response",
+        steps=[StepModel(action="Submit an invalid password", expected_result="Access is denied")],
+    )
+    suite = SuiteModel(
+        feature_name="Authentication",
+        test_cases=[
+            common,
+            common.model_copy(update={"id": "TC-003"}),
+            common.model_copy(
+                update={
+                    "id": "TC-001",
+                    "scenario_group": "Account recovery",
+                    "title": "Request password reset",
+                    "objective": "Verify password reset can be requested",
+                }
+            ),
+        ],
+    )
+
+    result = finalize_suite(
+        suite, GenerateRequest(description="Verify account authentication journeys.")
+    )
+
+    assert len(result.test_cases) == 2
+    assert [case.scenario_group for case in result.test_cases] == [
+        "Account recovery",
+        "Account sign in",
+    ]
 
 
 def test_manual_specialist_prompt_restricts_execution_mode() -> None:

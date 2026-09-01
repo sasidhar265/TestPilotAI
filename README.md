@@ -13,7 +13,7 @@ from the Mac as PDF or XLSX. A document-ingestion component extracts normalized 
 agent generates the suite, and an independent validator reports coverage, traceability,
 duplicates, clarity, and expected-result quality. Image extraction uses local Tesseract OCR.
 
-The application uses fourteen discoverable agents across the test lifecycle. In addition to
+The application uses fifteen discoverable agents across the test lifecycle. In addition to
 requirement ingestion, manual/automation generation, validation, conversion, and storage, it can
 normalize business rules, recall approved knowledge, fill privacy-safe test data, summarize test
 execution, draft defects, and calculate quality metrics. `GET /api/agents` lists every agent's
@@ -93,6 +93,8 @@ independently:
 | Inspect | `GET /api/health` | Shows service, Copilot authentication mode, model selection, profile, and memory status. |
 | Discover | `GET /api/agents` | Lists registered agents, responsibilities, runtimes, and capabilities. |
 | Observe | `GET /api/logs` | Returns bounded operational logs, optionally filtered by correlation ID. |
+| Trace live | `GET /api/generation/{request_id}/events` | Returns incremental payload-free agent lifecycle events. |
+| Accept | `POST /api/output/accept` | Stores selected approved manual and automation artifacts in the fixed output directory. |
 | Generate | `POST /api/generate` | Generates test cases directly from a validated JSON request. |
 | Orchestrate | `POST /api/agent/run` | Runs the governed multi-agent generation and validation pipeline. |
 | Upload | `POST /api/generate/document` | Extracts a supported document and generates a validated suite. |
@@ -186,8 +188,8 @@ flowchart LR
     A[1. Enter text<br/>or upload a document] --> B[2. Normalize input<br/>and business rules]
     B --> C{3. Exact validated<br/>suite already stored?}
     C -->|Yes| D[Revalidate stored suite]
-    C -->|No| E[Route to manual,<br/>automation, or both]
-    E --> F[Generate through<br/>GitHub Copilot]
+    C -->|No| E[QA Master designs<br/>risk-based scenarios]
+    E --> F[SpecForge transforms to<br/>manual or BDD test cases]
     F --> G[Validate and allow<br/>one guided revision]
     G -->|Pass| H[Add safe test data<br/>and store suite]
     G -->|Fail| I[Return actionable<br/>validation findings]
@@ -197,8 +199,10 @@ flowchart LR
 ```
 
 The memory check can avoid a Copilot request for an exact known requirement. A stored suite is
-still revalidated before use. For a new requirement, SpecForge selects the manual specialist, the
-automation specialist, or both. Output that still fails after one findings-driven revision is not
+still revalidated before use. For a new requirement, QA Master reads the normalized UI or BRD
+input and designs the scenario intent. SpecForge then selects the manual specialist, automation
+specialist, or both to transform that intent into the requested manual or BDD test cases. Output
+that still fails after one findings-driven revision is not
 stored or offered for publication.
 
 After generation, a user can choose only the actions they need:
@@ -331,12 +335,12 @@ generation is needed. Jira receives only the cases selected in an explicit publi
 
 ### Agent responsibilities
 
-The fourteen roles are grouped below by purpose so their relationship is easier to scan:
+The fifteen roles are grouped below by purpose so their relationship is easier to scan:
 
 | Group | Agents | Responsibility |
 | --- | --- | --- |
 | Prepare | Input, Business Rules, Knowledge | Extract and normalize requirements, bind `BR-*` rules, and recall exact validated suites. |
-| Generate | SpecForge Router, Manual Generator, Automation Generator | Select the requested route and generate focused manual or repeatable automation scenarios. |
+| Generate | QA Master, SpecForge Transformer, Manual Generator, Automation Generator | Ingest UI/BRD input, design scenario intent, and transform it into requested manual or BDD test cases. |
 | Assure | Test Case Validator, Test Data | Enforce coverage and traceability rules and fill missing values with privacy-safe synthetic data. |
 | Deliver | Context Converter, Output, Test Storage | Convert approved suites, retain artifacts, and store validated knowledge for exact-match reuse. |
 | Learn from execution | Execution, Bug Reporter, Metrics | Validate supplied results, draft defects for review, and calculate transparent quality measures. |

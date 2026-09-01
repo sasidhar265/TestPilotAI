@@ -41,6 +41,11 @@ class ExportFormat(StrEnum):
     FEATURE = "feature"
 
 
+class ManualArtifactFormat(StrEnum):
+    CSV = "csv"
+    EXCEL = "xlsx"
+
+
 class ExecutionStatus(StrEnum):
     PASSED = "passed"
     FAILED = "failed"
@@ -66,6 +71,11 @@ class TestDatum(BaseModel):
 
 class TestCase(BaseModel):
     id: str = Field(description="Stable identifier such as TC-001")
+    scenario_group: str = Field(
+        default="General scenario",
+        min_length=1,
+        description="Business scenario that owns this test case and its shared coverage",
+    )
     title: str
     objective: str
     category: TestCategory
@@ -138,6 +148,38 @@ class DocumentSource(BaseModel):
 
 class SuiteRequest(BaseModel):
     suite: TestSuite
+
+
+class AcceptSuiteRequest(SuiteRequest):
+    validation: "ValidationReportPayload"
+    selected_case_ids: list[str] = Field(min_length=1)
+    manual_format: ManualArtifactFormat = ManualArtifactFormat.EXCEL
+    accepted_by: str = Field(min_length=2, max_length=100)
+
+
+class ValidationReportPayload(BaseModel):
+    passed: bool
+    score: int = Field(ge=0, le=100)
+    acceptance_criteria_total: int = Field(ge=0)
+    acceptance_criteria_covered: int = Field(ge=0)
+    findings: list[dict[str, object]] = Field(default_factory=list)
+
+
+class AcceptedArtifact(BaseModel):
+    filename: str
+    format: str
+    case_count: int = Field(ge=0)
+    size_bytes: int = Field(ge=0)
+    sha256: str
+
+
+class AcceptanceReceipt(BaseModel):
+    accepted_at: str
+    accepted_by: str
+    suite_hash: str
+    selected_case_ids: list[str]
+    output_directory: str
+    artifacts: list[AcceptedArtifact]
 
 
 class TestExecutionResult(BaseModel):

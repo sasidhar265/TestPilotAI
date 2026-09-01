@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .copilot-runtime/
 .agent-memory/
+output/
 *.py[cod]
 .DS_Store
 .coverage

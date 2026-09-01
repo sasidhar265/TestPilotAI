@@ -2,6 +2,7 @@
 
 import asyncio
 import contextvars
+import hmac
 import json
 import logging
 import re
@@ -15,6 +16,8 @@ from types import TracebackType
 from uuid import uuid4
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+from app.config import Settings
 
 request_id_context: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
 logger = logging.getLogger(__name__)
@@ -168,11 +171,128 @@ class GenerationCancellationRegistry:
 generation_cancellations = GenerationCancellationRegistry()
 
 
-class OrganizationHttpMiddleware:
-    """Add correlation, safe request logs, and baseline browser protections."""
+@dataclass(frozen=True)
+class LifecycleEvent:
+    sequence: int
+    timestamp: str
+    agent: str
+    action: str
+    status: str
+    summary: str
 
-    def __init__(self, app: ASGIApp) -> None:
+
+class LifecycleEventRegistry:
+    """Keep bounded, payload-free agent activity for live UI inspection."""
+
+    def __init__(self, request_capacity: int = 200, events_per_request: int = 100) -> None:
+        self._request_capacity = request_capacity
+        self._events_per_request = events_per_request
+        self._events: dict[str, deque[LifecycleEvent]] = {}
+        self._order: deque[str] = deque()
+        self._completed: set[str] = set()
+        self._lock = Lock()
+
+    def start(self, request_id: str) -> None:
+        with self._lock:
+            if request_id not in self._events:
+                while len(self._events) >= self._request_capacity and self._order:
+                    expired = self._order.popleft()
+                    self._events.pop(expired, None)
+                    self._completed.discard(expired)
+                self._events[request_id] = deque(maxlen=self._events_per_request)
+                self._order.append(request_id)
+                self._completed.discard(request_id)
+
+    def publish(
+        self,
+        request_id: str,
+        agent: str,
+        action: str,
+        status: str,
+        summary: str,
+    ) -> None:
+        self.start(request_id)
+        with self._lock:
+            if request_id in self._completed:
+                return
+            events = self._events[request_id]
+            events.append(
+                LifecycleEvent(
+                    sequence=(events[-1].sequence + 1) if events else 1,
+                    timestamp=datetime.now(UTC).isoformat(),
+                    agent=agent,
+                    action=action,
+                    status=status,
+                    summary=summary,
+                )
+            )
+
+    def complete(self, request_id: str) -> None:
+        with self._lock:
+            if request_id in self._events:
+                self._completed.add(request_id)
+
+    def read(self, request_id: str, after: int = 0) -> dict[str, object]:
+        with self._lock:
+            events = list(self._events.get(request_id, ()))
+            complete = request_id in self._completed
+        return {
+            "request_id": request_id,
+            "events": [asdict(event) for event in events if event.sequence > after],
+            "complete": complete,
+        }
+
+
+lifecycle_events = LifecycleEventRegistry()
+
+
+def publish_lifecycle_event(agent: str, action: str, status: str, summary: str) -> None:
+    """Publish against the active correlation ID without recording request content."""
+    request_id = request_id_context.get()
+    if request_id != "-":
+        lifecycle_events.publish(request_id, agent, action, status, summary)
+
+
+class OrganizationHttpMiddleware:
+    """Enforce API access, resource bounds, safe logs, and browser protections."""
+
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
         self.app = app
+        self.settings = settings
+        self._request_slots = asyncio.Semaphore(settings.max_concurrent_requests)
+        self._generation_slots = asyncio.Semaphore(settings.max_concurrent_generations)
+
+    @staticmethod
+    async def _reject(send: Send, status: int, detail: str, request_id: str) -> None:
+        body = json.dumps({"detail": detail}, separators=(",", ":")).encode()
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(body)).encode()),
+                    (b"cache-control", b"no-store"),
+                    (b"x-request-id", request_id.encode()),
+                    (b"x-content-type-options", b"nosniff"),
+                    (b"www-authenticate", b"Bearer"),
+                ],
+            }
+        )
+        await send({"type": "http.response.body", "body": body})
+
+    def _authorized(self, scope: Scope, headers: dict[bytes, bytes]) -> bool:
+        expected = self.settings.api_auth_token_value
+        path = str(scope.get("path", ""))
+        if not expected or not path.startswith("/api/"):
+            return True
+        if path in {"/api/health", "/api/live", "/api/ready"}:
+            return True
+        supplied = headers.get(b"authorization", b"").decode("ascii", "ignore")
+        scheme, separator, token = supplied.partition(" ")
+        return bool(
+            separator and scheme.casefold() == "bearer" and hmac.compare_digest(token, expected)
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -185,6 +305,70 @@ class OrganizationHttpMiddleware:
         token = request_id_context.set(request_id)
         started = time.perf_counter()
         status_code = 500
+        slot_acquired = False
+        generation_slot_acquired = False
+
+        content_length = headers.get(b"content-length", b"0")
+        try:
+            declared_length = int(content_length)
+        except ValueError:
+            declared_length = -1
+
+        if declared_length < 0:
+            await self._reject(send, 400, "Invalid Content-Length header", request_id)
+            request_id_context.reset(token)
+            return
+        if declared_length > self.settings.max_request_body_bytes:
+            await self._reject(send, 413, "Request body exceeds the configured limit", request_id)
+            request_id_context.reset(token)
+            return
+        if not self._authorized(scope, headers):
+            await self._reject(send, 401, "Authentication required", request_id)
+            request_id_context.reset(token)
+            return
+
+        try:
+            await asyncio.wait_for(
+                self._request_slots.acquire(),
+                timeout=self.settings.request_queue_timeout_seconds,
+            )
+            slot_acquired = True
+        except TimeoutError:
+            await self._reject(send, 503, "Server is at request capacity", request_id)
+            request_id_context.reset(token)
+            return
+
+        generation_paths = {
+            "/api/generate",
+            "/api/agent/run",
+            "/api/generate/document",
+            "/api/generate/expand",
+            "/api/step-definitions/reqnroll",
+        }
+        if scope.get("method") == "POST" and scope.get("path") in generation_paths:
+            try:
+                await asyncio.wait_for(
+                    self._generation_slots.acquire(),
+                    timeout=self.settings.request_queue_timeout_seconds,
+                )
+                generation_slot_acquired = True
+            except TimeoutError:
+                self._request_slots.release()
+                slot_acquired = False
+                await self._reject(send, 503, "Generation capacity is currently full", request_id)
+                request_id_context.reset(token)
+                return
+
+        received_bytes = 0
+
+        async def bounded_receive() -> Message:
+            nonlocal received_bytes
+            message = await receive()
+            if message["type"] == "http.request":
+                received_bytes += len(message.get("body", b""))
+                if received_bytes > self.settings.max_request_body_bytes:
+                    raise RequestBodyTooLarge
+            return message
 
         async def send_with_headers(message: Message) -> None:
             nonlocal status_code
@@ -198,13 +382,28 @@ class OrganizationHttpMiddleware:
                         (b"x-frame-options", b"DENY"),
                         (b"referrer-policy", b"no-referrer"),
                         (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
+                        (
+                            b"content-security-policy",
+                            b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
+                            b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
+                            b"script-src 'self'; style-src 'self' 'unsafe-inline'",
+                        ),
+                        (b"cross-origin-opener-policy", b"same-origin"),
+                        (b"cross-origin-resource-policy", b"same-origin"),
                     ]
                 )
+                if self.settings.is_production:
+                    response_headers.append(
+                        (b"strict-transport-security", b"max-age=31536000; includeSubDomains")
+                    )
                 message["headers"] = response_headers
             await send(message)
 
         try:
-            await self.app(scope, receive, send_with_headers)
+            await self.app(scope, bounded_receive, send_with_headers)
+        except RequestBodyTooLarge:
+            status_code = 413
+            await self._reject(send, 413, "Request body exceeds the configured limit", request_id)
         except asyncio.CancelledError:
             status_code = 499
             raise
@@ -224,4 +423,12 @@ class OrganizationHttpMiddleware:
                 status_code,
                 duration_ms,
             )
+            if slot_acquired:
+                self._request_slots.release()
+            if generation_slot_acquired:
+                self._generation_slots.release()
             request_id_context.reset(token)
+
+
+class RequestBodyTooLarge(Exception):
+    """Internal signal raised when a streamed body crosses the configured maximum."""

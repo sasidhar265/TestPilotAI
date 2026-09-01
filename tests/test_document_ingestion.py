@@ -87,3 +87,14 @@ def test_iwork_binary_only_package_has_export_guidance() -> None:
 
     with pytest.raises(DocumentIngestionError, match="export it as PDF.*Excel/XLSX"):
         DocumentIngestionService().extract("requirements.pages", content.getvalue())
+
+
+def test_rejects_archive_with_unsafe_expansion() -> None:
+    content = BytesIO()
+    with ZipFile(content, "w") as package:
+        package.writestr("word/document.xml", b"x" * 2048)
+
+    with pytest.raises(DocumentIngestionError, match="safe processing limit"):
+        DocumentIngestionService(max_archive_uncompressed_bytes=1024).extract(
+            "requirements.docx", content.getvalue()
+        )

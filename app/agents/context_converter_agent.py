@@ -50,6 +50,7 @@ class ContextConverterAgent:
 
     _HEADERS = (
         "Test Case Identifier",
+        "Scenario Group",
         "Summary",
         "Test Type",
         "Priority",
@@ -92,6 +93,7 @@ class ContextConverterAgent:
                 rows.append(
                     [
                         case.id,
+                        case.scenario_group,
                         case.title,
                         "Manual" if case.execution_mode.value == "manual" else "Generic",
                         case.priority,

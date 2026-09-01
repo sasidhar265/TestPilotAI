@@ -1,7 +1,9 @@
 """Model-directed Copilot agent runtime for test-design goals."""
 
+import asyncio
 import json
 from collections.abc import Callable
+from contextlib import suppress
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -13,6 +15,7 @@ from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.config import Settings
 from app.models import GenerateRequest, TestSuite
+from app.observability import lifecycle_events, publish_lifecycle_event, request_id_context
 
 
 class AgentEvent(BaseModel):
@@ -60,14 +63,24 @@ class AgentRuntime:
             ) from error
 
         trace: list[AgentEvent] = []
+        run_request_id = request_id_context.get()
         suite: TestSuite | None = None
         validation: ValidationReport | None = None
         finished = False
+        active_specialist_task: asyncio.Task[TestSuite] | None = None
 
         def record(tool: str, status: str, summary: str) -> None:
-            trace.append(
-                AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
-            )
+            event = AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
+            trace.append(event)
+            agent = {
+                "lookup_memory": "Knowledge Agent",
+                "design_test_suite": "QA Master → SpecForge",
+                "validate_test_suite": "Quality Gate",
+                "store_validated_suite": "Test Storage Agent",
+                "finish_run": "QA Master Agent",
+            }.get(tool, "QA Master Agent")
+            if run_request_id != "-":
+                lifecycle_events.publish(run_request_id, agent, tool, status, summary)
 
         @define_tool(
             description="Look for an already validated exact-match suite in memory.",
@@ -85,12 +98,15 @@ class AgentRuntime:
             return json.dumps({"found": True, "validation": validation.model_dump(mode="json")})
 
         @define_tool(
-            description="Ask the approved test-design model to create or revise the suite.",
+            description=(
+                "Ask QA Master to design scenarios from ingested UI input and have SpecForge "
+                "transform them into the requested test-case format."
+            ),
             skip_permission=True,
             defer="never",
         )
         async def design_test_suite(params: DesignParams) -> str:
-            nonlocal suite, validation
+            nonlocal active_specialist_task, suite, validation
             design_request = request
             if params.revision_instructions:
                 design_request = request.model_copy(
@@ -102,10 +118,24 @@ class AgentRuntime:
                         ).strip()
                     }
                 )
-            suite = await self.generator.generate(design_request)
+            correlation_token = request_id_context.set(run_request_id)
+            try:
+                active_specialist_task = asyncio.create_task(
+                    self.generator.generate(design_request),
+                    name=f"specialist-generation-{run_request_id}",
+                )
+                suite = await active_specialist_task
+            finally:
+                if active_specialist_task is not None and active_specialist_task.done():
+                    active_specialist_task = None
+                request_id_context.reset(correlation_token)
             validation = None
-            action = "Revised" if params.revision_instructions else "Designed"
-            record("design_test_suite", "success", f"{action} {len(suite.test_cases)} cases.")
+            action = "Revised" if params.revision_instructions else "Transformed"
+            record(
+                "design_test_suite",
+                "success",
+                f"QA Master and SpecForge {action.lower()} {len(suite.test_cases)} cases.",
+            )
             return json.dumps(suite.model_dump(mode="json"))
 
         @define_tool(
@@ -165,13 +195,30 @@ class AgentRuntime:
             finish_run,
         ]
         runner = CopilotAgentRunner(self.settings, self.client_factory)
-        await runner.invoke(
-            instructions=load_agent_instructions("testpilot-coordinator"),
-            prompt="REQUEST ENVELOPE\n" + request.model_dump_json(),
-            timeout_error="The coordinator agent timed out.",
-            tools=tools,
-            capture_response=False,
+        publish_lifecycle_event(
+            "QA Master Agent",
+            "coordinate",
+            "running",
+            "Coordinator is selecting governed lifecycle tools from the normalized request.",
         )
+        try:
+            await runner.invoke(
+                instructions=load_agent_instructions("testpilot-coordinator"),
+                prompt="REQUEST ENVELOPE\n" + request.model_dump_json(),
+                timeout_error=(
+                    "The coordinator agent timed out while waiting for its governed tools."
+                ),
+                tools=tools,
+                capture_response=False,
+                timeout_seconds=self.settings.copilot_coordinator_timeout_seconds,
+            )
+        except (CopilotGenerationError, asyncio.CancelledError):
+            task = active_specialist_task
+            if task is not None and not task.done():
+                task.cancel("Coordinator stopped before specialist completion")
+                with suppress(asyncio.CancelledError):
+                    await task
+            raise
 
         if not finished or suite is None or validation is None:
             return await self._recover_incomplete_run(request, suite, validation, trace)
@@ -187,9 +234,9 @@ class AgentRuntime:
         """Complete safely when the model-directed coordinator idles prematurely."""
 
         def record(tool: str, status: str, summary: str) -> None:
-            trace.append(
-                AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
-            )
+            event = AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
+            trace.append(event)
+            publish_lifecycle_event("Governed Recovery", tool, status, summary)
 
         record(
             "coordinator_recovery",
@@ -201,7 +248,10 @@ class AgentRuntime:
             record(
                 "design_test_suite",
                 "success",
-                f"Fallback designed {len(suite.test_cases)} cases through SpecForge.",
+                (
+                    f"Fallback transformed {len(suite.test_cases)} QA Master scenarios "
+                    "through SpecForge."
+                ),
             )
         if validation is None:
             validation = self.validator.validate(request, suite)

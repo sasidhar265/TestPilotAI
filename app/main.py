@@ -1,10 +1,12 @@
 import logging
+import os
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agent_runtime import AgentEvent
 from app.agents import TestStorageAgent
@@ -27,6 +29,7 @@ from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
     ManualTestCaseGeneratorAgent,
+    SpecForgeTransformerAgent,
     TestCaseGeneratorAgent,
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
@@ -41,6 +44,8 @@ from app.generator import CopilotGenerator, copilot_error_message
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
 from app.models import (
+    AcceptanceReceipt,
+    AcceptSuiteRequest,
     BusinessRule,
     DefectDraft,
     DocumentSource,
@@ -60,10 +65,13 @@ from app.observability import (
     OrganizationHttpMiddleware,
     configure_logging,
     generation_cancellations,
+    lifecycle_events,
+    publish_lifecycle_event,
     request_id_context,
     ui_log_handler,
 )
 from app.services import MultiAgentTestPipeline, TestGenerationService
+from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
 from app.services.document_ingestion import DocumentIngestionError, InputAgent
 
 settings_at_startup = get_settings()
@@ -72,8 +80,18 @@ app = FastAPI(
     title="Story-to-Tests Agent",
     version="0.1.0",
     description="Governed multi-agent conversion of product requirements into validated tests.",
+    docs_url=None if settings_at_startup.is_production else "/docs",
+    redoc_url=None if settings_at_startup.is_production else "/redoc",
+    openapi_url=None if settings_at_startup.is_production else "/openapi.json",
 )
-app.add_middleware(OrganizationHttpMiddleware)
+app.add_middleware(
+    OrganizationHttpMiddleware,
+    settings=settings_at_startup,
+)
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings_at_startup.allowed_host_list,
+)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
@@ -91,6 +109,11 @@ def log_operation_failure(operation: str, status_code: int, error: Exception) ->
         type(error).__name__,
         exc_info=(type(error), error, error.__traceback__),
     )
+
+
+def complete_lifecycle_action(agent: str, action: str, summary: str) -> None:
+    publish_lifecycle_event(agent, action, "success", summary)
+    lifecycle_events.complete(request_id_context.get())
 
 
 class DocumentGenerationResult(DocumentSource):
@@ -192,6 +215,39 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
     }
 
 
+@app.get("/api/live")
+async def liveness() -> dict[str, bool]:
+    """Report process liveness without touching providers or persistent storage."""
+    return {"ok": True}
+
+
+@app.get("/api/ready")
+async def readiness(settings: Settings = Depends(get_settings)) -> dict[str, object]:
+    """Verify local dependencies needed to accept work; no premium AI request is consumed."""
+    checks: dict[str, bool] = {
+        "configuration": True,
+        "agent_profile": True,
+        "memory": True,
+    }
+    profile = (
+        settings.copilot_working_directory / ".github" / "agent-profiles" / settings.agent_profile
+    )
+    checks["agent_profile"] = profile.is_dir()
+    if settings.organizational_memory_enabled:
+        memory_parent = settings.organizational_memory_path.parent
+        try:
+            memory_parent.mkdir(parents=True, exist_ok=True)
+            checks["memory"] = os.access(memory_parent, os.W_OK)
+            if checks["memory"]:
+                OrganizationalMemory(settings.organizational_memory_path).count()
+        except OSError:
+            checks["memory"] = False
+    ready = all(checks.values())
+    if not ready:
+        raise HTTPException(status_code=503, detail={"ready": False, "checks": checks})
+    return {"ready": True, "checks": checks, "upstream_copilot_checked": False}
+
+
 @app.get("/api/agents")
 async def list_agents() -> list[dict[str, object]]:
     """List the functional agents in execution order."""
@@ -202,6 +258,7 @@ async def list_agents() -> list[dict[str, object]]:
             BusinessRulesAgent.descriptor,
             KnowledgeAgent.descriptor,
             TestCaseGeneratorAgent.descriptor,
+            SpecForgeTransformerAgent.descriptor,
             ManualTestCaseGeneratorAgent.descriptor,
             AutomationTestCaseGeneratorAgent.descriptor,
             TestCaseValidatorAgent.descriptor,
@@ -226,6 +283,14 @@ async def application_logs(request_id: str = "", limit: int = 100) -> dict[str, 
     return {"entries": entries, "count": len(entries)}
 
 
+@app.get("/api/generation/{request_id}/events")
+async def generation_events(request_id: str, after: int = 0) -> dict[str, object]:
+    """Return incremental, payload-free lifecycle activity for one correlated generation."""
+    if not request_id.isascii() or len(request_id) > 128 or after < 0:
+        raise HTTPException(status_code=422, detail="Invalid lifecycle event query")
+    return lifecycle_events.read(request_id, after)
+
+
 @app.post("/api/generate", response_model=TestSuite)
 async def generate(
     request: GenerateRequest,
@@ -244,14 +309,26 @@ async def generate(
 @app.post("/api/test-data", response_model=TestSuite)
 async def generate_test_data(request: SuiteRequest) -> TestSuite:
     """Fill missing case-aligned values with safe synthetic test data."""
-    return TestDataAgent().generate(request.suite)
+    suite = TestDataAgent().generate(request.suite)
+    complete_lifecycle_action(
+        "Test Data Agent",
+        "generate_synthetic_data",
+        f"Prepared case-aligned synthetic data for {len(suite.test_cases)} cases.",
+    )
+    return suite
 
 
 @app.post("/api/execution", response_model=ExecutionSummary)
 async def summarize_execution(request: ExecutionRequest) -> ExecutionSummary:
     """Validate and summarize results supplied by an approved execution source."""
     try:
-        return ExecutionAgent().summarize(request)
+        summary = ExecutionAgent().summarize(request)
+        complete_lifecycle_action(
+            "Execution Agent",
+            "summarize_execution",
+            f"Summarized {summary.total} reviewed results with a {summary.pass_rate}% pass rate.",
+        )
+        return summary
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
@@ -261,7 +338,13 @@ async def draft_defects(request: ExecutionRequest) -> list[DefectDraft]:
     """Create human-review-required defect drafts from failed test results."""
     try:
         ExecutionAgent().summarize(request)
-        return BugReporterAgent().draft(request.suite, request.results)
+        defects = BugReporterAgent().draft(request.suite, request.results)
+        complete_lifecycle_action(
+            "Bug Reporter Agent",
+            "draft_defects",
+            f"Created {len(defects)} review-required defect drafts from failed evidence.",
+        )
+        return defects
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
@@ -269,7 +352,13 @@ async def draft_defects(request: ExecutionRequest) -> list[DefectDraft]:
 @app.post("/api/metrics", response_model=MetricsReport)
 async def generate_metrics(request: MetricsRequest) -> MetricsReport:
     """Calculate transparent coverage, execution, and defect metrics."""
-    return MetricsAgent().calculate(request.suite, request.execution, request.defects)
+    report = MetricsAgent().calculate(request.suite, request.execution, request.defects)
+    complete_lifecycle_action(
+        "Metrics Agent",
+        "calculate_metrics",
+        f"Calculated metrics for {report.total_tests} tests and {report.total_defects} defects.",
+    )
+    return report
 
 
 @app.post("/api/agent/run", response_model=AgentRunResult)
@@ -279,6 +368,13 @@ async def run_agent(
 ) -> AgentRunResult:
     """Run the deterministic SpecForge coordinator and its governed specialists."""
     request_id = request_id_context.get()
+    lifecycle_events.start(request_id)
+    publish_lifecycle_event(
+        "Input Agent",
+        "normalize_text",
+        "success",
+        "Validated and normalized the UI requirement into the typed request envelope.",
+    )
     generation_cancellations.register(request_id, "agent_test_case_generation")
     try:
         result = await pipeline.run(request)
@@ -288,6 +384,12 @@ async def run_agent(
             trace=list(getattr(result, "trace", ())),
         )
     except CopilotGenerationError as error:
+        publish_lifecycle_event(
+            "QA Master Agent",
+            "coordinate",
+            "failed",
+            "Coordinator stopped safely before completing the governed lifecycle.",
+        )
         log_operation_failure("agent_run", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
@@ -295,6 +397,7 @@ async def run_agent(
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
     finally:
         generation_cancellations.unregister(request_id)
+        lifecycle_events.complete(request_id)
 
 
 @app.post("/api/generate/document", response_model=DocumentGenerationResult)
@@ -308,8 +411,20 @@ async def generate_from_document(
     """Extract requirements, generate test cases, then independently validate them."""
     filename = file.filename or "uploaded-document"
     request_id = request_id_context.get()
+    lifecycle_events.start(request_id)
+    publish_lifecycle_event(
+        "Input Agent",
+        "ingest_document",
+        "running",
+        "Reading the supported document within configured safety limits.",
+    )
     generation_cancellations.register(request_id, "document_test_case_generation")
     try:
+        if file.size is not None and file.size > settings_at_startup.max_upload_bytes:
+            raise DocumentIngestionError(
+                "The uploaded document exceeds the "
+                f"{settings_at_startup.max_upload_bytes}-byte limit."
+            )
         rules = [
             BusinessRule(id=f"BR-{index:03d}", description=line.strip())
             for index, line in enumerate(business_rules.splitlines(), 1)
@@ -320,6 +435,12 @@ async def generate_from_document(
         )
         document = result.document
         assert document is not None
+        publish_lifecycle_event(
+            "Input Agent",
+            "ingest_document",
+            "success",
+            f"Extracted {len(document.text)} normalized characters for the request envelope.",
+        )
         return DocumentGenerationResult(
             filename=document.filename,
             media_type=document.media_type,
@@ -339,6 +460,7 @@ async def generate_from_document(
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
     finally:
         generation_cancellations.unregister(request_id)
+        lifecycle_events.complete(request_id)
 
 
 @app.post("/api/generation/{request_id}/cancel")
@@ -384,6 +506,11 @@ async def convert_validated_context(
             settings.organizational_memory_path,
             enabled=settings.organizational_memory_enabled,
         ).store(request.suite, output_format, artifact)
+        complete_lifecycle_action(
+            "Context Converter → Output Agent",
+            "convert_and_store",
+            f"Produced and retained the approved {output_format.value} artifact.",
+        )
     except ContextConversionError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     return Response(
@@ -393,6 +520,27 @@ async def convert_validated_context(
     )
 
 
+@app.post("/api/output/accept", response_model=AcceptanceReceipt)
+async def accept_selected_tests(
+    request: AcceptSuiteRequest,
+    settings: Settings = Depends(get_settings),
+) -> AcceptanceReceipt:
+    """Persist explicitly selected, quality-gate-approved manual and automation artifacts."""
+    try:
+        receipt = AcceptedOutputService(settings.accepted_output_directory).accept(request)
+        complete_lifecycle_action(
+            "Output Agent",
+            "accept_selected_tests",
+            (
+                f"Accepted {len(receipt.selected_case_ids)} cases into "
+                f"{len(receipt.artifacts)} artifacts."
+            ),
+        )
+        return receipt
+    except AcceptanceError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
 @app.post("/api/step-definitions/reqnroll", response_model=StepDefinitionArtifact)
 async def generate_reqnroll_step_definitions(
     request: StepDefinitionRequest,
@@ -400,7 +548,16 @@ async def generate_reqnroll_step_definitions(
 ) -> StepDefinitionArtifact:
     """Generate reviewable C# bindings from Quality Gate-approved automation scenarios."""
     try:
-        return await agent.generate(request)
+        artifact = await agent.generate(request)
+        complete_lifecycle_action(
+            "ReqnRoll Agent",
+            "generate_step_definitions",
+            (
+                f"Generated {len(artifact.files)} C# files with "
+                f"{len(artifact.coverage)} step mappings."
+            ),
+        )
+        return artifact
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except CopilotGenerationError as error:
@@ -422,9 +579,15 @@ async def publish_to_jira(
                 detail=f"Unknown selected test case IDs: {', '.join(sorted(missing_ids))}",
             )
         selected_suite = request.suite.model_copy(update={"test_cases": selected_cases})
-        return await JiraClient(settings).publish(
+        result = await JiraClient(settings).publish(
             request.issue_key.upper(), selected_suite, request.add_comment
         )
+        complete_lifecycle_action(
+            "Jira Publishing Agent",
+            "publish_selected_cases",
+            f"Published {len(selected_cases)} explicitly selected cases to {result.issue_key}.",
+        )
+        return result
     except HTTPException:
         raise
     except RuntimeError as error:

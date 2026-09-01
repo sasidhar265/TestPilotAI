@@ -1,5 +1,6 @@
 from fastapi import Depends
 
+from app.agent_runtime import AgentRuntime
 from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.output_agent import OutputAgent
 from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgent
@@ -13,7 +14,7 @@ from app.services import (
     RequirementToTestCaseService,
     TestGenerationService,
 )
-from app.services.document_ingestion import InputAgent
+from app.services.document_ingestion import DocumentIngestionService, InputAgent
 
 
 def get_agent_registry(settings: Settings = Depends(get_settings)) -> AgentRegistry:
@@ -64,4 +65,6 @@ def get_multi_agent_pipeline(
     )
     generator = TestCaseGeneratorAgent(registry, validator, knowledge_source)
     storage = TestStorageAgent(memory)
-    return MultiAgentTestPipeline(InputAgent(), generator, validator, storage)
+    input_agent = InputAgent(DocumentIngestionService(max_file_bytes=settings.max_upload_bytes))
+    runtime = AgentRuntime(settings, generator, validator, storage)
+    return MultiAgentTestPipeline(input_agent, generator, validator, storage, runtime)

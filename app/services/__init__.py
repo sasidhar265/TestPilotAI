@@ -12,6 +12,7 @@ from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.lifecycle_agents import BusinessRulesAgent, KnowledgeAgent, TestDataAgent
 from app.memory import OrganizationalMemory
 from app.models import BusinessRule, ExpandRequest, GenerateRequest, TestFormat, TestSuite
+from app.observability import publish_lifecycle_event
 from app.services.document_ingestion import ExtractedDocument, InputAgent
 
 if TYPE_CHECKING:
@@ -51,8 +52,20 @@ class MultiAgentTestPipeline:
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
         request = self.business_rules.enrich(request)
+        publish_lifecycle_event(
+            "Business Rules Agent",
+            "enrich_requirements",
+            "success",
+            f"Prepared {len(request.business_rules)} explicit business rules for orchestration.",
+        )
         known = self.knowledge.recall(request)
         if known is not None:
+            publish_lifecycle_event(
+                "Knowledge Agent",
+                "recall_approved_suite",
+                "success",
+                f"Reused an exact approved suite containing {len(known.test_cases)} cases.",
+            )
             logger.info(
                 "memory_lookup result=hit memory_key=%s copilot_contacted=false cases=%s",
                 known.memory_key,
@@ -72,6 +85,12 @@ class MultiAgentTestPipeline:
             )
             return PipelineResult(known, validation, trace=trace)
         logger.info("memory_lookup result=miss copilot_contacted=true")
+        publish_lifecycle_event(
+            "Knowledge Agent",
+            "recall_approved_suite",
+            "miss",
+            "No exact approved suite matched; new governed generation is required.",
+        )
         if self.runtime is not None:
             outcome = await self.runtime.run(request)
             return PipelineResult(outcome.suite, outcome.validation, trace=tuple(outcome.trace))

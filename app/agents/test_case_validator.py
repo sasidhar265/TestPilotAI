@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.models import ExecutionMode, GenerateRequest, TestCase, TestSuite
+from app.observability import publish_lifecycle_event
 
 
 class ValidationSeverity(StrEnum):
@@ -230,10 +231,18 @@ class TestCaseValidatorAgent:
         errors = sum(item.severity == ValidationSeverity.ERROR for item in findings)
         warnings = len(findings) - errors
         score = max(0, 100 - errors * 15 - warnings * 5)
-        return ValidationReport(
+        report = ValidationReport(
             passed=errors == 0,
             score=score,
             acceptance_criteria_total=len(criteria),
             acceptance_criteria_covered=covered,
             findings=findings,
         )
+        publish_lifecycle_event(
+            "Quality Gate",
+            "validate_suite",
+            "passed" if report.passed else "failed",
+            f"Validated {len(suite.test_cases)} cases: score {score}/100, "
+            f"{errors} errors and {warnings} warnings.",
+        )
+        return report

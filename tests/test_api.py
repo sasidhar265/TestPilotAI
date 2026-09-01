@@ -51,17 +51,28 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'class="panel agent-workspace"' in response.text
     assert 'class="panel agent-workspace hidden"' not in response.text
     assert 'class="secondary lifecycle-action" id="generate-data" disabled' in response.text
-    assert 'id="execution-dashboard"' in response.text
-    assert 'id="defects-dashboard"' in response.text
+    assert 'id="execution-dashboard"' not in response.text
+    assert 'id="defects-dashboard"' not in response.text
+    assert 'id="summarize-execution"' not in response.text
+    assert 'id="draft-defects"' not in response.text
     assert 'id="metrics-dashboard"' in response.text
     assert "Business Rules Agent" in response.text
-    assert "Bug Reporter Agent" in response.text
+    assert "Bug Reporter Agent" not in response.text
     assert "Metrics Agent" in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/index.js?v=20260831-input-state"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260901-accepted-output"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260831-fluid-type"' in response.text
+    assert 'href="/static/styles/index.css?v=20260901-accepted-output"' in response.text
+    assert 'id="theme-gear"' in response.text
+    assert 'id="theme-menu"' in response.text
+    assert 'data-theme-option="light"' in response.text
+    assert 'data-theme-option="dark"' in response.text
+    assert 'data-theme-option="system"' in response.text
+    assert 'id="accept-selected"' in response.text
+    assert 'id="accepted-by"' in response.text
+    assert 'id="accepted-manual-format"' in response.text
+    assert 'id="acceptance-receipt"' in response.text
     assert 'id="runtime-health"' in response.text
     assert 'id="server-location"' in response.text
     assert 'id="active-agent"' in response.text
@@ -69,7 +80,10 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="llm-details"' in response.text
     assert 'id="agent-details"' in response.text
     assert 'id="orchestration-details"' in response.text
-    assert "TestGenerationService" in response.text
+    assert 'id="live-agent-events"' in response.text
+    assert 'id="live-agent-feed-state"' in response.text
+    assert "Model-directed coordinator" in response.text
+    assert "AgentRuntime" in response.text
     assert "Copilot SDK + CLI" in response.text
     assert 'href="/logs"' in response.text
 
@@ -165,6 +179,30 @@ def test_cancel_endpoint_reports_unknown_generation() -> None:
     assert response.json() == {"request_id": "not-active", "cancelled": False}
 
 
+def test_generation_lifecycle_events_are_incremental_and_payload_free() -> None:
+    from app.observability import lifecycle_events
+
+    request_id = "lifecycle-test-request"
+    lifecycle_events.start(request_id)
+    lifecycle_events.publish(
+        request_id,
+        "Quality Gate",
+        "validate_suite",
+        "passed",
+        "Validated 4 cases with score 100/100.",
+    )
+    lifecycle_events.complete(request_id)
+
+    response = client.get(f"/api/generation/{request_id}/events", params={"after": 0})
+    incremental = client.get(f"/api/generation/{request_id}/events", params={"after": 1})
+
+    assert response.status_code == 200
+    assert response.json()["complete"] is True
+    assert response.json()["events"][0]["agent"] == "Quality Gate"
+    assert response.json()["events"][0]["summary"] == "Validated 4 cases with score 100/100."
+    assert incremental.json()["events"] == []
+
+
 def test_http_baseline_security_and_correlation_headers() -> None:
     response = client.get("/api/health", headers={"X-Request-ID": "qe-check-123"})
 
@@ -182,7 +220,8 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "input",
         "business-rules",
         "knowledge",
-        "specforge-router",
+        "qa-master",
+        "specforge",
         "manual-test-generator",
         "automation-test-generator",
         "validator",
@@ -194,11 +233,12 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "bug-reporter",
         "metrics",
     ]
-    assert agents[3]["runtime"] == "local-router"
-    assert agents[4]["runtime"] == "github-copilot"
-    assert agents[3]["instruction_file"] == ".github/agents/specforge.agent.md"
-    assert agents[7]["instruction_file"] == ".github/agents/context-converter.agent.md"
-    assert agents[9]["runtime"] == "local-sqlite"
+    assert agents[3]["runtime"] == "local-orchestrator"
+    assert agents[4]["runtime"] == "local-router"
+    assert agents[3]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
+    assert agents[4]["instruction_file"] == ".github/agents/specforge.agent.md"
+    assert agents[8]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[10]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:
