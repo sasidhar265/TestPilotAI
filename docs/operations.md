@@ -11,7 +11,10 @@ failure, policy denial, exhausted allowance, or timeout is returned as a control
 `COPILOT_TIMEOUT_SECONDS` limits each isolated specialist call. The larger
 `COPILOT_COORDINATOR_TIMEOUT_SECONDS` limits the complete QA Master tool loop and must allow for
 sequential automation, findings-driven revision, manual generation, validation, and storage.
-In-flight specialist work is cancelled and awaited if the coordinator or user stops the request.
+It must be at least four times `COPILOT_TIMEOUT_SECONDS`; the default is 1,800 seconds for a
+300-second specialist budget. If only the coordinator envelope expires, the application completes
+through the same deterministic validation-and-storage recovery workflow. In-flight specialist work
+is cancelled and awaited if the coordinator or user stops the request.
 
 ## Configuration
 

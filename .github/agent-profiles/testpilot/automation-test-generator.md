@@ -1,4 +1,4 @@
-# TestPilot automation override
+# Quality Lifecycle Studio automation override
 
 Produce portable Cucumber Gherkin suitable for SpecFlow and comparable automation frameworks.
 Use a Scenario Outline only when multiple data rows execute the same behavior, and always provide

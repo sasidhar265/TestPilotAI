@@ -1,4 +1,4 @@
-"""Build the client-facing TestPilot AI demonstration deck."""
+"""Build the client-facing Quality Lifecycle Studio demonstration deck."""
 
 from pathlib import Path
 
@@ -10,7 +10,7 @@ from pptx.util import Inches, Pt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "docs" / "TestPilot_AI_Client_Demo.pptx"
+OUTPUT = ROOT / "docs" / "Quality_Lifecycle_Studio_Client_Demo.pptx"
 
 BG = RGBColor(6, 8, 15)
 SURFACE = RGBColor(16, 23, 40)
@@ -55,7 +55,7 @@ def base_slide(prs, section, number):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     slide.background.fill.solid()
     slide.background.fill.fore_color.rgb = BG
-    add_text(slide, "TESTPILOT AI", 0.55, 0.22, 2.2, 0.3, 9, MINT, True)
+    add_text(slide, "QUALITY LIFECYCLE STUDIO", 0.55, 0.22, 2.8, 0.3, 9, MINT, True)
     add_text(slide, section.upper(), 9.2, 0.22, 3.4, 0.3, 8, MUTED, False,
              align=PP_ALIGN.RIGHT)
     add_text(slide, f"{number:02d}", 12.2, 7.08, 0.55, 0.22, 8, MUTED,
@@ -107,9 +107,9 @@ def build():
     prs = Presentation()
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
-    prs.core_properties.title = "TestPilot AI — Client Demonstration"
+    prs.core_properties.title = "Quality Lifecycle Studio — Client Demonstration"
     prs.core_properties.subject = "GitHub Copilot-powered test design POC"
-    prs.core_properties.author = "TestPilot AI"
+    prs.core_properties.author = "Quality Lifecycle Studio"
 
     # 1 — Cover
     slide = base_slide(prs, "Client demonstration", 1)

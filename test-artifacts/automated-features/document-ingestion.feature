@@ -5,7 +5,7 @@ Feature: Ingest supported requirement documents safely
   So that their normalized content can be used for test generation
 
   Background:
-    Given the TestPilot API is available
+    Given the Quality Lifecycle Studio API is available
 
   @FR-002
   Scenario Outline: Extract a supported requirement document
@@ -51,4 +51,3 @@ Feature: Ingest supported requirement documents safely
     When the client uploads it to "/api/generate/document"
     Then the request is rejected with an image-limit error
     And no OCR or generation request is made
-

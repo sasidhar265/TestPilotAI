@@ -1,4 +1,4 @@
-# Copilot instructions for Story-to-Tests Agent
+# Copilot instructions for Quality Lifecycle Studio
 
 This is a Python 3.11+ FastAPI application. Keep API payloads typed with Pydantic and keep
 GitHub Copilot generation, Jira, export, and web concerns in their existing modules.

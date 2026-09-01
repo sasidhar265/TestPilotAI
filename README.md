@@ -1,4 +1,6 @@
-# Story-to-Tests AI Agent
+# Quality Lifecycle Studio
+
+Governed agentic test design from requirements to accepted quality artifacts.
 
 A local web application that turns a user story, feature description, or acceptance criteria
 into structured test cases. It classifies cases as critical, smoke, sanity, or regression,
@@ -46,10 +48,11 @@ Before calling Copilot, the application checks a repository-local organizational
 immediately and avoids a new premium request. New results are stored for subsequent reuse. The
 database is local operational data and is excluded from source control.
 
-For this proof of concept, generation returns 4–5 concise, high-level, non-duplicate risk
-scenarios, including at least two automation and two manual cases, while keeping Copilot response
-times practical. Before publishing, select individual cases
-with the Jira checkboxes; only those cases are included in the Jira attachment and summary.
+Generation preserves every unique case produced from the supplied requirements, business rules,
+agent policies, and quality-gate feedback. The final count is coverage-driven rather than capped by
+the application, although Copilot response-size, latency, and account limits still apply. Before
+publishing, select individual cases with the Jira checkboxes; only those cases are included in the
+Jira attachment and summary.
 
 ## Run locally
 
@@ -134,8 +137,8 @@ starts its bundled Copilot CLI runtime and uses either the locally signed-in Git
 generation, or any other agent/provider.
 
 Each generation prompt counts toward the Copilot usage allowance associated with the
-authenticated identity. The browser requests 4–5 high-level scenarios in one prompt so a
-failed follow-up cannot leave partial results. Leave `COPILOT_MODEL` blank to use the account
+authenticated identity. The browser requests coverage driven by the complete BRD, validation
+rules, and agent policies in one governed workflow. Leave `COPILOT_MODEL` blank to use the account
 default, or set it to a
 model allowed by your organization's Copilot policy. Never commit a token.
 
@@ -378,4 +381,4 @@ For company adoption, use the [project prerequisites](docs/company-project-prere
 pack.
 
 For stakeholder presentations, use the [client demonstration guide](docs/client-demo-guide.md)
-and the downloadable [client demo PowerPoint](docs/TestPilot_AI_Client_Demo.pptx).
+and the downloadable [client demo PowerPoint](docs/Quality_Lifecycle_Studio_Client_Demo.pptx).

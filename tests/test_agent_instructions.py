@@ -102,8 +102,8 @@ def test_unknown_markdown_agent_is_rejected() -> None:
 def test_project_profile_loads_common_and_agent_override() -> None:
     body = load_profile_instructions("testpilot", "automation-test-generator")
 
-    assert "TestPilot project profile" in body
-    assert "TestPilot automation override" in body
+    assert "Quality Lifecycle Studio default project profile" in body
+    assert "Quality Lifecycle Studio automation override" in body
     assert "SpecFlow" in body
 
 

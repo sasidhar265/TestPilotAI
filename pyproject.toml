@@ -1,7 +1,7 @@
 [project]
-name = "story-to-tests-agent"
+name = "quality-lifecycle-studio"
 version = "0.1.0"
-description = "Generate categorised software test cases and test data from user stories."
+description = "Governed agentic test design from requirements to accepted quality artifacts."
 requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "Proprietary"}

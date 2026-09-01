@@ -1,1 +1,1 @@
-"""Story-to-tests agent."""
+"""Quality Lifecycle Studio application."""

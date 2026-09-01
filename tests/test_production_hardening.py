@@ -35,9 +35,15 @@ def test_request_and_upload_limits_must_leave_multipart_overhead() -> None:
         Settings(max_request_body_bytes=1024, max_upload_bytes=1024)
 
 
-def test_coordinator_timeout_covers_at_least_one_specialist_timeout() -> None:
+def test_coordinator_timeout_covers_both_specialists_and_revisions() -> None:
     with pytest.raises(ValidationError, match="COPILOT_COORDINATOR_TIMEOUT_SECONDS"):
-        Settings(copilot_timeout_seconds=300, copilot_coordinator_timeout_seconds=299)
+        Settings(copilot_timeout_seconds=300, copilot_coordinator_timeout_seconds=1199)
+
+
+def test_default_coordinator_timeout_covers_governed_generation_budget() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.copilot_coordinator_timeout_seconds >= settings.copilot_timeout_seconds * 4
 
 
 def test_completed_lifecycle_rejects_late_callback_events() -> None:
@@ -101,6 +107,18 @@ def test_production_responses_include_transport_and_browser_protections() -> Non
     assert response.headers["strict-transport-security"].startswith("max-age=31536000")
     assert response.headers["content-security-policy"].startswith("default-src 'self'")
     assert response.headers["cross-origin-opener-policy"] == "same-origin"
+
+
+def test_development_api_docs_allow_only_the_required_swagger_cdn() -> None:
+    client = TestClient(app)
+
+    response = client.get("/docs")
+
+    assert response.status_code == 200
+    policy = response.headers["content-security-policy"]
+    assert "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net" in policy
+    assert "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net" in policy
+    assert "cdn.jsdelivr.net" not in client.get("/").headers["content-security-policy"]
 
 
 def test_liveness_and_readiness_are_separate() -> None:

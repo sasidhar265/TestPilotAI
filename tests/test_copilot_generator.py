@@ -124,8 +124,8 @@ def test_system_prompt_loads_repository_markdown_agent_policies() -> None:
     assert "You are SpecForge" in prompt
     assert "You are the Automation Test Generator" in prompt
     assert "You are the Quality Gate" in prompt
-    assert "TestPilot project profile" in prompt
-    assert "TestPilot automation override" in prompt
+    assert "Quality Lifecycle Studio default project profile" in prompt
+    assert "Quality Lifecycle Studio automation override" in prompt
     assert "You are the Manual Test Generator" not in prompt
 
 

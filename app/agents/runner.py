@@ -17,6 +17,10 @@ class CopilotGenerationError(RuntimeError):
     """A safe, user-facing failure produced by a Copilot-backed agent."""
 
 
+class CopilotTimeoutError(CopilotGenerationError):
+    """A bounded Copilot session exceeded its configured execution budget."""
+
+
 @dataclass(frozen=True)
 class StructuredAgentDefinition(Generic[OutputModel]):
     """Declarative executable contract paired with repository-owned Markdown policy."""
@@ -121,7 +125,7 @@ class CopilotAgentRunner:
                         timeout_seconds or self.settings.copilot_timeout_seconds,
                     )
                 except TimeoutError as error:
-                    raise CopilotGenerationError(timeout_error) from error
+                    raise CopilotTimeoutError(timeout_error) from error
 
         if capture_response and not content:
             raise CopilotGenerationError(empty_error or "GitHub Copilot returned no output.")

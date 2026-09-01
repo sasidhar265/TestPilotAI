@@ -56,12 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build immutable application image
-        run: docker build --tag story-to-tests-agent:${{ github.sha }} .
+        run: docker build --tag quality-lifecycle-studio:${{ github.sha }} .
       - name: Start container
         run: >-
-          docker run --detach --name story-to-tests-smoke
+          docker run --detach --name quality-lifecycle-studio-smoke
           --publish 127.0.0.1:8000:8000
-          story-to-tests-agent:${{ github.sha }}
+          quality-lifecycle-studio:${{ github.sha }}
       - name: Verify container readiness
         run: |
           for attempt in {1..20}; do
@@ -70,8 +70,8 @@ jobs:
             fi
             sleep 1
           done
-          docker logs story-to-tests-smoke
+          docker logs quality-lifecycle-studio-smoke
           exit 1
       - name: Stop container
         if: always()
-        run: docker rm --force story-to-tests-smoke || true
+        run: docker rm --force quality-lifecycle-studio-smoke || true

@@ -43,6 +43,28 @@ def test_quality_gate_enforces_bdd_and_removes_duplicates() -> None:
     assert "Then the link is rejected as expired" in result.test_cases[0].gherkin
 
 
+def test_quality_gate_preserves_all_unique_generated_cases() -> None:
+    generated_cases = [
+        case(f"TC-{index:03d}").model_copy(
+            update={
+                "title": f"Requirement coverage {index}",
+                "objective": f"Verify requirement outcome {index}",
+            }
+        )
+        for index in range(1, 13)
+    ]
+
+    result = finalize_suite(
+        Suite(feature_name="Complete BRD coverage", test_cases=generated_cases),
+        GenerateRequest(description="Generate complete coverage for all specified requirements."),
+    )
+
+    assert len(result.test_cases) == 12
+    assert {generated.id for generated in result.test_cases} == {
+        f"TC-{index:03d}" for index in range(1, 13)
+    }
+
+
 def test_quality_gate_preserves_specflow_scenario_outline() -> None:
     outline = case("TC-001").model_copy(
         update={

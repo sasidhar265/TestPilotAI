@@ -1,15 +1,15 @@
-# TestPilot AI — Client Demonstration Guide
+# Quality Lifecycle Studio — Client Demonstration Guide
 
 ## 1. Demonstration purpose
 
-TestPilot AI is a proof-of-concept quality-engineering assistant that converts product
+Quality Lifecycle Studio is a quality-engineering application that converts product
 requirements into concise, reviewable test scenarios. It uses the client's organization-enabled
 GitHub Copilot entitlement as its only AI runtime.
 
 The demonstration shows how an automation tester can:
 
-- turn a user story or acceptance criteria into 4–5 high-level scenarios, including at least two
-  automation and two manual cases;
+- turn a user story, acceptance criteria, or BRD into coverage-driven automation and manual
+  scenarios;
 - choose manual test steps or SpecFlow-compatible BDD;
 - generate `Scenario Outline` and `Examples` tables for data-driven coverage;
 - copy individual scenarios or download an entire `.feature` file;
@@ -62,7 +62,7 @@ Do not display `.env`, credentials, Copilot logs, Jira tokens, or real customer 
 Suggested presenter narrative:
 
 > Quality engineers often spend significant time translating requirements into consistent test
-> scenarios before automation begins. TestPilot AI accelerates that first design step. It uses
+> scenarios before automation begins. Quality Lifecycle Studio accelerates that first design step. It uses
 > our approved GitHub Copilot service to produce a small, risk-focused suite that remains under
 > human control. Automation testers can copy SpecFlow-ready Gherkin directly into feature files,
 > while manual test cases can be exported or selectively attached to Jira.
@@ -88,7 +88,7 @@ flowchart LR
     SDK --> CLI[Authenticated Copilot CLI]
     CLI --> Copilot[GitHub Copilot service]
     Copilot --> Validation[Pydantic validation and quality gate]
-    Validation --> Results[4–5 reviewed automation/manual scenarios]
+    Validation --> Results[Coverage-driven reviewed automation/manual scenarios]
     Results --> Copy[Copy SpecFlow feature]
     Results --> Export[CSV or JSON]
     Results -->|Explicit user action| Jira[Jira Cloud]
@@ -130,13 +130,13 @@ Click **Generate Test Scenarios**.
 
 Explain the result:
 
-- Copilot returns 4–5 high-level scenarios, including automation and manual coverage, rather than
-  an exhaustive suite.
+- Copilot returns unique scenarios driven by the supplied BRD, validation rules, and agent
+  policies. The count is not capped by the application.
 - Each scenario has a category, priority, objective, actions, and observable expected results.
 - Each scenario is segregated as `automation` or `manual` with a case-specific feasibility
   rationale.
 - Duplicate title/objective combinations are removed.
-- No more than five scenarios are published by the generation quality gate.
+- Every unique scenario that passes schema processing is preserved for quality-gate review.
 - The tester reviews the result before copying, exporting, or publishing it.
 
 ## 8. Demonstration 2 — SpecFlow BDD
@@ -211,7 +211,8 @@ validated against the client's GitHub organization policies before production de
 
 Be explicit about the current boundaries:
 
-- The output is limited to 4–5 high-level scenarios to reduce latency and premium-request usage.
+- The application does not impose a test-case count cap; practical output remains subject to the
+  model response size, latency, timeout, and premium-request allowance.
 - AI-generated cases are suggestions, not proof of complete coverage.
 - The application does not execute tests or generate SpecFlow step-definition code.
 - Generated Gherkin may require alignment with an existing domain language and automation stack.
@@ -241,11 +242,11 @@ Yes. The Copilot SDK uses the authenticated Copilot CLI identity or an approved
 It can be pasted into a SpecFlow feature file as a starting point. The automation team must
 review the language and ensure matching step definitions exist or are implemented.
 
-### Why does it generate only five scenarios?
+### How many scenarios does it generate?
 
-The POC prioritizes quick, high-value suggestions and predictable premium-request usage. A
-production design can introduce configurable, governed coverage strategies after measuring
-quality, latency, and cost.
+The application preserves all unique cases returned from the coverage-driven agent workflow.
+The actual count depends on the BRD, business rules, validation feedback, model response capacity,
+latency, timeouts, and the authenticated account's usage policy.
 
 ### Can it publish to Jira automatically?
 

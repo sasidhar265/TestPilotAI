@@ -375,6 +375,18 @@ class OrganizationHttpMiddleware:
             if message["type"] == "http.response.start":
                 status_code = message["status"]
                 response_headers = list(message.get("headers", []))
+                content_security_policy = (
+                    b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
+                    b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
+                    b"script-src 'self'; style-src 'self' 'unsafe-inline'"
+                )
+                if not self.settings.is_production and scope.get("path") in {"/docs", "/redoc"}:
+                    content_security_policy = (
+                        b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
+                        b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
+                        b"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                        b"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"
+                    )
                 response_headers.extend(
                     [
                         (b"x-request-id", request_id.encode("ascii")),
@@ -384,9 +396,7 @@ class OrganizationHttpMiddleware:
                         (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
                         (
                             b"content-security-policy",
-                            b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
-                            b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
-                            b"script-src 'self'; style-src 'self' 'unsafe-inline'",
+                            content_security_policy,
                         ),
                         (b"cross-origin-opener-policy", b"same-origin"),
                         (b"cross-origin-resource-policy", b"same-origin"),

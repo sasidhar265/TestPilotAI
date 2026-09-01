@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     copilot_github_token: str = ""
     copilot_model: str = ""
     copilot_timeout_seconds: float = 300
-    copilot_coordinator_timeout_seconds: float = Field(default=900, gt=0, le=3600)
+    copilot_coordinator_timeout_seconds: float = Field(default=1800, gt=0, le=3600)
     copilot_working_directory: Path = Path.cwd()
     agent_profile: str = "auto-finance-quotation"
     organizational_memory_enabled: bool = True
@@ -52,9 +52,11 @@ class Settings(BaseSettings):
     def validate_deployment_safety(self) -> "Settings":
         if self.max_upload_bytes >= self.max_request_body_bytes:
             raise ValueError("MAX_UPLOAD_BYTES must be smaller than MAX_REQUEST_BODY_BYTES")
-        if self.copilot_coordinator_timeout_seconds < self.copilot_timeout_seconds:
+        minimum_coordinator_budget = self.copilot_timeout_seconds * 4
+        if self.copilot_coordinator_timeout_seconds < minimum_coordinator_budget:
             raise ValueError(
-                "COPILOT_COORDINATOR_TIMEOUT_SECONDS must be at least COPILOT_TIMEOUT_SECONDS"
+                "COPILOT_COORDINATOR_TIMEOUT_SECONDS must be at least four times "
+                "COPILOT_TIMEOUT_SECONDS to cover both specialist routes and revisions"
             )
         if self.is_production:
             token = self.api_auth_token_value

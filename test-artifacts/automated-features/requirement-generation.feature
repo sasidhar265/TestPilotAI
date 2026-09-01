@@ -5,7 +5,7 @@ Feature: Generate structured test cases from requirements
   So that I can start test design from a consistent, traceable draft
 
   Background:
-    Given the TestPilot API is available
+    Given the Quality Lifecycle Studio API is available
 
   @smoke @FR-001 @FR-004 @FR-005
   Scenario Outline: Generate cases from valid pasted requirement text
@@ -56,4 +56,3 @@ Feature: Generate structured test cases from requirements
     Then no new Copilot generation request is made
     And the retrieved suite is independently revalidated before it is returned
     And the generation source is "organizational-memory"
-

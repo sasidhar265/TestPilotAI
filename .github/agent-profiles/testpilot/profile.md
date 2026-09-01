@@ -1,4 +1,4 @@
-# TestPilot project profile
+# Quality Lifecycle Studio default project profile
 
 Apply these project-specific rules in addition to the mandatory base agent policies:
 

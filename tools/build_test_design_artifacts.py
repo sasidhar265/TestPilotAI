@@ -26,7 +26,7 @@ CASES = [
         "data": "Requirement: A registered user can sign in and see their dashboard.",
         "ac": "FR-001, FR-004, FR-005", "tags": "manual, generation, ui",
         "steps": [
-            ("Open the TestPilot web UI.", "The requirement input and generation controls are visible."),
+            ("Open the Quality Lifecycle Studio web UI.", "The requirement input and generation controls are visible."),
             ("Paste the synthetic requirement and select normal/manual output.", "The input is accepted and remains available for review."),
             ("Start generation and wait for completion.", "A suite of test cases is displayed without an unhandled error."),
             ("Inspect every generated case.", "Each case shows ID, title, objective, category, priority, execution mode, rationale, and observable steps."),

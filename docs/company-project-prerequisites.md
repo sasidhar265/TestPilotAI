@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Project | TestPilot AI — Requirements-to-Tests Platform |
+| Project | Quality Lifecycle Studio — Governed Test Design Platform |
 | Document | Company implementation prerequisites |
 | Status | Draft for organizational review |
 | Owners | Product, Quality Engineering, Platform Engineering, Security |
@@ -13,7 +13,7 @@
 ## Purpose
 
 This document defines the organizational, technical, security, and operational conditions that
-must be satisfied before TestPilot AI is developed, piloted, or deployed inside the company.
+must be satisfied before Quality Lifecycle Studio is developed, piloted, or deployed inside the company.
 
 ## Business prerequisites
 

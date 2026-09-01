@@ -85,7 +85,7 @@ def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
     return suite.model_copy(
         update={
             "output_format": request.output_format,
-            "test_cases": unique_cases[:5],
+            "test_cases": unique_cases,
         }
     )
 

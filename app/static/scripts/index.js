@@ -70,17 +70,5 @@ $('generate-step-definitions').onclick=async()=>{if(!suite||!validationReport)re
 $('step-definition-files').addEventListener('click',event=>{const button=event.target.closest('.copy-step-definition');if(button&&stepDefinitionArtifact){const file=stepDefinitionArtifact.files[Number(button.dataset.index)];copyText(file.content,file.path)}});
 $('download-step-definitions').onclick=()=>{if(!stepDefinitionArtifact)return;const content=stepDefinitionArtifact.files.map(file=>`// FILE: ${file.path}\n${file.content}`).join('\n\n');download(new Blob([content],{type:'text/plain;charset=utf-8'}),'ReqnRollStepDefinitions.cs')};
 const descriptionInput=$('description'),characterCount=$('character-count');descriptionInput.addEventListener('input',()=>{const count=descriptionInput.value.length;characterCount.textContent=`${count} character${count===1?'':'s'}`;syncGenerateAvailability()});
-const themeQuery=window.matchMedia('(prefers-color-scheme: dark)'),themeGear=$('theme-gear'),themeMenu=$('theme-menu');
-let preferredTheme='system';
-try{const saved=localStorage.getItem('testpilot-theme');if(['light','dark','system'].includes(saved))preferredTheme=saved}catch{}
-function resolvedTheme(){return preferredTheme==='system'?(themeQuery.matches?'dark':'light'):preferredTheme}
-function applyTheme(){const resolved=resolvedTheme();document.documentElement.dataset.theme=resolved;document.querySelector('meta[name="theme-color"]').content=resolved==='dark'?'#10121a':'#f5f6fa';document.querySelectorAll('[data-theme-option]').forEach(button=>{const active=button.dataset.themeOption===preferredTheme;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))})}
-function closeThemeMenu(){themeMenu.hidden=true;themeGear.setAttribute('aria-expanded','false')}
-themeGear.addEventListener('click',()=>{const opening=themeMenu.hidden;themeMenu.hidden=!opening;themeGear.setAttribute('aria-expanded',String(opening));if(opening)themeMenu.querySelector('.active')?.focus()});
-themeMenu.addEventListener('click',event=>{const button=event.target.closest('[data-theme-option]');if(!button)return;preferredTheme=button.dataset.themeOption;try{localStorage.setItem('testpilot-theme',preferredTheme)}catch{}applyTheme();closeThemeMenu();themeGear.focus()});
-document.addEventListener('click',event=>{if(!event.target.closest('.theme-settings'))closeThemeMenu()});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeThemeMenu();themeGear.focus()}});
-themeQuery.addEventListener('change',()=>{if(preferredTheme==='system')applyTheme()});
-applyTheme();
 syncGenerateAvailability();
 setWorkflowStage(1);loadRuntimeStatus();

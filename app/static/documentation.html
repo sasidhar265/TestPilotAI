@@ -4,15 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
-  <title>TestPilot AI — Product guide</title>
-  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260831-fluid-layout">
+  <title>Quality Lifecycle Studio — Product guide</title>
+  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260901-themed-navigation">
+  <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
   <div class="docs-shell">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="TestPilot AI home">
-        <span class="brand-mark" aria-hidden="true">T</span>
-        <span><strong>TestPilot</strong><small>AI quality studio</small></span>
+      <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span><strong>Quality Lifecycle</strong><small>Agentic test studio</small></span>
       </a>
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
@@ -44,7 +45,7 @@
 
     <main class="docs-main">
       <header class="docs-topbar">
-        <div><span class="eyebrow">Documentation</span><strong>TestPilot AI</strong></div>
+        <div><span class="eyebrow">Documentation</span><strong>Quality Lifecycle Studio</strong></div>
         <div class="top-actions"><a href="/logs">Runtime logs</a><a class="api-link" href="/docs">API reference ↗</a></div>
       </header>
 
@@ -53,7 +54,7 @@
           <div class="hero-copy">
             <span class="eyebrow">Governed quality engineering</span>
             <h1>From business requirements to review-ready test evidence.</h1>
-            <p>TestPilot turns pasted requirements and business documents into traceable manual tests, executable BDD scenarios, ReqnRoll C# bindings, and controlled quality outputs.</p>
+            <p>Quality Lifecycle Studio turns requirements and business documents into traceable manual tests, executable BDD scenarios, ReqnRoll C# bindings, and governed acceptance outputs.</p>
             <div class="actions"><a class="button primary" href="/">Open Test Designer →</a><a class="button secondary" href="#workflow">Explore the workflow</a></div>
           </div>
           <aside class="hero-card">
@@ -140,7 +141,7 @@
         </section>
 
         <section class="section" id="company-documents">
-          <div class="section-heading"><span class="section-number">08</span><div><span class="eyebrow">Organizational readiness</span><h2>Company requirements and implementation guidance</h2><p>Read the maintained adoption documents without leaving TestPilot.</p></div></div>
+          <div class="section-heading"><span class="section-number">08</span><div><span class="eyebrow">Organizational readiness</span><h2>Company requirements and implementation guidance</h2><p>Read the maintained adoption documents without leaving Quality Lifecycle Studio.</p></div></div>
           <div class="doc-tabs" role="tablist" aria-label="Company implementation documents"><button class="doc-tab active" type="button" data-document="prerequisites" role="tab">Project prerequisites</button><button class="doc-tab" type="button" data-document="requirements" role="tab">Solution requirements</button><button class="doc-tab" type="button" data-document="checklist" role="tab">Implementation checklist</button></div>
           <article class="document-reader" id="document-reader" aria-live="polite"><p class="doc-loading">Loading company prerequisites…</p></article>
         </section>
@@ -164,6 +165,14 @@
       </article>
     </main>
   </div>
-  <script src="/static/scripts/documentation.js?v=20260901-qa-master" defer></script>
+  <div class="theme-settings">
+    <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
+      <strong id="theme-menu-title">Appearance</strong><span>Choose your workspace theme</span>
+      <div class="theme-options" role="group" aria-label="Color theme"><button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button><button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button><button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button></div>
+    </div>
+    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
+  </div>
+  <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
+  <script src="/static/scripts/documentation.js?v=20260901-shared-theme" defer></script>
 </body>
 </html>

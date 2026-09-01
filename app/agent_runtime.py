@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from app.agent_instructions import load_agent_instructions
 from app.agents import TestStorageAgent
-from app.agents.runner import CopilotAgentRunner, CopilotGenerationError
+from app.agents.runner import CopilotAgentRunner, CopilotGenerationError, CopilotTimeoutError
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.config import Settings
@@ -212,6 +212,13 @@ class AgentRuntime:
                 capture_response=False,
                 timeout_seconds=self.settings.copilot_coordinator_timeout_seconds,
             )
+        except CopilotTimeoutError:
+            task = active_specialist_task
+            if task is not None and not task.done():
+                task.cancel("Coordinator stopped before specialist completion")
+                with suppress(asyncio.CancelledError):
+                    await task
+            return await self._recover_incomplete_run(request, suite, validation, trace)
         except (CopilotGenerationError, asyncio.CancelledError):
             task = active_specialist_task
             if task is not None and not task.done():

@@ -2,6 +2,7 @@ import pytest
 
 from app.agent_runtime import AgentRuntime
 from app.agents import TestStorageAgent as StorageAgent
+from app.agents.runner import CopilotAgentRunner, CopilotTimeoutError
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings
 from app.memory import OrganizationalMemory
@@ -61,3 +62,26 @@ async def test_incomplete_coordinator_recovers_through_governed_pipeline(tmp_pat
         "finish_run",
     ]
     assert storage.find(request) is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_timeout_recovers_instead_of_failing_request(
+    tmp_path, monkeypatch
+) -> None:
+    async def time_out_coordinator(self, **kwargs):
+        raise CopilotTimeoutError(kwargs["timeout_error"])
+
+    monkeypatch.setattr(CopilotAgentRunner, "invoke", time_out_coordinator)
+    generator = FallbackGenerator()
+    validator = TestCaseValidatorAgent()
+    storage = StorageAgent(OrganizationalMemory(tmp_path / "memory.db"))
+    runtime = AgentRuntime(Settings(), generator, validator, storage)  # type: ignore[arg-type]
+    request = GenerateRequest(
+        description="As a user, I want an option to stay logged in between browser sessions."
+    )
+
+    outcome = await runtime.run(request)
+
+    assert outcome.validation.passed
+    assert outcome.trace[0].tool == "coordinator_recovery"
+    assert outcome.trace[-1].tool == "finish_run"

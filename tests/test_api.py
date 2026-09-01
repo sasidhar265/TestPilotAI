@@ -61,7 +61,8 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Metrics Agent" in response.text
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/index.js?v=20260901-accepted-output"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260901-shared-theme"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
     assert 'href="/static/styles/index.css?v=20260901-accepted-output"' in response.text
     assert 'id="theme-gear"' in response.text
@@ -94,6 +95,8 @@ def test_logs_page_has_search_and_navigation() -> None:
     assert 'id="log-reference"' in response.text
     assert 'id="search-logs"' in response.text
     assert 'href="/documentation"' in response.text
+    assert 'id="theme-gear"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
 
 
 def test_documentation_page_is_not_cached() -> None:
@@ -103,6 +106,8 @@ def test_documentation_page_is_not_cached() -> None:
     assert response.headers["cache-control"] == "no-store, max-age=0"
     assert "Markdown-directed, Python-governed" in response.text
     assert "/api/step-definitions/reqnroll" in response.text
+    assert 'id="theme-gear"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
 
 
 def test_logs_can_be_searched_by_failure_reference_id() -> None:

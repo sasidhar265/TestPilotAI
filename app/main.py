@@ -77,7 +77,7 @@ from app.services.document_ingestion import DocumentIngestionError, InputAgent
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
 app = FastAPI(
-    title="Story-to-Tests Agent",
+    title="Quality Lifecycle Studio API",
     version="0.1.0",
     description="Governed multi-agent conversion of product requirements into validated tests.",
     docs_url=None if settings_at_startup.is_production else "/docs",
