@@ -30,6 +30,7 @@ from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
     ManualTestCaseGeneratorAgent,
+    ManualTestingSpecialistAgent,
     SpecForgeTransformerAgent,
     TestCaseGeneratorAgent,
 )
@@ -56,8 +57,10 @@ from app.models import (
     ExpandRequest,
     ExportFormat,
     GenerateRequest,
+    GenerationTarget,
     JiraPublishRequest,
     JiraPublishResult,
+    ManualTestingType,
     MetricsReport,
     SuiteRequest,
     TestFormat,
@@ -333,6 +336,7 @@ async def list_agents() -> list[dict[str, object]]:
             TestCaseGeneratorAgent.descriptor,
             SpecForgeTransformerAgent.descriptor,
             ManualTestCaseGeneratorAgent.descriptor,
+            ManualTestingSpecialistAgent.descriptor,
             AutomationTestCaseGeneratorAgent.descriptor,
             TestCaseValidatorAgent.descriptor,
             ContextConverterAgent.descriptor,
@@ -477,6 +481,8 @@ async def run_agent(
 async def generate_from_document(
     file: UploadFile = File(...),
     output_format: TestFormat = Form(TestFormat.NORMAL),
+    generation_target: GenerationTarget = Form(GenerationTarget.AUTO),
+    manual_testing_type: ManualTestingType = Form(ManualTestingType.API),
     additional_context: str = Form(""),
     business_rules: str = Form(""),
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
@@ -500,7 +506,13 @@ async def generate_from_document(
             )
         rules = parse_business_rule_lines(business_rules)
         result = await pipeline.run_document(
-            filename, await file.read(), additional_context, output_format, rules
+            filename,
+            await file.read(),
+            additional_context,
+            output_format,
+            rules,
+            manual_testing_type,
+            generation_target,
         )
         document = result.document
         assert document is not None

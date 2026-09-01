@@ -62,6 +62,7 @@ class AgentKind(StrEnum):
     SPECFORGE = "specforge"
     ROUTER = "qa-master"  # Backward-compatible enum alias.
     MANUAL_GENERATOR = "manual-test-generator"
+    MANUAL_SPECIALIST = "manual-testing-specialist"
     AUTOMATION_GENERATOR = "automation-test-generator"
     VALIDATOR = "validator"
     CONTEXT_CONVERTER = "context-converter"

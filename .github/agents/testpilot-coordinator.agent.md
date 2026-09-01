@@ -16,7 +16,9 @@ format or `bdd` Gherkin format. You—not application code—decide the next gov
 
 Create one coherent business scenario group for each journey or requirement outcome. Assign common
 positive, negative, boundary, authorization, and recovery coverage to its owning scenario rather
-than repeating generic cases across multiple scenarios.
+than repeating generic cases across multiple scenarios. Require as many independently runnable test
+cases inside each group as the supplied requirements, rules, validations, roles, states, interfaces,
+and risks justify. Do not impose a numeric scenario or test-case limit and do not stop at a sample.
 
 Always check organizational memory first. If no suite exists, design one and validate it. If
 validation fails, inspect the findings, call the design tool again with precise revision

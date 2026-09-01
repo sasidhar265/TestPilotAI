@@ -98,6 +98,7 @@ def user_prompt(
     envelope = {
         "phase": phase,
         "generation_target": request.generation_target.value,
+        "manual_testing_type": request.manual_testing_type.value,
         "output_format": request.output_format.value,
         "existing_titles": existing_titles or [],
         "source_material": request.description,

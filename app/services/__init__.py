@@ -11,7 +11,15 @@ from app.agent_runtime import AgentEvent, AgentRuntime
 from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.lifecycle_agents import BusinessRulesAgent, KnowledgeAgent, TestDataAgent
 from app.memory import OrganizationalMemory
-from app.models import BusinessRule, ExpandRequest, GenerateRequest, TestFormat, TestSuite
+from app.models import (
+    BusinessRule,
+    ExpandRequest,
+    GenerateRequest,
+    GenerationTarget,
+    ManualTestingType,
+    TestFormat,
+    TestSuite,
+)
 from app.observability import publish_lifecycle_event
 from app.services.document_ingestion import ExtractedDocument, InputAgent
 
@@ -106,11 +114,19 @@ class MultiAgentTestPipeline:
         additional_context: str = "",
         output_format: TestFormat = TestFormat.NORMAL,
         business_rules: list[BusinessRule] | None = None,
+        manual_testing_type: ManualTestingType = ManualTestingType.API,
+        generation_target: GenerationTarget = GenerationTarget.AUTO,
     ) -> PipelineResult:
         document, request = self.input_agent.from_document(
             filename, content, additional_context, output_format
         )
-        request = request.model_copy(update={"business_rules": business_rules or []})
+        request = request.model_copy(
+            update={
+                "business_rules": business_rules or [],
+                "manual_testing_type": manual_testing_type,
+                "generation_target": generation_target,
+            }
+        )
         result = await self.run(request)
         return PipelineResult(result.suite, result.validation, document, result.trace)
 

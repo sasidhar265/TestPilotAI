@@ -12,6 +12,7 @@ AGENT_FILES = {
     "specforge": "specforge.agent.md",
     "testpilot-coordinator": "testpilot-coordinator.agent.md",
     "manual-test-generator": "manual-test-generator.agent.md",
+    "manual-testing-specialist": "manual-testing-specialist.agent.md",
     "automation-test-generator": "automation-test-generator.agent.md",
     "reqnroll-step-definition-generator": "reqnroll-step-definition-generator.agent.md",
     "quality-gate": "quality-gate.agent.md",
@@ -88,6 +89,8 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
     sections.append(load_profile_instructions(profile, "specforge"))
     if specialist:
         sections.append(load_agent_instructions(specialist))
+        if specialist == "manual-test-generator":
+            sections.append(load_agent_instructions("manual-testing-specialist"))
         specialist_override = PROFILE_DIRECTORY / profile / f"{specialist}.md"
         if specialist_override.is_file():
             sections.append(_instruction_body(specialist_override))

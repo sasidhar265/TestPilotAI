@@ -2,6 +2,7 @@ import pytest
 
 from app import agent_runtime, generator
 from app.agent_instructions import (
+    generation_agent_instructions,
     load_agent_instructions,
     load_profile_instructions,
     step_definition_agent_instructions,
@@ -14,6 +15,7 @@ from app.agent_instructions import (
         "specforge",
         "testpilot-coordinator",
         "manual-test-generator",
+        "manual-testing-specialist",
         "automation-test-generator",
         "reqnroll-step-definition-generator",
         "quality-gate",
@@ -63,12 +65,22 @@ def test_markdown_defines_input_output_and_manual_bdd_formats() -> None:
     assert "## Canonical output contract" in specforge
     assert "scenario-to-test-case transformation agent" in specforge
     assert "requested `output_format`" in specforge
+    assert "There is no numeric scenario or test-case cap" in specforge
+    assert "all distinct test cases" in specforge
     assert "## Manual test-case format" in manual
     assert '"gherkin": null' in manual
     assert "## Automation test-case and scenario format" in automation
     assert "Scenario Outline:" in automation
     assert "Every placeholder must have a matching Examples column" in automation
     assert "## Required validation checklist" in quality_gate
+
+
+def test_manual_generation_includes_discipline_specialist_policy() -> None:
+    instructions = generation_agent_instructions("manual")
+
+    assert "Manual Testing Specialist Agent" in instructions
+    assert "manual_testing_type" in instructions
+    assert "For `database`" in instructions
 
 
 @pytest.mark.parametrize(

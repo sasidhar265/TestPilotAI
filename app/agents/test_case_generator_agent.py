@@ -17,14 +17,20 @@ class ManualTestCaseGeneratorAgent:
         id="manual-test-case-generator-agent",
         name="Manual Test Case Generator",
         kind=AgentKind.MANUAL_GENERATOR,
-        purpose="Generate human-led exploratory, usability, visual, and accessibility tests.",
+        purpose="Generate governed human-led tests through the selected manual discipline.",
         runtime="github-copilot",
-        capabilities=("manual-tests", "exploratory-tests", "usability-tests"),
+        capabilities=(
+            "manual-tests",
+            "manual-ui-tests",
+            "manual-performance-tests",
+            "manual-database-tests",
+        ),
         instruction_file=".github/agents/manual-test-generator.agent.md",
     )
 
     def __init__(self, registry: AgentRegistry) -> None:
         self.registry = registry
+        self.specialist = ManualTestingSpecialistAgent()
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
         publish_lifecycle_event(
@@ -33,7 +39,7 @@ class ManualTestCaseGeneratorAgent:
             "running",
             "Generating human-led scenarios from the current governed request envelope.",
         )
-        targeted = request.model_copy(update={"generation_target": GenerationTarget.MANUAL})
+        targeted = self.specialist.prepare(request)
         suite = await self.registry.get_test_design_agent().generate(targeted)
         publish_lifecycle_event(
             "Manual Test Generator",
@@ -42,6 +48,37 @@ class ManualTestCaseGeneratorAgent:
             f"Generated {len(suite.test_cases)} manual candidate cases.",
         )
         return suite
+
+
+class ManualTestingSpecialistAgent:
+    """Preserve the selected manual discipline in the governed request envelope."""
+
+    descriptor = FunctionalAgentDescriptor(
+        id="manual-testing-specialist-agent",
+        name="Manual Testing Specialist Agent",
+        kind=AgentKind.MANUAL_SPECIALIST,
+        purpose=(
+            "Design manual API, UI, performance, or database test coverage "
+            "from requirements and governed business rules."
+        ),
+        runtime="local-router",
+        capabilities=(
+            "manual-ui-tests",
+            "manual-api-tests",
+            "manual-performance-tests",
+            "manual-database-tests",
+            "discipline-routing",
+        ),
+        instruction_file=".github/agents/manual-testing-specialist.agent.md",
+    )
+
+    def prepare(self, request: GenerateRequest) -> GenerateRequest:
+        return request.model_copy(
+            update={
+                "generation_target": GenerationTarget.MANUAL,
+                "output_format": TestFormat.NORMAL,
+            }
+        )
 
 
 class AutomationTestCaseGeneratorAgent:

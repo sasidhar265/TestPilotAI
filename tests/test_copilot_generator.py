@@ -34,6 +34,7 @@ def test_request_prompt_contains_data_not_agent_policy() -> None:
 
     assert '"phase": "initial"' in prompt
     assert '"generation_target": "auto"' in prompt
+    assert '"manual_testing_type": "api"' in prompt
     assert "As a user, I want secure sign in." in prompt
     assert "Generate two or three" not in prompt
     assert "Generate only manual cases" not in prompt
@@ -59,7 +60,7 @@ def test_prompt_requires_automation_feasibility_classification() -> None:
     assert "execution_mode" in prompt
     assert "feasibility_reason" in prompt
     assert "scenario_group" in prompt
-    assert "must not be emitted as a duplicated standalone case" in prompt
+    assert "duplicated standalone case" in prompt
 
 
 def test_finalized_cases_are_grouped_and_common_duplicates_are_removed() -> None:

@@ -29,6 +29,15 @@ class GenerationTarget(StrEnum):
     BOTH = "both"
 
 
+class ManualTestingType(StrEnum):
+    """Human-led test discipline requested for the manual specialist."""
+
+    API = "api"
+    UI = "ui"
+    PERFORMANCE = "performance"
+    DATABASE = "database"
+
+
 class GenerationSource(StrEnum):
     COPILOT = "copilot"
     ORGANIZATIONAL_MEMORY = "organizational-memory"
@@ -111,6 +120,7 @@ class GenerateRequest(BaseModel):
     additional_context: str = Field(default="", max_length=10_000)
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
+    manual_testing_type: ManualTestingType = ManualTestingType.API
     business_rules: list[BusinessRule] = Field(default_factory=list, max_length=100)
 
     @field_validator("description")

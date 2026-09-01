@@ -74,9 +74,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260901-business-rules"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260901-manual-types"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260901-accepted-output"' in response.text
+    assert 'href="/static/styles/index.css?v=20260901-manual-type-size"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -240,6 +240,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "qa-master",
         "specforge",
         "manual-test-generator",
+        "manual-testing-specialist",
         "automation-test-generator",
         "validator",
         "context-converter",
@@ -254,7 +255,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     assert agents[4]["runtime"] == "local-router"
     assert agents[3]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
     assert agents[4]["instruction_file"] == ".github/agents/specforge.agent.md"
-    assert agents[8]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[9]["instruction_file"] == ".github/agents/context-converter.agent.md"
     assert agents[10]["runtime"] == "local-sqlite"
 
 
@@ -359,12 +360,21 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
     from app.services.document_ingestion import ExtractedDocument
 
     captured_rules = []
+    captured_manual_types = []
 
     class StubPipeline:
         async def run_document(
-            self, filename, content, additional_context, output_format, business_rules=None
+            self,
+            filename,
+            content,
+            additional_context,
+            output_format,
+            business_rules=None,
+            manual_testing_type="api",
+            generation_target="auto",
         ):
             captured_rules.extend(business_rules or [])
+            captured_manual_types.append(manual_testing_type)
             request = type("Request", (), {"output_format": output_format})()
             return SimpleNamespace(
                 document=ExtractedDocument(
@@ -394,6 +404,8 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
             },
             data={
                 "output_format": "normal",
+                "generation_target": "manual",
+                "manual_testing_type": "database",
                 "business_rules": (
                     "BR-CUSTOM-001: Reject expired campaigns\n"
                     "BR-CUSTOM-002: Preserve the correlation ID"
@@ -410,6 +422,7 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
     assert result["suite"]["test_cases"][0]["id"] == "TC-001"
     assert result["validation"]["score"] <= 100
     assert [rule.id for rule in captured_rules] == ["BR-CUSTOM-001", "BR-CUSTOM-002"]
+    assert captured_manual_types[0] == "database"
 
 
 def test_document_generation_rejects_duplicate_business_rule_ids() -> None:
