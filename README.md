@@ -65,6 +65,12 @@ Jira attachment and summary.
    pip install -e '.[dev]'
    ```
 
+Browser login is enabled when `APP_PASSWORD` and `SESSION_SECRET` are both configured. Set
+`APP_USERNAME`, use a password of at least 12 characters, and generate a random session secret of
+at least 32 characters. Signed sessions are stored in an HttpOnly, SameSite=Strict cookie and
+expire after `SESSION_TTL_SECONDS` (eight hours by default). Bearer-token API clients remain
+supported independently through `API_AUTH_TOKEN`.
+
 3. Copy `.env.example` to `.env`.
 4. Ensure GitHub Copilot CLI is installed, then authenticate it using your Copilot-enabled
    account:

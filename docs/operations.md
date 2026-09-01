@@ -39,6 +39,12 @@ allowlist. An identity-aware reverse proxy should authenticate users and inject
 `Authorization: Bearer <API_AUTH_TOKEN>` only on the trusted upstream connection. Do not expose the
 application container directly to users or put the shared upstream token in browser code.
 
+For the built-in browser login, configure `APP_USERNAME`, `APP_PASSWORD`, and `SESSION_SECRET` in
+the deployment secret manager. The password must contain at least 12 characters and the signing
+secret at least 32. Sessions use signed, expiring, HttpOnly, Secure-in-production,
+SameSite=Strict cookies. For enterprise deployment, prefer the approved identity-aware proxy or
+SSO and leave the optional built-in credentials unset when the proxy owns interactive identity.
+
 The application bounds request bodies, uploaded files, total concurrent requests, and concurrent
 Copilot generations. Tune `MAX_REQUEST_BODY_BYTES`, `MAX_UPLOAD_BYTES`,
 `MAX_CONCURRENT_REQUESTS`, `MAX_CONCURRENT_GENERATIONS`, and

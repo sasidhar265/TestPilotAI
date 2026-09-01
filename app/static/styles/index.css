@@ -243,6 +243,20 @@ textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0
 .character-count { position: absolute; right: 13px; bottom: 11px; color: #a0a4b4; font-size: .65rem; }
 .field-help { margin: 7px 0 17px; color: var(--muted); font-size: .68rem; }
 
+.rule-control { margin: 2px 0 17px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); overflow: hidden; }
+.rule-control > summary { min-height: 58px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; list-style: none; }
+.rule-control > summary::-webkit-details-marker { display: none; }
+.rule-control > summary span:first-child { display: grid; gap: 3px; }
+.rule-control > summary b { color: var(--ink-soft); font-size: .73rem; }
+.rule-control > summary small { color: var(--muted); font-size: .64rem; }
+.rule-count { padding: 5px 8px; border-radius: 999px; color: var(--primary-dark); background: var(--primary-soft); font-size: .6rem; font-weight: 800; }
+.rule-editor { padding: 15px; border-top: 1px solid var(--line); background: var(--surface); }
+.rule-editor textarea { min-height: 126px; padding-bottom: 16px; font-family: "SFMono-Regular", Consolas, monospace; font-size: .72rem; }
+.rule-editor .field-help code { color: var(--primary-dark); }
+.rule-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rule-actions .secondary { min-height: 34px; }
+.rule-actions span { color: var(--muted); font-size: .62rem; }
+
 .upload-zone {
   min-height: 86px;
   padding: 16px;

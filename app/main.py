@@ -1,9 +1,10 @@
+import hmac
 import logging
 import os
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -33,6 +34,7 @@ from app.agents.test_case_generator_agent import (
     TestCaseGeneratorAgent,
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
+from app.auth import SESSION_COOKIE, issue_browser_session, valid_session
 from app.config import Settings, get_settings
 from app.dependencies import (
     get_multi_agent_pipeline,
@@ -96,8 +98,39 @@ app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), na
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
 LOGS = Path(__file__).parent / "static" / "logs.html"
+LOGIN = Path(__file__).parent / "static" / "login.html"
 logger = logging.getLogger(__name__)
 HTML_HEADERS = {"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"}
+
+
+def parse_business_rule_lines(value: str) -> list[BusinessRule]:
+    """Parse editable rule overlays while preserving explicit BR identifiers."""
+    rules: list[BusinessRule] = []
+    seen: set[str] = set()
+    for index, raw_line in enumerate(value.splitlines(), 1):
+        line = raw_line.strip()
+        if not line:
+            continue
+        candidate_id, separator, candidate_description = line.partition(":")
+        if separator and candidate_id.strip().upper().startswith("BR-"):
+            rule_id = candidate_id.strip().upper()
+            description = candidate_description.strip()
+        else:
+            rule_id = f"BR-{index:03d}"
+            description = line
+        if rule_id in seen:
+            raise DocumentIngestionError(f"Business rule {rule_id} is duplicated.")
+        try:
+            rule = BusinessRule(id=rule_id, description=description)
+        except ValueError as error:
+            raise DocumentIngestionError(
+                f"Business rule line {index} must use BR-ID: description."
+            ) from error
+        rules.append(rule)
+        seen.add(rule_id)
+    if len(rules) > 100:
+        raise DocumentIngestionError("A maximum of 100 business rules can be supplied.")
+    return rules
 
 
 def log_operation_failure(operation: str, status_code: int, error: Exception) -> None:
@@ -144,6 +177,11 @@ class CompanyDocument(BaseModel):
     content: str
 
 
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=500)
+
+
 COMPANY_DOCUMENTS = {
     "prerequisites": (
         "Company project prerequisites",
@@ -158,6 +196,41 @@ COMPANY_DOCUMENTS = {
         Path(__file__).parent.parent / "docs" / "company-implementation-checklist.md",
     ),
 }
+
+
+@app.get("/login", include_in_schema=False)
+async def login_page(request: Request) -> Response:
+    if valid_session(request.cookies.get(SESSION_COOKIE, ""), settings_at_startup):
+        return RedirectResponse("/", status_code=303)
+    return FileResponse(LOGIN, headers=HTML_HEADERS)
+
+
+@app.post("/api/auth/login", include_in_schema=False)
+async def login(credentials: LoginRequest) -> Response:
+    if not settings_at_startup.browser_login_enabled:
+        raise HTTPException(status_code=503, detail="Browser login is not configured")
+    username_ok = hmac.compare_digest(credentials.username, settings_at_startup.app_username)
+    password_ok = hmac.compare_digest(credentials.password, settings_at_startup.app_password_value)
+    if not username_ok or not password_ok:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    response = Response(content='{"authenticated":true}', media_type="application/json")
+    response.set_cookie(
+        SESSION_COOKIE,
+        issue_browser_session(credentials.username, settings_at_startup),
+        max_age=settings_at_startup.session_ttl_seconds,
+        httponly=True,
+        secure=settings_at_startup.is_production,
+        samesite="strict",
+        path="/",
+    )
+    return response
+
+
+@app.post("/api/auth/logout", include_in_schema=False)
+async def logout() -> Response:
+    response = Response(content='{"authenticated":false}', media_type="application/json")
+    response.delete_cookie(SESSION_COOKIE, path="/", samesite="strict")
+    return response
 
 
 @app.get("/", include_in_schema=False)
@@ -425,11 +498,7 @@ async def generate_from_document(
                 "The uploaded document exceeds the "
                 f"{settings_at_startup.max_upload_bytes}-byte limit."
             )
-        rules = [
-            BusinessRule(id=f"BR-{index:03d}", description=line.strip())
-            for index, line in enumerate(business_rules.splitlines(), 1)
-            if line.strip()
-        ]
+        rules = parse_business_rule_lines(business_rules)
         result = await pipeline.run_document(
             filename, await file.read(), additional_context, output_format, rules
         )

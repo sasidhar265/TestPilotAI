@@ -11,12 +11,14 @@ import traceback
 from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from http.cookies import SimpleCookie
 from threading import Lock
 from types import TracebackType
 from uuid import uuid4
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.auth import SESSION_COOKIE, valid_session
 from app.config import Settings
 
 request_id_context: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
@@ -284,10 +286,21 @@ class OrganizationHttpMiddleware:
     def _authorized(self, scope: Scope, headers: dict[bytes, bytes]) -> bool:
         expected = self.settings.api_auth_token_value
         path = str(scope.get("path", ""))
-        if not expected or not path.startswith("/api/"):
+        public_paths = {"/login", "/api/auth/login", "/api/health", "/api/live", "/api/ready"}
+        if path in public_paths or path.startswith("/static/"):
             return True
-        if path in {"/api/health", "/api/live", "/api/ready"}:
+        cookie = SimpleCookie()
+        try:
+            cookie.load(headers.get(b"cookie", b"").decode("latin-1"))
+        except ValueError:
+            cookie.clear()
+        session = cookie.get(SESSION_COOKIE)
+        if session is not None and valid_session(session.value, self.settings):
             return True
+        if not path.startswith("/api/"):
+            return not self.settings.browser_login_enabled
+        if not expected:
+            return not self.settings.browser_login_enabled
         supplied = headers.get(b"authorization", b"").decode("ascii", "ignore")
         scheme, separator, token = supplied.partition(" ")
         return bool(
@@ -323,6 +336,21 @@ class OrganizationHttpMiddleware:
             request_id_context.reset(token)
             return
         if not self._authorized(scope, headers):
+            if not str(scope.get("path", "")).startswith("/api/"):
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 303,
+                        "headers": [
+                            (b"location", b"/login"),
+                            (b"cache-control", b"no-store"),
+                            (b"x-request-id", request_id.encode()),
+                        ],
+                    }
+                )
+                await send({"type": "http.response.body", "body": b""})
+                request_id_context.reset(token)
+                return
             await self._reject(send, 401, "Authentication required", request_id)
             request_id_context.reset(token)
             return

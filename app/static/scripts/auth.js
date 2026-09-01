@@ -1,0 +1,1 @@
+document.getElementById('logout')?.addEventListener('click',async()=>{const button=document.getElementById('logout');button.disabled=true;try{await fetch('/api/auth/logout',{method:'POST'});window.location.replace('/login')}catch{button.disabled=false}});

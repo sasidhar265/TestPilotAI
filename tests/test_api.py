@@ -25,6 +25,16 @@ def test_frontend_assets_are_served() -> None:
     assert "javascript" in script.headers["content-type"]
 
 
+def test_login_page_presents_ai_test_generation_workspace() -> None:
+    response = client.get("/login")
+
+    assert response.status_code == 200
+    assert 'id="login-form"' in response.text
+    assert "AI-assisted quality engineering" in response.text
+    assert "manual and automated tests" in response.text
+    assert 'src="/static/scripts/login.js?v=20260901-ai-login"' in response.text
+
+
 def test_home_has_format_radios_and_generation_timer() -> None:
     response = client.get("/")
     assert response.status_code == 200
@@ -45,7 +55,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "↓ .feature" in response.text
     assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' in response.text
-    assert 'id="business-rules"' not in response.text
+    assert 'id="business-rules"' in response.text
+    assert 'id="save-business-rules"' in response.text
+    assert "The repository BRD baseline and Quality Gate remain protected" in response.text
     assert 'id="agent-workspace"' in response.text
     assert 'href="#agent-workspace"' in response.text
     assert 'class="panel agent-workspace"' in response.text
@@ -62,7 +74,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260901-business-rules"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
     assert 'href="/static/styles/index.css?v=20260901-accepted-output"' in response.text
     assert 'id="theme-gear"' in response.text
@@ -346,10 +358,13 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
     from app.agents.test_case_validator import ValidationReport
     from app.services.document_ingestion import ExtractedDocument
 
+    captured_rules = []
+
     class StubPipeline:
         async def run_document(
             self, filename, content, additional_context, output_format, business_rules=None
         ):
+            captured_rules.extend(business_rules or [])
             request = type("Request", (), {"output_format": output_format})()
             return SimpleNamespace(
                 document=ExtractedDocument(
@@ -377,7 +392,13 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
             },
-            data={"output_format": "normal"},
+            data={
+                "output_format": "normal",
+                "business_rules": (
+                    "BR-CUSTOM-001: Reject expired campaigns\n"
+                    "BR-CUSTOM-002: Preserve the correlation ID"
+                ),
+            },
         )
     finally:
         app.dependency_overrides.clear()
@@ -388,6 +409,23 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
     assert result["extracted_characters"] > 0
     assert result["suite"]["test_cases"][0]["id"] == "TC-001"
     assert result["validation"]["score"] <= 100
+    assert [rule.id for rule in captured_rules] == ["BR-CUSTOM-001", "BR-CUSTOM-002"]
+
+
+def test_document_generation_rejects_duplicate_business_rule_ids() -> None:
+    response = client.post(
+        "/api/generate/document",
+        files={"file": ("requirements.pdf", b"document bytes", "application/pdf")},
+        data={
+            "business_rules": (
+                "BR-CUSTOM-001: Reject expired campaigns\n"
+                "BR-CUSTOM-001: Preserve the correlation ID"
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Business rule BR-CUSTOM-001 is duplicated."
 
 
 def test_jira_rejects_unknown_selected_case_id_before_publish(monkeypatch) -> None:

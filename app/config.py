@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     json_logs: bool = True
     api_auth_token: SecretStr = SecretStr("")
+    app_username: str = "admin"
+    app_password: SecretStr = SecretStr("")
+    session_secret: SecretStr = SecretStr("")
+    session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=7 * 24 * 60 * 60)
     allowed_hosts: str = "localhost,127.0.0.1,testserver"
     max_request_body_bytes: int = Field(default=16 * 1024 * 1024, ge=1024)
     max_upload_bytes: int = Field(default=15 * 1024 * 1024, ge=1024)
@@ -45,6 +49,18 @@ class Settings(BaseSettings):
         return self.api_auth_token.get_secret_value()
 
     @property
+    def app_password_value(self) -> str:
+        return self.app_password.get_secret_value()
+
+    @property
+    def session_secret_value(self) -> str:
+        return self.session_secret.get_secret_value()
+
+    @property
+    def browser_login_enabled(self) -> bool:
+        return bool(self.app_password_value and self.session_secret_value)
+
+    @property
     def allowed_host_list(self) -> list[str]:
         return [host.strip() for host in self.allowed_hosts.split(",") if host.strip()]
 
@@ -66,6 +82,18 @@ class Settings(BaseSettings):
                 raise ValueError("ALLOWED_HOSTS must contain explicit hosts in production")
             if not self.json_logs:
                 raise ValueError("JSON_LOGS must remain enabled in production")
+            if bool(self.app_password_value) != bool(self.session_secret_value):
+                raise ValueError(
+                    "APP_PASSWORD and SESSION_SECRET must either both be configured "
+                    "or both be empty"
+                )
+            if self.browser_login_enabled and (
+                len(self.app_password_value) < 12 or len(self.session_secret_value) < 32
+            ):
+                raise ValueError(
+                    "APP_PASSWORD must contain at least 12 characters and "
+                    "SESSION_SECRET at least 32"
+                )
         return self
 
 

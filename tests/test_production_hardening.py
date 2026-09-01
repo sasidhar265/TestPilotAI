@@ -5,6 +5,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
+from app.auth import SESSION_COOKIE, issue_browser_session
 from app.config import Settings
 from app.main import app
 from app.observability import LifecycleEventRegistry, OrganizationHttpMiddleware
@@ -78,6 +79,69 @@ def test_api_authentication_is_enforced_when_configured() -> None:
     assert missing.headers["www-authenticate"] == "Bearer"
     assert invalid.status_code == 401
     assert accepted.status_code == 200
+
+
+def test_browser_login_redirects_pages_and_authorizes_api_with_signed_cookie() -> None:
+    settings = Settings(
+        app_username="qa.user",
+        app_password="a-secure-password",
+        session_secret="s" * 32,
+    )
+    application = Starlette(
+        routes=[
+            Route("/", protected_endpoint, methods=["GET"]),
+            Route("/api/protected", protected_endpoint, methods=["POST"]),
+        ]
+    )
+    application.add_middleware(OrganizationHttpMiddleware, settings=settings)
+    client = TestClient(application)
+
+    redirect = client.get("/", follow_redirects=False)
+    unauthorized_api = client.post("/api/protected")
+    client.cookies.set(SESSION_COOKIE, issue_browser_session("qa.user", settings))
+    authorized_page = client.get("/")
+    authorized_api = client.post("/api/protected")
+
+    assert redirect.status_code == 303
+    assert redirect.headers["location"] == "/login"
+    assert unauthorized_api.status_code == 401
+    assert authorized_page.status_code == 200
+    assert authorized_api.status_code == 200
+
+
+def test_tampered_browser_session_is_rejected() -> None:
+    settings = Settings(
+        app_username="qa.user",
+        app_password="a-secure-password",
+        session_secret="s" * 32,
+    )
+    client = hardened_client(settings)
+    client.cookies.set(SESSION_COOKIE, issue_browser_session("qa.user", settings) + "tampered")
+
+    assert client.post("/api/protected").status_code == 401
+
+
+def test_login_endpoint_sets_http_only_same_site_session(monkeypatch) -> None:
+    settings = Settings(
+        app_username="qa.user",
+        app_password="a-secure-password",
+        session_secret="s" * 32,
+    )
+    monkeypatch.setattr("app.main.settings_at_startup", settings)
+    client = TestClient(app)
+
+    invalid = client.post("/api/auth/login", json={"username": "qa.user", "password": "wrong"})
+    accepted = client.post(
+        "/api/auth/login",
+        json={"username": "qa.user", "password": "a-secure-password"},
+    )
+
+    assert invalid.status_code == 401
+    assert accepted.status_code == 200
+    cookie = accepted.headers["set-cookie"]
+    assert f"{SESSION_COOKIE}=" in cookie
+    assert "HttpOnly" in cookie
+    assert "SameSite=strict" in cookie
 
 
 def test_declared_oversized_request_is_rejected_before_routing() -> None:

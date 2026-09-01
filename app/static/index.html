@@ -29,14 +29,15 @@
       <div class="side-status">
         <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
         <div class="model">SECURE LOCAL WORKSPACE</div>
+        <button class="logout-button" id="logout" type="button">Sign out</button>
       </div>
     </aside>
 
     <main class="workspace">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Quality engineering workspace</div>
-          <h1>Turn requirements into trusted tests.</h1>
+          <div class="eyebrow">Agentic AI test-generation workspace</div>
+          <h1>Design trusted test coverage with AI agents.</h1>
         </div>
         <div class="top-actions">
           <span class="runtime-pill" id="runtime-health">● Checking service…</span>
@@ -69,6 +70,16 @@
               <span class="character-count" id="character-count">0 characters</span>
             </div>
             <p class="field-help" id="description-help">Use business language. The active project profile supplies governed domain rules.</p>
+
+            <details class="rule-control" id="rule-control">
+              <summary><span><b>Business requirements &amp; rules</b><small>Add governed rules for this generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
+              <div class="rule-editor">
+                <label class="field-label" for="business-rules">Editable rule overlay</label>
+                <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: The quotation must reject an expired campaign.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
+                <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. The repository BRD baseline and Quality Gate remain protected.</p>
+                <div class="rule-actions"><button class="secondary" id="save-business-rules" type="button">Save rule overlay</button><button class="secondary" id="clear-business-rules" type="button">Clear</button><span id="rule-save-state" aria-live="polite">Stored in this browser only</span></div>
+              </div>
+            </details>
 
             <label class="upload-zone" id="upload-zone" for="requirement-file">
               <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
@@ -212,6 +223,7 @@
     <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
-  <script src="/static/scripts/index.js?v=20260901-shared-theme" defer></script>
+  <script src="/static/scripts/auth.js?v=20260901-login" defer></script>
+  <script src="/static/scripts/index.js?v=20260901-business-rules" defer></script>
 </body>
 </html>

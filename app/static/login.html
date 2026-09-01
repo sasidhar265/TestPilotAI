@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f6fa">
+  <title>Sign in — Quality Lifecycle Studio</title>
+  <link rel="stylesheet" href="/static/styles/login.css?v=20260901-ai-login">
+  <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
+</head>
+<body>
+  <main class="login-shell">
+    <section class="product-story">
+      <a class="brand" href="/login"><span class="brand-mark">Q</span><span><strong>Quality Lifecycle</strong><small>Agentic test studio</small></span></a>
+      <div class="story-copy"><span class="eyebrow">AI-assisted quality engineering</span><h1>Turn governed requirements into trusted test coverage.</h1><p>Orchestrate specialist agents to analyze BRDs, apply business rules, generate manual and automated tests, validate traceability, and deliver accepted quality artifacts.</p></div>
+      <div class="agent-flow" aria-label="AI quality lifecycle"><span>Requirements</span><b>→</b><span>AI agents</span><b>→</b><span>Quality Gate</span><b>→</b><span>Accepted tests</span></div>
+      <div class="trust"><span>✓</span><div><strong>Governed by design</strong><small>Repository policies · typed schemas · human acceptance</small></div></div>
+    </section>
+    <section class="login-panel">
+      <form id="login-form">
+        <span class="eyebrow">Secure workspace</span><h2>Welcome back</h2><p>Sign in to open the AI test-generation workspace.</p>
+        <label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus>
+        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button id="login-button" type="submit">Sign in <span>→</span></button>
+        <div class="login-status" id="login-status" role="alert" aria-live="polite"></div>
+      </form>
+      <small class="access-note">Access is restricted to authorized quality-engineering users.</small>
+    </section>
+  </main>
+  <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
+  <script src="/static/scripts/login.js?v=20260901-ai-login" defer></script>
+</body>
+</html>

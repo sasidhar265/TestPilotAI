@@ -42,6 +42,8 @@
 .theme-options button span { color: var(--ink); font-size: .9rem; }
 .theme-options button:hover { color: var(--ink); border-color: var(--primary); }
 .theme-options button.active { color: var(--primary-dark); border-color: var(--primary); background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--primary); }
+.logout-button { width: 100%; min-height: 36px; margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface); font-size: .64rem; font-weight: 750; }
+.logout-button:hover { color: var(--danger, #c33d55); border-color: currentColor; background: var(--surface-soft, var(--soft)); }
 
 @media (max-width: 580px) {
   .theme-settings { right: 14px; bottom: 14px; }
