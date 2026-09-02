@@ -32,7 +32,13 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert 'id="login-form"' in response.text
     assert "AI-assisted quality engineering" in response.text
     assert "manual and automated tests" in response.text
-    assert 'src="/static/scripts/login.js?v=20260901-ai-login"' in response.text
+    assert 'src="/static/scripts/login.js?v=20260902-login-feedback"' in response.text
+    assert 'id="auth-overlay"' in response.text
+    assert 'id="dismiss-auth-error"' in response.text
+    assert 'id="password-toggle"' in response.text
+    assert 'id="forgot-password"' in response.text
+    assert 'aria-label="Show password"' in response.text
+    assert "styles/login-feedback.css?v=20260902" in response.text
 
 
 def test_home_has_format_radios_and_generation_timer() -> None:
@@ -238,7 +244,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "business-rules",
         "knowledge",
         "qa-master",
-        "specforge",
+        "reqforge",
         "manual-test-generator",
         "manual-testing-specialist",
         "automation-test-generator",
@@ -254,7 +260,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     assert agents[3]["runtime"] == "local-orchestrator"
     assert agents[4]["runtime"] == "local-router"
     assert agents[3]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
-    assert agents[4]["instruction_file"] == ".github/agents/specforge.agent.md"
+    assert agents[4]["instruction_file"] == ".github/agents/reqforge.agent.md"
     assert agents[9]["instruction_file"] == ".github/agents/context-converter.agent.md"
     assert agents[10]["runtime"] == "local-sqlite"
 

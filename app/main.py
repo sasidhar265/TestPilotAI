@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 
+import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -31,7 +32,7 @@ from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
     ManualTestCaseGeneratorAgent,
     ManualTestingSpecialistAgent,
-    SpecForgeTransformerAgent,
+    ReqForgeTransformerAgent,
     TestCaseGeneratorAgent,
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
@@ -58,8 +59,10 @@ from app.models import (
     ExportFormat,
     GenerateRequest,
     GenerationTarget,
+    JiraGenerateRequest,
     JiraPublishRequest,
     JiraPublishResult,
+    JiraRequirement,
     ManualTestingType,
     MetricsReport,
     SuiteRequest,
@@ -162,6 +165,10 @@ class AgentRunResult(BaseModel):
     suite: TestSuite
     validation: ValidationReport
     trace: list[AgentEvent]
+
+
+class JiraGenerationResult(AgentRunResult):
+    requirement: JiraRequirement
 
 
 class ContextConversionRequest(BaseModel):
@@ -334,7 +341,7 @@ async def list_agents() -> list[dict[str, object]]:
             BusinessRulesAgent.descriptor,
             KnowledgeAgent.descriptor,
             TestCaseGeneratorAgent.descriptor,
-            SpecForgeTransformerAgent.descriptor,
+            ReqForgeTransformerAgent.descriptor,
             ManualTestCaseGeneratorAgent.descriptor,
             ManualTestingSpecialistAgent.descriptor,
             AutomationTestCaseGeneratorAgent.descriptor,
@@ -443,7 +450,7 @@ async def run_agent(
     request: GenerateRequest,
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> AgentRunResult:
-    """Run the deterministic SpecForge coordinator and its governed specialists."""
+    """Run the deterministic ReqForge coordinator and its governed specialists."""
     request_id = request_id_context.get()
     lifecycle_events.start(request_id)
     publish_lifecycle_event(
@@ -677,3 +684,54 @@ async def publish_to_jira(
     except Exception as error:
         log_operation_failure("jira_publish", 502, error)
         raise HTTPException(status_code=502, detail="Jira publish failed") from error
+
+
+@app.get("/api/jira/issues/{issue_key}/requirements", response_model=JiraRequirement)
+async def read_jira_requirement(
+    issue_key: str, settings: Settings = Depends(get_settings)
+) -> JiraRequirement:
+    """Fetch description and acceptance criteria from a Jira/Xray project issue."""
+    import re
+
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*-\d+", issue_key):
+        raise HTTPException(status_code=422, detail="Invalid Jira issue key")
+    try:
+        return await JiraClient(settings).read_requirement(issue_key.upper())
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except httpx.HTTPStatusError as error:
+        status = 404 if error.response.status_code == 404 else 502
+        raise HTTPException(status_code=status, detail="Unable to read the Jira issue") from error
+
+
+@app.post("/api/jira/generate", response_model=JiraGenerationResult)
+async def generate_from_jira(
+    request: JiraGenerateRequest,
+    settings: Settings = Depends(get_settings),
+    pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
+) -> JiraGenerationResult:
+    """Fetch a Jira/Xray story and run it through the governed test pipeline."""
+    try:
+        requirement = await JiraClient(settings).read_requirement(request.issue_key.upper())
+        generated = await pipeline.run(
+            GenerateRequest(
+                description=requirement.generation_description,
+                additional_context=request.additional_context,
+                output_format=request.output_format,
+                generation_target=request.generation_target,
+                manual_testing_type=request.manual_testing_type,
+            )
+        )
+        return JiraGenerationResult(
+            requirement=requirement,
+            suite=generated.suite,
+            validation=generated.validation,
+            trace=list(getattr(generated, "trace", ())),
+        )
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except httpx.HTTPStatusError as error:
+        status = 404 if error.response.status_code == 404 else 502
+        raise HTTPException(status_code=status, detail="Unable to read the Jira issue") from error
+    except CopilotGenerationError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error

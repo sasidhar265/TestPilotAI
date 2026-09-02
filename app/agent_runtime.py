@@ -74,7 +74,7 @@ class AgentRuntime:
             trace.append(event)
             agent = {
                 "lookup_memory": "Knowledge Agent",
-                "design_test_suite": "QA Master → SpecForge",
+                "design_test_suite": "QA Master → ReqForge",
                 "validate_test_suite": "Quality Gate",
                 "store_validated_suite": "Test Storage Agent",
                 "finish_run": "QA Master Agent",
@@ -99,7 +99,7 @@ class AgentRuntime:
 
         @define_tool(
             description=(
-                "Ask QA Master to design scenarios from ingested UI input and have SpecForge "
+                "Ask QA Master to design scenarios from ingested UI input and have ReqForge "
                 "transform them into the requested test-case format."
             ),
             skip_permission=True,
@@ -134,7 +134,7 @@ class AgentRuntime:
             record(
                 "design_test_suite",
                 "success",
-                f"QA Master and SpecForge {action.lower()} {len(suite.test_cases)} cases.",
+                f"QA Master and ReqForge {action.lower()} {len(suite.test_cases)} cases.",
             )
             return json.dumps(suite.model_dump(mode="json"))
 
@@ -257,7 +257,7 @@ class AgentRuntime:
                 "success",
                 (
                     f"Fallback transformed {len(suite.test_cases)} QA Master scenarios "
-                    "through SpecForge."
+                    "through ReqForge."
                 ),
             )
         if validation is None:

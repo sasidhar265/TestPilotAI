@@ -23,7 +23,7 @@ responsibility, runtime, and capabilities. Only suites that pass independent val
 stored for future exact-match reuse.
 
 Agent behavior is defined in readable `.github/agents/*.agent.md` files. The FastAPI/Python layer
-loads the relevant SpecForge, specialist, and quality-gate policies into each Copilot session and
+loads the relevant ReqForge, specialist, and quality-gate policies into each Copilot session and
 retains deterministic enforcement for validation, conversion, storage, security, and the web UI.
 Team and project customization is layered through `.github/agent-profiles/<profile>/`. Set
 `AGENT_PROFILE` to select a profile; `profile.md` applies common rules and optional files named
@@ -116,6 +116,8 @@ independently:
 | Convert | `POST /api/context-converter/{output_format}` | Converts a validated suite to CSV, Excel, JSON, or a feature file. |
 | Export | `POST /api/export/csv` | Produces a CSV download. |
 | Publish | `POST /api/jira/publish` | Attaches selected cases to Jira after an explicit user action. |
+| Read Jira | `GET /api/jira/issues/{issue_key}/requirements` | Reads a story description and Xray/Jira acceptance criteria. |
+| Generate from Jira | `POST /api/jira/generate` | Reads a Jira story and generates a validated test suite from it. |
 
 Execution results are supplied by an approved manual or automation source; this application does
 not execute arbitrary test commands. Defects remain drafts until a person reviews them, and Jira
@@ -151,12 +153,17 @@ model allowed by your organization's Copilot policy. Never commit a token.
 ## Jira Cloud setup
 
 Set `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` in `.env`. The Jira user needs Browse
-Projects, Add Attachments, and Add Comments permissions for the target project. The app uses
-Jira Cloud REST API v3. Publishing is always initiated by the user and attaches a timestamped
-CSV; it does not create or overwrite Jira issues.
+Projects to import stories, plus Add Attachments and Add Comments to publish results. The app uses
+Jira Cloud REST API v3 and supports Jira projects with Xray by reading the native story description
+and acceptance-criteria custom fields. Fields named `Acceptance Criteria` are discovered
+automatically; set `JIRA_ACCEPTANCE_CRITERIA_FIELDS` to comma-separated custom-field IDs or exact
+field names when your project uses different labels. In the browser, choose **Load story**, review
+the imported requirement, and generate normally. The `/api/jira/generate` endpoint offers the same
+fetch-and-generate flow in one API call.
 
-For Jira Data Center or a test-management plugin such as Xray/Zephyr, implement a separate
-adapter because their authentication and test-case APIs differ.
+Publishing is always initiated by the user and attaches an Xray-ready timestamped CSV; it does not
+create or overwrite Jira/Xray issues. Jira Data Center and direct Xray test-issue creation require
+separate authentication and adapters.
 
 ## Develop with GitHub Copilot
 
@@ -198,7 +205,7 @@ flowchart LR
     B --> C{3. Exact validated<br/>suite already stored?}
     C -->|Yes| D[Revalidate stored suite]
     C -->|No| E[QA Master designs<br/>risk-based scenarios]
-    E --> F[SpecForge transforms to<br/>manual or BDD test cases]
+    E --> F[ReqForge transforms to<br/>manual or BDD test cases]
     F --> G[Validate and allow<br/>one guided revision]
     G -->|Pass| H[Add safe test data<br/>and store suite]
     G -->|Fail| I[Return actionable<br/>validation findings]
@@ -209,7 +216,7 @@ flowchart LR
 
 The memory check can avoid a Copilot request for an exact known requirement. A stored suite is
 still revalidated before use. For a new requirement, QA Master reads the normalized UI or BRD
-input and designs the scenario intent. SpecForge then selects the manual specialist, automation
+input and designs the scenario intent. ReqForge then selects the manual specialist, automation
 specialist, or both to transform that intent into the requested manual or BDD test cases. Output
 that still fails after one findings-driven revision is not
 stored or offered for publication.
@@ -279,7 +286,7 @@ flowchart TB
 
             subgraph AGENTS[Governed agent layer]
                 PREP[Prepare<br/>Input, Business Rules, Knowledge]
-                DESIGN[Design<br/>SpecForge, Manual, Automation]
+                DESIGN[Design<br/>ReqForge, Manual, Automation]
                 ASSURE[Assure<br/>Validator, Test Data]
                 DELIVER[Deliver<br/>Converter, Output, Storage]
                 EVIDENCE[Evidence<br/>Execution, Defects, Metrics]
@@ -349,7 +356,7 @@ The fifteen roles are grouped below by purpose so their relationship is easier t
 | Group | Agents | Responsibility |
 | --- | --- | --- |
 | Prepare | Input, Business Rules, Knowledge | Extract and normalize requirements, bind `BR-*` rules, and recall exact validated suites. |
-| Generate | QA Master, SpecForge Transformer, Manual Generator, Automation Generator | Ingest UI/BRD input, design scenario intent, and transform it into requested manual or BDD test cases. |
+| Generate | QA Master, ReqForge Transformer, Manual Generator, Automation Generator | Ingest UI/BRD input, design scenario intent, and transform it into requested manual or BDD test cases. |
 | Assure | Test Case Validator, Test Data | Enforce coverage and traceability rules and fill missing values with privacy-safe synthetic data. |
 | Deliver | Context Converter, Output, Test Storage | Convert approved suites, retain artifacts, and store validated knowledge for exact-match reuse. |
 | Learn from execution | Execution, Bug Reporter, Metrics | Validate supplied results, draft defects for review, and calculate transparent quality measures. |

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f6fa">
   <title>Sign in — Quality Lifecycle Studio</title>
-  <link rel="stylesheet" href="/static/styles/login.css?v=20260901-ai-login">
+  <link rel="stylesheet" href="/static/styles/login.css?v=20260902-login-feedback">
+  <link rel="stylesheet" href="/static/styles/login-feedback.css?v=20260902">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -20,14 +21,33 @@
       <form id="login-form">
         <span class="eyebrow">Secure workspace</span><h2>Welcome back</h2><p>Sign in to open the AI test-generation workspace.</p>
         <label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus>
-        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button class="password-toggle" id="password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+            <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/></svg>
+            <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A10.9 10.9 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.2 2.8M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 4-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+          </button>
+        </div>
         <button id="login-button" type="submit">Sign in <span>→</span></button>
+        <button class="forgot-password" id="forgot-password" type="button">Forgot password?</button>
         <div class="login-status" id="login-status" role="alert" aria-live="polite"></div>
       </form>
       <small class="access-note">Access is restricted to authorized quality-engineering users.</small>
     </section>
   </main>
+  <div class="auth-overlay" id="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-error-title" aria-describedby="auth-error-message" hidden>
+    <div class="auth-dialog">
+      <span class="auth-error-icon" aria-hidden="true">!</span>
+      <div class="auth-dialog-copy">
+        <span class="eyebrow error-eyebrow">Sign-in unsuccessful</span>
+        <h2 id="auth-error-title">We couldn't verify those details</h2>
+        <p id="auth-error-message">Check your username and password, then try again.</p>
+      </div>
+      <button class="auth-dialog-button" id="dismiss-auth-error" type="button">Try again</button>
+    </div>
+  </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
-  <script src="/static/scripts/login.js?v=20260901-ai-login" defer></script>
+  <script src="/static/scripts/login.js?v=20260902-login-feedback" defer></script>
 </body>
 </html>

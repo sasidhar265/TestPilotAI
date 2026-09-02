@@ -1,4 +1,4 @@
-"""QA Master orchestration and SpecForge test-case transformation."""
+"""QA Master orchestration and ReqForge test-case transformation."""
 
 import logging
 
@@ -124,15 +124,15 @@ class AutomationTestCaseGeneratorAgent:
         return suite
 
 
-class SpecForgeTransformerAgent:
+class ReqForgeTransformerAgent:
     descriptor = FunctionalAgentDescriptor(
-        id="specforge-transformer-agent",
-        name="SpecForge Transformer",
-        kind=AgentKind.SPECFORGE,
+        id="reqforge-transformer-agent",
+        name="ReqForge Transformer",
+        kind=AgentKind.REQFORGE,
         purpose=("Transform QA Master scenarios into requested manual test cases or BDD Gherkin."),
         runtime="local-router",
         capabilities=("scenario-transformation", "manual-tests", "bdd-gherkin", "fan-out"),
-        instruction_file=".github/agents/specforge.agent.md",
+        instruction_file=".github/agents/reqforge.agent.md",
     )
 
     def __init__(
@@ -148,7 +148,7 @@ class SpecForgeTransformerAgent:
 
     async def transform(self, request: GenerateRequest, route: GenerationTarget) -> TestSuite:
         publish_lifecycle_event(
-            "SpecForge Transformer",
+            "ReqForge Transformer",
             "route_specialists",
             "running",
             f"Transforming scenario intent through the {route.value} specialist route.",
@@ -265,7 +265,7 @@ class SpecForgeTransformerAgent:
 
 
 class QAMasterAgent:
-    """Ingest normalized UI requirements, design scenario intent, and orchestrate SpecForge."""
+    """Ingest normalized UI requirements, design scenario intent, and orchestrate ReqForge."""
 
     descriptor = FunctionalAgentDescriptor(
         id="qa-master-agent",
@@ -273,14 +273,14 @@ class QAMasterAgent:
         kind=AgentKind.QA_MASTER,
         purpose=(
             "Read normalized UI or BRD input, design risk-based scenarios, and direct "
-            "SpecForge transformation."
+            "ReqForge transformation."
         ),
         runtime="local-orchestrator",
         capabilities=(
             "ui-input-ingestion",
             "requirement-analysis",
             "scenario-design",
-            "specforge-orchestration",
+            "reqforge-orchestration",
         ),
         instruction_file=".github/agents/testpilot-coordinator.agent.md",
     )
@@ -291,7 +291,7 @@ class QAMasterAgent:
         quality_gate: TestCaseValidatorAgent | None = None,
         knowledge_source: OutputAgent | None = None,
     ) -> None:
-        self.specforge = SpecForgeTransformerAgent(registry, quality_gate, knowledge_source)
+        self.reqforge = ReqForgeTransformerAgent(registry, quality_gate, knowledge_source)
 
     def route(self, request: GenerateRequest) -> GenerationTarget:
         if request.generation_target != GenerationTarget.AUTO:
@@ -308,7 +308,7 @@ class QAMasterAgent:
         return GenerationTarget.BOTH
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
-        """Treat the validated request as ingested UI data and send scenarios to SpecForge."""
+        """Treat the validated request as ingested UI data and send scenarios to ReqForge."""
         route = self.route(request)
         publish_lifecycle_event(
             "QA Master Agent",
@@ -316,7 +316,7 @@ class QAMasterAgent:
             "success",
             f"Analyzed normalized requirements and selected the {route.value} route.",
         )
-        return await self.specforge.transform(request, route)
+        return await self.reqforge.transform(request, route)
 
 
 # Preserve the former public name for callers while exposing the new responsibility explicitly.

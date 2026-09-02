@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     jira_base_url: str = ""
     jira_email: str = ""
     jira_api_token: str = ""
+    jira_acceptance_criteria_fields: str = ""
+
+    @property
+    def jira_acceptance_criteria_field_list(self) -> list[str]:
+        """Optional Jira custom-field IDs/names that contain acceptance criteria."""
+        return [
+            value.strip()
+            for value in self.jira_acceptance_criteria_fields.split(",")
+            if value.strip()
+        ]
 
     model_config = SettingsConfigDict(
         env_file=".env",

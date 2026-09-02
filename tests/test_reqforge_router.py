@@ -1,7 +1,7 @@
 import pytest
 
 from app.agents import AgentCapability, AgentDescriptor, AgentRegistry
-from app.agents.test_case_generator_agent import TestCaseGeneratorAgent as SpecForgeRouter
+from app.agents.test_case_generator_agent import TestCaseGeneratorAgent as ReqForgeRouter
 from app.models import ExecutionMode, GenerateRequest, GenerationTarget
 from app.models import TestCase as Case
 from app.models import TestCategory as Category
@@ -42,7 +42,7 @@ class RouteAwareProvider:
 @pytest.mark.asyncio
 async def test_explicit_automation_action_calls_only_automation_specialist() -> None:
     provider = RouteAwareProvider()
-    router = SpecForgeRouter(AgentRegistry(provider))
+    router = ReqForgeRouter(AgentRegistry(provider))
 
     result = await router.generate(
         GenerateRequest(
@@ -58,7 +58,7 @@ async def test_explicit_automation_action_calls_only_automation_specialist() -> 
 @pytest.mark.asyncio
 async def test_neutral_action_fans_out_to_both_specialists() -> None:
     provider = RouteAwareProvider()
-    router = SpecForgeRouter(AgentRegistry(provider))
+    router = ReqForgeRouter(AgentRegistry(provider))
 
     result = await router.generate(
         GenerateRequest(description="Create tests for secure customer sign in.")
@@ -73,7 +73,7 @@ async def test_neutral_action_fans_out_to_both_specialists() -> None:
 
 
 def test_framework_keyword_routes_to_automation() -> None:
-    router = SpecForgeRouter(AgentRegistry(RouteAwareProvider()))
+    router = ReqForgeRouter(AgentRegistry(RouteAwareProvider()))
 
     route = router.route(
         GenerateRequest(description="Generate Playwright coverage for customer sign in.")
@@ -100,7 +100,7 @@ async def test_manual_output_is_revised_from_quality_gate_findings() -> None:
             return result
 
     provider = RevisingProvider()
-    router = SpecForgeRouter(AgentRegistry(provider))
+    router = ReqForgeRouter(AgentRegistry(provider))
     request = GenerateRequest(
         description="""Review account lockout manually.
 BR-1: Lock the account after five failed sign-in attempts""",
@@ -128,7 +128,7 @@ async def test_segregated_automation_output_is_generated_and_quality_gated() -> 
             return result
 
     provider = RevisingAutomationProvider()
-    router = SpecForgeRouter(AgentRegistry(provider))
+    router = ReqForgeRouter(AgentRegistry(provider))
     request = GenerateRequest(
         description="""Automate secure customer sign in with Playwright.
 AC-1: Valid credentials open the dashboard""",
@@ -158,7 +158,7 @@ async def test_mixed_route_keeps_valid_automation_when_manual_gate_fails() -> No
             return result
 
     provider = InvalidManualProvider()
-    router = SpecForgeRouter(AgentRegistry(provider))
+    router = ReqForgeRouter(AgentRegistry(provider))
 
     result = await router.generate(
         GenerateRequest(description="Keep the user signed in between browser sessions.")

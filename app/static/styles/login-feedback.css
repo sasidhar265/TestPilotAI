@@ -1,0 +1,148 @@
+/* Accessible authentication feedback layered over the shared login design. */
+.input-invalid,
+.input-invalid:focus {
+  border-color: #cf2f3f;
+  background: #fff7f8;
+  box-shadow: 0 0 0 4px rgba(207, 47, 63, 0.12);
+}
+
+.login-status.error {
+  color: #b42332;
+  font-weight: 750;
+}
+
+.password-field { position: relative; }
+.password-field input {
+  width: 100%;
+  padding-right: 50px;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+}
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--primary);
+  background: var(--primary-soft);
+  outline: none;
+}
+.password-toggle svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.password-toggle .eye-closed { display: none; }
+.password-toggle[aria-pressed="true"] .eye-open { display: none; }
+.password-toggle[aria-pressed="true"] .eye-closed { display: block; }
+.forgot-password {
+  min-height: auto;
+  width: max-content;
+  margin: 13px 0 0 auto;
+  padding: 2px 0;
+  color: var(--primary);
+  background: transparent;
+  box-shadow: none;
+}
+.forgot-password:hover,
+.forgot-password:focus-visible {
+  color: var(--primary-dark);
+  background: transparent;
+  text-decoration: underline;
+  outline: none;
+}
+.auth-overlay.help .auth-error-icon {
+  background: linear-gradient(145deg, #7474ea, #5050c5);
+  box-shadow: 0 10px 24px rgba(91, 91, 214, 0.22);
+}
+.auth-overlay.help .error-eyebrow { color: var(--primary); }
+.auth-overlay.help .auth-dialog-button {
+  background: var(--primary);
+  box-shadow: 0 9px 24px rgba(91, 91, 214, 0.2);
+}
+
+.dialog-open { overflow: hidden; }
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(20, 22, 39, 0.46);
+  backdrop-filter: blur(8px);
+  animation: overlay-in 0.18s ease-out;
+}
+.auth-overlay[hidden] { display: none; }
+.auth-dialog {
+  width: min(440px, 100%);
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 18px;
+  border: 1px solid rgba(207, 47, 63, 0.18);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 30px 90px rgba(21, 24, 45, 0.3);
+  animation: dialog-in 0.22s ease-out;
+}
+.auth-error-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #e14b59, #bd2434);
+  font-size: 1.35rem;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(207, 47, 63, 0.22);
+}
+.auth-dialog-copy h2 {
+  margin: 7px 0 8px;
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+}
+.auth-dialog-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.error-eyebrow { color: #cf2f3f; }
+.auth-dialog-button {
+  grid-column: 1 / -1;
+  justify-content: center;
+  margin-top: 5px;
+  background: #cf2f3f;
+  box-shadow: 0 9px 24px rgba(207, 47, 63, 0.2);
+}
+.auth-dialog-button:hover { background: #aa2130; }
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-overlay,
+  .auth-dialog { animation: none; }
+}

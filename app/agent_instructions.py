@@ -9,7 +9,7 @@ PROFILE_DIRECTORY = Path(__file__).parent.parent / ".github" / "agent-profiles"
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
     "business-rules": "business-rules.agent.md",
-    "specforge": "specforge.agent.md",
+    "reqforge": "reqforge.agent.md",
     "testpilot-coordinator": "testpilot-coordinator.agent.md",
     "manual-test-generator": "manual-test-generator.agent.md",
     "manual-testing-specialist": "manual-testing-specialist.agent.md",
@@ -84,9 +84,9 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
     }.get(target)
     sections = [
         load_agent_instructions("business-rules"),
-        load_agent_instructions("specforge"),
+        load_agent_instructions("reqforge"),
     ]
-    sections.append(load_profile_instructions(profile, "specforge"))
+    sections.append(load_profile_instructions(profile, "reqforge"))
     if specialist:
         sections.append(load_agent_instructions(specialist))
         if specialist == "manual-test-generator":

@@ -390,6 +390,7 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .bdd-actions { margin-top: 10px; }
 .jira-row input { width: 100%; min-height: 36px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; outline: none; color: var(--ink); background: #fff; font-size: .7rem; }
 .jira-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91, 91, 214, .1); }
+.jira-import { margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
 
 .step-definitions { margin-top: 20px; padding: 21px; border: 1px solid #dcdcf6; border-radius: 14px; background: #fafaff; }
 .step-definitions-head h3 { margin: 6px 0 3px; font-size: 1.05rem; }

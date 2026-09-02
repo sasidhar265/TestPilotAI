@@ -59,7 +59,7 @@ class AgentKind(StrEnum):
     BUSINESS_RULES = "business-rules"
     KNOWLEDGE = "knowledge"
     QA_MASTER = "qa-master"
-    SPECFORGE = "specforge"
+    REQFORGE = "reqforge"
     ROUTER = "qa-master"  # Backward-compatible enum alias.
     MANUAL_GENERATOR = "manual-test-generator"
     MANUAL_SPECIALIST = "manual-testing-specialist"

@@ -12,7 +12,7 @@ from app.agent_instructions import (
 @pytest.mark.parametrize(
     "agent_id",
     [
-        "specforge",
+        "reqforge",
         "testpilot-coordinator",
         "manual-test-generator",
         "manual-testing-specialist",
@@ -45,7 +45,7 @@ def test_coordinator_workflow_is_loaded_from_markdown() -> None:
     assert "You are the QA Master Agent" in body
     assert "input ingested\nfrom the UI" in body
     assert "Design the risk-based test scenarios first" in body
-    assert "SpecForge" in body
+    assert "ReqForge" in body
     assert "Always check organizational memory first" in body
     assert "Store only a passing suite" in body
 
@@ -56,17 +56,17 @@ def test_python_modules_do_not_embed_agent_system_prompts() -> None:
 
 
 def test_markdown_defines_input_output_and_manual_bdd_formats() -> None:
-    specforge = load_agent_instructions("specforge")
+    reqforge = load_agent_instructions("reqforge")
     manual = load_agent_instructions("manual-test-generator")
     automation = load_agent_instructions("automation-test-generator")
     quality_gate = load_agent_instructions("quality-gate")
 
-    assert "## Input contract" in specforge
-    assert "## Canonical output contract" in specforge
-    assert "scenario-to-test-case transformation agent" in specforge
-    assert "requested `output_format`" in specforge
-    assert "There is no numeric scenario or test-case cap" in specforge
-    assert "all distinct test cases" in specforge
+    assert "## Input contract" in reqforge
+    assert "## Canonical output contract" in reqforge
+    assert "scenario-to-test-case transformation agent" in reqforge
+    assert "requested `output_format`" in reqforge
+    assert "There is no numeric scenario or test-case cap" in reqforge
+    assert "all distinct test cases" in reqforge
     assert "## Manual test-case format" in manual
     assert '"gherkin": null' in manual
     assert "## Automation test-case and scenario format" in automation

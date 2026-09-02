@@ -30,7 +30,7 @@ fine-tuning.
 
 The application is coordinated as fifteen explicit roles under `app/agents/`. QA Master consumes
 the normalized UI text or uploaded BRD, analyzes the requirement, and designs risk-based scenario
-intent. SpecForge transforms that intent according to the requested `output_format` and routes an
+intent. ReqForge transforms that intent according to the requested `output_format` and routes an
 explicit `generation_target`, or the target inferred from terms such as Playwright, automation,
 manual test, exploratory, and usability. Ambiguous or neutral requests fan out to both specialists.
 
@@ -39,10 +39,10 @@ manual test, exploratory, and usability. Ambiguous or neutral requests fan out t
 3. `KnowledgeAgent` checks for an exact validated match before any Copilot request.
 4. `AgentRuntime` starts the Markdown-directed QA Master coordinator with governed lookup, design,
    validation, storage, and completion tools; `QAMasterAgent` then defines specialist routing.
-5. `SpecForgeTransformerAgent` converts those scenarios to the requested manual or BDD test-case
+5. `ReqForgeTransformerAgent` converts those scenarios to the requested manual or BDD test-case
    representation and selects the applicable specialists.
 6. `ManualTestCaseGeneratorAgent` creates human-led test cases with structured observable steps.
-7. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by SpecForge and
+7. `AutomationTestCaseGeneratorAgent` receives the automation route segregated by ReqForge and
    creates only repeatable deterministic UI, API, integration, or BDD automation scenarios. Its
    generation request always asks for executable Gherkin so scenarios can be packaged as a
    framework-compatible `.feature` file; parameterized outlines retain complete Examples tables.
@@ -96,7 +96,7 @@ flowchart LR
   import paths remain available for compatibility.
 - `app/services/document_ingestion.py`: bounded document extraction and input-agent normalization.
 - `app/observability.py`: safe logging, request correlation, HTTP protections, and cancellation.
-- `app/agents/test_case_generator_agent.py`: QA Master orchestration, SpecForge transformation,
+- `app/agents/test_case_generator_agent.py`: QA Master orchestration, ReqForge transformation,
   and specialist generation.
 - `app/agents/runner.py`: the single GitHub Copilot SDK session and structured-output runtime.
 - `app/generator.py`: test-suite request envelopes, normalization, and declarative agent contract.
@@ -118,7 +118,7 @@ explicit user operation.
 3. A known exact match returns immediately from organizational memory without calling Copilot.
 4. Otherwise, the approved registry supplies the test-design agent and `CopilotGenerator` opens
    a restricted authenticated session.
-5. QA Master derives scenario intent from the normalized UI or BRD request; SpecForge calls the
+5. QA Master derives scenario intent from the normalized UI or BRD request; ReqForge calls the
    selected specialist, or both specialists sequentially, and combines their structured suites in
    the requested manual or BDD format.
 6. The quality gate validates automation/manual feasibility, deduplicates, caps, and formats the

@@ -71,6 +71,12 @@
             </div>
             <p class="field-help" id="description-help">Use business language. The active project profile supplies governed domain rules.</p>
 
+            <div class="jira-import">
+              <label class="field-label" for="jira-source-key">Import from Jira / Xray</label>
+              <div class="jira-row"><input id="jira-source-key" type="text" placeholder="PROJ-123" aria-label="Source Jira issue key"><button class="secondary" id="load-jira" type="button">Load story</button></div>
+              <p class="field-help">Reads the story description and configured acceptance-criteria fields. Jira credentials stay on the server.</p>
+            </div>
+
             <details class="rule-control" id="rule-control">
               <summary><span><b>Business requirements &amp; rules</b><small>Add governed rules for this generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
               <div class="rule-editor">
@@ -151,7 +157,7 @@
           <div class="runtime-title" id="runtime-title">Restricted execution flow</div>
           <div class="flow" role="img" aria-label="Request flows through input, generation, validation and storage">
             <div class="flow-node"><span>01</span><div><b>Input Agent</b><small>Normalizes text, documents and images</small></div></div>
-            <div class="flow-node"><span>02</span><div><b>QA Master → SpecForge</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
+            <div class="flow-node"><span>02</span><div><b>QA Master → ReqForge</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
             <div class="flow-node"><span>03</span><div><b>Quality Gate</b><small>Checks traceability and deterministic rules</small></div></div>
             <div class="flow-node"><span>04</span><div><b>Test Storage</b><small>Retains approved exact-match suites</small></div></div>
           </div>
@@ -234,7 +240,7 @@
     <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
-  <script src="/static/scripts/auth.js?v=20260901-login" defer></script>
+  <script src="/static/scripts/auth.js?v=20260902-heartbeat-alert" defer></script>
   <script src="/static/scripts/index.js?v=20260901-manual-types" defer></script>
 </body>
 </html>

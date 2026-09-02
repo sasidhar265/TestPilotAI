@@ -150,6 +150,35 @@ class JiraPublishResult(BaseModel):
     comment_added: bool
 
 
+class JiraRequirement(BaseModel):
+    issue_key: str
+    summary: str
+    description: str = ""
+    acceptance_criteria: list[str] = Field(default_factory=list)
+    source_fields: list[str] = Field(default_factory=list)
+
+    @property
+    def generation_description(self) -> str:
+        sections = [f"Jira story {self.issue_key}: {self.summary}"]
+        if self.description:
+            sections.append(f"Description:\n{self.description}")
+        if self.acceptance_criteria:
+            criteria = "\n".join(
+                f"AC-{index:03d}: {criterion}"
+                for index, criterion in enumerate(self.acceptance_criteria, 1)
+            )
+            sections.append(f"Acceptance criteria:\n{criteria}")
+        return "\n\n".join(sections)
+
+
+class JiraGenerateRequest(BaseModel):
+    issue_key: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
+    output_format: TestFormat = TestFormat.NORMAL
+    generation_target: GenerationTarget = GenerationTarget.AUTO
+    manual_testing_type: ManualTestingType = ManualTestingType.API
+    additional_context: str = Field(default="", max_length=10_000)
+
+
 class DocumentSource(BaseModel):
     filename: str
     media_type: str
