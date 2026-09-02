@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline, get_test_generation_service
-from app.main import app, log_operation_failure
+from app.main import app, business_rules_from_document_text, log_operation_failure
 from app.models import ExecutionMode
 from app.models import TestCase as Case
 from app.models import TestCategory as Category
@@ -62,6 +62,15 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' in response.text
     assert 'id="business-rules"' in response.text
+    assert 'id="business-rules-file"' in response.text
+    assert 'id="source-state"' in response.text
+    assert 'id="jira-source-key"' in response.text
+    assert 'id="add-requirement-source"' in response.text
+    assert 'id="requirement-source-menu"' in response.text
+    assert 'id="show-jira-link"' in response.text
+    assert 'id="jira-link-panel"' in response.text
+    assert 'id="generation-overlay"' in response.text
+    assert 'id="cancel-generation-overlay"' in response.text
     assert 'id="save-business-rules"' in response.text
     assert "The repository BRD baseline and Quality Gate remain protected" in response.text
     assert 'id="agent-workspace"' in response.text
@@ -80,9 +89,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260901-manual-types"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260902-idle-only"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260901-manual-type-size"' in response.text
+    assert 'href="/static/styles/index.css?v=20260902-generation-overlay"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -105,6 +114,18 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "AgentRuntime" in response.text
     assert "Copilot SDK + CLI" in response.text
     assert 'href="/logs"' in response.text
+
+
+def test_business_rule_document_text_replaces_overlay_with_stable_ids() -> None:
+    rules = business_rules_from_document_text(
+        "Business rules\nBR-SEC-01: Require a signed token\nReject expired sessions"
+    )
+
+    assert [(rule.id, rule.description) for rule in rules] == [
+        ("BR-UPLOAD-001", "Business rules"),
+        ("BR-SEC-01", "Require a signed token"),
+        ("BR-UPLOAD-003", "Reject expired sessions"),
+    ]
 
 
 def test_logs_page_has_search_and_navigation() -> None:

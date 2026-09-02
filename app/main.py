@@ -51,6 +51,7 @@ from app.models import (
     AcceptanceReceipt,
     AcceptSuiteRequest,
     BusinessRule,
+    BusinessRuleDocumentResult,
     DefectDraft,
     DocumentSource,
     ExecutionRequest,
@@ -80,7 +81,11 @@ from app.observability import (
 )
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
-from app.services.document_ingestion import DocumentIngestionError, InputAgent
+from app.services.document_ingestion import (
+    DocumentIngestionError,
+    DocumentIngestionService,
+    InputAgent,
+)
 
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
@@ -137,6 +142,26 @@ def parse_business_rule_lines(value: str) -> list[BusinessRule]:
     if len(rules) > 100:
         raise DocumentIngestionError("A maximum of 100 business rules can be supplied.")
     return rules
+
+
+def business_rules_from_document_text(value: str) -> list[BusinessRule]:
+    """Convert extracted document rows into a complete replacement rule overlay."""
+    candidates: list[str] = []
+    for raw_line in value.splitlines():
+        line = raw_line.strip().lstrip("•-*–— ").strip()
+        if not line or line.casefold().startswith("sheet:"):
+            continue
+        candidates.append(line)
+    if not candidates:
+        raise DocumentIngestionError("The uploaded document contains no readable business rules.")
+    normalized: list[str] = []
+    for index, line in enumerate(candidates, 1):
+        candidate_id, separator, description = line.partition(":")
+        if separator and candidate_id.strip().upper().startswith("BR-"):
+            normalized.append(f"{candidate_id.strip().upper()}: {description.strip()}")
+        else:
+            normalized.append(f"BR-UPLOAD-{index:03d}: {line}")
+    return parse_business_rule_lines("\n".join(normalized))
 
 
 def log_operation_failure(operation: str, status_code: int, error: Exception) -> None:
@@ -549,6 +574,31 @@ async def generate_from_document(
     finally:
         generation_cancellations.unregister(request_id)
         lifecycle_events.complete(request_id)
+
+
+@app.post("/api/business-rules/document", response_model=BusinessRuleDocumentResult)
+async def import_business_rule_document(
+    file: UploadFile = File(...), settings: Settings = Depends(get_settings)
+) -> BusinessRuleDocumentResult:
+    """Extract a document into a replacement business-rule overlay for user review."""
+    filename = file.filename or "business-rules-document"
+    try:
+        if file.size is not None and file.size > settings.max_upload_bytes:
+            raise DocumentIngestionError(
+                f"The uploaded document exceeds the {settings.max_upload_bytes}-byte limit."
+            )
+        document = DocumentIngestionService(max_file_bytes=settings.max_upload_bytes).extract(
+            filename, await file.read()
+        )
+        rules = business_rules_from_document_text(document.text)
+        return BusinessRuleDocumentResult(
+            filename=document.filename,
+            media_type=document.media_type,
+            extracted_characters=len(document.text),
+            business_rules=rules,
+        )
+    except DocumentIngestionError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @app.post("/api/generation/{request_id}/cancel")

@@ -185,6 +185,10 @@ class DocumentSource(BaseModel):
     extracted_characters: int = Field(ge=1)
 
 
+class BusinessRuleDocumentResult(DocumentSource):
+    business_rules: list[BusinessRule] = Field(min_length=1, max_length=100)
+
+
 class SuiteRequest(BaseModel):
     suite: TestSuite
 

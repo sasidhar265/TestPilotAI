@@ -5,6 +5,7 @@ let warningOpen = false;
 let signingOut = false;
 let audioContext = null;
 let lastHeartbeatSecond = null;
+let workspaceBusy = false;
 
 const style = document.createElement('style');
 style.textContent = `
@@ -83,6 +84,17 @@ function noteActivity() {
   if (!warningOpen) lastActivity = Date.now();
 }
 
+window.addEventListener('workspace-busy-change', event => {
+  workspaceBusy = Boolean(event.detail?.busy);
+  lastActivity = Date.now();
+  lastHeartbeatSecond = null;
+  if (workspaceBusy && warningOpen) {
+    warningOpen = false;
+    overlay.hidden = true;
+    document.body.classList.remove('dialog-open');
+  }
+});
+
 ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(name =>
   window.addEventListener(name, noteActivity, {passive: true}),
 );
@@ -95,6 +107,10 @@ document.getElementById('logout')?.addEventListener('click', async () => {
 });
 
 setInterval(() => {
+  if (workspaceBusy) {
+    lastActivity = Date.now();
+    return;
+  }
   const remaining = IDLE_LIMIT_MS - (Date.now() - lastActivity);
   if (remaining <= 0) {
     signOut();

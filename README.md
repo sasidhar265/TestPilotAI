@@ -107,6 +107,7 @@ independently:
 | Generate | `POST /api/generate` | Generates test cases directly from a validated JSON request. |
 | Orchestrate | `POST /api/agent/run` | Runs the governed multi-agent generation and validation pipeline. |
 | Upload | `POST /api/generate/document` | Extracts a supported document and generates a validated suite. |
+| Override rules | `POST /api/business-rules/document` | Extracts a document into a reviewable replacement business-rule overlay. |
 | Expand | `POST /api/generate/expand` | Adds distinct risk-based coverage to an existing suite. |
 | Cancel | `POST /api/generation/{request_id}/cancel` | Requests cancellation of an active generation. |
 | Enrich | `POST /api/test-data` | Fills missing test data with case-aligned synthetic values. |

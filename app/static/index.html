@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Governed test design</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260901-manual-type-size">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260902-generation-overlay">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -67,41 +67,46 @@
             <label class="field-label" for="description">Requirement or acceptance criteria</label>
             <div class="textarea-wrap">
               <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate complete positive, negative and boundary coverage for the quotation API…"></textarea>
+              <span class="file-preview attached-requirement hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached requirement document">×</button></span>
+              <button class="source-trigger" id="add-requirement-source" type="button" aria-label="Add requirement from document or Jira" aria-expanded="false" aria-controls="requirement-source-menu">+</button>
               <span class="character-count" id="character-count">0 characters</span>
+              <span class="inline-source-state" id="source-state"></span>
+              <div class="requirement-source-menu hidden" id="requirement-source-menu" role="dialog" aria-label="Add requirement source">
+                <div class="source-menu-head"><span><b>Add requirement</b><small>Imported content remains editable</small></span><button id="close-requirement-source" type="button" aria-label="Close requirement source menu">×</button></div>
+                <label class="source-menu-option" id="upload-zone" for="requirement-file">
+                  <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
+                  <span class="source-icon document-icon">↑</span>
+                  <span class="upload-copy" id="upload-copy"><b>Upload document</b><small>Attach now and process during generation</small></span>
+                </label>
+                <button class="source-menu-option" id="show-jira-link" type="button">
+                  <span class="source-icon">J</span><span><b>Link Jira ticket</b><small>Issue key or browse link</small></span>
+                  <span class="menu-chevron" aria-hidden="true">›</span>
+                </button>
+                <div class="jira-link-panel hidden" id="jira-link-panel">
+                  <button class="jira-back" id="jira-link-back" type="button" aria-label="Back to source options">‹</button>
+                  <span><b>Link Jira ticket</b><small>Paste an issue key or full browse URL</small></span>
+                  <div class="jira-row"><input id="jira-source-key" type="text" placeholder="PROJ-123 or paste Jira link" aria-label="Source Jira issue key or URL"><button class="secondary" id="load-jira" type="button">Connect</button></div>
+                </div>
+              </div>
             </div>
             <p class="field-help" id="description-help">Use business language. The active project profile supplies governed domain rules.</p>
-
-            <div class="jira-import">
-              <label class="field-label" for="jira-source-key">Import from Jira / Xray</label>
-              <div class="jira-row"><input id="jira-source-key" type="text" placeholder="PROJ-123" aria-label="Source Jira issue key"><button class="secondary" id="load-jira" type="button">Load story</button></div>
-              <p class="field-help">Reads the story description and configured acceptance-criteria fields. Jira credentials stay on the server.</p>
-            </div>
 
             <details class="rule-control" id="rule-control">
               <summary><span><b>Business requirements &amp; rules</b><small>Add governed rules for this generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
               <div class="rule-editor">
                 <label class="field-label" for="business-rules">Editable rule overlay</label>
-                <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: The quotation must reject an expired campaign.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
+                <div class="rule-textarea-wrap">
+                  <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: The quotation must reject an expired campaign.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
+                  <span class="file-preview attached-rule-document hidden" id="rule-file-preview"><span class="file-badge" id="rule-file-type"></span><span class="file-info"><span class="file-name" id="rule-file-name"></span><span class="file-size" id="rule-file-size"></span></span><button class="file-remove" id="rule-file-remove" type="button" aria-label="Remove attached business rules document">×</button></span>
+                  <label class="rule-attachment-trigger" for="business-rules-file" aria-label="Attach business rules document" title="Attach business rules document">
+                    <input class="upload-input" id="business-rules-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload a business rules document">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 17 7.7-7.7a3 3 0 0 0-4.2-4.2L4.8 12.8a5 5 0 0 0 7.1 7.1l7.4-7.4"/></svg>
+                  </label>
+                </div>
                 <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. The repository BRD baseline and Quality Gate remain protected.</p>
                 <div class="rule-actions"><button class="secondary" id="save-business-rules" type="button">Save rule overlay</button><button class="secondary" id="clear-business-rules" type="button">Clear</button><span id="rule-save-state" aria-live="polite">Stored in this browser only</span></div>
               </div>
             </details>
-
-            <label class="upload-zone" id="upload-zone" for="requirement-file">
-              <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
-              <span class="upload-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
-              </span>
-              <span class="upload-copy" id="upload-copy">
-                <span class="upload-title">Drop a requirements file here</span>
-                <span class="upload-hint">or browse DOCX, PDF, XLSX, Pages, Numbers and images · max 15 MB</span>
-              </span>
-              <span class="file-preview hidden" id="file-preview">
-                <span class="file-badge" id="file-type"></span>
-                <span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span>
-                <button class="file-remove" id="file-remove" type="button" aria-label="Remove attached file">×</button>
-              </span>
-            </label>
 
             <div class="controls">
               <div class="generation-options">
@@ -227,6 +232,17 @@
       </section>
     </main>
   </div>
+  <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
+    <div class="generation-dialog">
+      <div class="generation-orbit" aria-hidden="true"><span></span><span></span><span></span><b>✦</b></div>
+      <span class="section-kicker">ReqForge is working</span>
+      <h2 id="generation-overlay-title">Generating test cases</h2>
+      <p id="generation-overlay-message">The specialist agents are designing and validating your coverage.</p>
+      <div class="generation-agent-pulse" aria-label="Generation stages"><span>Analyze</span><span>Design</span><span>Validate</span></div>
+      <div class="generation-progress"><span class="generation-progress-bar"></span></div>
+      <div class="generation-dialog-footer"><span id="generation-overlay-time">00:00 elapsed</span><button class="secondary" id="cancel-generation-overlay" type="button">Cancel generation</button></div>
+    </div>
+  </div>
   <div class="theme-settings">
     <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
       <strong id="theme-menu-title">Appearance</strong>
@@ -240,7 +256,7 @@
     <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
-  <script src="/static/scripts/auth.js?v=20260902-heartbeat-alert" defer></script>
-  <script src="/static/scripts/index.js?v=20260901-manual-types" defer></script>
+  <script src="/static/scripts/auth.js?v=20260902-idle-only" defer></script>
+  <script src="/static/scripts/index.js?v=20260902-idle-only" defer></script>
 </body>
 </html>
