@@ -89,13 +89,13 @@ class FunctionalAgentDescriptor(BaseModel):
 class AgentRegistry:
     """Fail-closed registry for organization-approved agent runtimes."""
 
-    APPROVED_RUNTIME = "github-copilot"
+    APPROVED_RUNTIMES = frozenset({"github-copilot", "automatic-fallback"})
 
     def __init__(self, agent: TestDesignAgent) -> None:
-        if agent.descriptor.runtime_id != self.APPROVED_RUNTIME:
+        if agent.descriptor.runtime_id not in self.APPROVED_RUNTIMES:
             raise ValueError(
                 f"Runtime {agent.descriptor.runtime_id!r} is not approved; "
-                f"only {self.APPROVED_RUNTIME!r} is allowed."
+                f"allowed runtimes are {sorted(self.APPROVED_RUNTIMES)!r}."
             )
         self._agent = agent
 

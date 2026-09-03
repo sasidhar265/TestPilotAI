@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     copilot_timeout_seconds: float = 300
     copilot_coordinator_timeout_seconds: float = Field(default=1800, gt=0, le=3600)
     copilot_working_directory: Path = Path.cwd()
+    openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = "gpt-5.4"
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_timeout_seconds: float = Field(default=300, gt=0, le=1800)
+    codex_executable: str = "codex"
+    codex_model: str = ""
+    codex_timeout_seconds: float = Field(default=300, gt=0, le=1800)
     agent_profile: str = "auto-finance-quotation"
     organizational_memory_enabled: bool = True
     organizational_memory_path: Path = Path(".agent-memory/test_suites.db")
@@ -65,6 +72,10 @@ class Settings(BaseSettings):
     @property
     def session_secret_value(self) -> str:
         return self.session_secret.get_secret_value()
+
+    @property
+    def openai_api_key_value(self) -> str:
+        return self.openai_api_key.get_secret_value()
 
     @property
     def browser_login_enabled(self) -> bool:

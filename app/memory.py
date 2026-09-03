@@ -24,8 +24,9 @@ class OrganizationalMemory:
             "output_format": request.output_format.value,
             "generation_target": request.generation_target.value,
             "manual_testing_type": request.manual_testing_type.value,
+            "llm_model": request.llm_model.value,
             # Bump when generation policy changes would make approved cached suites stale.
-            "schema_version": 7,
+            "schema_version": 8,
         }
         value = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(value.encode("utf-8")).hexdigest()

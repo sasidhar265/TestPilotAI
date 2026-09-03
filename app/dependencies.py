@@ -7,7 +7,7 @@ from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgen
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings, get_settings
-from app.generator import CopilotGenerator
+from app.generator import create_generator
 from app.memory import OrganizationalMemory
 from app.services import (
     MultiAgentTestPipeline,
@@ -18,8 +18,8 @@ from app.services.document_ingestion import DocumentIngestionService, InputAgent
 
 
 def get_agent_registry(settings: Settings = Depends(get_settings)) -> AgentRegistry:
-    """Composition root: GitHub Copilot is intentionally the only registered runtime."""
-    return AgentRegistry(CopilotGenerator(settings))
+    """Compose the governed Copilot, OpenAI API, and Codex fallback runtime."""
+    return AgentRegistry(create_generator(settings))
 
 
 def get_reqnroll_step_definition_agent(

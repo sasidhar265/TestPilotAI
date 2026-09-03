@@ -38,8 +38,23 @@ class ManualTestingType(StrEnum):
     DATABASE = "database"
 
 
+class LlmModel(StrEnum):
+    """Allowlisted provider routes and Copilot models exposed to callers."""
+
+    AUTO_FALLBACK = "auto-fallback"
+    OPENAI = "openai"
+    CODEX = "codex"
+    ORGANIZATION_DEFAULT = "organization-default"
+    AUTO = "auto"
+    CLAUDE_HAIKU_4_5 = "claude-haiku-4.5"
+    GPT_5_3_CODEX = "gpt-5.3-codex"
+    GPT_5_4 = "gpt-5.4"
+
+
 class GenerationSource(StrEnum):
     COPILOT = "copilot"
+    OPENAI = "openai"
+    CODEX = "codex"
     ORGANIZATIONAL_MEMORY = "organizational-memory"
 
 
@@ -121,6 +136,7 @@ class GenerateRequest(BaseModel):
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
     manual_testing_type: ManualTestingType = ManualTestingType.API
+    llm_model: LlmModel = LlmModel.AUTO_FALLBACK
     business_rules: list[BusinessRule] = Field(default_factory=list, max_length=100)
 
     @field_validator("description")
@@ -176,6 +192,7 @@ class JiraGenerateRequest(BaseModel):
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
     manual_testing_type: ManualTestingType = ManualTestingType.API
+    llm_model: LlmModel = LlmModel.AUTO_FALLBACK
     additional_context: str = Field(default="", max_length=10_000)
 
 

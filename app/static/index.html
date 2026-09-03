@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Governed test design</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260902-generation-overlay">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260903-ai-fallback">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -110,12 +110,14 @@
 
             <div class="controls">
               <div class="generation-options">
-                <fieldset>
+                <fieldset class="generation-select-control">
                   <legend>Output format</legend>
-                  <div class="format-options">
-                    <label class="format-option"><input type="radio" name="format" value="normal"><span><b>Manual test</b><small>Structured review steps</small></span></label>
-                    <label class="format-option"><input type="radio" name="format" value="bdd" checked><span><b>BDD / Gherkin</b><small>Automation + C# bindings</small></span></label>
-                  </div>
+                  <select id="output-target" name="output_target" aria-label="Output format">
+                    <option value="manual">Manual</option>
+                    <option value="automation" selected>Automation (BDD / Gherkin)</option>
+                    <option value="both">Both manual and automation</option>
+                  </select>
+                  <small class="option-help">QA Master passes this output intent to ReqForge for specialist routing.</small>
                 </fieldset>
                 <fieldset class="manual-type-control" id="manual-type-control">
                   <legend>Manual testing type</legend>
@@ -125,6 +127,20 @@
                     <option value="performance">Performance testing</option>
                     <option value="database">Database testing</option>
                   </select>
+                </fieldset>
+                <fieldset class="generation-select-control">
+                  <legend>LLM</legend>
+                  <select id="llm-model" name="llm_model" aria-label="LLM model">
+                    <option value="auto-fallback" selected>Automatic · Copilot → OpenAI → Codex</option>
+                    <option value="openai">OpenAI API · GPT-5.4</option>
+                    <option value="codex">Codex · signed-in account</option>
+                    <option value="organization-default">Organization default</option>
+                    <option value="auto">Copilot Auto</option>
+                    <option value="claude-haiku-4.5">Claude Haiku 4.5 · fast</option>
+                    <option value="gpt-5.3-codex">GPT-5.3-Codex · automation</option>
+                    <option value="gpt-5.4">GPT-5.4 · complex coverage</option>
+                  </select>
+                  <small class="option-help">Automatic mode falls back when Copilot quota or access fails.</small>
                 </fieldset>
               </div>
               <div class="generation-actions">
@@ -238,10 +254,24 @@
       <span class="section-kicker">ReqForge is working</span>
       <h2 id="generation-overlay-title">Generating test cases</h2>
       <p id="generation-overlay-message">The specialist agents are designing and validating your coverage.</p>
+      <dl class="generation-llm-details" aria-label="Active LLM details">
+        <div><dt>Provider</dt><dd id="generation-llm-provider">Detecting…</dd></div>
+        <div><dt>Model</dt><dd id="generation-llm-model">Detecting…</dd></div>
+        <div><dt>Authentication</dt><dd id="generation-llm-auth">Detecting…</dd></div>
+      </dl>
       <div class="generation-agent-pulse" aria-label="Generation stages"><span>Analyze</span><span>Design</span><span>Validate</span></div>
       <div class="generation-progress"><span class="generation-progress-bar"></span></div>
       <div class="generation-dialog-footer"><span id="generation-overlay-time">00:00 elapsed</span><button class="secondary" id="cancel-generation-overlay" type="button">Cancel generation</button></div>
     </div>
+  </div>
+  <div class="model-access-overlay hidden" id="model-access-overlay" role="dialog" aria-modal="true" aria-labelledby="model-access-title">
+    <section class="model-access-popup">
+      <button class="model-access-close" id="close-model-access" type="button" aria-label="Close model access details">×</button>
+      <span class="section-kicker">LLM access check</span>
+      <h2 id="model-access-title">Checking model access…</h2>
+      <p id="model-access-summary">Verifying account permissions and usage limits without consuming a generation request.</p>
+      <dl class="model-access-details" id="model-access-details"></dl>
+    </section>
   </div>
   <div class="theme-settings">
     <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
@@ -257,6 +287,6 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260902-idle-only" defer></script>
-  <script src="/static/scripts/index.js?v=20260902-idle-only" defer></script>
+  <script src="/static/scripts/index.js?v=20260903-ai-fallback" defer></script>
 </body>
 </html>

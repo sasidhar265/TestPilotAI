@@ -1,23 +1,81 @@
 import pytest
 
-from app.agents.runner import json_object
+from app.agents.runner import CopilotGenerationError, json_object
 from app.config import Settings
 from app.generator import (
+    FallbackGenerator,
+    _codex_failure_message,
     _normalize_suite_payload,
+    _strict_json_schema,
     create_generator,
     finalize_suite,
     system_prompt,
     user_prompt,
 )
-from app.models import GenerateRequest
+from app.models import GenerateRequest, GenerationSource
 from app.models import TestCase as CaseModel
 from app.models import TestCategory as CategoryModel
 from app.models import TestStep as StepModel
 from app.models import TestSuite as SuiteModel
 
 
-def test_create_generator_always_returns_copilot() -> None:
-    assert type(create_generator(Settings())).__name__ == "CopilotGenerator"
+def test_create_generator_returns_resilient_fallback() -> None:
+    assert type(create_generator(Settings())).__name__ == "FallbackGenerator"
+
+
+def test_codex_schema_closes_every_object_and_requires_its_properties() -> None:
+    schema = _strict_json_schema(SuiteModel.model_json_schema())
+
+    assert schema["additionalProperties"] is False
+    assert set(schema["required"]) == set(schema["properties"])
+    assert schema["$defs"]["TestCase"]["additionalProperties"] is False
+    assert "default" not in schema["properties"]["generation_source"]
+
+
+def test_codex_error_classification_does_not_scan_echoed_prompt() -> None:
+    stderr = b"user prompt about authentication\nERROR: invalid_json_schema"
+
+    assert "schema" in _codex_failure_message(stderr).casefold()
+
+
+@pytest.mark.asyncio
+async def test_automatic_route_falls_back_from_copilot_and_openai_to_codex() -> None:
+    generator = FallbackGenerator(Settings())
+    calls: list[str] = []
+
+    async def unavailable(*args, **kwargs):
+        calls.append("unavailable")
+        raise CopilotGenerationError("quota exhausted")
+
+    async def codex(*args, **kwargs):
+        calls.append("codex")
+        return SuiteModel(
+            feature_name="Fallback suite",
+            generation_source=GenerationSource.CODEX,
+            test_cases=[
+                CaseModel(
+                    id="TC-001",
+                    title="Fallback case",
+                    objective="Verify fallback generation",
+                    category=CategoryModel.SMOKE,
+                    priority="P1",
+                    execution_mode="automation",
+                    feasibility_reason="Deterministic behavior",
+                    steps=[StepModel(action="Generate", expected_result="Suite is returned")],
+                )
+            ],
+        )
+
+    generator.copilot.generate = unavailable
+    generator.openai.generate = unavailable
+    generator.codex.generate = codex
+
+    result = await generator.generate(
+        GenerateRequest(description="Generate test cases using automatic provider fallback.")
+    )
+
+    assert calls == ["unavailable", "unavailable", "codex"]
+    assert result.generation_source == GenerationSource.CODEX
 
 
 def test_json_object_accepts_accidental_markdown_fence() -> None:

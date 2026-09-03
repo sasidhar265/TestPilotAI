@@ -117,7 +117,7 @@ async def test_service_calls_copilot_once_then_returns_memory(tmp_path) -> None:
     first = await service.generate(request)
     second = await service.generate(request)
 
-    assert agent.calls == 2
+    assert agent.calls == 1
     assert first.generation_source == GenerationSource.COPILOT
     assert second.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
 

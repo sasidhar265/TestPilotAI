@@ -56,7 +56,7 @@ async def test_explicit_automation_action_calls_only_automation_specialist() -> 
 
 
 @pytest.mark.asyncio
-async def test_neutral_action_fans_out_to_both_specialists() -> None:
+async def test_orchestrator_routes_neutral_manual_output_to_manual_specialist() -> None:
     provider = RouteAwareProvider()
     router = ReqForgeRouter(AgentRegistry(provider))
 
@@ -64,19 +64,29 @@ async def test_neutral_action_fans_out_to_both_specialists() -> None:
         GenerateRequest(description="Create tests for secure customer sign in.")
     )
 
-    assert set(provider.targets) == {GenerationTarget.MANUAL, GenerationTarget.AUTOMATION}
-    assert {case.execution_mode for case in result.test_cases} == {
-        ExecutionMode.MANUAL,
-        ExecutionMode.AUTOMATION,
-    }
-    assert [case.id for case in result.test_cases] == ["TC-001", "TC-002"]
+    assert provider.targets == [GenerationTarget.MANUAL]
+    assert {case.execution_mode for case in result.test_cases} == {ExecutionMode.MANUAL}
 
 
-def test_framework_keyword_routes_to_automation() -> None:
+def test_orchestrator_routes_neutral_bdd_output_to_automation_specialist() -> None:
     router = ReqForgeRouter(AgentRegistry(RouteAwareProvider()))
 
     route = router.route(
-        GenerateRequest(description="Generate Playwright coverage for customer sign in.")
+        GenerateRequest(
+            description="Create tests for secure customer sign in.", output_format="bdd"
+        )
+    )
+
+    assert route == GenerationTarget.AUTOMATION
+
+
+def test_auto_route_uses_selected_bdd_output_format() -> None:
+    router = ReqForgeRouter(AgentRegistry(RouteAwareProvider()))
+
+    route = router.route(
+        GenerateRequest(
+            description="Generate coverage for customer sign in.", output_format="bdd"
+        )
     )
 
     assert route == GenerationTarget.AUTOMATION
@@ -132,6 +142,8 @@ async def test_segregated_automation_output_is_generated_and_quality_gated() -> 
     request = GenerateRequest(
         description="""Automate secure customer sign in with Playwright.
 AC-1: Valid credentials open the dashboard""",
+        generation_target="automation",
+        output_format="bdd",
     )
 
     result = await router.generate(request)
@@ -161,7 +173,10 @@ async def test_mixed_route_keeps_valid_automation_when_manual_gate_fails() -> No
     router = ReqForgeRouter(AgentRegistry(provider))
 
     result = await router.generate(
-        GenerateRequest(description="Keep the user signed in between browser sessions.")
+        GenerateRequest(
+            description="Keep the user signed in between browser sessions.",
+            generation_target="both",
+        )
     )
 
     assert {case.execution_mode for case in result.test_cases} == {ExecutionMode.AUTOMATION}

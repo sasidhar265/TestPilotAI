@@ -22,5 +22,5 @@ def test_registry_rejects_unapproved_runtime() -> None:
             capabilities=frozenset({AgentCapability.TEST_DESIGN}),
         )
 
-    with pytest.raises(ValueError, match="only 'github-copilot' is allowed"):
+    with pytest.raises(ValueError, match="allowed runtimes"):
         AgentRegistry(UnapprovedAgent())

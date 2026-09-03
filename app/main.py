@@ -44,7 +44,7 @@ from app.dependencies import (
     get_test_generation_service,
 )
 from app.exporter import suite_to_csv
-from app.generator import CopilotGenerator, copilot_error_message
+from app.generator import FallbackGenerator, copilot_error_message
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
 from app.models import (
@@ -64,6 +64,7 @@ from app.models import (
     JiraPublishRequest,
     JiraPublishResult,
     JiraRequirement,
+    LlmModel,
     ManualTestingType,
     MetricsReport,
     SuiteRequest,
@@ -86,6 +87,7 @@ from app.services.document_ingestion import (
     DocumentIngestionService,
     InputAgent,
 )
+from app.services.model_access import inspect_model_access
 
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
@@ -305,10 +307,13 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
     return {
         "ok": True,
         "execution_host": "local-fastapi-uvicorn",
-        "ai_provider": "github-copilot",
-        "active_agent": CopilotGenerator.descriptor.display_name,
-        "agent_runtime_id": CopilotGenerator.descriptor.runtime_id,
+        "ai_provider": "automatic-fallback",
+        "active_agent": FallbackGenerator.descriptor.display_name,
+        "agent_runtime_id": FallbackGenerator.descriptor.runtime_id,
         "copilot_model": settings.copilot_model or "organization-default",
+        "openai_model": settings.openai_model,
+        "openai_configured": bool(settings.openai_api_key_value),
+        "codex_model": settings.codex_model or "account-default",
         "agent_profile": settings.agent_profile,
         "copilot_auth": "token" if settings.copilot_github_token else "signed-in-user",
         "organizational_memory": "enabled"
@@ -321,6 +326,22 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
             [settings.jira_base_url, settings.jira_email, settings.jira_api_token]
         ),
     }
+
+
+@app.get("/api/llm/models/{model_id}/access")
+async def llm_model_access(
+    model_id: LlmModel,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, object]:
+    """Inspect model policy and quota without consuming a generation request."""
+    try:
+        return await inspect_model_access(settings, model_id.value)
+    except Exception as error:
+        log_operation_failure("llm_model_access", 503, error)
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to verify AI provider access. Check the server authentication.",
+        ) from error
 
 
 @app.get("/api/live")
@@ -515,6 +536,7 @@ async def generate_from_document(
     output_format: TestFormat = Form(TestFormat.NORMAL),
     generation_target: GenerationTarget = Form(GenerationTarget.AUTO),
     manual_testing_type: ManualTestingType = Form(ManualTestingType.API),
+    llm_model: LlmModel = Form(LlmModel.AUTO_FALLBACK),
     additional_context: str = Form(""),
     business_rules: str = Form(""),
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
@@ -545,6 +567,7 @@ async def generate_from_document(
             rules,
             manual_testing_type,
             generation_target,
+            llm_model,
         )
         document = result.document
         assert document is not None
@@ -770,6 +793,7 @@ async def generate_from_jira(
                 output_format=request.output_format,
                 generation_target=request.generation_target,
                 manual_testing_type=request.manual_testing_type,
+                llm_model=request.llm_model,
             )
         )
         return JiraGenerationResult(

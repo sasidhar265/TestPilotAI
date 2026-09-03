@@ -146,12 +146,21 @@ class ReqForgeTransformerAgent:
         self.quality_gate = quality_gate or TestCaseValidatorAgent()
         self.knowledge_source = knowledge_source
 
-    async def transform(self, request: GenerateRequest, route: GenerationTarget) -> TestSuite:
+    def route(self, request: GenerateRequest) -> GenerationTarget:
+        """Select specialists from the normalized output intent supplied by QA Master."""
+        if request.generation_target != GenerationTarget.AUTO:
+            return request.generation_target
+        if request.output_format == TestFormat.BDD:
+            return GenerationTarget.AUTOMATION
+        return GenerationTarget.MANUAL
+
+    async def transform(self, request: GenerateRequest) -> TestSuite:
+        route = self.route(request)
         publish_lifecycle_event(
             "ReqForge Transformer",
             "route_specialists",
-            "running",
-            f"Transforming scenario intent through the {route.value} specialist route.",
+            "success",
+            f"Received QA Master scenario intent and selected the {route.value} specialist route.",
         )
         request = self._with_organizational_knowledge(request)
         if route == GenerationTarget.MANUAL:
@@ -294,29 +303,18 @@ class QAMasterAgent:
         self.reqforge = ReqForgeTransformerAgent(registry, quality_gate, knowledge_source)
 
     def route(self, request: GenerateRequest) -> GenerationTarget:
-        if request.generation_target != GenerationTarget.AUTO:
-            return request.generation_target
-        text = f"{request.description}\n{request.additional_context}".casefold()
-        automation_markers = ("playwright", "selenium", "cypress", "automated", "automation")
-        manual_markers = ("manual test", "exploratory", "usability", "human review")
-        wants_automation = any(marker in text for marker in automation_markers)
-        wants_manual = any(marker in text for marker in manual_markers)
-        if wants_automation and not wants_manual:
-            return GenerationTarget.AUTOMATION
-        if wants_manual and not wants_automation:
-            return GenerationTarget.MANUAL
-        return GenerationTarget.BOTH
+        """Compatibility boundary; ReqForge owns the actual routing decision."""
+        return self.reqforge.route(request)
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
         """Treat the validated request as ingested UI data and send scenarios to ReqForge."""
-        route = self.route(request)
         publish_lifecycle_event(
             "QA Master Agent",
-            "analyze_and_route",
+            "analyze_and_handoff",
             "success",
-            f"Analyzed normalized requirements and selected the {route.value} route.",
+            "Analyzed normalized requirements and transferred scenario intent to ReqForge.",
         )
-        return await self.reqforge.transform(request, route)
+        return await self.reqforge.transform(request)
 
 
 # Preserve the former public name for callers while exposing the new responsibility explicitly.

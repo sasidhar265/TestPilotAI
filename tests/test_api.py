@@ -49,10 +49,14 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Automation / manual" not in response.text
     assert "Sole AI runtime" not in response.text
     assert "Execution topology" not in response.text
-    assert 'type="radio" name="format" value="normal"' in response.text
-    assert "Manual test" in response.text
+    assert 'id="output-target"' in response.text
+    assert '<option value="manual">Manual</option>' in response.text
     assert "Normal steps" not in response.text
-    assert 'type="radio" name="format" value="bdd"' in response.text
+    automation_option = (
+        '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
+    )
+    assert automation_option in response.text
+    assert '<option value="both">Both manual and automation</option>' in response.text
     assert 'id="timer" role="timer"' in response.text
     assert 'id="download-feature"' in response.text
     assert 'id="generate-step-definitions"' in response.text
@@ -71,6 +75,18 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="jira-link-panel"' in response.text
     assert 'id="generation-overlay"' in response.text
     assert 'id="cancel-generation-overlay"' in response.text
+    assert 'id="generation-llm-provider"' in response.text
+    assert 'id="generation-llm-model"' in response.text
+    assert 'id="generation-llm-auth"' in response.text
+    assert 'id="generation-agent"' not in response.text
+    assert 'id="llm-model"' in response.text
+    assert 'value="auto-fallback" selected' in response.text
+    assert 'value="openai"' in response.text
+    assert 'value="codex"' in response.text
+    assert 'value="gpt-5.3-codex"' in response.text
+    assert 'id="model-access-overlay"' in response.text
+    assert 'id="close-model-access"' in response.text
+    assert 'aria-label="Close model access details"' in response.text
     assert 'id="save-business-rules"' in response.text
     assert "The repository BRD baseline and Quality Gate remain protected" in response.text
     assert 'id="agent-workspace"' in response.text
@@ -89,9 +105,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260902-idle-only"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260903-ai-fallback"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260902-generation-overlay"' in response.text
+    assert 'href="/static/styles/index.css?v=20260903-ai-fallback"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -190,12 +206,42 @@ def test_health_reports_configuration() -> None:
     assert response.status_code == 200
     assert response.json()["ok"] is True
     assert response.json()["execution_host"] == "local-fastapi-uvicorn"
-    assert response.json()["active_agent"] == "GitHub Copilot Test Designer"
-    assert response.json()["agent_runtime_id"] == "github-copilot"
+    assert response.json()["active_agent"] == "Resilient AI Test Designer"
+    assert response.json()["agent_runtime_id"] == "automatic-fallback"
     assert response.json()["copilot_model"] == "organization-default"
+    assert response.json()["openai_model"] == "gpt-5.4"
+    assert response.json()["codex_model"] == "account-default"
     assert response.json()["agent_profile"] == "auto-finance-quotation"
     assert response.json()["organizational_memory"] == "enabled"
     assert isinstance(response.json()["organizational_memory_entries"], int)
+
+
+def test_model_access_endpoint_returns_permission_and_quota(monkeypatch) -> None:
+    async def inspect(settings, model):
+        assert model == "gpt-5.3-codex"
+        return {
+            "model": model,
+            "display_name": "GPT-5.3-Codex",
+            "available": True,
+            "policy": "enabled",
+            "billing_multiplier": 1,
+            "quota": {"remaining_percentage": 75},
+            "can_use": True,
+            "reason": "Available",
+        }
+
+    monkeypatch.setattr("app.main.inspect_model_access", inspect)
+    response = client.get("/api/llm/models/gpt-5.3-codex/access")
+
+    assert response.status_code == 200
+    assert response.json()["can_use"] is True
+    assert response.json()["quota"]["remaining_percentage"] == 75
+
+
+def test_model_access_endpoint_rejects_unlisted_model() -> None:
+    response = client.get("/api/llm/models/not-approved/access")
+
+    assert response.status_code == 422
 
 
 def test_health_reports_disabled_memory_and_configured_jira() -> None:
@@ -399,6 +445,7 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
             business_rules=None,
             manual_testing_type="api",
             generation_target="auto",
+            llm_model="organization-default",
         ):
             captured_rules.extend(business_rules or [])
             captured_manual_types.append(manual_testing_type)

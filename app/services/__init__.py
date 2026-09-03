@@ -116,6 +116,7 @@ class MultiAgentTestPipeline:
         business_rules: list[BusinessRule] | None = None,
         manual_testing_type: ManualTestingType = ManualTestingType.API,
         generation_target: GenerationTarget = GenerationTarget.AUTO,
+        llm_model: str = "organization-default",
     ) -> PipelineResult:
         document, request = self.input_agent.from_document(
             filename, content, additional_context, output_format
@@ -125,6 +126,7 @@ class MultiAgentTestPipeline:
                 "business_rules": business_rules or [],
                 "manual_testing_type": manual_testing_type,
                 "generation_target": generation_target,
+                "llm_model": llm_model,
             }
         )
         result = await self.run(request)

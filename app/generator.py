@@ -1,16 +1,27 @@
+import asyncio
 import json
+import logging
 import re
+import shutil
+import tempfile
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Protocol
+
+import httpx
 
 from app.agent_instructions import generation_agent_instructions
 from app.agents import AgentCapability, AgentDescriptor
 from app.agents.runner import (
     CopilotAgentRunner,
+    CopilotGenerationError,
     StructuredAgentDefinition,
+    json_object,
 )
 from app.config import Settings
-from app.models import GenerateRequest, TestCase, TestFormat, TestSuite
+from app.models import GenerateRequest, GenerationSource, LlmModel, TestCase, TestFormat, TestSuite
+
+logger = logging.getLogger(__name__)
 
 TEST_SUITE_AGENT = StructuredAgentDefinition(
     output_model=TestSuite,
@@ -110,6 +121,8 @@ def user_prompt(
 
 
 class GeneratorProvider(Protocol):
+    descriptor: AgentDescriptor
+
     async def generate(
         self,
         request: GenerateRequest,
@@ -149,7 +162,10 @@ class CopilotGenerator:
         phase: str = "initial",
         existing_titles: list[str] | None = None,
     ) -> TestSuite:
-        runner = CopilotAgentRunner(self.settings, self.client_factory)
+        model = "" if request.llm_model.value == "organization-default" else request.llm_model.value
+        runner = CopilotAgentRunner(
+            self.settings.model_copy(update={"copilot_model": model}), self.client_factory
+        )
         suite = await runner.generate_structured(
             TEST_SUITE_AGENT,
             instructions=system_prompt(request, self.settings.agent_profile),
@@ -157,6 +173,254 @@ class CopilotGenerator:
             normalize=_normalize_suite_payload,
         )
         return finalize_suite(suite, request)
+
+
+class OpenAIGenerator:
+    """Generate a schema-validated suite through the OpenAI Responses API."""
+
+    descriptor = AgentDescriptor(
+        runtime_id="openai-api",
+        display_name="OpenAI API Test Designer",
+        capabilities=CopilotGenerator.descriptor.capabilities,
+    )
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
+    async def generate(
+        self,
+        request: GenerateRequest,
+        phase: str = "initial",
+        existing_titles: list[str] | None = None,
+    ) -> TestSuite:
+        api_key = self.settings.openai_api_key_value
+        if not api_key:
+            raise CopilotGenerationError(
+                "OpenAI API is not configured. Add OPENAI_API_KEY to .env and restart."
+            )
+        body = {
+            "model": self.settings.openai_model,
+            "instructions": system_prompt(request, self.settings.agent_profile),
+            "input": user_prompt(request, phase, existing_titles),
+            "store": False,
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "test_suite",
+                    "strict": False,
+                    "schema": TestSuite.model_json_schema(),
+                }
+            },
+        }
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.openai_timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.settings.openai_base_url.rstrip('/')}/responses",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    json=body,
+                )
+                response.raise_for_status()
+            payload = response.json()
+            content = _openai_output_text(payload)
+            suite = TestSuite.model_validate(
+                _normalize_suite_payload(json.loads(json_object(content)))
+            )
+        except httpx.HTTPStatusError as error:
+            status = error.response.status_code
+            if status == 401:
+                message = "OpenAI API rejected OPENAI_API_KEY. Check the Platform API key."
+            elif status == 429:
+                message = "OpenAI API quota or rate limit is exhausted."
+            else:
+                message = f"OpenAI API generation failed with HTTP {status}."
+            raise CopilotGenerationError(message) from error
+        except (httpx.HTTPError, json.JSONDecodeError, ValueError) as error:
+            raise CopilotGenerationError(
+                "OpenAI API did not return a valid test suite. Check the server logs."
+            ) from error
+        return finalize_suite(
+            suite.model_copy(update={"generation_source": GenerationSource.OPENAI}), request
+        )
+
+
+class CodexGenerator:
+    """Use the locally authenticated Codex CLI in non-interactive read-only mode."""
+
+    descriptor = AgentDescriptor(
+        runtime_id="codex-cli",
+        display_name="Codex CLI Test Designer",
+        capabilities=CopilotGenerator.descriptor.capabilities,
+    )
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
+    async def generate(
+        self,
+        request: GenerateRequest,
+        phase: str = "initial",
+        existing_titles: list[str] | None = None,
+    ) -> TestSuite:
+        executable = shutil.which(self.settings.codex_executable)
+        if executable is None:
+            raise CopilotGenerationError(
+                "Codex CLI is not installed or is not available on the server PATH."
+            )
+        prompt = (
+            system_prompt(request, self.settings.agent_profile)
+            + "\n\n"
+            + user_prompt(request, phase, existing_titles)
+        )
+        try:
+            with tempfile.TemporaryDirectory(prefix="reqforge-codex-") as directory:
+                temp_path = Path(directory)
+                schema_path = temp_path / "test-suite.schema.json"
+                output_path = temp_path / "test-suite.json"
+                schema_path.write_text(
+                    json.dumps(_strict_json_schema(TestSuite.model_json_schema())),
+                    encoding="utf-8",
+                )
+                command = [
+                    executable,
+                    "exec",
+                    "--ephemeral",
+                    "--sandbox",
+                    "read-only",
+                    "--skip-git-repo-check",
+                    "--output-schema",
+                    str(schema_path),
+                    "--output-last-message",
+                    str(output_path),
+                ]
+                if self.settings.codex_model:
+                    command.extend(["--model", self.settings.codex_model])
+                command.append("-")
+                process = await asyncio.create_subprocess_exec(
+                    *command,
+                    cwd=directory,
+                    stdin=asyncio.subprocess.PIPE,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(prompt.encode("utf-8")),
+                    timeout=self.settings.codex_timeout_seconds,
+                )
+                if process.returncode != 0:
+                    raise CopilotGenerationError(_codex_failure_message(stderr))
+                content = (
+                    output_path.read_text(encoding="utf-8")
+                    if output_path.exists()
+                    else stdout.decode("utf-8")
+                )
+                suite = TestSuite.model_validate(
+                    _normalize_suite_payload(json.loads(json_object(content)))
+                )
+        except TimeoutError as error:
+            if "process" in locals() and process.returncode is None:
+                process.kill()
+                await process.wait()
+            raise CopilotGenerationError("Codex CLI generation timed out. Try again.") from error
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            raise CopilotGenerationError(
+                "Codex CLI did not return a valid test suite. Check the server logs."
+            ) from error
+        return finalize_suite(
+            suite.model_copy(update={"generation_source": GenerationSource.CODEX}), request
+        )
+
+
+class FallbackGenerator:
+    """Route explicit selections or fail over Copilot -> OpenAI API -> Codex CLI."""
+
+    descriptor = AgentDescriptor(
+        runtime_id="automatic-fallback",
+        display_name="Resilient AI Test Designer",
+        capabilities=CopilotGenerator.descriptor.capabilities,
+    )
+
+    def __init__(self, settings: Settings) -> None:
+        self.copilot = CopilotGenerator(settings)
+        self.openai = OpenAIGenerator(settings)
+        self.codex = CodexGenerator(settings)
+
+    async def generate(
+        self,
+        request: GenerateRequest,
+        phase: str = "initial",
+        existing_titles: list[str] | None = None,
+    ) -> TestSuite:
+        if request.llm_model == LlmModel.OPENAI:
+            return await self.openai.generate(request, phase, existing_titles)
+        if request.llm_model == LlmModel.CODEX:
+            return await self.codex.generate(request, phase, existing_titles)
+        if request.llm_model != LlmModel.AUTO_FALLBACK:
+            return await self.copilot.generate(request, phase, existing_titles)
+
+        failures: list[str] = []
+        routes: tuple[tuple[str, GeneratorProvider, LlmModel], ...] = (
+            ("github-copilot", self.copilot, LlmModel.ORGANIZATION_DEFAULT),
+            ("openai-api", self.openai, LlmModel.OPENAI),
+            ("codex-cli", self.codex, LlmModel.CODEX),
+        )
+        for route, provider, selection in routes:
+            try:
+                selected = request.model_copy(update={"llm_model": selection})
+                return await provider.generate(selected, phase, existing_titles)
+            except Exception as error:
+                failures.append(f"{route}: {error}")
+                logger.warning(
+                    "generation_provider_fallback route=%s error_type=%s",
+                    route,
+                    type(error).__name__,
+                )
+        raise CopilotGenerationError(
+            "All configured AI providers are unavailable. " + " | ".join(failures)
+        )
+
+
+def _openai_output_text(payload: dict[str, Any]) -> str:
+    chunks: list[str] = []
+    for item in payload.get("output", []):
+        if not isinstance(item, dict) or item.get("type") != "message":
+            continue
+        for content in item.get("content", []):
+            if isinstance(content, dict) and content.get("type") == "output_text":
+                chunks.append(str(content.get("text", "")))
+    if not chunks:
+        raise ValueError("OpenAI response contained no output text")
+    return "\n".join(chunks)
+
+
+def _strict_json_schema(value: Any) -> Any:
+    """Convert Pydantic's schema to the closed object shape required by Codex."""
+    if isinstance(value, list):
+        return [_strict_json_schema(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    schema = {
+        key: _strict_json_schema(item)
+        for key, item in value.items()
+        if key != "default"
+    }
+    properties = schema.get("properties")
+    if isinstance(properties, dict):
+        schema["additionalProperties"] = False
+        schema["required"] = list(properties)
+    return schema
+
+
+def _codex_failure_message(stderr: bytes) -> str:
+    """Classify the provider error tail without scanning the echoed user prompt."""
+    diagnostic = stderr.decode("utf-8", errors="replace")
+    error_tail = diagnostic.rsplit("\nERROR:", 1)[-1].casefold()
+    if "invalid_json_schema" in error_tail:
+        return "Codex CLI rejected the test-suite schema. Check the server logs."
+    if any(marker in error_tail for marker in ("usage limit", "quota", "rate limit", "429")):
+        return "Codex account usage limit is exhausted."
+    if any(marker in error_tail for marker in ("not authenticated", "login required", "401")):
+        return "Codex CLI is not authenticated. Run 'codex login' and restart."
+    return "Codex CLI generation failed. Check the server logs."
 
 
 _KEY = re.compile(r"[^a-z0-9]+")
@@ -308,7 +572,7 @@ def _normalize_test_data(value: Any) -> Any:
 
 
 def create_generator(settings: Settings) -> GeneratorProvider:
-    return CopilotGenerator(settings)
+    return FallbackGenerator(settings)
 
 
 TestCaseGenerator = CopilotGenerator
