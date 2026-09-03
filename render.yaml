@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: quality-lifecycle-studio
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/ready
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: ALLOWED_HOSTS
+        value: quality-lifecycle-studio.onrender.com
+      - key: API_AUTH_TOKEN
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: APP_USERNAME
+        value: admin
+      - key: APP_PASSWORD
+        sync: false
+      - key: COPILOT_GITHUB_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.4
+      - key: COPILOT_MODEL
+        value: ""
+      - key: ORGANIZATIONAL_MEMORY_ENABLED
+        value: "true"
