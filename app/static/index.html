@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
-  <title>Quality Lifecycle Studio — Governed test design</title>
+  <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
   <link rel="stylesheet" href="/static/styles/index.css?v=20260904-profile-menu">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
@@ -13,12 +13,12 @@
     <aside class="sidebar">
       <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
         <span class="brand-mark" aria-hidden="true">Q</span>
-        <span><strong>Quality Lifecycle</strong><small>Agentic test studio</small></span>
+        <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
       </a>
 
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
-        <a class="nav-item active" href="/"><span class="nav-icon">✦</span><span>Test designer</span></a>
+        <a class="nav-item active" href="/"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
         <span class="nav-label">Explore</span>
         <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
         <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
@@ -33,8 +33,8 @@
     <main class="workspace">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Agentic AI test-generation workspace</div>
-          <h1>Design trusted test coverage with AI agents.</h1>
+          <div class="eyebrow">AI quality lifecycle workspace</div>
+          <h1>Design trusted quality coverage with AI agents.</h1>
         </div>
         <div class="top-actions">
           <span class="runtime-pill" id="runtime-health">● Checking service…</span>
@@ -58,11 +58,11 @@
         </div>
       </header>
 
-      <div class="workflow-rail" aria-label="Test design workflow">
-        <a class="workflow-step active" href="#test-studio"><span>1</span><strong>Define</strong><small>Add requirements</small></a>
-        <a class="workflow-step" href="#results"><span>2</span><strong>Review</strong><small>Inspect generated tests</small></a>
-        <a class="workflow-step" href="#agent-workspace"><span>3</span><strong>Validate</strong><small>Run quality actions</small></a>
-        <a class="workflow-step" href="#publish-panel"><span>4</span><strong>Deliver</strong><small>Export or publish</small></a>
+      <div class="workflow-rail" role="list" aria-label="Test design workflow">
+        <div class="workflow-step active" role="listitem" aria-current="step"><span>1</span><strong>Define</strong><small>Add requirements</small></div>
+        <div class="workflow-step" role="listitem"><span>2</span><strong>Review</strong><small>Inspect generated tests</small></div>
+        <div class="workflow-step" role="listitem"><span>3</span><strong>Validate</strong><small>Run quality actions</small></div>
+        <div class="workflow-step" role="listitem"><span>4</span><strong>Deliver</strong><small>Export or publish</small></div>
       </div>
 
       <section class="studio-layout">
@@ -71,7 +71,7 @@
             <div>
               <span class="section-kicker">New test suite</span>
               <h2>What should we test?</h2>
-              <p>Paste a requirement or attach a BRD. Quality Lifecycle Studio will generate traceable manual and automation coverage.</p>
+              <p>Paste a requirement or attach a project document. The AI Quality Lifecycle Agent will generate traceable manual and automation coverage.</p>
             </div>
             <span class="secure">PRIVATE BY DESIGN</span>
           </div>
@@ -79,7 +79,7 @@
           <form id="generate-form">
             <label class="field-label" for="description">Requirement or acceptance criteria</label>
             <div class="textarea-wrap">
-              <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate complete positive, negative and boundary coverage for the quotation API…"></textarea>
+              <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate positive, negative and boundary coverage for this feature…"></textarea>
               <span class="file-preview attached-requirement hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached requirement document">×</button></span>
               <button class="source-trigger" id="add-requirement-source" type="button" aria-label="Add requirement from document or Jira" aria-expanded="false" aria-controls="requirement-source-menu">+</button>
               <span class="character-count" id="character-count">0 characters</span>
@@ -102,14 +102,14 @@
                 </div>
               </div>
             </div>
-            <p class="field-help" id="description-help">Use business language. The active project profile supplies governed domain rules.</p>
+            <p class="field-help" id="description-help">Use business language. The active workspace profile supplies governed quality rules.</p>
 
             <details class="rule-control" id="rule-control">
               <summary><span><b>Business requirements &amp; rules</b><small>Add governed rules for this generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
               <div class="rule-editor">
                 <label class="field-label" for="business-rules">Editable rule overlay</label>
                 <div class="rule-textarea-wrap">
-                  <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: The quotation must reject an expired campaign.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
+                  <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: Requests must reject invalid or expired input.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
                   <span class="file-preview attached-rule-document hidden" id="rule-file-preview"><span class="file-badge" id="rule-file-type"></span><span class="file-info"><span class="file-name" id="rule-file-name"></span><span class="file-size" id="rule-file-size"></span></span><button class="file-remove" id="rule-file-remove" type="button" aria-label="Remove attached business rules document">×</button></span>
                   <label class="rule-attachment-trigger" for="business-rules-file" aria-label="Attach business rules document" title="Attach business rules document">
                     <input class="upload-input" id="business-rules-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload a business rules document">
@@ -171,8 +171,8 @@
 
         <aside class="context-panel" aria-label="Runtime context">
           <div class="context-head"><span class="section-kicker">Active workspace</span><span class="live-badge">LIVE</span></div>
-          <h2>Auto Finance Quotation</h2>
-          <p>BRD-grounded test design with controlled Copilot execution.</p>
+          <h2>AI Quality Lifecycle Agent</h2>
+          <p>Requirement-grounded quality design with governed AI execution.</p>
           <dl class="context-list">
             <div><dt>Host</dt><dd id="server-location">Detecting…</dd></div>
             <div><dt>Agent</dt><dd id="active-agent">Detecting…</dd></div>
