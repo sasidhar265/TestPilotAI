@@ -177,6 +177,10 @@ def test_documentation_page_is_not_cached() -> None:
     assert "Markdown-directed, Python-governed" in response.text
     assert "/api/step-definitions/reqnroll" in response.text
     assert 'id="theme-gear"' in response.text
+    assert 'id="profile-toggle"' in response.text
+    assert 'class="profile-signout" id="logout"' in response.text
+    assert 'href="/static/styles/documentation.css?v=20260904-current-ui"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=20260904-current-ui"' in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
 
 
@@ -357,6 +361,9 @@ def test_documentation_page_describes_agents_and_use_cases() -> None:
     assert "Application use cases" in response.text
     assert "GET /api/agents" in response.text
     assert "Document-to-tests" in response.text
+    assert "Generated Suite actions" in response.text
+    assert "Activity and reuse notices" in response.text
+    assert 'href="/#agent-workspace"' not in response.text
     assert 'id="company-documents"' in response.text
     assert 'data-document="requirements"' in response.text
 

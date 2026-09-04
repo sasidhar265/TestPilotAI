@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Product guide</title>
-  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260901-themed-navigation">
+  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260904-current-ui">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -18,11 +18,9 @@
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
         <a class="nav-item" href="/"><span class="nav-icon">✦</span><span>Test designer</span></a>
-        <a class="nav-item" href="/#agent-workspace"><span class="nav-icon">◎</span><span>Quality lifecycle</span></a>
         <span class="nav-label">Explore</span>
         <a class="nav-item active" href="#overview"><span class="nav-icon">□</span><span>Documentation</span></a>
         <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
-        <a class="nav-item" href="#integrations"><span class="nav-icon">↗</span><span>Jira Cloud</span></a>
       </nav>
       <nav class="docs-nav" aria-label="On this page">
         <span class="nav-label">On this page</span>
@@ -40,14 +38,13 @@
       <div class="side-status">
         <div class="status-line" id="status"><span class="pulse"></span><span class="status-copy">Checking agent registry…</span></div>
         <div class="model">SECURE LOCAL WORKSPACE</div>
-        <button class="logout-button" id="logout" type="button">Sign out</button>
       </div>
     </aside>
 
     <main class="docs-main">
       <header class="docs-topbar">
         <div><span class="eyebrow">Documentation</span><strong>Quality Lifecycle Studio</strong></div>
-        <div class="top-actions"><a href="/logs">Runtime logs</a><a class="api-link" href="/docs">API reference ↗</a></div>
+        <div class="top-actions"><a href="/logs">Runtime logs</a><a class="api-link" href="/docs">API reference ↗</a><div class="profile-menu"><button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">GH</button><section class="profile-panel" id="profile-panel" aria-label="Profile menu" hidden><div><span class="avatar profile-avatar" aria-hidden="true">GH</span><p><strong>Signed-in user</strong><small>Quality Lifecycle workspace</small></p></div><button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button></section></div></div>
       </header>
 
       <article class="content">
@@ -75,10 +72,10 @@
         <section class="section" id="workflow">
           <div class="section-heading"><span class="section-number">01</span><div><span class="eyebrow">Product workflow</span><h2>Four stages from intent to delivery</h2><p>The application keeps creation, review, validation, and publishing distinct so users always know what happens next.</p></div></div>
           <div class="workflow-grid">
-            <article class="workflow-card"><span>1</span><div><h3>Define</h3><p>Paste requirement text or attach a supported business document. Choose manual steps or BDD/Gherkin output.</p><small>Input Agent · Business Rules Agent</small></div></article>
-            <article class="workflow-card"><span>2</span><div><h3>Review</h3><p>Inspect case purpose, feasibility, test data, requirement mappings, steps, expected results, and Gherkin.</p><small>DecisionAgent · Manual and Automation specialists</small></div></article>
+            <article class="workflow-card"><span>1</span><div><h3>Define</h3><p>Paste requirements, upload a supported document, or connect a Jira story. Choose manual, automation, or both and select the provider.</p><small>Input Agent · Business Rules Agent</small></div></article>
+            <article class="workflow-card"><span>2</span><div><h3>Review</h3><p>Expand compact manual cases to inspect numbered steps and expected results, or review reusable BDD scenarios and live agent activity.</p><small>DecisionAgent · Manual and Automation specialists</small></div></article>
             <article class="workflow-card"><span>3</span><div><h3>Validate</h3><p>Review rule coverage, generate synthetic data, create C# bindings, and capture execution evidence.</p><small>Quality Gate · Test Data · ReqnRoll</small></div></article>
-            <article class="workflow-card"><span>4</span><div><h3>Deliver</h3><p>Export approved suites to feature, CSV, Excel, or JSON, then explicitly publish selected cases to Jira.</p><small>Context Converter · Output Agent</small></div></article>
+            <article class="workflow-card"><span>4</span><div><h3>Deliver</h3><p>Select cases in Generated Suite, enter the reviewer, approve, download, or explicitly attach them to Jira from the same toolbar.</p><small>Context Converter · Output Agent</small></div></article>
           </div>
         </section>
 
@@ -104,7 +101,7 @@
           <div class="grid two">
             <article class="card"><span class="card-label">All test cases</span><h3>Canonical case structure</h3><ul><li>Stable ID, concise title, objective, category, and priority</li><li>Explicit manual or automation execution mode</li><li>Case-specific feasibility reason and preconditions</li><li>Actions paired with observable expected results</li><li>Synthetic test data, tags, and BR-QT traceability</li></ul></article>
             <article class="card"><span class="card-label">Automation</span><h3>Executable BDD contract</h3><ul><li>Scenario or Scenario Outline with complete Examples</li><li>Concise Given, When, Then and optional And/But</li><li>Maximum four executable lines per scenario</li><li>Typed data suitable for ReqnRoll bindings</li><li>Approved financial oracle required for exact calculations</li></ul></article>
-            <article class="card"><span class="card-label">Manual</span><h3>Acceptance evidence</h3><ul><li>Human-executable counterpart for every BRD validation</li><li>Clear operator action and observable evidence</li><li>Consumer Duty and disclosure comprehension review</li><li>Accessibility and customer/business presentation checks</li><li><code>gherkin: null</code> for structured manual cases</li></ul></article>
+            <article class="card"><span class="card-label">Manual</span><h3>Acceptance evidence</h3><ul><li>Compact scenario and title rows with expandable details</li><li>Numbered Steps to reproduce and corresponding expected results</li><li>Preconditions, synthetic data, tags, rationale, and traceability</li><li>API, UI, performance, or database testing intent</li><li><code>gherkin: null</code> for structured manual cases</li></ul></article>
             <article class="card"><span class="card-label">Quality Gate</span><h3>BRD completeness</h3><ul><li>BR-QT-001 through BR-QT-028 remain traceable</li><li>All applicable validation categories are represented</li><li>All 19 business error codes use the BRD schema</li><li>Unsupported formulas and regulatory wording are rejected</li><li>Exact calculations require approved golden references</li></ul></article>
           </div>
         </section>
@@ -133,11 +130,12 @@
         <section class="section" id="outputs">
           <div class="section-heading"><span class="section-number">07</span><div><span class="eyebrow">Outputs and delivery</span><h2>Reviewable artifacts, never silent publication</h2></div></div>
           <div class="output-list">
-            <article><span>01</span><div><h3>Manual cases</h3><p>Structured actions, evidence-oriented expected results, synthetic data, and requirement mappings.</p></div></article>
-            <article><span>02</span><div><h3>BDD scenarios</h3><p>Copy-ready feature content using Scenario and Scenario Outline with complete Examples.</p></div></article>
-            <article><span>03</span><div><h3>ReqnRoll C#</h3><p>Typed HttpClient-based bindings, coverage classification, reusable files, and explicit TODOs.</p></div></article>
-            <article><span>04</span><div><h3>Exports and Jira</h3><p>Xray-oriented CSV, Excel, JSON, feature downloads, and explicitly selected Jira publication.</p></div></article>
+            <article><span>01</span><div><h3>Manual cases</h3><p>Expandable material-style cards with numbered actions, expected results, synthetic data, and requirement mappings.</p></div></article>
+            <article><span>02</span><div><h3>BDD scenarios</h3><p>Reusable feature content with Background setup, Scenario Outline parameters, and complete Examples.</p></div></article>
+            <article><span>03</span><div><h3>ReqnRoll C#</h3><p>Reusable typed bindings generated from approved Gherkin, with coverage classification and explicit TODOs.</p></div></article>
+            <article><span>04</span><div><h3>Generated Suite actions</h3><p>Approve selected cases beside CSV, Excel, JSON, feature, ReqnRoll, and Jira actions; missing reviewer or Jira IDs are flagged inline.</p></div></article>
             <article><span>05</span><div><h3>Validated memory</h3><p>Approved exact-match suites in repository-local SQLite, revalidated before reuse.</p></div></article>
+            <article><span>06</span><div><h3>Activity and reuse notices</h3><p>The top-right bell reports runs and system updates; a popup identifies suites recalled from approved knowledge.</p></div></article>
           </div>
         </section>
 
@@ -175,6 +173,6 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/documentation.js?v=20260901-shared-theme" defer></script>
+  <script src="/static/scripts/documentation.js?v=20260904-current-ui" defer></script>
 </body>
 </html>

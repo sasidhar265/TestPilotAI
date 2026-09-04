@@ -34,25 +34,36 @@ The active default is `auto-finance-quotation`. Its `knowledge/quotation-brd-bas
 reviewable BRD v1.0 knowledge source used by the agents. This is prompt-time grounded context, not
 irreversible model fine-tuning; updating or reverting the Markdown changes the baseline cleanly.
 
-At generation time, choose either manual test cases with numbered steps and expected results or BDD
-scenarios written as `Scenario / Given / When / Then`. Both formats retain category, priority,
+At generation time, choose manual test cases, BDD automation scenarios, or both in the same run.
+Manual cases appear as compact scenario/title rows that expand to show preconditions, numbered
+`Step 1`, `Step 2` actions, corresponding expected results, test data, and traceability. Automation
+scenarios use `Scenario / Given / When / Then`. Both formats retain category, priority,
 automation/manual feasibility, a decision rationale, test data, acceptance-criteria traceability,
 and CSV/JSON/Jira export support.
 
-BDD output is ready for SpecFlow feature files. Data-driven flows use `Scenario Outline` with
-parameter placeholders and `Examples` tables where appropriate. The results screen can copy an
-individual scenario or a complete feature containing all generated scenarios.
+BDD output is ready for SpecFlow/ReqnRoll feature files. Shared setup is promoted into a feature
+`Background`, while repeated quoted and numeric values are parameterized for reusable C# bindings.
+Data-driven flows use `Scenario Outline` with parameter placeholders and `Examples` tables where
+appropriate. The results screen can copy a scenario or feature and generate, review, copy, and
+download ReqnRoll C# step definitions.
 
-Before calling Copilot, the application checks a repository-local organizational memory at
+Before calling an AI provider, the application checks a repository-local organizational memory at
 `.agent-memory/test_suites.db`. An exact normalized match returns the previously validated suite
 immediately and avoids a new premium request. New results are stored for subsequent reuse. The
 database is local operational data and is excluded from source control.
 
 Generation preserves every unique case produced from the supplied requirements, business rules,
 agent policies, and quality-gate feedback. The final count is coverage-driven rather than capped by
-the application, although Copilot response-size, latency, and account limits still apply. Before
-publishing, select individual cases with the Jira checkboxes; only those cases are included in the
-Jira attachment and summary.
+the application, although provider response-size, latency, and account limits still apply. Before
+delivery, select individual cases in **Generated Suite**. Downloads, Jira publication, reviewer
+entry, and **Approve selected** are kept together there. Reviewer and Jira issue fields show inline
+validation. Multi-step Excel exports merge repeated case-detail cells instead of duplicating them
+on every step row.
+
+The UI shows payload-free orchestration events in the generation popup and lifecycle panel. The
+top-right notification bell records run completion, failures, and system updates. A separate notice
+tells the user when an approved exact-match suite came from the knowledge base. Sign out is
+available from the adjacent profile menu rather than the sidebar.
 
 ## Run locally
 
@@ -80,7 +91,8 @@ supported independently through `API_AUTH_TOKEN`.
    ```
 
    Your organization administrator must enable the Copilot CLI policy. For non-interactive
-   deployments, configure `COPILOT_GITHUB_TOKEN` instead.
+   deployments, configure `COPILOT_GITHUB_TOKEN` instead. Optional fallback providers are enabled
+   with `OPENAI_API_KEY` and an authenticated Codex CLI (`codex login`).
 5. Start the app:
 
    ```bash
@@ -151,18 +163,18 @@ ships with JSON request logs, correlation IDs, baseline browser security headers
 container image, bounded document processing, sanitized provider errors, and an explicit
 human-controlled Jira publication boundary.
 
-## GitHub Copilot runtime
+## AI provider runtime
 
-GitHub Copilot is the only AI runtime in this application. The official Python Copilot SDK
-starts its bundled Copilot CLI runtime and uses either the locally signed-in GitHub identity or
-`COPILOT_GITHUB_TOKEN`. The app does not support OpenAI keys, GitHub Models, Ollama, BYOK, mock
-generation, or any other agent/provider.
+Automatic mode tries GitHub Copilot first, then the OpenAI API, then the locally authenticated
+Codex CLI. The UI also allows a provider/model to be selected explicitly. Copilot uses either the
+locally signed-in GitHub identity or `COPILOT_GITHUB_TOKEN`; OpenAI requires `OPENAI_API_KEY` with
+separate API billing; Codex requires the `codex` executable and `codex login` on the machine that
+runs the service. A local Codex login is not automatically available inside Render.
 
-Each generation prompt counts toward the Copilot usage allowance associated with the
-authenticated identity. The browser requests coverage driven by the complete BRD, validation
-rules, and agent policies in one governed workflow. Leave `COPILOT_MODEL` blank to use the account
-default, or set it to a
-model allowed by your organization's Copilot policy. Never commit a token.
+Provider quotas, rate limits, account eligibility, and model policies still apply. Leave
+`COPILOT_MODEL` or `CODEX_MODEL` blank to use the relevant account default, and configure
+`OPENAI_MODEL` for the API fallback. Never commit credentials. If all configured providers are
+unavailable, the UI returns one combined, reference-ID-bearing error describing each provider.
 
 ## Jira Cloud setup
 
@@ -263,7 +275,7 @@ flowchart LR
     end
 
     subgraph COMPANY[External company-approved services]
-        COPILOT[GitHub Copilot<br/>authenticated account]
+        AI[Copilot, OpenAI API,<br/>or Codex service]
         JIRA[Jira Cloud]
     end
 
@@ -272,11 +284,11 @@ flowchart LR
     POLICY --> PIPE
     PIPE <--> DB
     PIPE --> FILES
-    PIPE <--> COPILOT
+    PIPE <--> AI
     API -->|User-approved publish| JIRA
 ```
 
-Only generation crosses the GitHub Copilot boundary. Document processing, validation, synthetic
+Only AI generation crosses the selected provider boundary. Document processing, validation, synthetic
 fallback data, execution summaries, defect drafts, metrics, storage, and exports run locally.
 Jira is contacted only when a user explicitly publishes selected cases.
 
@@ -306,7 +318,7 @@ flowchart TB
                 EVIDENCE[Evidence<br/>Execution, Defects, Metrics]
             end
 
-            COPILOT_SDK[GitHub Copilot SDK<br/>restricted sessions]
+            PROVIDERS[Provider runtime<br/>Copilot, OpenAI, Codex]
             JIRA_ADAPTER[Jira adapter<br/>explicit publication only]
         end
 
@@ -323,11 +335,11 @@ flowchart TB
         end
 
         OCR[Tesseract OCR<br/>optional local executable]
-        COPILOT_CLI[Authenticated Copilot CLI]
+        LOCAL_CLI[Authenticated Copilot/Codex CLI]
     end
 
     subgraph EXTERNAL[Company-approved external services]
-        GITHUB[GitHub Copilot service<br/>company account and policy]
+        AI_SERVICES[Approved AI services<br/>account, quota and policy]
         JIRA[Jira Cloud project]
     end
 
@@ -346,12 +358,13 @@ flowchart TB
     DELIVER --> ARTIFACTS
     FASTAPI --> APPLOGS
 
-    DESIGN --> COPILOT_SDK --> COPILOT_CLI --> GITHUB
-    GITHUB --> COPILOT_CLI --> COPILOT_SDK --> DESIGN
+    DESIGN <--> PROVIDERS
+    PROVIDERS <--> AI_SERVICES
+    LOCAL_CLI -.->|local authentication| PROVIDERS
     FASTAPI -->|user-approved request| JIRA_ADAPTER --> JIRA
 
     ENV -.-> FASTAPI
-    ENV -.-> COPILOT_SDK
+    ENV -.-> PROVIDERS
     ENV -.-> JIRA_ADAPTER
     POLICIES -.-> DESIGN
     POLICIES -.-> ASSURE
@@ -360,8 +373,8 @@ flowchart TB
 ```
 
 The entire FastAPI application, deterministic agent logic, SQLite memory, generated files, and
-logs stay on the local machine. Requirement content is sent to GitHub only when a Copilot-backed
-generation is needed. Jira receives only the cases selected in an explicit publish request.
+logs stay on the application host. Requirement content is sent only to the provider selected for
+generation. Jira receives only the cases selected in an explicit publish request.
 
 ### Agent responsibilities
 
