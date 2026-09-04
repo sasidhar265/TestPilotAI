@@ -104,6 +104,31 @@ AC-2: A valid link opens the reset form"""
     } <= dimensions
 
 
+def test_validator_allows_manual_and_automation_counterparts() -> None:
+    request = GenerateRequest(description="AC-1: An expired link is rejected")
+    automated = case(
+        "TC-001",
+        "Reject expired reset link",
+        "Verify expired link rejection",
+        "AC-1",
+        "An expired-link message is displayed",
+    )
+    manual = automated.model_copy(
+        update={"id": "TC-002", "execution_mode": ExecutionMode.MANUAL}
+    )
+
+    report = Validator().validate(
+        request,
+        Suite(feature_name="Reset", test_cases=[automated, manual]),
+    )
+
+    assert report.passed
+    assert not any(
+        finding.dimension == ValidationDimension.DUPLICATES
+        for finding in report.findings
+    )
+
+
 def test_free_form_requirements_still_check_case_traceability() -> None:
     request = GenerateRequest(description="Users need a secure password reset journey.")
     suite = Suite(

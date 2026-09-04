@@ -67,6 +67,11 @@ def _criteria(description: str) -> list[str]:
 
 
 def _same_scenario(left: TestCase, right: TestCase) -> bool:
+    # A manual case and its automation counterpart intentionally validate the same
+    # business behavior through different execution modes. Only flag duplicates
+    # within the same specialist output.
+    if left.execution_mode != right.execution_mode:
+        return False
     left_title, right_title = _normal(left.title), _normal(right.title)
     left_objective, right_objective = _normal(left.objective), _normal(right.objective)
     return (
