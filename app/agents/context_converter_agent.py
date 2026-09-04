@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 
 from openpyxl import Workbook
+from openpyxl.styles import Alignment
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.test_case_validator import ValidationReport
@@ -123,6 +124,25 @@ class ContextConverterAgent:
         sheet.append(self._HEADERS)
         for row in self._rows(suite):
             sheet.append(row)
+        first_row = 2
+        step_columns = {8, 9, 11}
+        shared_columns = [
+            column for column in range(1, len(self._HEADERS) + 1) if column not in step_columns
+        ]
+        for case in suite.test_cases:
+            last_row = first_row + len(case.steps) - 1
+            if case.execution_mode.value == "manual" and last_row > first_row:
+                for column in shared_columns:
+                    sheet.merge_cells(
+                        start_row=first_row,
+                        start_column=column,
+                        end_row=last_row,
+                        end_column=column,
+                    )
+            first_row = last_row + 1
+        for row in sheet.iter_rows():
+            for cell in row:
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
         sheet.freeze_panes = "A2"
         output = io.BytesIO()
         workbook.save(output)
@@ -200,5 +220,34 @@ class ContextConverterAgent:
             scenarios.append(scenario)
         if not scenarios:
             raise ContextConversionError("The approved suite contains no automation scenarios.")
-        feature = f"Feature: {suite.feature_name}\n\n" + "\n\n".join(scenarios) + "\n"
+        background, scenarios = _extract_shared_background(scenarios)
+        sections = [f"Feature: {suite.feature_name}"]
+        if background:
+            sections.append(f"Background:\n  {background}")
+        sections.extend(scenarios)
+        feature = "\n\n".join(sections) + "\n"
         return feature.encode("utf-8")
+
+
+def _extract_shared_background(scenarios: list[str]) -> tuple[str | None, list[str]]:
+    """Lift an identical leading Given into Background without changing scenario behavior."""
+    if len(scenarios) < 2:
+        return None, scenarios
+    lines_by_scenario = [scenario.splitlines() for scenario in scenarios]
+    given_indexes: list[int] = []
+    given_steps: list[str] = []
+    for lines in lines_by_scenario:
+        index = next(
+            (position for position, line in enumerate(lines) if line.strip().startswith("Given ")),
+            -1,
+        )
+        if index < 0:
+            return None, scenarios
+        given_indexes.append(index)
+        given_steps.append(lines[index].strip())
+    if len(set(given_steps)) != 1:
+        return None, scenarios
+    reusable = []
+    for lines, index in zip(lines_by_scenario, given_indexes, strict=True):
+        reusable.append("\n".join(lines[:index] + lines[index + 1 :]))
+    return given_steps[0], reusable

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Governed test design</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260904-generation-process">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260904-jira-validation">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -19,11 +19,9 @@
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
         <a class="nav-item active" href="/"><span class="nav-icon">✦</span><span>Test designer</span></a>
-        <a class="nav-item" href="#agent-workspace"><span class="nav-icon">◎</span><span>Quality lifecycle</span></a>
         <span class="nav-label">Explore</span>
         <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
         <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
-        <a class="nav-item" href="/documentation#integrations"><span class="nav-icon">↗</span><span>Jira Cloud</span></a>
       </nav>
 
       <div class="side-status">
@@ -41,6 +39,16 @@
         </div>
         <div class="top-actions">
           <span class="runtime-pill" id="runtime-health">● Checking service…</span>
+          <div class="notification-center">
+            <button class="notification-bell" id="notification-bell" type="button" aria-label="Open notifications" aria-expanded="false" aria-controls="notification-panel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+              <span class="notification-count hidden" id="notification-count">0</span>
+            </button>
+            <section class="notification-panel hidden" id="notification-panel" aria-labelledby="notification-title">
+              <div class="notification-panel-head"><div><span>Activity centre</span><h2 id="notification-title">Notifications</h2></div><button id="clear-notifications" type="button">Clear all</button></div>
+              <ol id="notification-list"><li class="notification-empty">Run activity and system updates will appear here.</li></ol>
+            </section>
+          </div>
           <span class="avatar" aria-label="Authenticated GitHub Copilot user">GH</span>
         </div>
       </header>
@@ -201,14 +209,28 @@
         </div>
         <div class="result-actions">
           <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
-          <div class="tools">
-            <button id="download-feature" class="secondary hidden">↓ .feature</button>
-            <button id="generate-step-definitions" class="secondary hidden">&lt;/&gt; Generate C# bindings</button>
-            <button id="csv" class="secondary">↓ CSV</button>
-            <button id="xlsx" class="secondary">↓ Excel</button>
-            <button id="json" class="secondary">↓ JSON</button>
+          <div class="suite-output-actions">
+            <div class="tools" aria-label="Download generated suite">
+              <button id="download-feature" class="secondary hidden">↓ .feature</button>
+              <button id="generate-step-definitions" class="secondary hidden">&lt;/&gt; Generate C# bindings</button>
+              <button id="csv" class="secondary">↓ CSV</button>
+              <button id="xlsx" class="secondary">↓ Excel</button>
+              <button id="json" class="secondary">↓ JSON</button>
+              <details class="suite-jira">
+                <summary class="secondary">↗ Jira</summary>
+                <div class="jira-popover"><label for="jira-key">Destination issue</label><div class="jira-row"><div class="jira-key-field"><input id="jira-key" type="text" placeholder="PROJ-123" aria-label="Jira issue key" aria-describedby="jira-key-error"><span class="jira-key-error hidden" id="jira-key-error" role="alert">Enter a valid Jira issue key, such as PROJ-123.</span></div><button class="primary compact" id="jira">Attach selected</button></div></div>
+              </details>
+            </div>
+            <div class="suite-approval" aria-label="Approve selected generated test cases">
+              <div class="reviewer-field">
+                <input id="accepted-by" type="text" maxlength="100" placeholder="Reviewer name or ID" aria-label="Approved by" aria-describedby="reviewer-error">
+                <span class="reviewer-error hidden" id="reviewer-error" role="alert">Enter the reviewer name or ID.</span>
+              </div>
+              <button class="primary compact" id="accept-selected" type="button">✓ Approve selected</button>
+            </div>
           </div>
         </div>
+        <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
         <div class="cases" id="cases"></div>
         <section class="step-definitions hidden" id="step-definitions" aria-live="polite">
           <div class="step-definitions-head"><div><span class="section-kicker">ReqnRoll automation</span><h3>Generated C# step definitions</h3><p>Review, copy or download the typed bindings for this suite.</p></div><button class="primary compact" id="download-step-definitions" type="button">↓ Download C#</button></div>
@@ -235,17 +257,6 @@
         </div>
       </section>
 
-      <section class="publish-panel hidden" id="publish-panel" aria-labelledby="publish-title">
-        <div class="publish-layout">
-          <div class="publish-copy"><span class="section-kicker">Acceptance and delivery</span><h2 id="publish-title">Agree selected test cases</h2><p>Accept only reviewed cases. Manual cases are stored as CSV or Excel; automation cases are stored as a Gherkin feature.</p></div>
-          <div class="acceptance-action">
-            <div class="acceptance-fields"><label>Accepted by<input id="accepted-by" type="text" maxlength="100" placeholder="Reviewer name or ID"></label><label>Manual format<select id="accepted-manual-format"><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV (.csv)</option></select></label></div>
-            <button class="primary" id="accept-selected" type="button">✓ Accept selected cases</button>
-            <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
-          </div>
-          <div class="publish-action"><label for="jira-key">Destination Jira issue</label><div class="jira-row"><input id="jira-key" type="text" placeholder="PROJ-123" aria-label="Jira issue key"><button class="primary" id="jira">Attach selected cases</button></div></div>
-        </div>
-      </section>
     </main>
   </div>
   <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
@@ -277,6 +288,15 @@
       <dl class="model-access-details" id="model-access-details"></dl>
     </section>
   </div>
+  <div class="knowledge-notice-overlay hidden" id="knowledge-notice-overlay" role="dialog" aria-modal="true" aria-labelledby="knowledge-notice-title">
+    <section class="knowledge-notice">
+      <span class="knowledge-notice-icon" aria-hidden="true">◎</span>
+      <span class="section-kicker">Knowledge base match</span>
+      <h2 id="knowledge-notice-title">Approved test knowledge reused</h2>
+      <p>This suite was retrieved from a previously validated knowledge-base entry instead of consuming a new AI generation request.</p>
+      <button class="primary" id="close-knowledge-notice" type="button">View generated suite</button>
+    </section>
+  </div>
   <div class="theme-settings">
     <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
       <strong id="theme-menu-title">Appearance</strong>
@@ -290,7 +310,7 @@
     <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
-  <script src="/static/scripts/auth.js?v=20260902-idle-only" defer></script>
-  <script src="/static/scripts/index.js?v=20260904-generation-process" defer></script>
+  <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
+  <script src="/static/scripts/index.js?v=20260904-jira-validation" defer></script>
 </body>
 </html>

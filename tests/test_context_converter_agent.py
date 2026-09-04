@@ -78,6 +78,38 @@ def test_converter_creates_excel_workbook() -> None:
     assert sheet["I2"].value == "Submit an invalid password five times"
 
 
+def test_converter_merges_repeated_manual_case_details_across_step_rows() -> None:
+    manual_suite = suite()
+    case = manual_suite.test_cases[0].model_copy(
+        update={
+            "steps": [
+                Step(
+                    action="Submit an invalid password four times",
+                    expected_result="The account remains active after attempt four",
+                ),
+                Step(
+                    action="Submit an invalid password a fifth time",
+                    expected_result="The account is locked after attempt five",
+                ),
+            ]
+        }
+    )
+    manual_suite = manual_suite.model_copy(update={"test_cases": [case]})
+
+    artifact = ContextConverterAgent().convert(
+        manual_suite, approved(), ExportFormat.EXCEL
+    )
+    sheet = load_workbook(io.BytesIO(artifact.content)).active
+
+    merged_ranges = {str(cell_range) for cell_range in sheet.merged_cells.ranges}
+    assert {"A2:A3", "B2:B3", "C2:C3", "J2:J3", "M2:M3"} <= merged_ranges
+    assert not {"H2:H3", "I2:I3", "K2:K3"} & merged_ranges
+    assert sheet["A2"].value == "TC-001"
+    assert sheet["A3"].value is None
+    assert sheet["H2"].value == 1
+    assert sheet["H3"].value == 2
+
+
 def test_converter_creates_xray_json_test_objects() -> None:
     artifact = ContextConverterAgent().convert(suite(), approved(), ExportFormat.JSON)
     tests = json.loads(artifact.content)
@@ -115,6 +147,42 @@ Examples:
     assert content.startswith("Feature: Account lockout")
     assert "Scenario Outline:" in content
     assert "Examples:" in content
+
+
+def test_feature_converter_lifts_shared_given_into_background() -> None:
+    first = suite().test_cases[0].model_copy(
+        update={
+            "execution_mode": ExecutionMode.AUTOMATION,
+            "gherkin": (
+                "Scenario: Create quote\n"
+                "  Given an authenticated customer\n"
+                "  When a quote is requested\n"
+                "  Then a quote is returned"
+            ),
+        }
+    )
+    second = first.model_copy(
+        update={
+            "id": "TC-002",
+            "title": "Reject invalid quote",
+            "gherkin": (
+                "Scenario: Reject invalid quote\n"
+                "  Given an authenticated customer\n"
+                "  When an invalid quote is requested\n"
+                "  Then a validation error is returned"
+            ),
+        }
+    )
+    automated_suite = suite().model_copy(update={"test_cases": [first, second]})
+
+    artifact = ContextConverterAgent().convert(
+        automated_suite, approved(), ExportFormat.FEATURE
+    )
+    content = artifact.content.decode()
+
+    assert "Background:\n  Given an authenticated customer" in content
+    assert content.count("Given an authenticated customer") == 1
+    assert content.count("Scenario:") == 2
 
 
 def test_feature_converter_rejects_outline_without_examples() -> None:

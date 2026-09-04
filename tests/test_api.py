@@ -64,7 +64,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="download-step-definitions"' in response.text
     assert "↓ .feature" in response.text
     assert 'id="stop-generation"' in response.text
-    assert 'id="publish-panel"' in response.text
+    assert 'id="publish-panel"' not in response.text
     assert 'id="business-rules"' in response.text
     assert 'id="business-rules-file"' in response.text
     assert 'id="source-state"' in response.text
@@ -104,12 +104,12 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Business Rules Agent" in response.text
     assert "Bug Reporter Agent" not in response.text
     assert "Metrics Agent" in response.text
-    assert 'aria-labelledby="publish-title"' in response.text
+    assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260904-generation-process"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260904-jira-validation"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260904-generation-process"' in response.text
+    assert 'href="/static/styles/index.css?v=20260904-jira-validation"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -117,8 +117,18 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'data-theme-option="system"' in response.text
     assert 'id="accept-selected"' in response.text
     assert 'id="accepted-by"' in response.text
-    assert 'id="accepted-manual-format"' in response.text
+    assert 'id="reviewer-error" role="alert"' in response.text
+    assert 'id="notification-bell"' in response.text
+    assert 'id="notification-panel"' in response.text
+    assert 'id="notification-list"' in response.text
+    assert 'id="knowledge-notice-overlay"' in response.text
+    assert 'id="close-knowledge-notice"' in response.text
+    assert 'id="accepted-manual-format"' not in response.text
     assert 'id="acceptance-receipt"' in response.text
+    assert 'class="suite-jira"' in response.text
+    assert "↗ Jira" in response.text
+    assert 'id="jira-key-error" role="alert"' in response.text
+    assert 'href="/documentation#integrations"' not in response.text
     assert 'id="runtime-health"' in response.text
     assert 'id="server-location"' in response.text
     assert 'id="active-agent"' in response.text
