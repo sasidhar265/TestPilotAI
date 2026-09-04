@@ -229,8 +229,11 @@ class ReqForgeTransformerAgent:
             request, revised, expected_mode=ExecutionMode.MANUAL
         )
         if not final_report.passed:
+            details = self._failure_summary(final_report)
+            logger.warning("specialist_quality_gate route=manual outcome=failed details=%s", details)
             raise CopilotGenerationError(
-                "Manual test cases failed the business-requirement quality gate after revision."
+                "Manual test cases failed the business-requirement quality gate after revision. "
+                f"Remaining issues: {details}"
             )
         return revised
 
@@ -263,6 +266,7 @@ class ReqForgeTransformerAgent:
     def _revision_instructions(report: ValidationReport) -> str:
         return "\n".join(
             f"- {finding.message}"
+            + (f" Cases: {', '.join(finding.test_case_ids)}." if finding.test_case_ids else "")
             + (
                 f" Requirement: {finding.acceptance_criterion}"
                 if finding.acceptance_criterion
@@ -271,6 +275,17 @@ class ReqForgeTransformerAgent:
             for finding in report.findings
             if finding.severity == "error"
         )
+
+    @staticmethod
+    def _failure_summary(report: ValidationReport) -> str:
+        issues: list[str] = []
+        for finding in report.findings:
+            if finding.severity != "error":
+                continue
+            affected = f" ({', '.join(finding.test_case_ids)})" if finding.test_case_ids else ""
+            criterion = f" [{finding.acceptance_criterion}]" if finding.acceptance_criterion else ""
+            issues.append(f"{finding.dimension.value}{affected}{criterion}")
+        return ", ".join(dict.fromkeys(issues)) or "unspecified validation error"
 
 
 class QAMasterAgent:

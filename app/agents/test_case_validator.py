@@ -50,10 +50,33 @@ _VAGUE = re.compile(
     re.IGNORECASE,
 )
 _SPACE = re.compile(r"[^a-z0-9]+")
+_EXPECTED_RESULT_FILLER = {
+    "a",
+    "an",
+    "as",
+    "be",
+    "is",
+    "it",
+    "should",
+    "the",
+    "then",
+    "to",
+}
 
 
 def _normal(value: str) -> str:
     return _SPACE.sub(" ", value.casefold()).strip()
+
+
+def _is_only_vague_expected_result(value: str) -> bool:
+    """Reject placeholder outcomes without penalizing an otherwise observable result."""
+    if not _VAGUE.search(value):
+        return False
+    remainder = _normal(_VAGUE.sub(" ", value))
+    meaningful_words = [
+        word for word in remainder.split() if word not in _EXPECTED_RESULT_FILLER
+    ]
+    return len(meaningful_words) < 2
 
 
 def _criteria(description: str) -> list[str]:
@@ -191,7 +214,9 @@ class TestCaseValidatorAgent:
 
             for index, step in enumerate(case.steps, start=1):
                 expected = _normal(step.expected_result)
-                if _VAGUE.search(step.expected_result) or expected == _normal(step.action):
+                if _is_only_vague_expected_result(step.expected_result) or expected == _normal(
+                    step.action
+                ):
                     findings.append(
                         ValidationFinding(
                             dimension=ValidationDimension.EXPECTED_RESULTS,

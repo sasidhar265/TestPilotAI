@@ -104,6 +104,30 @@ AC-2: A valid link opens the reset form"""
     } <= dimensions
 
 
+def test_validator_allows_observable_result_with_successfully_qualifier() -> None:
+    request = GenerateRequest(description="AC-1: Valid credentials open the dashboard")
+    suite = Suite(
+        feature_name="Sign in",
+        test_cases=[
+            case(
+                "TC-001",
+                "Open dashboard with valid credentials",
+                "Verify the authenticated landing page",
+                "AC-1",
+                "The user is successfully redirected to the account dashboard",
+            )
+        ],
+    )
+
+    report = Validator().validate(request, suite)
+
+    assert report.passed
+    assert not any(
+        finding.dimension == ValidationDimension.EXPECTED_RESULTS
+        for finding in report.findings
+    )
+
+
 def test_validator_allows_manual_and_automation_counterparts() -> None:
     request = GenerateRequest(description="AC-1: An expired link is rejected")
     automated = case(
