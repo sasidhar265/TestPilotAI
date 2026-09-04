@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Governed test design</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260903-ai-fallback">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260904-generation-process">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -260,6 +260,10 @@
         <div><dt>Authentication</dt><dd id="generation-llm-auth">Detecting…</dd></div>
       </dl>
       <div class="generation-agent-pulse" aria-label="Generation stages"><span>Analyze</span><span>Design</span><span>Validate</span></div>
+      <section class="generation-background-process" aria-labelledby="generation-background-title">
+        <div><h3 id="generation-background-title">Background process</h3><span id="generation-background-state">STARTING</span></div>
+        <ol id="generation-background-events" aria-live="polite"><li class="empty-event">Waiting for the first agent update…</li></ol>
+      </section>
       <div class="generation-progress"><span class="generation-progress-bar"></span></div>
       <div class="generation-dialog-footer"><span id="generation-overlay-time">00:00 elapsed</span><button class="secondary" id="cancel-generation-overlay" type="button">Cancel generation</button></div>
     </div>
@@ -287,6 +291,6 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260902-idle-only" defer></script>
-  <script src="/static/scripts/index.js?v=20260903-ai-fallback" defer></script>
+  <script src="/static/scripts/index.js?v=20260904-generation-process" defer></script>
 </body>
 </html>

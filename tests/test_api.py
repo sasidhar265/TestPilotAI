@@ -78,6 +78,8 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="generation-llm-provider"' in response.text
     assert 'id="generation-llm-model"' in response.text
     assert 'id="generation-llm-auth"' in response.text
+    assert 'id="generation-background-state"' in response.text
+    assert 'id="generation-background-events"' in response.text
     assert 'id="generation-agent"' not in response.text
     assert 'id="llm-model"' in response.text
     assert 'value="auto-fallback" selected' in response.text
@@ -105,9 +107,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'aria-labelledby="publish-title"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260903-ai-fallback"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260904-generation-process"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260903-ai-fallback"' in response.text
+    assert 'href="/static/styles/index.css?v=20260904-generation-process"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
