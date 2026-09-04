@@ -43,6 +43,38 @@ def test_quality_gate_enforces_bdd_and_removes_duplicates() -> None:
     assert "Then the link is rejected as expired" in result.test_cases[0].gherkin
 
 
+def test_automation_specialist_corrects_a_mislabeled_manual_case() -> None:
+    mislabeled = case("TC-001").model_copy(
+        update={"execution_mode": ExecutionMode.MANUAL, "gherkin": None}
+    )
+
+    result = finalize_suite(
+        Suite(feature_name="Password reset", test_cases=[mislabeled]),
+        GenerateRequest(
+            description="Automate password reset acceptance criteria.",
+            generation_target="automation",
+            output_format="bdd",
+        ),
+    )
+
+    assert result.test_cases[0].execution_mode == ExecutionMode.AUTOMATION
+    assert result.test_cases[0].gherkin.startswith("Scenario:")
+
+
+def test_manual_specialist_corrects_a_mislabeled_automation_case() -> None:
+    result = finalize_suite(
+        Suite(feature_name="Password reset", test_cases=[case("TC-001")]),
+        GenerateRequest(
+            description="Manually verify password reset acceptance criteria.",
+            generation_target="manual",
+            output_format="normal",
+        ),
+    )
+
+    assert result.test_cases[0].execution_mode == ExecutionMode.MANUAL
+    assert result.test_cases[0].gherkin is None
+
+
 def test_quality_gate_preserves_all_unique_generated_cases() -> None:
     generated_cases = [
         case(f"TC-{index:03d}").model_copy(

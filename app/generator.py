@@ -19,7 +19,16 @@ from app.agents.runner import (
     json_object,
 )
 from app.config import Settings
-from app.models import GenerateRequest, GenerationSource, LlmModel, TestCase, TestFormat, TestSuite
+from app.models import (
+    ExecutionMode,
+    GenerateRequest,
+    GenerationSource,
+    GenerationTarget,
+    LlmModel,
+    TestCase,
+    TestFormat,
+    TestSuite,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +83,10 @@ def _concise(value: str, limit: int = 100) -> str:
 
 def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
     """Enforce quality guarantees on untrusted Copilot output."""
+    expected_mode = {
+        GenerationTarget.MANUAL: ExecutionMode.MANUAL,
+        GenerationTarget.AUTOMATION: ExecutionMode.AUTOMATION,
+    }.get(request.generation_target)
     unique_cases: list[TestCase] = []
     seen: set[tuple[str, str]] = set()
     for case in suite.test_cases:
@@ -82,7 +95,8 @@ def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
             continue
         seen.add(fingerprint)
         gherkin_text = case.gherkin.strip() if case.gherkin else ""
-        if request.output_format == TestFormat.BDD:
+        execution_mode = expected_mode or case.execution_mode
+        if execution_mode == ExecutionMode.AUTOMATION and request.output_format == TestFormat.BDD:
             if not gherkin_text.startswith(("Scenario:", "Scenario Outline:")):
                 gherkin_text = _gherkin_from_case(case)
             gherkin: str | None = gherkin_text
@@ -90,7 +104,13 @@ def finalize_suite(suite: TestSuite, request: GenerateRequest) -> TestSuite:
             gherkin = None
         scenario_group = case.scenario_group.strip() or suite.feature_name
         unique_cases.append(
-            case.model_copy(update={"scenario_group": scenario_group, "gherkin": gherkin})
+            case.model_copy(
+                update={
+                    "scenario_group": scenario_group,
+                    "execution_mode": execution_mode,
+                    "gherkin": gherkin,
+                }
+            )
         )
     unique_cases.sort(key=lambda case: case.scenario_group.casefold())
     return suite.model_copy(
