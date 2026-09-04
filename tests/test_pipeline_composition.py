@@ -18,3 +18,16 @@ def test_application_pipeline_wires_model_directed_agent_runtime(tmp_path) -> No
     assert pipeline.runtime.generator is pipeline.generator
     assert pipeline.runtime.validator is pipeline.validator
     assert pipeline.runtime.storage is pipeline.storage
+
+
+def test_application_pipeline_can_disable_model_directed_runtime(tmp_path) -> None:
+    settings = Settings(
+        organizational_memory_path=tmp_path / "memory.db",
+        copilot_working_directory=tmp_path,
+        model_directed_runtime_enabled=False,
+    )
+    registry = AgentRegistry(CopilotGenerator(settings))
+
+    pipeline = get_multi_agent_pipeline(registry, settings)
+
+    assert pipeline.runtime is None

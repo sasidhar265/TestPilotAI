@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     max_concurrent_requests: int = Field(default=20, ge=1, le=1000)
     max_concurrent_generations: int = Field(default=2, ge=1, le=100)
     request_queue_timeout_seconds: float = Field(default=2.0, gt=0, le=60)
+    model_directed_runtime_enabled: bool = True
     copilot_github_token: str = ""
     copilot_model: str = ""
     copilot_timeout_seconds: float = 300

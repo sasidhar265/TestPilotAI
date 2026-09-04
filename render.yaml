@@ -28,6 +28,14 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-5.4
+      # Avoid keeping a Copilot coordinator CLI process resident while a specialist
+      # provider runs. The deterministic Python pipeline preserves the same gates.
+      - key: MODEL_DIRECTED_RUNTIME_ENABLED
+        value: "false"
+      - key: MAX_CONCURRENT_GENERATIONS
+        value: "1"
+      - key: MAX_CONCURRENT_REQUESTS
+        value: "10"
       - key: COPILOT_MODEL
         value: ""
       - key: ORGANIZATIONAL_MEMORY_ENABLED

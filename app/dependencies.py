@@ -66,5 +66,9 @@ def get_multi_agent_pipeline(
     generator = TestCaseGeneratorAgent(registry, validator, knowledge_source)
     storage = TestStorageAgent(memory)
     input_agent = InputAgent(DocumentIngestionService(max_file_bytes=settings.max_upload_bytes))
-    runtime = AgentRuntime(settings, generator, validator, storage)
+    runtime = (
+        AgentRuntime(settings, generator, validator, storage)
+        if settings.model_directed_runtime_enabled
+        else None
+    )
     return MultiAgentTestPipeline(input_agent, generator, validator, storage, runtime)
