@@ -38,6 +38,12 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert 'id="password-toggle"' in response.text
     assert 'id="forgot-password"' in response.text
     assert 'aria-label="Show password"' in response.text
+    assert 'id="theme-gear"' in response.text
+    assert 'id="theme-menu"' in response.text
+    assert 'data-theme-option="light"' in response.text
+    assert 'data-theme-option="dark"' in response.text
+    assert 'data-theme-option="system"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
     assert "styles/login-feedback.css?v=20260902" in response.text
 
 
