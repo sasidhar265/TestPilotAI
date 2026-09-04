@@ -191,7 +191,7 @@ class CopilotAgentRunner:
             )
             content = await self.invoke(
                 instructions=(
-                    "You are ReqForge in schema-recovery mode. Generate a complete test suite "
+                    "You are DecisionAgent in schema-recovery mode. Generate a complete test suite "
                     "from the supplied request envelope. Return exactly one JSON object matching "
                     "the output schema, with no Markdown or commentary. Preserve explicit AC-, "
                     "BR-, and NFR- identifiers. Use synthetic data and observable expected results."

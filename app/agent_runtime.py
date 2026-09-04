@@ -74,11 +74,11 @@ class AgentRuntime:
             trace.append(event)
             agent = {
                 "lookup_memory": "Knowledge Agent",
-                "design_test_suite": "QA Master → ReqForge",
+                "design_test_suite": "OrchestratorAgent → DecisionAgent",
                 "validate_test_suite": "Quality Gate",
                 "store_validated_suite": "Test Storage Agent",
-                "finish_run": "QA Master Agent",
-            }.get(tool, "QA Master Agent")
+                "finish_run": "OrchestratorAgent",
+            }.get(tool, "OrchestratorAgent")
             if run_request_id != "-":
                 lifecycle_events.publish(run_request_id, agent, tool, status, summary)
 
@@ -99,7 +99,7 @@ class AgentRuntime:
 
         @define_tool(
             description=(
-                "Ask QA Master to design scenarios from ingested UI input and have ReqForge "
+                "Ask OrchestratorAgent to design scenarios and have DecisionAgent "
                 "transform them into the requested test-case format."
             ),
             skip_permission=True,
@@ -134,7 +134,7 @@ class AgentRuntime:
             record(
                 "design_test_suite",
                 "success",
-                f"QA Master and ReqForge {action.lower()} {len(suite.test_cases)} cases.",
+                f"OrchestratorAgent and DecisionAgent {action.lower()} {len(suite.test_cases)} cases.",
             )
             return json.dumps(suite.model_dump(mode="json"))
 
@@ -196,7 +196,7 @@ class AgentRuntime:
         ]
         runner = CopilotAgentRunner(self.settings, self.client_factory)
         publish_lifecycle_event(
-            "QA Master Agent",
+            "OrchestratorAgent",
             "coordinate",
             "running",
             "Coordinator is selecting governed lifecycle tools from the normalized request.",
@@ -256,8 +256,8 @@ class AgentRuntime:
                 "design_test_suite",
                 "success",
                 (
-                    f"Fallback transformed {len(suite.test_cases)} QA Master scenarios "
-                    "through ReqForge."
+                    f"Fallback transformed {len(suite.test_cases)} OrchestratorAgent scenarios "
+                    "through DecisionAgent."
                 ),
             )
         if validation is None:

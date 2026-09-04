@@ -496,7 +496,7 @@ async def run_agent(
     request: GenerateRequest,
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> AgentRunResult:
-    """Run the deterministic ReqForge coordinator and its governed specialists."""
+    """Run the deterministic DecisionAgent routing flow and its governed specialists."""
     request_id = request_id_context.get()
     lifecycle_events.start(request_id)
     publish_lifecycle_event(
@@ -515,7 +515,7 @@ async def run_agent(
         )
     except CopilotGenerationError as error:
         publish_lifecycle_event(
-            "QA Master Agent",
+            "OrchestratorAgent",
             "coordinate",
             "failed",
             "Coordinator stopped safely before completing the governed lifecycle.",

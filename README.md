@@ -23,7 +23,7 @@ responsibility, runtime, and capabilities. Only suites that pass independent val
 stored for future exact-match reuse.
 
 Agent behavior is defined in readable `.github/agents/*.agent.md` files. The FastAPI/Python layer
-loads the relevant ReqForge, specialist, and quality-gate policies into each Copilot session and
+loads the relevant DecisionAgent, specialist, and quality-gate policies into each Copilot session and
 retains deterministic enforcement for validation, conversion, storage, security, and the web UI.
 Team and project customization is layered through `.github/agent-profiles/<profile>/`. Set
 `AGENT_PROFILE` to select a profile; `profile.md` applies common rules and optional files named
@@ -218,8 +218,8 @@ flowchart LR
     A[1. Enter text<br/>or upload a document] --> B[2. Normalize input<br/>and business rules]
     B --> C{3. Exact validated<br/>suite already stored?}
     C -->|Yes| D[Revalidate stored suite]
-    C -->|No| E[QA Master designs<br/>risk-based scenarios]
-    E --> F[ReqForge transforms to<br/>manual or BDD test cases]
+    C -->|No| E[OrchestratorAgent designs<br/>risk-based scenarios]
+    E --> F[DecisionAgent routes to<br/>manual or BDD test cases]
     F --> G[Validate and allow<br/>one guided revision]
     G -->|Pass| H[Add safe test data<br/>and store suite]
     G -->|Fail| I[Return actionable<br/>validation findings]
@@ -229,8 +229,8 @@ flowchart LR
 ```
 
 The memory check can avoid a Copilot request for an exact known requirement. A stored suite is
-still revalidated before use. For a new requirement, QA Master reads the normalized UI or BRD
-input and designs the scenario intent. ReqForge then selects the manual specialist, automation
+still revalidated before use. For a new requirement, OrchestratorAgent reads the normalized UI or BRD
+input and designs the scenario intent. DecisionAgent then selects the manual specialist, automation
 specialist, or both to transform that intent into the requested manual or BDD test cases. Output
 that still fails after one findings-driven revision is not
 stored or offered for publication.
@@ -300,7 +300,7 @@ flowchart TB
 
             subgraph AGENTS[Governed agent layer]
                 PREP[Prepare<br/>Input, Business Rules, Knowledge]
-                DESIGN[Design<br/>ReqForge, Manual, Automation]
+                DESIGN[Design<br/>DecisionAgent, Manual, Automation]
                 ASSURE[Assure<br/>Validator, Test Data]
                 DELIVER[Deliver<br/>Converter, Output, Storage]
                 EVIDENCE[Evidence<br/>Execution, Defects, Metrics]
@@ -370,7 +370,7 @@ The fifteen roles are grouped below by purpose so their relationship is easier t
 | Group | Agents | Responsibility |
 | --- | --- | --- |
 | Prepare | Input, Business Rules, Knowledge | Extract and normalize requirements, bind `BR-*` rules, and recall exact validated suites. |
-| Generate | QA Master, ReqForge Transformer, Manual Generator, Automation Generator | Ingest UI/BRD input, design scenario intent, and transform it into requested manual or BDD test cases. |
+| Generate | OrchestratorAgent, DecisionAgent, Manual Generator, Automation Generator | Ingest UI/BRD input, design scenario intent, and route it into requested manual or BDD test cases. |
 | Assure | Test Case Validator, Test Data | Enforce coverage and traceability rules and fill missing values with privacy-safe synthetic data. |
 | Deliver | Context Converter, Output, Test Storage | Convert approved suites, retain artifacts, and store validated knowledge for exact-match reuse. |
 | Learn from execution | Execution, Bug Reporter, Metrics | Validate supplied results, draft defects for review, and calculate transparent quality measures. |

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Quality Lifecycle Studio — Governed test design</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260904-jira-validation">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260904-profile-menu">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
 </head>
 <body>
@@ -27,7 +27,6 @@
       <div class="side-status">
         <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
         <div class="model">SECURE LOCAL WORKSPACE</div>
-        <button class="logout-button" id="logout" type="button">Sign out</button>
       </div>
     </aside>
 
@@ -49,7 +48,13 @@
               <ol id="notification-list"><li class="notification-empty">Run activity and system updates will appear here.</li></ol>
             </section>
           </div>
-          <span class="avatar" aria-label="Authenticated GitHub Copilot user">GH</span>
+          <div class="profile-menu">
+            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">GH</button>
+            <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+              <div><span class="avatar profile-avatar" aria-hidden="true">GH</span><p><strong>Signed-in user</strong><small>GitHub Copilot workspace</small></p></div>
+              <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
+            </section>
+          </div>
         </div>
       </header>
 
@@ -125,7 +130,7 @@
                     <option value="automation" selected>Automation (BDD / Gherkin)</option>
                     <option value="both">Both manual and automation</option>
                   </select>
-                  <small class="option-help">QA Master passes this output intent to ReqForge for specialist routing.</small>
+                  <small class="option-help">OrchestratorAgent passes this output intent to DecisionAgent for specialist routing.</small>
                 </fieldset>
                 <fieldset class="manual-type-control" id="manual-type-control">
                   <legend>Manual testing type</legend>
@@ -186,7 +191,7 @@
           <div class="runtime-title" id="runtime-title">Restricted execution flow</div>
           <div class="flow" role="img" aria-label="Request flows through input, generation, validation and storage">
             <div class="flow-node"><span>01</span><div><b>Input Agent</b><small>Normalizes text, documents and images</small></div></div>
-            <div class="flow-node"><span>02</span><div><b>QA Master → ReqForge</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
+            <div class="flow-node"><span>02</span><div><b>OrchestratorAgent → DecisionAgent</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
             <div class="flow-node"><span>03</span><div><b>Quality Gate</b><small>Checks traceability and deterministic rules</small></div></div>
             <div class="flow-node"><span>04</span><div><b>Test Storage</b><small>Retains approved exact-match suites</small></div></div>
           </div>
@@ -262,7 +267,7 @@
   <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
     <div class="generation-dialog">
       <div class="generation-orbit" aria-hidden="true"><span></span><span></span><span></span><b>✦</b></div>
-      <span class="section-kicker">ReqForge is working</span>
+      <span class="section-kicker">DecisionAgent is working</span>
       <h2 id="generation-overlay-title">Generating test cases</h2>
       <p id="generation-overlay-message">The specialist agents are designing and validating your coverage.</p>
       <dl class="generation-llm-details" aria-label="Active LLM details">
@@ -311,6 +316,6 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260904-jira-validation" defer></script>
+  <script src="/static/scripts/index.js?v=20260904-profile-menu" defer></script>
 </body>
 </html>

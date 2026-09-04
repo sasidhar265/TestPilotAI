@@ -1,4 +1,4 @@
-"""QA Master orchestration and ReqForge test-case transformation."""
+"""OrchestratorAgent coordination and DecisionAgent specialist routing."""
 
 import logging
 
@@ -124,12 +124,12 @@ class AutomationTestCaseGeneratorAgent:
         return suite
 
 
-class ReqForgeTransformerAgent:
+class DecisionAgent:
     descriptor = FunctionalAgentDescriptor(
-        id="reqforge-transformer-agent",
-        name="ReqForge Transformer",
-        kind=AgentKind.REQFORGE,
-        purpose=("Transform QA Master scenarios into requested manual test cases or BDD Gherkin."),
+        id="decision-agent",
+        name="DecisionAgent",
+        kind=AgentKind.DECISION,
+        purpose=("Route OrchestratorAgent scenarios into manual test cases or BDD Gherkin."),
         runtime="local-router",
         capabilities=("scenario-transformation", "manual-tests", "bdd-gherkin", "fan-out"),
         instruction_file=".github/agents/reqforge.agent.md",
@@ -147,7 +147,7 @@ class ReqForgeTransformerAgent:
         self.knowledge_source = knowledge_source
 
     def route(self, request: GenerateRequest) -> GenerationTarget:
-        """Select specialists from the normalized output intent supplied by QA Master."""
+        """Select specialists from the normalized output intent supplied by OrchestratorAgent."""
         if request.generation_target != GenerationTarget.AUTO:
             return request.generation_target
         if request.output_format == TestFormat.BDD:
@@ -157,10 +157,10 @@ class ReqForgeTransformerAgent:
     async def transform(self, request: GenerateRequest) -> TestSuite:
         route = self.route(request)
         publish_lifecycle_event(
-            "ReqForge Transformer",
+            "DecisionAgent",
             "route_specialists",
             "success",
-            f"Received QA Master scenario intent and selected the {route.value} specialist route.",
+            f"Received OrchestratorAgent scenario intent and selected the {route.value} specialist route.",
         )
         request = self._with_organizational_knowledge(request)
         if route == GenerationTarget.MANUAL:
@@ -288,23 +288,23 @@ class ReqForgeTransformerAgent:
         return ", ".join(dict.fromkeys(issues)) or "unspecified validation error"
 
 
-class QAMasterAgent:
-    """Ingest normalized UI requirements, design scenario intent, and orchestrate ReqForge."""
+class OrchestratorAgent:
+    """Ingest normalized requirements, design scenario intent, and coordinate DecisionAgent."""
 
     descriptor = FunctionalAgentDescriptor(
-        id="qa-master-agent",
-        name="QA Master Agent",
-        kind=AgentKind.QA_MASTER,
+        id="orchestrator-agent",
+        name="OrchestratorAgent",
+        kind=AgentKind.ORCHESTRATOR,
         purpose=(
             "Read normalized UI or BRD input, design risk-based scenarios, and direct "
-            "ReqForge transformation."
+            "DecisionAgent routing."
         ),
         runtime="local-orchestrator",
         capabilities=(
             "ui-input-ingestion",
             "requirement-analysis",
             "scenario-design",
-            "reqforge-orchestration",
+            "decision-agent-orchestration",
         ),
         instruction_file=".github/agents/testpilot-coordinator.agent.md",
     )
@@ -315,22 +315,24 @@ class QAMasterAgent:
         quality_gate: TestCaseValidatorAgent | None = None,
         knowledge_source: OutputAgent | None = None,
     ) -> None:
-        self.reqforge = ReqForgeTransformerAgent(registry, quality_gate, knowledge_source)
+        self.decision_agent = DecisionAgent(registry, quality_gate, knowledge_source)
 
     def route(self, request: GenerateRequest) -> GenerationTarget:
-        """Compatibility boundary; ReqForge owns the actual routing decision."""
-        return self.reqforge.route(request)
+        """Compatibility boundary; DecisionAgent owns the specialist routing decision."""
+        return self.decision_agent.route(request)
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
-        """Treat the validated request as ingested UI data and send scenarios to ReqForge."""
+        """Treat the validated request as ingested UI data and send scenarios to DecisionAgent."""
         publish_lifecycle_event(
-            "QA Master Agent",
+            "OrchestratorAgent",
             "analyze_and_handoff",
             "success",
-            "Analyzed normalized requirements and transferred scenario intent to ReqForge.",
+            "Analyzed normalized requirements and transferred scenario intent to DecisionAgent.",
         )
-        return await self.reqforge.transform(request)
+        return await self.decision_agent.transform(request)
 
 
-# Preserve the former public name for callers while exposing the new responsibility explicitly.
-TestCaseGeneratorAgent = QAMasterAgent
+# Preserve former public names for callers while exposing the renamed responsibilities.
+ReqForgeTransformerAgent = DecisionAgent
+QAMasterAgent = OrchestratorAgent
+TestCaseGeneratorAgent = OrchestratorAgent

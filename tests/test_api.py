@@ -107,9 +107,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260904-jira-validation"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260904-profile-menu"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260904-jira-validation"' in response.text
+    assert 'href="/static/styles/index.css?v=20260904-profile-menu"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -123,6 +123,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="notification-list"' in response.text
     assert 'id="knowledge-notice-overlay"' in response.text
     assert 'id="close-knowledge-notice"' in response.text
+    assert 'id="profile-toggle"' in response.text
+    assert 'id="profile-panel"' in response.text
+    assert 'class="profile-signout" id="logout"' in response.text
     assert 'id="accepted-manual-format"' not in response.text
     assert 'id="acceptance-receipt"' in response.text
     assert 'class="suite-jira"' in response.text
@@ -322,8 +325,8 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "input",
         "business-rules",
         "knowledge",
-        "qa-master",
-        "reqforge",
+        "orchestrator",
+        "decision",
         "manual-test-generator",
         "manual-testing-specialist",
         "automation-test-generator",

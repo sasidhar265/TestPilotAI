@@ -12,8 +12,8 @@ from app.agent_instructions import (
 @pytest.mark.parametrize(
     "agent_id",
     [
-        "reqforge",
-        "testpilot-coordinator",
+        "decision-agent",
+        "orchestrator-agent",
         "manual-test-generator",
         "manual-testing-specialist",
         "automation-test-generator",
@@ -40,12 +40,12 @@ def test_reqnroll_generator_requires_reusable_http_client_api_scripts() -> None:
 
 
 def test_coordinator_workflow_is_loaded_from_markdown() -> None:
-    body = load_agent_instructions("testpilot-coordinator")
+    body = load_agent_instructions("orchestrator-agent")
 
-    assert "You are the QA Master Agent" in body
+    assert "You are OrchestratorAgent" in body
     assert "input ingested\nfrom the UI" in body
     assert "Design the risk-based test scenarios first" in body
-    assert "ReqForge" in body
+    assert "DecisionAgent" in body
     assert "Always check organizational memory first" in body
     assert "Store only a passing suite" in body
 
@@ -56,17 +56,17 @@ def test_python_modules_do_not_embed_agent_system_prompts() -> None:
 
 
 def test_markdown_defines_input_output_and_manual_bdd_formats() -> None:
-    reqforge = load_agent_instructions("reqforge")
+    decision = load_agent_instructions("decision-agent")
     manual = load_agent_instructions("manual-test-generator")
     automation = load_agent_instructions("automation-test-generator")
     quality_gate = load_agent_instructions("quality-gate")
 
-    assert "## Input contract" in reqforge
-    assert "## Canonical output contract" in reqforge
-    assert "scenario-to-test-case transformation agent" in reqforge
-    assert "requested `output_format`" in reqforge
-    assert "There is no numeric scenario or test-case cap" in reqforge
-    assert "all distinct test cases" in reqforge
+    assert "## Input contract" in decision
+    assert "## Canonical output contract" in decision
+    assert "scenario-to-test-case routing and transformation agent" in decision
+    assert "requested `output_format`" in decision
+    assert "There is no numeric scenario or test-case cap" in decision
+    assert "all distinct test cases" in decision
     assert "## Manual test-case format" in manual
     assert '"gherkin": null' in manual
     assert "## Automation test-case and scenario format" in automation
