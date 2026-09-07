@@ -49,9 +49,10 @@
             </section>
           </div>
           <div class="profile-menu">
-            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">GH</button>
+            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">?</button>
             <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
-              <div><span class="avatar profile-avatar" aria-hidden="true">GH</span><p><strong>Signed-in user</strong><small>GitHub Copilot workspace</small></p></div>
+              <div><span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true">?</span><p><strong id="profile-name">User</strong><small id="profile-role">Workspace account</small></p></div>
+              <a class="profile-signout hidden" id="manage-users" href="/admin/users">Manage users</a>
               <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
             </section>
           </div>
@@ -316,6 +317,6 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260904-profile-menu" defer></script>
+  <script src="/static/scripts/index.js?v=20260907-user-roles" defer></script>
 </body>
 </html>

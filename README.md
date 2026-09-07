@@ -422,3 +422,22 @@ pack.
 
 For stakeholder presentations, use the [client demonstration guide](docs/client-demo-guide.md)
 and the downloadable [client demo PowerPoint](docs/Quality_Lifecycle_Studio_Client_Demo.pptx).
+
+## User accounts and roles
+
+The account configured with `APP_USERNAME` and `APP_PASSWORD` is the initial administrator.
+Sign in and open **Profile → Manage users** to create accounts with first and last names,
+usernames, passwords, and either the **User** or **Admin** role. Users can access the workspace;
+only admins can list accounts, create users, amend roles, and enable or disable access.
+Use an account’s edit icon to populate the user form. Update first and last names, choose Role
+and Application access with inline radio options, then select Update user. Leave the password blank
+to retain it or enter a replacement. The username stays fixed. Cancel editing returns to
+Create user mode. Saved edits revoke existing sessions. The delete icon removes an account after confirmation;
+admins cannot delete themselves or the initial administrator. There is no public
+registration. Disabling an account immediately invalidates its browser sessions. Re-enabling
+requires a fresh sign-in. Admins cannot disable themselves or the initial administrator.
+
+Accounts persist in `USER_DATABASE_PATH` (default `.agent-memory/users.db`). Passwords are
+stored as salted scrypt hashes. Keep this database on persistent storage when deploying.
+The existing API token grants workspace API access but cannot manage users; account management
+requires an authenticated admin browser session. Configure browser login before granting access.

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>Manage users — Quality Lifecycle Studio</title>
+  <link rel="stylesheet" href="/static/styles/index.css">
+  <link rel="stylesheet" href="/static/styles/users.css?v=20260907-inline-radios">
+  <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <span class="nav-label">Workspace</span>
+        <a class="nav-item" href="/"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
+        <span class="nav-label">Explore</span>
+        <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
+        <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
+        <span class="nav-label">Administration</span>
+        <a class="nav-item active" href="/admin/users" aria-current="page" aria-label="Manage users"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><circle cx="12" cy="10" r="2.5"/><path d="M8 16c0-4 8-4 8 0"/></svg></span><span>Manage users</span></a>
+      </nav>
+
+      <div class="side-status">
+        <div class="status-line"><span class="pulse"></span><span>Administrator workspace</span></div>
+        <div class="model">SECURE LOCAL WORKSPACE</div>
+      </div>
+    </aside>
+
+<main class="workspace users-workspace" id="main-content">
+  <header class="topbar">
+    <div><div class="eyebrow">Workspace / Administration</div><h1>Manage users</h1><p class="users-intro">Create accounts and control who can access your workspace.</p></div>
+    <div class="top-actions">          <div class="profile-menu">
+            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">?</button>
+            <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+              <div><span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true">?</span><p><strong id="profile-name">User</strong><small id="profile-role">Workspace account</small></p></div>
+              <a class="profile-signout hidden" id="manage-users" href="/admin/users">Manage users</a>
+              <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
+            </section>
+          </div>
+</div>
+  </header>
+  <section class="panel composer users-card" aria-labelledby="create-title">
+    <div class="panel-head"><div><span class="eyebrow">Account setup</span><h2 id="create-title">Create user</h2><p>Users can access the workspace. Admins can also manage accounts.</p></div></div>
+    <form id="create-user">
+      <label>First name<input name="first_name" autocomplete="off" required maxlength="100"></label>
+      <label>Last name<input name="last_name" autocomplete="off" required maxlength="100"></label>
+      <label>Username<input name="username" autocomplete="off" required maxlength="100" pattern="[a-zA-Z0-9][a-zA-Z0-9_.@\-]*"></label>
+      <label>Password<input name="password" type="password" autocomplete="new-password" aria-describedby="password-help" required minlength="12" maxlength="256"><small class="field-help" id="password-help">At least 12 characters. Share with the user securely.</small></label>
+      <fieldset class="account-options"><legend>User role</legend>
+        <div class="account-radio-row">
+          <label class="account-option"><input type="radio" name="role" value="user" checked><span>User</span></label>
+          <label class="account-option"><input type="radio" name="role" value="admin"><span>Admin</span></label>
+        </div>
+        <small class="field-help">Admins can also manage user accounts.</small>
+      </fieldset>
+      <fieldset class="account-options"><legend>Application access</legend>
+        <div class="account-radio-row">
+          <label class="account-option"><input type="radio" name="enabled" value="true" checked><span>Enabled</span></label>
+          <label class="account-option"><input type="radio" name="enabled" value="false"><span>Disabled</span></label>
+        </div>
+        <small class="field-help">Disabled users cannot sign in.</small>
+      </fieldset>
+      <div class="users-form-actions"><button class="primary" id="save-user" type="submit">Create user</button><button class="secondary hidden" id="cancel-edit" type="button">Cancel editing</button></div>
+    </form>
+  </section>
+  <p id="users-status" role="status" aria-live="polite"></p>
+  <section class="panel composer users-card" aria-labelledby="accounts-title"><div class="panel-head"><div><span class="eyebrow">Workspace access</span><h2 id="accounts-title">Accounts</h2><p>Select the edit icon to load an account into the form. Saved updates require a fresh sign-in.</p></div><span class="runtime-pill" id="user-count">Loading accounts…</span></div><div class="users-table" role="region" aria-label="User accounts, scroll horizontally on small screens" tabindex="0"><table><thead><tr><th scope="col">Name</th><th scope="col">Username</th><th scope="col">Role</th><th scope="col">Application access</th><th scope="col">Action</th></tr></thead><tbody id="users-list"><tr><td colspan="5">Loading accounts…</td></tr></tbody></table></div></section>
+</main>
+</div>
+<div class="theme-settings"><div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden><strong id="theme-menu-title">Appearance</strong><span>Choose your workspace theme</span><div class="theme-options" role="group" aria-label="Color theme"><button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button><button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button><button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button></div></div><button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button></div>
+<script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
+<script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
+<script src="/static/scripts/users.js?v=20260907-inline-radios" defer></script>
+</body>
+</html>

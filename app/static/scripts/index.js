@@ -33,7 +33,35 @@ document.addEventListener('click',event=>{if(!event.target.closest('.notificatio
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){setNotificationPanel(false);setProfilePanel(false);if(!$('knowledge-notice-overlay').classList.contains('hidden'))$('close-knowledge-notice').click()}});
 function closeModelAccess(){$('model-access-overlay').classList.add('hidden')}
 function modelAccessRow(label,value){return `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`}
-async function checkModelAccess(){const select=$('llm-model'),model=select.value,request=++modelAccessRequest,popup=$('model-access-overlay'),card=popup.querySelector('.model-access-popup');select.dataset.access='checking';syncGenerateAvailability();card.classList.remove('is-allowed','is-blocked');$('model-access-title').textContent='Checking model access…';$('model-access-summary').textContent='Verifying account permissions and usage limits without consuming a generation request.';$('model-access-details').innerHTML=modelAccessRow('Selected model',select.selectedOptions[0].textContent)+modelAccessRow('Status','Checking…');popup.classList.remove('hidden');try{const response=await fetch(`/api/llm/models/${encodeURIComponent(model)}/access`);if(!response.ok)throw await responseError(response);const result=await response.json();if(request!==modelAccessRequest)return;select.dataset.access=result.can_use?'allowed':'blocked';card.classList.add(result.can_use?'is-allowed':'is-blocked');$('model-access-title').textContent=result.can_use?'AI route available':'AI route unavailable';$('model-access-summary').textContent=result.reason;const quota=result.quota,remaining=quota?`${Number(quota.remaining_percentage).toFixed(1)}%`:'Not exposed',usage=quota?(quota.is_unlimited?'Unlimited':`${quota.used_requests} of ${quota.entitlement_requests}`):'Not exposed',reset=quota?.reset_date||'Not exposed',providers=(result.providers||[]).map(provider=>modelAccessRow(provider.display_name,`${provider.can_use?'Ready':'Unavailable'} · ${provider.reason}`)).join('');$('model-access-details').innerHTML=modelAccessRow('Selection',result.display_name)+modelAccessRow('Route / policy',result.policy)+providers+modelAccessRow('Usage',usage)+modelAccessRow('Remaining',remaining)+modelAccessRow('Quota reset',reset)+modelAccessRow('Can generate',result.can_use?'Yes':'No')}catch(error){if(request!==modelAccessRequest)return;select.dataset.access='blocked';card.classList.add('is-blocked');$('model-access-title').textContent='Access check unavailable';$('model-access-summary').textContent=error.message;$('model-access-details').innerHTML=modelAccessRow('Selected model',select.selectedOptions[0].textContent)+modelAccessRow('Can generate','Not verified')}finally{if(request===modelAccessRequest)syncGenerateAvailability()}}
+function modelUsageRows(result){
+  const quota=result.quota;
+  const numeric=value=>typeof value==='number'&&Number.isFinite(value);
+  let used='Unavailable',remaining='Unavailable',reset='Unavailable';
+  let scope='Usage could not be retrieved for this check.';
+  if(quota){
+    used=numeric(quota.used_requests)?`${quota.used_requests} requests used`:'Unavailable';
+    if(quota.is_unlimited){remaining='Unlimited'}
+    else{
+      if(numeric(quota.entitlement_requests))used+=` / ${quota.entitlement_requests} allocated`;
+      const count=numeric(quota.entitlement_requests)&&numeric(quota.used_requests)?`${Math.max(0,quota.entitlement_requests-quota.used_requests)} requests`:null;
+      const percent=numeric(quota.remaining_percentage)?`${quota.remaining_percentage.toFixed(1)}%`:null;
+      remaining=[count,percent].filter(Boolean).join(' · ')||'Unavailable';
+    }
+    reset=quota.reset_date||'Not reported';
+    scope='Shared Copilot account allowance; not usage for this model or project alone.';
+  }else if(result.model==='openai'){
+    used='Not provided by model access check';remaining='Not provided by model access check';
+    reset='Not provided by model access check';scope='View API usage and billing in the OpenAI Platform dashboard.';
+  }else if(result.model==='codex'){
+    used='Not provided by CLI login status';remaining='Not provided by CLI login status';
+    reset='Not provided by CLI login status';scope='Sign-in status does not report account usage or remaining allowance.';
+  }
+  return modelAccessRow('Usage',used)+modelAccessRow('Remaining allowance',remaining)+modelAccessRow('Quota reset',reset)+modelAccessRow('Usage scope',scope);
+}
+function modelProviderRows(provider){
+  return `<div class="model-provider-heading"><dt>${esc(provider.display_name)}</dt><dd>${esc(`${provider.can_use?'Ready':'Unavailable'} · ${provider.reason}`)}</dd></div>`+modelUsageRows(provider);
+}
+async function checkModelAccess(){const select=$('llm-model'),model=select.value,request=++modelAccessRequest,popup=$('model-access-overlay'),card=popup.querySelector('.model-access-popup');select.dataset.access='checking';syncGenerateAvailability();card.classList.remove('is-allowed','is-blocked');$('model-access-title').textContent='Checking model access…';$('model-access-summary').textContent='Verifying account permissions and usage limits without consuming a generation request.';$('model-access-details').innerHTML=modelAccessRow('Selected model',select.selectedOptions[0].textContent)+modelAccessRow('Status','Checking…');popup.classList.remove('hidden');try{const response=await fetch(`/api/llm/models/${encodeURIComponent(model)}/access`);if(!response.ok)throw await responseError(response);const result=await response.json();if(request!==modelAccessRequest)return;select.dataset.access=result.can_use?'allowed':'blocked';card.classList.add(result.can_use?'is-allowed':'is-blocked');$('model-access-title').textContent=result.can_use?'AI route available':'AI route unavailable';$('model-access-summary').textContent=result.reason;const providers=result.providers||[];$('model-access-details').innerHTML=modelAccessRow('Selection',result.display_name)+modelAccessRow('Route / policy',result.policy)+(providers.length?providers.map(modelProviderRows).join(''):modelUsageRows(result))+modelAccessRow('Can generate',result.can_use?'Yes':'No')}catch(error){if(request!==modelAccessRequest)return;select.dataset.access='blocked';card.classList.add('is-blocked');$('model-access-title').textContent='Access check unavailable';$('model-access-summary').textContent=error.message;$('model-access-details').innerHTML=modelAccessRow('Selected model',select.selectedOptions[0].textContent)+modelUsageRows({model})+modelAccessRow('Can generate','Not verified')}finally{if(request===modelAccessRequest)syncGenerateAvailability()}}
 $('close-model-access').onclick=closeModelAccess;
 $('model-access-overlay').addEventListener('click',event=>{if(event.target===$('model-access-overlay'))closeModelAccess()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('model-access-overlay').classList.contains('hidden'))closeModelAccess()});
@@ -136,3 +164,23 @@ const descriptionInput=$('description'),characterCount=$('character-count');desc
 syncGenerateAvailability();
 syncManualTestingType();
 setWorkflowStage(1);loadRuntimeStatus();
+
+async function loadUserProfile(){
+  try{
+    const response=await fetch('/api/auth/profile');
+    if(!response.ok)throw new Error('Profile unavailable');
+    const profile=await response.json();
+    const adminIcon='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><circle cx="12" cy="10" r="2.5"/><path d="M8 16c0-4 8-4 8 0"/></svg>';
+    for(const id of ['profile-toggle','profile-avatar']){
+      if(profile.is_admin)$(id).innerHTML=adminIcon;
+      else $(id).textContent=profile.initials;
+    }
+    $('manage-users').classList.toggle('hidden',!profile.is_admin);
+    $('profile-name').textContent=profile.display_name;
+    $('profile-role').textContent=profile.is_admin?'Administrator':'Workspace account';
+    $('profile-toggle').setAttribute('aria-label',`Open profile menu for ${profile.display_name}${profile.is_admin?' (Administrator)':''}`);
+  }catch{
+    $('profile-name').textContent='Profile unavailable';
+  }
+}
+loadUserProfile();

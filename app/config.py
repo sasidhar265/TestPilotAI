@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     json_logs: bool = True
     api_auth_token: SecretStr = SecretStr("")
     app_username: str = "admin"
+    app_display_name: str = ""
+    user_database_path: Path = Path(".agent-memory/users.db")
     app_password: SecretStr = SecretStr("")
     session_secret: SecretStr = SecretStr("")
     session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=7 * 24 * 60 * 60)

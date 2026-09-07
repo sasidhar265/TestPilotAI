@@ -1,6 +1,7 @@
 """Read-only permission checks for Copilot, OpenAI API, and Codex CLI."""
 
 import asyncio
+import re
 import shutil
 from typing import Any
 
@@ -11,44 +12,62 @@ from app.config import Settings
 
 async def inspect_model_access(settings: Settings, requested_model: str) -> dict[str, Any]:
     """Return access details without consuming a generation request."""
-    if requested_model == "openai":
-        return await _inspect_openai(settings)
-    if requested_model == "codex":
-        return await _inspect_codex(settings)
     if requested_model == "auto-fallback":
-        checks = await asyncio.gather(
-            _inspect_copilot(settings, "organization-default"),
-            _inspect_openai(settings),
-            _inspect_codex(settings),
-            return_exceptions=True,
+        providers = await asyncio.gather(
+            *(
+                inspect_model_access(settings, model)
+                for model in ("organization-default", "openai", "codex")
+            )
         )
-        providers: list[dict[str, Any]] = []
-        for name, result in zip(
-            ("GitHub Copilot", "OpenAI API", "Codex CLI"), checks, strict=True
-        ):
-            if isinstance(result, BaseException):
-                providers.append(
-                    {"display_name": name, "can_use": False, "reason": "Access check failed."}
-                )
-            else:
-                providers.append(result)
-        can_use = any(bool(provider.get("can_use")) for provider in providers)
-        return {
-            "model": requested_model,
-            "display_name": "Automatic fallback",
-            "available": can_use,
-            "policy": "Copilot → OpenAI API → Codex CLI",
-            "billing_multiplier": None,
-            "quota": None,
-            "can_use": can_use,
-            "reason": (
-                "At least one provider is ready; unavailable providers will be skipped."
-                if can_use
-                else "No fallback provider is currently available."
-            ),
-            "providers": providers,
-        }
-    return await _inspect_copilot(settings, requested_model)
+        can_use = any(provider["can_use"] for provider in providers)
+        result = _access_result(
+            requested_model,
+            "Automatic fallback",
+            can_use,
+            "Copilot → OpenAI API → Codex CLI",
+            "At least one provider is ready; unavailable providers will be skipped."
+            if can_use
+            else "No fallback provider is currently available.",
+        )
+        result["providers"] = providers
+        return result
+    name = {"openai": "OpenAI API", "codex": "Codex CLI"}.get(requested_model, "GitHub Copilot")
+    try:
+        if requested_model == "openai":
+            check = _inspect_openai(settings)
+        elif requested_model == "codex":
+            check = _inspect_codex(settings)
+        else:
+            check = _inspect_copilot(settings, requested_model)
+        return await asyncio.wait_for(check, timeout=30)
+    except Exception as error:
+        return _access_result(
+            requested_model,
+            name,
+            False,
+            "check-failed",
+            f"{name} access check failed: {failure_reason(settings, error)}",
+        )
+
+
+def failure_reason(settings: Settings, error: Exception) -> str:
+    """Preserve provider diagnostics without returning credentials to the browser."""
+    detail = str(error).strip() or type(error).__name__
+    if isinstance(error, TimeoutError):
+        detail = "Access check timed out."
+    for secret in (
+        settings.copilot_github_token,
+        settings.openai_api_key_value,
+        settings.api_auth_token.get_secret_value(),
+        settings.app_password.get_secret_value(),
+        settings.session_secret.get_secret_value(),
+        settings.jira_api_token,
+    ):
+        if secret:
+            detail = detail.replace(secret, "[redacted]")
+    detail = re.sub(r"(?i)Bearer\s+[^\s\"']+", "Bearer [redacted]", detail)
+    detail = re.sub(r"(?:gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]+", "[redacted]", detail)
+    return detail[:1500]
 
 
 async def _inspect_openai(settings: Settings) -> dict[str, Any]:
@@ -70,11 +89,14 @@ async def _inspect_openai(settings: Settings) -> dict[str, Any]:
             response.raise_for_status()
     except httpx.HTTPStatusError as error:
         status = error.response.status_code
-        reason = (
-            "The Platform API key is invalid or expired."
-            if status == 401
-            else f"The API key cannot access {model} (HTTP {status})."
-        )
+        try:
+            payload = error.response.json()
+            provider_error = payload.get("error", {})
+            message = provider_error.get("message", "") if isinstance(provider_error, dict) else ""
+        except (ValueError, AttributeError):
+            message = ""
+        detail = failure_reason(settings, RuntimeError(message or error.response.reason_phrase))
+        reason = f"Model access failed (HTTP {status}): {detail}"
         return _access_result("openai", f"OpenAI API · {model}", False, "denied", reason)
     return _access_result(
         "openai",
@@ -101,16 +123,20 @@ async def _inspect_codex(settings: Settings) -> dict[str, Any]:
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=10)
-    except (OSError, TimeoutError):
-        return _access_result(
-            "codex", "Codex CLI", False, "check-failed", "Codex sign-in could not be checked."
-        )
+    except TimeoutError:
+        if process.returncode is None:
+            process.kill()
+        await process.communicate()
+        raise
     detail = (stdout + stderr).decode("utf-8", errors="replace").strip()
     signed_in = process.returncode == 0 and "logged in" in detail.casefold()
     reason = (
         "Codex CLI is signed in. Exact remaining ChatGPT/Codex usage is not exposed by the CLI."
         if signed_in
-        else "Codex CLI is not signed in. Run 'codex login' on the server."
+        else (
+            f"Codex login status failed (exit {process.returncode}): "
+            + failure_reason(settings, RuntimeError(detail or "No diagnostic output."))
+        )
     )
     return _access_result(
         "codex",
@@ -191,7 +217,14 @@ async def _inspect_copilot(settings: Settings, requested_model: str) -> dict[str
     if not available:
         reason = "This Copilot model is unavailable or disabled by organization policy."
     elif not quota_allows_use:
-        reason = "Copilot premium quota is exhausted; automatic mode will try OpenAI then Codex."
+        reason = (
+            "Copilot quota does not permit usage: "
+            f"{quota_details['used_requests']} of {quota_details['entitlement_requests']} "
+            f"requests used, {quota_details['remaining_percentage']}% remaining; "
+            "usage after exhaustion and overage are both disabled."
+            if quota_details is not None
+            else "Copilot quota does not permit usage."
+        )
     else:
         reason = "The Copilot model is available and the current quota permits usage."
 

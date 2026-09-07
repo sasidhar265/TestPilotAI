@@ -1,4 +1,3 @@
-import hmac
 import logging
 import os
 from pathlib import Path
@@ -87,7 +86,9 @@ from app.services.document_ingestion import (
     DocumentIngestionService,
     InputAgent,
 )
-from app.services.model_access import inspect_model_access
+from app.services.model_access import failure_reason, inspect_model_access
+from app.user_routes import router as user_router
+from app.users import authenticate
 
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
@@ -107,6 +108,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=settings_at_startup.allowed_host_list,
 )
+app.include_router(user_router)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
@@ -243,17 +245,16 @@ async def login_page(request: Request) -> Response:
 
 
 @app.post("/api/auth/login", include_in_schema=False)
-async def login(credentials: LoginRequest) -> Response:
+def login(credentials: LoginRequest) -> Response:
     if not settings_at_startup.browser_login_enabled:
         raise HTTPException(status_code=503, detail="Browser login is not configured")
-    username_ok = hmac.compare_digest(credentials.username, settings_at_startup.app_username)
-    password_ok = hmac.compare_digest(credentials.password, settings_at_startup.app_password_value)
-    if not username_ok or not password_ok:
+    user = authenticate(settings_at_startup, credentials.username, credentials.password)
+    if user is None:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     response = Response(content='{"authenticated":true}', media_type="application/json")
     response.set_cookie(
         SESSION_COOKIE,
-        issue_browser_session(credentials.username, settings_at_startup),
+        issue_browser_session(user["username"], settings_at_startup),
         max_age=settings_at_startup.session_ttl_seconds,
         httponly=True,
         secure=settings_at_startup.is_production,
@@ -340,7 +341,7 @@ async def llm_model_access(
         log_operation_failure("llm_model_access", 503, error)
         raise HTTPException(
             status_code=503,
-            detail="Unable to verify AI provider access. Check the server authentication.",
+            detail=f"Unable to verify AI provider access: {failure_reason(settings, error)}",
         ) from error
 
 

@@ -764,3 +764,6 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
   .generation-background-process li { grid-template-columns: 1fr auto; }
   .generation-background-process li p { grid-column: 1 / -1; grid-row: 2; }
 }
+
+.model-access-popup { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.model-access-details .model-provider-heading { grid-column: 1 / -1; background: var(--surface); }
