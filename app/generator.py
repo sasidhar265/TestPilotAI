@@ -418,11 +418,7 @@ def _strict_json_schema(value: Any) -> Any:
         return [_strict_json_schema(item) for item in value]
     if not isinstance(value, dict):
         return value
-    schema = {
-        key: _strict_json_schema(item)
-        for key, item in value.items()
-        if key != "default"
-    }
+    schema = {key: _strict_json_schema(item) for key, item in value.items() if key != "default"}
     properties = schema.get("properties")
     if isinstance(properties, dict):
         schema["additionalProperties"] = False

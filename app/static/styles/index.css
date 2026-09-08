@@ -483,6 +483,20 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .result-actions { padding: 14px 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); }
 .selection-actions, .tools { display: flex; flex-wrap: wrap; gap: 7px; }
 .suite-output-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
+.suite-menu { position: relative; }
+.suite-menu > summary { display: flex; align-items: center; gap: 16px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 9px; cursor: pointer; list-style: none; font-size: .7rem; font-weight: 700; }
+.suite-menu > summary::-webkit-details-marker { display: none; }
+.suite-menu-options { position: absolute; right: 0; top: calc(100% + 7px); z-index: 30; width: 245px; max-width: calc(100vw - 40px); padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-md); }
+.suite-menu-options button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 10px; border: 0; border-radius: 7px; text-align: left; background: transparent; color: var(--ink); font-size: .75rem; }
+.suite-menu-options button span { margin-left: auto; font-weight: 400; font-size: .68rem; color: var(--muted); }
+.suite-menu-options button:hover:not(:disabled), .suite-menu-options button:focus-visible { background: var(--surface-soft); }
+.suite-menu-options button:disabled { opacity: .45; cursor: not-allowed; }
+.cs-download-dialog { width: min(640px, calc(100vw - 40px)); max-height: 80vh; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); }
+.cs-download-dialog::backdrop { background: rgba(15, 20, 35, .5); }
+.cs-download-dialog h3 { margin-top: 0; }
+.cs-download-dialog p { color: var(--muted); font-size: .8rem; }
+#cs-download-files { display: grid; gap: 8px; margin: 18px 0; }
+#cs-download-files button { overflow-wrap: anywhere; text-align: left; }
 .suite-approval { padding-left: 9px; display: flex; align-items: center; gap: 7px; border-left: 1px solid var(--line); }
 .reviewer-field { position: relative; align-self: flex-start; display: grid; }
 .suite-approval input { min-height: 35px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 9px; color: var(--ink); background: var(--surface); font-size: .67rem; outline: none; }
@@ -741,6 +755,9 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
   .generation-actions .primary { justify-content: center; }
   .flow { grid-template-columns: 1fr; }
   .tools .secondary { flex: 1 1 calc(50% - 7px); }
+  .tools .suite-menu { flex: 1 1 100%; }
+  .tools .suite-menu > summary { justify-content: space-between; }
+  .tools .suite-menu-options { position: static; width: 100%; margin-top: 7px; }
   .tools .suite-jira { flex: 1 1 calc(50% - 7px); }
   .tools .suite-jira > summary { justify-content: center; }
   .jira-popover { position: fixed; top: auto; right: 18px; bottom: 18px; left: 18px; width: auto; }

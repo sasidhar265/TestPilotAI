@@ -43,7 +43,9 @@ def _validation(passed: bool) -> ValidationReport:
 
 @pytest.mark.asyncio
 async def test_step_definitions_require_quality_gate_approval() -> None:
-    agent = ReqnRollStepDefinitionAgent(Settings())
+    agent = ReqnRollStepDefinitionAgent(
+        Settings(openai_api_key="", codex_executable="unavailable-test-codex")
+    )
     request = StepDefinitionRequest(
         suite=_suite(
             gherkin=(
@@ -60,7 +62,9 @@ async def test_step_definitions_require_quality_gate_approval() -> None:
 
 @pytest.mark.asyncio
 async def test_step_definitions_require_automation_gherkin() -> None:
-    agent = ReqnRollStepDefinitionAgent(Settings())
+    agent = ReqnRollStepDefinitionAgent(
+        Settings(openai_api_key="", codex_executable="unavailable-test-codex")
+    )
     request = StepDefinitionRequest(suite=_suite(mode="manual"), validation=_validation(True))
 
     with pytest.raises(ValueError, match="no automation Gherkin"):
@@ -68,14 +72,16 @@ async def test_step_definitions_require_automation_gherkin() -> None:
 
 
 @pytest.mark.asyncio
-async def test_step_definitions_fall_back_to_deterministic_reqnroll_bindings(
+async def test_provider_failure_never_returns_incomplete_bindings(
     monkeypatch,
 ) -> None:
     async def unavailable(*args, **kwargs):
         raise CopilotGenerationError("GitHub Copilot usage quota is exhausted.")
 
     monkeypatch.setattr(CopilotAgentRunner, "generate_structured", unavailable)
-    agent = ReqnRollStepDefinitionAgent(Settings())
+    agent = ReqnRollStepDefinitionAgent(
+        Settings(openai_api_key="", codex_executable="unavailable-test-codex")
+    )
     request = StepDefinitionRequest(
         suite=_suite(
             gherkin=(
@@ -88,15 +94,8 @@ async def test_step_definitions_fall_back_to_deterministic_reqnroll_bindings(
         validation=_validation(True),
     )
 
-    artifact = await agent.generate(request)
-
-    assert artifact.files[0].path == "StepDefinitions/QuoteAPIStepDefinitions.cs"
-    assert '[Given(@"^a (.+) client$")]' in artifact.files[0].content
-    assert "string customerType" in artifact.files[0].content
-    assert "NotImplementedException" in artifact.files[0].content
-    assert len(artifact.coverage) == 3
-    assert all(item.status == "generated" for item in artifact.coverage)
-    assert "deterministic ReqnRoll bindings" in artifact.notes[0]
+    with pytest.raises(CopilotGenerationError, match="No incomplete files were returned"):
+        await agent.generate(request)
 
 
 def test_fallback_reuses_binding_for_steps_that_only_differ_by_quoted_value() -> None:
@@ -117,13 +116,191 @@ def test_fallback_reuses_binding_for_steps_that_only_differ_by_quoted_value() ->
         }
     )
 
-    artifact = ReqnRollStepDefinitionAgent._fallback_artifact(
-        "Quote API", [first, second]
-    )
+    artifact = ReqnRollStepDefinitionAgent._fallback_artifact("Quote API", [first, second])
 
     content = artifact.files[0].content
-    assert content.count("[Given(") == 1
-    assert '[Given(@"^a ""([^""]+)"" customer$")]' in content
+    assert content.count("[Given(") == 0
+    assert "NotImplementedException" not in content
     given_coverage = [item for item in artifact.coverage if item.gherkin_step.startswith("Given")]
-    assert [item.status for item in given_coverage] == ["generated", "reused"]
+    assert [item.status for item in given_coverage] == ["blocked", "blocked"]
     assert given_coverage[0].binding == given_coverage[1].binding
+
+
+@pytest.mark.asyncio
+async def test_ai_output_reuses_local_support_files(monkeypatch, tmp_path) -> None:
+    from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
+    from app.agents.reqnroll_validation import implementation_findings
+
+    async def generate(*args, **kwargs):
+        assert "OMIT unchanged Support/ files" in kwargs["prompt"]
+        return StepDefinitionArtifact(
+            files=[
+                {
+                    "path": "Steps.cs",
+                    "content": """using Reqnroll;
+namespace Generated.StepDefinitions;
+[Binding]
+public class Steps {
+    private readonly ApiScenario api;
+    public Steps(ApiScenario api) { this.api = api; }
+    [Then("the HTTP status should be 200")]
+    public void Status() { api.AssertStatus(200); }
+}""",
+                }
+            ],
+            coverage=[
+                {
+                    "gherkin_step": "Then the HTTP status should be 200",
+                    "status": "generated",
+                    "binding": "Status",
+                }
+            ],
+        )
+
+    monkeypatch.setattr(CopilotAgentRunner, "generate_structured", generate)
+    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    agent = ReqnRollStepDefinitionAgent(settings)
+    result = await agent.generate(
+        StepDefinitionRequest(
+            suite=_suite(gherkin="Scenario: Status\n Then the HTTP status should be 200"),
+            validation=_validation(True),
+        )
+    )
+    assert {file.path for file in result.files} == {
+        "Steps.cs",
+        "Support/ApiScenario.cs",
+        "Support/ApprovedFixtures.cs",
+    }
+    assert implementation_findings(result, {"Then the HTTP status should be 200"}) == []
+
+    async def unavailable(*args, **kwargs):
+        raise AssertionError("Validated AI output should be reused without calling the provider")
+
+    monkeypatch.setattr(CopilotAgentRunner, "generate_structured", unavailable)
+    reused = await ReqnRollStepDefinitionAgent(settings).generate(
+        StepDefinitionRequest(
+            suite=_suite(gherkin="Scenario: Status\n Then the HTTP status should be 200"),
+            validation=_validation(True),
+        )
+    )
+    assert reused.files == result.files
+    assert all(item.status == "reused" for item in reused.coverage)
+
+
+@pytest.mark.asyncio
+async def test_csharp_memory_reuses_duplicate_scenarios_after_restart(tmp_path, monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from app.agents.artifact_runner import ArtifactGenerationRunner
+
+    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    request = StepDefinitionRequest(
+        suite=_suite(gherkin="Scenario: Status\n Then the response status is 200"),
+        validation=_validation(True),
+    )
+    original = await ReqnRollStepDefinitionAgent(settings).generate(request)
+    duplicate = request.suite.test_cases[0].model_copy(update={"id": "TC-NEW"})
+    request.suite.test_cases.append(duplicate)
+    provider = AsyncMock(side_effect=AssertionError("Duplicate scenarios must not call AI"))
+    monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", provider)
+    result = await ReqnRollStepDefinitionAgent(settings).generate(request)
+    assert result.files == original.files
+    assert all(item.status == "reused" for item in result.coverage)
+    assert "organizational memory" in result.notes[-1]
+    provider.assert_not_awaited()
+    request.validation.passed = False
+    with pytest.raises(ValueError, match="Quality Gate"):
+        await ReqnRollStepDefinitionAgent(settings).generate(request)
+
+
+@pytest.mark.asyncio
+async def test_partial_duplicate_csharp_is_supplied_as_knowledge(tmp_path, monkeypatch):
+    from app.agents.artifact_runner import ArtifactGenerationRunner
+
+    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    first = _suite(gherkin="Scenario: Status\n Then the response status is 200")
+    agent = ReqnRollStepDefinitionAgent(settings)
+    await agent.generate(StepDefinitionRequest(suite=first, validation=_validation(True)))
+    changed = first.model_copy(deep=True)
+    changed.test_cases.append(
+        first.test_cases[0].model_copy(
+            update={
+                "id": "TC-002",
+                "gherkin": "Scenario: Domain\n Then a quote is returned",
+            }
+        )
+    )
+
+    async def generate(*args, **kwargs):
+        assert "VALIDATED C# KNOWLEDGE FOR OVERLAPPING SCENARIOS" in kwargs["prompt"]
+        assert "AssertStatus(expectedStatus)" in kwargs["prompt"]
+        raise CopilotGenerationError("offline")
+
+    monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", generate)
+    with pytest.raises(CopilotGenerationError, match="offline"):
+        await agent.generate(StepDefinitionRequest(suite=changed, validation=_validation(True)))
+    import sqlite3
+
+    with sqlite3.connect(settings.organizational_memory_path) as connection:
+        assert connection.execute("SELECT count(*) FROM reqnroll_memory").fetchone()[0] == 1
+
+
+@pytest.mark.asyncio
+async def test_corrupt_csharp_memory_is_not_returned(tmp_path):
+    import sqlite3
+
+    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    request = StepDefinitionRequest(
+        suite=_suite(gherkin="Scenario: Status\n Then the response status is 200"),
+        validation=_validation(True),
+    )
+    agent = ReqnRollStepDefinitionAgent(settings)
+    original = await agent.generate(request)
+    for content in [
+        '{"files": []}',
+        original.model_dump_json().replace("api.AssertStatus(expectedStatus);", ""),
+    ]:
+        with sqlite3.connect(settings.organizational_memory_path) as connection:
+            connection.execute("UPDATE reqnroll_memory SET artifact_json = ?", (content,))
+        regenerated = await agent.generate(request)
+        assert regenerated.files == original.files
+        assert all(item.status == "generated" for item in regenerated.coverage)
+
+
+def test_csharp_memory_identity_preserves_behavior_and_project_context():
+    from app.agents.reqnroll_memory import ReqnRollMemory
+
+    suite = _suite(gherkin='Scenario: Status\n Given fixture "Retail"')
+    identity = ReqnRollMemory.identity(suite, "project-a", "policy")
+    for field, value in [
+        ("gherkin", 'Scenario: Status\n Given fixture "retail"'),
+        ("preconditions", ["Requires authorization"]),
+        ("test_data", [{"name": "customer", "value": "business", "purpose": "fixture"}]),
+        ("steps", [{"action": "Send request", "expected_result": "Request rejected"}]),
+    ]:
+        changed = suite.model_copy(deep=True)
+        changed.test_cases[0] = changed.test_cases[0].model_validate(
+            {**changed.test_cases[0].model_dump(), field: value}
+        )
+        assert ReqnRollMemory.identity(changed, "project-a", "policy") != identity
+    assert ReqnRollMemory.identity(suite, "project-b", "policy") != identity
+    assert ReqnRollMemory.identity(suite, "project-a", "new policy") != identity
+    changed = suite.model_copy(update={"assumptions": ["New contract"]})
+    assert ReqnRollMemory.identity(changed, "project-a", "policy") != identity
+
+
+@pytest.mark.asyncio
+async def test_disabled_csharp_memory_does_not_write(tmp_path):
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_enabled=False,
+        organizational_memory_path=tmp_path / "memory.db",
+    )
+    request = StepDefinitionRequest(
+        suite=_suite(gherkin="Scenario: Status\n Then the response status is 200"),
+        validation=_validation(True),
+    )
+    for _ in range(2):
+        result = await ReqnRollStepDefinitionAgent(settings).generate(request)
+        assert all(item.status == "generated" for item in result.coverage)
+    assert not settings.organizational_memory_path.exists()

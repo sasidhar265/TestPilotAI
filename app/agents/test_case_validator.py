@@ -73,9 +73,7 @@ def _is_only_vague_expected_result(value: str) -> bool:
     if not _VAGUE.search(value):
         return False
     remainder = _normal(_VAGUE.sub(" ", value))
-    meaningful_words = [
-        word for word in remainder.split() if word not in _EXPECTED_RESULT_FILLER
-    ]
+    meaningful_words = [word for word in remainder.split() if word not in _EXPECTED_RESULT_FILLER]
     return len(meaningful_words) < 2
 
 

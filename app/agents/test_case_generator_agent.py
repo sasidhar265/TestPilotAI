@@ -160,7 +160,8 @@ class DecisionAgent:
             "DecisionAgent",
             "route_specialists",
             "success",
-            f"Received OrchestratorAgent scenario intent and selected the {route.value} specialist route.",
+            "Received OrchestratorAgent scenario intent and selected "
+            f"the {route.value} specialist route.",
         )
         request = self._with_organizational_knowledge(request)
         if route == GenerationTarget.MANUAL:
@@ -230,7 +231,9 @@ class DecisionAgent:
         )
         if not final_report.passed:
             details = self._failure_summary(final_report)
-            logger.warning("specialist_quality_gate route=manual outcome=failed details=%s", details)
+            logger.warning(
+                "specialist_quality_gate route=manual outcome=failed details=%s", details
+            )
             raise CopilotGenerationError(
                 "Manual test cases failed the business-requirement quality gate after revision. "
                 f"Remaining issues: {details}"

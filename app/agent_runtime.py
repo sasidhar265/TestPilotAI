@@ -134,7 +134,8 @@ class AgentRuntime:
             record(
                 "design_test_suite",
                 "success",
-                f"OrchestratorAgent and DecisionAgent {action.lower()} {len(suite.test_cases)} cases.",
+                f"OrchestratorAgent and DecisionAgent {action.lower()} "
+                f"{len(suite.test_cases)} cases.",
             )
             return json.dumps(suite.model_dump(mode="json"))
 

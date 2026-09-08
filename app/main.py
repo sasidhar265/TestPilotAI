@@ -1,5 +1,7 @@
+import io
 import logging
 import os
+import zipfile
 from pathlib import Path
 
 import httpx
@@ -26,6 +28,7 @@ from app.agents.reqnroll_step_definition_agent import (
     StepDefinitionArtifact,
     StepDefinitionRequest,
 )
+from app.agents.reqnroll_validation import implementation_findings
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
@@ -648,6 +651,12 @@ async def expand_generation(
 
 @app.post("/api/export/csv")
 async def export_csv(suite: TestSuite) -> Response:
+    from app.agents.context_converter_agent import require_manual_document_export
+
+    try:
+        require_manual_document_export(suite)
+    except ContextConversionError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     return Response(
         suite_to_csv(suite),
         media_type="text/csv",
@@ -725,6 +734,30 @@ async def generate_reqnroll_step_definitions(
     except CopilotGenerationError as error:
         log_operation_failure("generate_reqnroll_step_definitions", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@app.post("/api/step-definitions/download")
+async def download_step_definitions(artifact: StepDefinitionArtifact) -> Response:
+    """Keep bindings and their supporting C# files separate in a downloadable archive."""
+    findings = implementation_findings(artifact)
+    if findings:
+        raise HTTPException(
+            status_code=422, detail="Regenerate complete C# files. " + " ".join(findings)
+        )
+    names: set[str] = set()
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for file in artifact.files:
+            parts = file.path.split("/")
+            if any(part in {"", ".", ".."} for part in parts) or file.path in names:
+                raise HTTPException(status_code=422, detail="Unsafe or duplicate C# file path.")
+            names.add(file.path)
+            archive.writestr(file.path, file.content)
+    return Response(
+        content=output.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="ReqnRollStepDefinitions.zip"'},
+    )
 
 
 @app.post("/api/jira/publish", response_model=JiraPublishResult)

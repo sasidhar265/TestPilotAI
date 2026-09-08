@@ -63,6 +63,7 @@ class ExportFormat(StrEnum):
     EXCEL = "xlsx"
     JSON = "json"
     FEATURE = "feature"
+    PDF = "pdf"
 
 
 class ManualArtifactFormat(StrEnum):

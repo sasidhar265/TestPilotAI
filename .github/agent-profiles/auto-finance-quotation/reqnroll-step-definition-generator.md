@@ -19,5 +19,30 @@ credentials. Approved golden/reference data belongs in injected fixtures or Exam
 scenario data.
 
 The coverage map must preserve each scenario's `BR-QT-*` traceability in the artifact notes and
-classify every unique validation step as reused, generated, or blocked. A missing implementation
-detail is blocked/TODO, never guessed.
+classify every unique validation step as reused, generated, or blocked. Missing runtime values use
+the base policy's configurable implementation contract. Missing business semantics are blocked,
+never guessed. Never emit placeholder methods.
+
+For supplied domain steps, implement the following operations through typed approved configuration:
+
+- Outcome/canonical/error assertions: resolve the named outcome to an expected HTTP status and
+  nonempty expected JSON field comparisons; assert correlation evidence, approved safe error
+  fields, and absence of configured confidential fields. Do not treat a nonempty response as success.
+- Boundary/invalid/catalogue fixtures: select the exact approved fixture variant by the supplied
+  parameters and load its request, version expectations and expected outcome. Do not invent
+  boundary values or mutate a real environment. Verify pinned versions from observable evidence.
+- Repeated submissions: send the same request twice, preserve both responses, and compare the
+  configured deterministic fields against each other and independent approved version values.
+- Oracle/decimal checks: load versioned approved golden outputs and nonempty decimal field/shape
+  mappings; compare using decimal arithmetic and an explicitly configured approved tolerance.
+- Access/audit checks: select an approved access-state fixture and credentials, submit the actual
+  request, and assert configured audit evidence and absence of unauthorized calculation output.
+  If separate audit evidence is required, implement a configured evidence query and verify it;
+  do not infer audit success solely from the response status.
+- Load checks: use an approved, bounded request count/concurrency and catalogue, execute actual
+  requests, record elapsed times and failures, and calculate mean and nearest-rank P95. Enforce
+  the supplied 1s/2s limits; do not discard failures or invent exceptions. Require independently
+  verifiable pinned-environment evidence, not a configuration flag asserting the environment is pinned.
+
+Document missing runtime configuration in notes while still returning concrete implementations
+for all implementable bindings. Keep assertions tied to the full meaning of each supplied step.

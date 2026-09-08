@@ -84,9 +84,7 @@ def test_auto_route_uses_selected_bdd_output_format() -> None:
     router = ReqForgeRouter(AgentRegistry(RouteAwareProvider()))
 
     route = router.route(
-        GenerateRequest(
-            description="Generate coverage for customer sign in.", output_format="bdd"
-        )
+        GenerateRequest(description="Generate coverage for customer sign in.", output_format="bdd")
     )
 
     assert route == GenerationTarget.AUTOMATION

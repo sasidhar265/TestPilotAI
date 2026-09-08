@@ -11,7 +11,7 @@ from openpyxl.styles import Alignment
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.test_case_validator import ValidationReport
-from app.models import ExportFormat, TestSuite
+from app.models import ExecutionMode, ExportFormat, TestSuite
 
 
 def _short_step(value: str, limit: int = 100) -> str:
@@ -23,6 +23,14 @@ def _short_step(value: str, limit: int = 100) -> str:
 
 class ContextConversionError(ValueError):
     """Raised when unapproved content reaches the conversion boundary."""
+
+
+def require_manual_document_export(suite: TestSuite) -> None:
+    if any(case.execution_mode == ExecutionMode.AUTOMATION for case in suite.test_cases):
+        raise ContextConversionError(
+            "Automation tests must be downloaded as .feature or .cs files. "
+            "Excel, PDF, CSV and JSON downloads are available only for manual test suites."
+        )
 
 
 @dataclass(frozen=True)
@@ -70,6 +78,8 @@ class ContextConverterAgent:
     ) -> ConvertedArtifact:
         if not validation.passed:
             raise ContextConversionError("Only a quality-gate-approved suite can be converted.")
+        if output_format != ExportFormat.FEATURE:
+            require_manual_document_export(suite)
         if output_format == ExportFormat.CSV:
             content = self._csv(suite)
             return ConvertedArtifact(content, "xray-test-cases.csv", "text/csv")
@@ -83,6 +93,10 @@ class ContextConverterAgent:
         if output_format == ExportFormat.FEATURE:
             content = self._feature(suite)
             return ConvertedArtifact(content, "automation-tests.feature", "text/x-gherkin")
+        if output_format == ExportFormat.PDF:
+            from app.pdf_exporter import suite_to_pdf
+
+            return ConvertedArtifact(suite_to_pdf(suite), "test-suite.pdf", "application/pdf")
         content = self._json(suite)
         return ConvertedArtifact(content, "xray-test-cases.json", "application/json")
 

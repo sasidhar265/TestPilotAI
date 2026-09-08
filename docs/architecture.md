@@ -101,6 +101,12 @@ flowchart LR
 - `app/agents/runner.py`: the single GitHub Copilot SDK session and structured-output runtime.
 - `app/generator.py`: test-suite request envelopes, normalization, and declarative agent contract.
 - `app/agents/reqnroll_step_definition_agent.py`: ReqnRoll schemas and a thin shared-runtime adapter.
+- `app/agents/artifact_runner.py`: code-artifact provider fallback. A caller-supplied implementation
+  validator runs after schema validation and local helper assembly. Incomplete output receives one
+  repair attempt on its provider, then advances to the next configured provider. Transport failures
+  advance immediately. Only validated artifacts reach previews/downloads; request-specific findings
+  stay in repair prompts and user-facing errors, not application logs. Domain runtime configuration
+  is documented separately from code completeness and must be validated by generated code.
 - `app/memory.py`: normalized fingerprinting and repository-local SQLite suite retrieval.
 - `app/models.py`: validated domain and API data contracts.
 - `app/jira.py` and `app/exporter.py`: outbound integrations.

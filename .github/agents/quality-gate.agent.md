@@ -28,6 +28,9 @@ Reject or return actionable findings when any applicable check fails:
   executable steps, and keeps step text within the configured length.
 - Every Scenario Outline placeholder maps to a unique Examples header and every row supplies all
   values; examples do not introduce behavior absent from the requirement.
+- Repeated business actions use consistent common-step wording and parameter conventions. Cases
+  differing only in data use complete Examples without losing required rows or requirement mappings.
+  String placeholders are quoted consistently and numeric columns contain compatible values.
 - API status, business error, response body, state, audit, security, calculation, and resilience
   assertions are included when required by the mapped behavior.
 - Assumptions explicitly identify missing formulas, thresholds, contracts, test oracles, or

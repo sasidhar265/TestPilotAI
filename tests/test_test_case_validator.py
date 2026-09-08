@@ -123,8 +123,7 @@ def test_validator_allows_observable_result_with_successfully_qualifier() -> Non
 
     assert report.passed
     assert not any(
-        finding.dimension == ValidationDimension.EXPECTED_RESULTS
-        for finding in report.findings
+        finding.dimension == ValidationDimension.EXPECTED_RESULTS for finding in report.findings
     )
 
 
@@ -137,9 +136,7 @@ def test_validator_allows_manual_and_automation_counterparts() -> None:
         "AC-1",
         "An expired-link message is displayed",
     )
-    manual = automated.model_copy(
-        update={"id": "TC-002", "execution_mode": ExecutionMode.MANUAL}
-    )
+    manual = automated.model_copy(update={"id": "TC-002", "execution_mode": ExecutionMode.MANUAL})
 
     report = Validator().validate(
         request,
@@ -148,8 +145,7 @@ def test_validator_allows_manual_and_automation_counterparts() -> None:
 
     assert report.passed
     assert not any(
-        finding.dimension == ValidationDimension.DUPLICATES
-        for finding in report.findings
+        finding.dimension == ValidationDimension.DUPLICATES for finding in report.findings
     )
 
 

@@ -15,3 +15,5 @@ dist/
 *.egg-info/
 .mypy_cache/
 .ruff_cache/
+tests/csharp/bin/
+tests/csharp/obj/

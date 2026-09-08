@@ -4,6 +4,7 @@ import json
 
 import pytest
 from openpyxl import load_workbook
+from pypdf import PdfReader
 
 from app.agents.context_converter_agent import ContextConversionError, ContextConverterAgent
 from app.agents.test_case_validator import ValidationReport
@@ -78,6 +79,45 @@ def test_converter_creates_excel_workbook() -> None:
     assert sheet["I2"].value == "Submit an invalid password five times"
 
 
+def test_converter_exports_paginated_pdf_with_all_test_details() -> None:
+    source = suite()
+    source.test_cases = [
+        source.test_cases[0].model_copy(
+            update={
+                "id": f"TC-{index:03}",
+                "title": f"Unicode £100 & <review> case {index}",
+            }
+        )
+        for index in range(1, 31)
+    ]
+    source.assumptions = ["Approved environment required"]
+    artifact = ContextConverterAgent().convert(source, approved(), ExportFormat.PDF)
+    assert artifact.filename == "test-suite.pdf"
+    assert artifact.media_type == "application/pdf"
+    reader = PdfReader(io.BytesIO(artifact.content))
+    assert len(reader.pages) > 1
+    text = "\n".join(page.extract_text() for page in reader.pages)
+    for case in source.test_cases:
+        assert case.id in text
+    for expected in [
+        "£100",
+        "<review>",
+        "Expected result",
+        "BR-1",
+        "invalid",
+        "Approved environment required",
+        "Page 1",
+    ]:
+        assert expected in text
+
+
+def test_pdf_export_requires_quality_gate_approval() -> None:
+    with pytest.raises(ContextConversionError, match="quality-gate-approved"):
+        ContextConverterAgent().convert(
+            suite(), approved().model_copy(update={"passed": False}), ExportFormat.PDF
+        )
+
+
 def test_converter_merges_repeated_manual_case_details_across_step_rows() -> None:
     manual_suite = suite()
     case = manual_suite.test_cases[0].model_copy(
@@ -96,9 +136,7 @@ def test_converter_merges_repeated_manual_case_details_across_step_rows() -> Non
     )
     manual_suite = manual_suite.model_copy(update={"test_cases": [case]})
 
-    artifact = ContextConverterAgent().convert(
-        manual_suite, approved(), ExportFormat.EXCEL
-    )
+    artifact = ContextConverterAgent().convert(manual_suite, approved(), ExportFormat.EXCEL)
     sheet = load_workbook(io.BytesIO(artifact.content)).active
 
     merged_ranges = {str(cell_range) for cell_range in sheet.merged_cells.ranges}
@@ -150,16 +188,20 @@ Examples:
 
 
 def test_feature_converter_lifts_shared_given_into_background() -> None:
-    first = suite().test_cases[0].model_copy(
-        update={
-            "execution_mode": ExecutionMode.AUTOMATION,
-            "gherkin": (
-                "Scenario: Create quote\n"
-                "  Given an authenticated customer\n"
-                "  When a quote is requested\n"
-                "  Then a quote is returned"
-            ),
-        }
+    first = (
+        suite()
+        .test_cases[0]
+        .model_copy(
+            update={
+                "execution_mode": ExecutionMode.AUTOMATION,
+                "gherkin": (
+                    "Scenario: Create quote\n"
+                    "  Given an authenticated customer\n"
+                    "  When a quote is requested\n"
+                    "  Then a quote is returned"
+                ),
+            }
+        )
     )
     second = first.model_copy(
         update={
@@ -175,9 +217,7 @@ def test_feature_converter_lifts_shared_given_into_background() -> None:
     )
     automated_suite = suite().model_copy(update={"test_cases": [first, second]})
 
-    artifact = ContextConverterAgent().convert(
-        automated_suite, approved(), ExportFormat.FEATURE
-    )
+    artifact = ContextConverterAgent().convert(automated_suite, approved(), ExportFormat.FEATURE)
     content = artifact.content.decode()
 
     assert "Background:\n  Given an authenticated customer" in content
@@ -203,3 +243,21 @@ def test_feature_converter_rejects_outline_without_examples() -> None:
             approved(),
             ExportFormat.FEATURE,
         )
+
+
+@pytest.mark.parametrize(
+    "format", [ExportFormat.EXCEL, ExportFormat.PDF, ExportFormat.CSV, ExportFormat.JSON]
+)
+@pytest.mark.parametrize("mixed", [False, True])
+def test_automation_cannot_be_converted_to_manual_documents(format, mixed):
+    source = suite()
+    automated = source.test_cases[0].model_copy(
+        update={
+            "id": "AUTO-1",
+            "execution_mode": ExecutionMode.AUTOMATION,
+            "gherkin": "Scenario: Lock\n Given an active account\n Then the account is locked",
+        }
+    )
+    source.test_cases = [*source.test_cases, automated] if mixed else [automated]
+    with pytest.raises(ContextConversionError, match=".feature or .cs"):
+        ContextConverterAgent().convert(source, approved(), format)

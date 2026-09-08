@@ -9,7 +9,11 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.agent_instructions import step_definition_agent_instructions
-from app.agents.runner import CopilotAgentRunner, CopilotGenerationError, StructuredAgentDefinition
+from app.agents.artifact_runner import ArtifactGenerationRunner
+from app.agents.reqnroll_implementations import common_step, support_files
+from app.agents.reqnroll_memory import ReqnRollMemory
+from app.agents.reqnroll_validation import implementation_findings
+from app.agents.runner import CopilotGenerationError, StructuredAgentDefinition
 from app.agents.test_case_validator import ValidationReport
 from app.config import Settings
 from app.models import ExecutionMode, TestSuite
@@ -59,6 +63,9 @@ class ReqnRollStepDefinitionAgent:
     ) -> None:
         self.settings = settings
         self.client_factory = client_factory
+        self.memory = ReqnRollMemory(
+            settings.organizational_memory_path, settings.organizational_memory_enabled
+        )
 
     async def generate(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
         if not request.validation.passed:
@@ -74,24 +81,107 @@ class ReqnRollStepDefinitionAgent:
             )
 
         schema = json.dumps(StepDefinitionArtifact.model_json_schema(), separators=(",", ":"))
-        source = request.suite.model_copy(update={"test_cases": automation_cases}).model_dump_json()
-        prompt = f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}"
-        runner = CopilotAgentRunner(self.settings, self.client_factory)
+        suite = request.suite.model_copy(update={"test_cases": automation_cases})
+        source = suite.model_dump_json()
+        instructions = step_definition_agent_instructions(self.settings.agent_profile)
+        scope, scenarios = self.memory.identity(suite, self.settings.agent_profile, instructions)
+        baseline = self._fallback_artifact(request.suite.feature_name, automation_cases)
+        expected_steps = {item.gherkin_step for item in baseline.coverage}
+        knowledge: list[str] = []
+        for exact, stored in self.memory.candidates(scope, scenarios):
+            try:
+                cached = StepDefinitionArtifact.model_validate_json(stored)
+            except ValueError:
+                continue
+            if implementation_findings(cached, expected_steps if exact else None):
+                continue
+            if exact:
+                for item in cached.coverage:
+                    item.status = "reused"
+                cached.notes.append(
+                    "Reused validated C# from organizational memory for matching scenarios."
+                )
+                return cached
+            if len(stored) <= 80000 and sum(map(len, knowledge)) + len(stored) <= 120000:
+                knowledge.append(stored)
+        baseline_findings = implementation_findings(baseline, expected_steps)
+        if not baseline_findings:
+            self.memory.put(scope, scenarios, baseline)
+            return baseline
+        reusable_files = {
+            file.path: file for file in baseline.files if file.path.startswith("Support/")
+        }
+        prompt = (
+            f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}\n\n"
+            "IMPLEMENTATION BASELINE\n"
+            f"{baseline.model_dump_json()}\n\n"
+            "Implement executable C# method bodies and include every referenced helper file. "
+            "Reuse the implemented common API bindings when compatible. Implement domain steps "
+            "using the approved behavior and typed runtime configuration for missing deployment "
+            "values, fixtures and independent oracle expectations. Document required configuration "
+            "in notes; do not classify executable configurable code as blocked solely because "
+            "those runtime values have not been supplied. Do not replace working "
+            "implementations with TODOs, pending steps, empty bodies or invented assertions."
+            " The Support/ files in the baseline are supplied automatically in the final "
+            "download. Reference them directly and OMIT unchanged Support/ files from your "
+            "response to avoid regenerating existing code. Return only binding files and "
+            "new or changed helpers, plus complete coverage and notes."
+            "\n\nREQUIRED COVERAGE KEYS\n"
+            + json.dumps(sorted(expected_steps))
+            + "\nReturn exactly one coverage item for each key above. Copy each gherkin_step "
+            "verbatim, including its Given/When/Then prefix and original <parameter> text. "
+            "Do not replace coverage keys with Examples values. Binding regex patterns must "
+            "match substituted runtime values, while coverage keys retain original source text."
+        )
+        runner = ArtifactGenerationRunner(self.settings, self.client_factory)
+        if knowledge:
+            prompt += (
+                "\n\nVALIDATED C# KNOWLEDGE FOR OVERLAPPING SCENARIOS\n"
+                + "\n".join(knowledge)
+                + "\nReuse compatible existing bindings and helpers for duplicate scenarios. "
+                "Current approved requirements take precedence. Return one coherent complete "
+                "artifact for the current suite, with no duplicate bindings or helper classes. "
+                "Include all required files other than the unchanged baseline Support/ files."
+            )
+
+        def validate(artifact: StepDefinitionArtifact) -> StepDefinitionArtifact:
+            # Keep provider output immutable so repair prompts do not repeat local helpers.
+            artifact = artifact.model_copy(deep=True)
+            returned_paths = {file.path for file in artifact.files}
+            artifact.files.extend(
+                file.model_copy(deep=True)
+                for path, file in reusable_files.items()
+                if path not in returned_paths
+            )
+            findings = implementation_findings(artifact, expected_steps)
+            if findings:
+                missing_inputs = " ".join(artifact.notes)
+                raise ValueError(
+                    " ".join(findings)
+                    + (" Implementation context: " + missing_inputs if missing_inputs else "")
+                )
+            return artifact
+
         try:
-            return await runner.generate_structured(
+            artifact = await runner.generate_structured(
                 STEP_DEFINITION_AGENT,
-                instructions=step_definition_agent_instructions(self.settings.agent_profile),
+                instructions=instructions,
                 prompt=prompt,
+                validate=validate,
             )
+            self.memory.put(scope, scenarios, artifact)
+            return artifact
         except CopilotGenerationError as error:
-            logger.warning(
-                "reqnroll_generation provider=unavailable fallback=deterministic error_type=%s",
-                type(error).__name__,
-            )
-            return self._fallback_artifact(request.suite.feature_name, automation_cases)
+            logger.warning("reqnroll_generation failed error_type=%s", type(error).__name__)
+            raise CopilotGenerationError(
+                "C# implementation generation is unavailable. No incomplete files were returned. "
+                + str(error)
+            ) from error
 
     @staticmethod
-    def _fallback_artifact(feature_name: str, automation_cases: list[Any]) -> StepDefinitionArtifact:
+    def _fallback_artifact(
+        feature_name: str, automation_cases: list[Any]
+    ) -> StepDefinitionArtifact:
         """Create safe ReqnRoll bindings when an AI provider cannot implement the steps."""
         steps: list[tuple[str, str]] = []
         seen: set[tuple[str, str]] = set()
@@ -113,11 +203,29 @@ class ReqnRollStepDefinitionAgent:
 
         bindings: dict[tuple[str, str, tuple[str, ...]], dict[str, Any]] = {}
         for keyword, text in steps:
-            pattern, parameters = _binding_pattern(text)
-            key = (keyword, pattern, tuple(parameter_type for parameter_type, _ in parameters))
+            implementation = common_step(keyword, text)
+            if implementation:
+                pattern, parameters, body, asynchronous = implementation
+            else:
+                pattern, parameters = _binding_pattern(text)
+                body = ""
+                asynchronous = False
+            binding_key = (
+                keyword,
+                pattern,
+                tuple(parameter_type for parameter_type, _ in parameters),
+            )
             binding = bindings.setdefault(
-                key,
-                {"keyword": keyword, "text": text, "pattern": pattern, "parameters": parameters},
+                binding_key,
+                {
+                    "keyword": keyword,
+                    "text": text,
+                    "pattern": pattern,
+                    "parameters": parameters,
+                    "body": body,
+                    "async": asynchronous,
+                    "implemented": implementation is not None,
+                },
             )
             binding.setdefault("steps", []).append(text)
 
@@ -133,48 +241,87 @@ class ReqnRollStepDefinitionAgent:
             used_methods[base_name] = used_methods.get(base_name, 0) + 1
             suffix = used_methods[base_name]
             method_name = base_name if suffix == 1 else f"{base_name}{suffix}"
-            arguments = ", ".join(
-                f"{parameter_type} {name}" for parameter_type, name in parameters
-            )
+            arguments = ", ".join(f"{parameter_type} {name}" for parameter_type, name in parameters)
             escaped_pattern = pattern.replace('"', '""')
-            escaped_step = text.replace('"', '\\"')
-            methods.append(
-                f'    [{keyword}(@"{escaped_pattern}")]\n'
-                f"    public void {method_name}({arguments})\n"
-                "    {\n"
-                f'        throw new NotImplementedException("TODO: Implement step: {escaped_step}");\n'
-                "    }"
-            )
+            return_type = "async Task" if binding["async"] else "void"
+            if binding["implemented"]:
+                methods.append(
+                    f'    [{keyword}(@"{escaped_pattern}")]\n'
+                    f"    public {return_type} {method_name}({arguments})\n"
+                    "    {\n"
+                    f"        {binding['body']}\n"
+                    "    }"
+                )
             for mapped_step in binding["steps"]:
                 coverage.append(
                     StepCoverage(
                         gherkin_step=f"{keyword} {mapped_step}",
-                        status="generated" if mapped_step == text else "reused",
+                        status=(
+                            "blocked"
+                            if not binding["implemented"]
+                            else "generated"
+                            if mapped_step == text
+                            else "reused"
+                        ),
                         binding=method_name,
                     )
                 )
 
         class_name = _method_name("", feature_name) or "GeneratedFeature"
+        has_implementation = any(binding["implemented"] for binding in bindings.values())
+        constructor = (
+            "    private readonly ApiScenario api;\n\n"
+            f"    public {class_name}StepDefinitions(ApiScenario api)\n"
+            "    {\n        this.api = api;\n    }\n\n"
+            if has_implementation
+            else ""
+        )
         content = (
             "using System;\n"
+            "using System.Threading.Tasks;\n"
             "using Reqnroll;\n\n"
             "namespace Generated.StepDefinitions;\n\n"
             "[Binding]\n"
             f"public sealed class {class_name}StepDefinitions\n"
-            "{\n"
-            + "\n\n".join(methods)
-            + "\n}\n"
+            "{\n" + constructor + "\n\n".join(methods) + "\n}\n"
         )
         return StepDefinitionArtifact(
             files=[
-                StepDefinitionFile(
-                    path=f"StepDefinitions/{class_name}StepDefinitions.cs", content=content
-                )
+                *(
+                    [
+                        StepDefinitionFile(
+                            path=f"StepDefinitions/{class_name}StepDefinitions.cs", content=content
+                        )
+                    ]
+                    if has_implementation
+                    else []
+                ),
+                *[
+                    StepDefinitionFile(path=path, content=source)
+                    for path, source in support_files(automation_cases)
+                ],
             ],
             coverage=coverage,
             notes=[
-                "AI implementation was unavailable, so deterministic ReqnRoll bindings were generated.",
-                "Replace each NotImplementedException TODO with project-specific page, API, or service calls.",
+                "Generated deterministic ReqnRoll bindings for the approved suite.",
+                "Common API steps contain implementations. Unimplemented steps are listed "
+                "in coverage for AI implementation; no placeholder methods are emitted.",
+                *(
+                    [
+                        "Target .NET 8+ with Reqnroll and Microsoft.Extensions.Http. "
+                        "Save each artifact at its own path.",
+                        "Set API_BASE_URL; optionally set API_BEARER_TOKEN. "
+                        "For configured submission, set "
+                        "API_REQUEST_METHOD and API_REQUEST_PATH from the approved contract.",
+                        "JSON object/array test_data values are embedded by name "
+                        "as request fixtures. "
+                        "Alternatively set API_FIXTURE_FILE to a JSON object "
+                        "mapping names to payloads. "
+                        "Missing or conflicting fixtures must be supplied before execution.",
+                    ]
+                    if has_implementation
+                    else []
+                ),
             ],
         )
 

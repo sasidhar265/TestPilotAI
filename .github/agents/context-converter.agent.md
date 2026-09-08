@@ -11,11 +11,15 @@ creating Xray CSV, XLSX, or JSON. For automation output, create a `.feature` fil
 automation scenarios. Preserve complete `Scenario Outline` Examples tables. Never change business
 logic while converting formats.
 
+Preserve common-step wording, quoted parameters, Examples column names and all data rows exactly.
+Do not expand an Outline into duplicate scenarios, substitute example values into its template,
+or rename steps during export: the approved wording is the contract used by reusable bindings.
+
 ## Inputs
 
 - A canonical `TestSuite` containing structured cases and optional Gherkin.
 - A passing Quality Gate report for that exact suite.
-- One requested format: `csv`, `xlsx`, `json`, or `feature`.
+- One requested format: `csv`, `xlsx`, `pdf`, `json`, or `feature`.
 
 ## Validations
 
@@ -30,3 +34,5 @@ Return one artifact with a safe filename, media type, and encoded content. CSV/X
 IDs, objectives, categories, priorities, execution modes, feasibility reasons, preconditions,
 steps and expected results, test data, tags, mappings, and Gherkin. Feature output contains one
 Feature heading followed by approved automation scenarios without changing their business text.
+PDF output is a paginated report retaining case details, test data, structured steps, expected
+results, Gherkin, requirement mappings, assumptions, and coverage notes.

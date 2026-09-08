@@ -38,9 +38,11 @@ class SequenceRunner(CopilotAgentRunner):
         super().__init__(Settings())
         self.contents = iter(contents)
         self.prompts: list[str] = []
+        self.instructions: list[str] = []
 
     async def invoke(self, **arguments: object) -> str:
         self.prompts.append(str(arguments["prompt"]))
+        self.instructions.append(str(arguments["instructions"]))
         content = next(self.contents)
         if not content:
             raise CopilotGenerationError(str(arguments["empty_error"]))
@@ -97,6 +99,8 @@ async def test_structured_runner_retries_an_empty_provider_session_once() -> Non
     assert artifact == ExampleArtifact(value="available after retry")
     assert len(runner.prompts) == 2
     assert "RETRY REQUIREMENT" in runner.prompts[1]
+    assert "Agent policy" in runner.instructions[1]
+    assert "Generate a complete test suite" not in runner.instructions[1]
 
 
 def test_copilot_session_lifecycle_has_one_python_owner() -> None:

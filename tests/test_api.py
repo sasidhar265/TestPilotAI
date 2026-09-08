@@ -1,4 +1,6 @@
 import asyncio
+import io
+import zipfile
 
 from fastapi.testclient import TestClient
 
@@ -13,6 +15,49 @@ from app.models import TestSuite as Suite
 from app.observability import request_id_context, ui_log_handler
 
 client = TestClient(app)
+
+
+def test_step_definition_download_preserves_separate_sources() -> None:
+    files = [
+        {"path": "StepDefinitions/Steps.cs", "content": "// bindings"},
+        {"path": "Support/ApiScenario.cs", "content": "// helper"},
+    ]
+    response = client.post("/api/step-definitions/download", json={"files": files})
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/zip"
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        assert archive.namelist() == [file["path"] for file in files]
+        for file in files:
+            assert archive.read(file["path"]).decode() == file["content"]
+
+
+def test_step_definition_download_rejects_unsafe_and_duplicate_paths() -> None:
+    for paths in [["../Steps.cs"], ["/Steps.cs"], ["Steps.cs", "Steps.cs"]]:
+        response = client.post(
+            "/api/step-definitions/download",
+            json={
+                "files": [{"path": path, "content": "// source"} for path in paths],
+            },
+        )
+        assert response.status_code == 422
+
+
+def test_step_definition_download_rejects_old_placeholder_artifacts() -> None:
+    response = client.post(
+        "/api/step-definitions/download",
+        json={
+            "files": [
+                {
+                    "path": "Steps.cs",
+                    "content": "public class Steps { public void Setup() { "
+                    "throw new NotImplementedException(); } }",
+                }
+            ]
+        },
+    )
+    assert response.status_code == 422
+    assert "Regenerate complete C# files" in response.json()["detail"]
+    assert response.headers["content-type"] != "application/zip"
 
 
 def test_frontend_assets_are_served() -> None:
@@ -58,9 +103,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="output-target"' in response.text
     assert '<option value="manual">Manual</option>' in response.text
     assert "Normal steps" not in response.text
-    automation_option = (
-        '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
-    )
+    automation_option = '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
     assert automation_option in response.text
     assert '<option value="both">Both manual and automation</option>' in response.text
     assert 'id="timer" role="timer"' in response.text
@@ -68,7 +111,11 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="generate-step-definitions"' in response.text
     assert 'id="step-definition-files"' in response.text
     assert 'id="download-step-definitions"' in response.text
-    assert "↓ .feature" in response.text
+    assert 'id="view-feature"' in response.text
+    assert 'id="pdf"' in response.text
+    assert 'id="suite-download-cs"' in response.text
+    assert 'id="feature-file-view"' in response.text
+    assert 'id="cs-download-dialog"' in response.text
     assert 'id="stop-generation"' in response.text
     assert 'id="publish-panel"' not in response.text
     assert 'id="business-rules"' in response.text
@@ -98,7 +145,8 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="save-business-rules"' in response.text
     assert "The repository BRD baseline and Quality Gate remain protected" in response.text
     assert 'id="agent-workspace"' in response.text
-    assert 'href="#agent-workspace"' in response.text
+    assert 'id="suite-view-menu"' in response.text
+    assert 'id="suite-download-menu"' in response.text
     assert 'class="panel agent-workspace"' in response.text
     assert 'class="panel agent-workspace hidden"' not in response.text
     assert 'class="secondary lifecycle-action" id="generate-data" disabled' in response.text
@@ -113,9 +161,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260904-profile-menu"' in response.text
+    assert 'src="/static/scripts/index.js?v=20260908-suite-files"' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260904-profile-menu"' in response.text
+    assert 'href="/static/styles/index.css?v=20260908-suite-files"' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -584,3 +632,42 @@ def test_context_converter_endpoint_requires_passing_validation() -> None:
 
     assert response.status_code == 422
     assert "quality-gate-approved" in response.json()["detail"]
+
+
+def test_automation_document_downloads_are_rejected_by_server():
+    source = Suite(
+        feature_name="Automation",
+        test_cases=[
+            Case(
+                id="AUTO-1",
+                title="Status",
+                objective="Verify response status",
+                category=Category.SMOKE,
+                priority="P1",
+                execution_mode=ExecutionMode.AUTOMATION,
+                feasibility_reason="API test",
+                steps=[Step(action="Send request", expected_result="HTTP 200")],
+                gherkin="Scenario: Status\n Then the response status is 200",
+            )
+        ],
+    )
+    payload = {
+        "suite": source.model_dump(mode="json"),
+        "validation": {
+            "passed": True,
+            "score": 100,
+            "acceptance_criteria_total": 0,
+            "acceptance_criteria_covered": 0,
+        },
+    }
+    for format in ["xlsx", "pdf", "csv", "json"]:
+        response = client.post(f"/api/context-converter/{format}", json=payload)
+        assert response.status_code == 422
+        assert ".feature or .cs" in response.json()["detail"]
+    response = client.post("/api/export/csv", json=payload["suite"])
+    assert response.status_code == 422
+    assert ".feature or .cs" in response.json()["detail"]
+    source.test_cases[0].execution_mode = ExecutionMode.MANUAL
+    source.test_cases[0].gherkin = None
+    response = client.post("/api/export/csv", json=source.model_dump(mode="json"))
+    assert response.status_code == 200
