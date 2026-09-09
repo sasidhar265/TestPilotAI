@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-case-hierarchy">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-targeted-review">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-mobile-labels">
 </head>
@@ -250,6 +250,16 @@
           </div>
         </div>
         <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
+        <section class="suite-review" aria-labelledby="suite-review-title">
+          <h3 id="suite-review-title">Review comments</h3>
+          <p id="suite-review-help">Tell the agents what to improve in the manual or automation tests. Mention exact test case IDs or titles to update only those tests; all other tests stay unchanged. Without a specific test, comments apply to the whole suite. Saved comments guide future runs of these requirements.</p>
+          <form id="suite-review-form">
+            <label for="suite-review-comments">What should change?</label>
+            <textarea id="suite-review-comments" rows="4" minlength="3" maxlength="4000" required aria-describedby="suite-review-help suite-review-status" placeholder="For example: TC-003 needs an explicit expected result. Add boundary cases for the loan amount and include the response status in the BDD steps."></textarea>
+            <div class="suite-review-actions"><button class="primary compact" type="submit" id="save-review-regenerate" disabled>Save review &amp; regenerate</button><span>Revised tests need a fresh review and approval.</span></div>
+          </form>
+          <p id="suite-review-status" role="status" aria-live="polite"></p>
+        </section>
         <div class="cases" id="cases"></div>
         <section class="step-definitions hidden" id="feature-file-view" aria-live="polite" aria-labelledby="feature-file-title">
           <div class="step-definitions-head"><div><span class="section-kicker">BDD Gherkin</span><h3 id="feature-file-title">Feature file</h3></div><button class="secondary" id="close-feature-view" type="button">Close preview</button></div>
@@ -345,7 +355,8 @@
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260909-exclusive-header-menus" defer></script>
+  <script src="/static/scripts/index.js?v=20260909-targeted-review" defer></script>
+  <script src="/static/scripts/suite-review.js?v=20260909-targeted-review" defer></script>
   <script src="/static/scripts/suite-files.js?v=20260908-separate-csharp" defer></script>
 </body>
 </html>

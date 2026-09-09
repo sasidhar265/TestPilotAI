@@ -155,6 +155,20 @@ class GenerateRequest(BaseModel):
         return value.strip()
 
 
+class ReviewFeedbackRequest(BaseModel):
+    request: GenerateRequest
+    suite: TestSuite
+    comments: str = Field(min_length=3, max_length=4000)
+
+    @field_validator("comments")
+    @classmethod
+    def meaningful_comments(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError("Enter at least 3 characters of review comments")
+        return value
+
+
 class ExpandRequest(BaseModel):
     request: GenerateRequest
     existing_titles: list[str] = Field(default_factory=list, max_length=100)

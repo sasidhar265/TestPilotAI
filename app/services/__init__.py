@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from dataclasses import dataclass
@@ -36,6 +37,7 @@ class PipelineResult:
     validation: ValidationReport
     document: ExtractedDocument | None = None
     trace: tuple[AgentEvent, ...] = ()
+    source_request: GenerateRequest | None = None
 
 
 class MultiAgentTestPipeline:
@@ -60,6 +62,8 @@ class MultiAgentTestPipeline:
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
         request = self.business_rules.enrich(request)
+        targeted = self.storage.memory.latest_targeted_review(request)
+        request = self.storage.memory.with_reviews(request)
         publish_lifecycle_event(
             "Business Rules Agent",
             "enrich_requirements",
@@ -99,6 +103,47 @@ class MultiAgentTestPipeline:
             "miss",
             "No exact approved suite matched; new governed generation is required.",
         )
+        if targeted is not None:
+            previous, target_ids = targeted
+            generation_request = request.model_copy(
+                update={
+                    "additional_context": request.additional_context + "\n\n"
+                    "TARGETED REVIEW: Return only the following test cases with their exact IDs. "
+                    "Apply review comments only to these cases. Do not add or rename IDs or change "
+                    "execution modes. This scope overrides earlier requests for a complete suite.\n"
+                    + json.dumps(
+                        [
+                            case.model_dump(mode="json")
+                            for case in previous.test_cases
+                            if case.id in target_ids
+                        ]
+                    ),
+                }
+            )
+            revised = self.test_data.generate(
+                await self.generator.generate_revision(generation_request)
+            )
+            replacements = {case.id: case for case in revised.test_cases if case.id in target_ids}
+            if set(replacements) != target_ids or any(
+                sum(case.id == target for case in revised.test_cases) != 1 for target in target_ids
+            ):
+                raise ValueError("Revision did not return each requested test ID exactly once.")
+            if any(
+                replacements[case.id].execution_mode != case.execution_mode
+                for case in previous.test_cases
+                if case.id in target_ids
+            ):
+                raise ValueError("Revision changed the requested test execution mode.")
+            generated = previous.model_copy(
+                update={
+                    "test_cases": [replacements.get(case.id, case) for case in previous.test_cases],
+                    "memory_key": None,
+                    "generation_source": revised.generation_source,
+                }
+            )
+            validation = self.validator.validate(request, generated)
+            suite = self.knowledge.remember(request, generated) if validation.passed else generated
+            return PipelineResult(suite, validation)
         if self.runtime is not None:
             outcome = await self.runtime.run(request)
             return PipelineResult(outcome.suite, outcome.validation, trace=tuple(outcome.trace))
@@ -130,7 +175,7 @@ class MultiAgentTestPipeline:
             }
         )
         result = await self.run(request)
-        return PipelineResult(result.suite, result.validation, document, result.trace)
+        return PipelineResult(result.suite, result.validation, document, result.trace, request)
 
 
 class TestGenerationService:

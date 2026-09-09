@@ -318,7 +318,12 @@ class OrchestratorAgent:
         quality_gate: TestCaseValidatorAgent | None = None,
         knowledge_source: OutputAgent | None = None,
     ) -> None:
+        self.registry = registry
         self.decision_agent = DecisionAgent(registry, quality_gate, knowledge_source)
+
+    async def generate_revision(self, request: GenerateRequest) -> TestSuite:
+        """Keep reviewed IDs stable; the pipeline validates after merging into the full suite."""
+        return await self.registry.get_test_design_agent().generate(request)
 
     def route(self, request: GenerateRequest) -> GenerationTarget:
         """Compatibility boundary; DecisionAgent owns the specialist routing decision."""

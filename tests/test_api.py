@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline, get_test_generation_service
 from app.main import app, business_rules_from_document_text, log_operation_failure
-from app.models import ExecutionMode
+from app.models import ExecutionMode, GenerateRequest
 from app.models import TestCase as Case
 from app.models import TestCategory as Category
 from app.models import TestStep as Step
@@ -526,6 +526,9 @@ def test_document_pipeline_extracts_generates_and_validates(monkeypatch) -> None
             captured_manual_types.append(manual_testing_type)
             request = type("Request", (), {"output_format": output_format})()
             return SimpleNamespace(
+                source_request=GenerateRequest(
+                    description="AC-1: Customer can add an available item to the basket"
+                ),
                 document=ExtractedDocument(
                     filename,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -70,6 +70,7 @@ from app.models import (
     LlmModel,
     ManualTestingType,
     MetricsReport,
+    ReviewFeedbackRequest,
     SuiteRequest,
     TestFormat,
     TestSuite,
@@ -193,12 +194,14 @@ def complete_lifecycle_action(agent: str, action: str, summary: str) -> None:
 
 
 class DocumentGenerationResult(DocumentSource):
+    source_request: GenerateRequest | None = None
     suite: TestSuite
     validation: ValidationReport
     trace: list[AgentEvent] = Field(default_factory=list)
 
 
 class AgentRunResult(BaseModel):
+    source_request: GenerateRequest | None = None
     suite: TestSuite
     validation: ValidationReport
     trace: list[AgentEvent]
@@ -506,6 +509,29 @@ async def generate_metrics(request: MetricsRequest) -> MetricsReport:
     return report
 
 
+@app.post("/api/reviews")
+async def save_review_feedback(
+    review: ReviewFeedbackRequest,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, str]:
+    """Save requirement-scoped corrections before requesting a new generation."""
+    memory = OrganizationalMemory(
+        settings.organizational_memory_path, settings.organizational_memory_enabled
+    )
+    try:
+        request = BusinessRulesAgent().enrich(review.request)
+        review_id = memory.save_review(request, review.suite, review.comments)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    publish_lifecycle_event(
+        "Knowledge Agent",
+        "save_review",
+        "success",
+        "Saved user review comments for future generation of these requirements.",
+    )
+    return {"review_id": review_id, "status": "saved"}
+
+
 @app.post("/api/agent/run", response_model=AgentRunResult)
 async def run_agent(
     request: GenerateRequest,
@@ -524,6 +550,7 @@ async def run_agent(
     try:
         result = await pipeline.run(request)
         return AgentRunResult(
+            source_request=request,
             suite=result.suite,
             validation=result.validation,
             trace=list(getattr(result, "trace", ())),
@@ -593,6 +620,7 @@ async def generate_from_document(
             f"Extracted {len(document.text)} normalized characters for the request envelope.",
         )
         return DocumentGenerationResult(
+            source_request=result.source_request,
             filename=document.filename,
             media_type=document.media_type,
             extracted_characters=len(document.text),

@@ -119,6 +119,21 @@ available from the adjacent profile menu rather than the sidebar.
 
 ## Run locally
 
+Use **Review comments → Save review & regenerate** in the generated suite to request changes
+for manual, automation, or combined tests. Mention case IDs for targeted corrections. The app
+saves the comments before regeneration, preserves the original text or extracted document,
+business rules, testing mode, and selected provider, and sends the feedback through the normal
+specialists and quality gate. Failed or cancelled regeneration retains the previous suite and
+saved comments; successful regeneration clears prior approval and generated file previews.
+
+Feedback is stored in the organizational knowledge database and reused for the same requirements,
+business-rule context, and testing mode, including when the provider changes. This is prompt-time
+knowledge retrieval, not model fine-tuning. The latest ten reviews and a bounded index of previous
+cases guide generation; only validated revised suites enter the reusable suite cache. Knowledge
+storage must be enabled. `POST /api/reviews` saves feedback independently; `POST /api/agent/run`
+then generates with the saved feedback. Both text and document generation responses include
+`source_request` so reviews do not accidentally use subsequently edited input fields.
+
 Saved suites carry a generation-policy version. A duplicate request matching older knowledge
 generates a fresh suite using the current scenario and test-case naming instructions. Only a
 Quality Gate-approved result replaces the saved suite; failed refreshes retain the earlier data.
@@ -508,3 +523,5 @@ Accounts persist in `USER_DATABASE_PATH` (default `.agent-memory/users.db`). Pas
 stored as salted scrypt hashes. Keep this database on persistent storage when deploying.
 The existing API token grants workspace API access but cannot manage users; account management
 requires an authenticated admin browser session. Configure browser login before granting access.
+
+Specific-test reviews: mention exact test IDs (for example, `TC-003`) or full test titles in review comments. Regeneration replaces only those tests and preserves every other test and its position. Unknown test IDs are rejected. Revisions that omit or duplicate a requested ID, or change its execution mode, fail without replacing the displayed suite. Comments without a specific test apply to the whole suite.
