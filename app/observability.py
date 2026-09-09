@@ -12,8 +12,11 @@ from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from http.cookies import SimpleCookie
+from logging.handlers import QueueHandler, QueueListener
+from queue import Full, Queue
 from threading import Lock
 from types import TracebackType
+from typing import cast
 from uuid import uuid4
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -99,17 +102,45 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, separators=(",", ":"))
 
 
+class NonBlockingConsoleHandler(QueueHandler):
+    """Keep a stalled console from blocking request handling or cancellation."""
+
+    def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
+        prepared = cast(logging.LogRecord, super().prepare(record))
+        prepared.request_id_override = getattr(
+            record, "request_id_override", request_id_context.get()
+        )
+        return prepared
+
+    def enqueue(self, record: logging.LogRecord) -> None:
+        try:
+            self.queue.put_nowait(record)
+        except Full:
+            # The bounded in-memory UI log remains available when console output stalls.
+            pass
+
+
+_console_handler: NonBlockingConsoleHandler | None = None
+
+
 def configure_logging(level: str = "INFO", json_logs: bool = True) -> None:
-    handler = logging.StreamHandler()
-    handler.setFormatter(
+    global _console_handler
+    if _console_handler is None:
+        console = logging.StreamHandler()
+        queue: Queue[logging.LogRecord] = Queue(maxsize=1000)
+        _console_handler = NonBlockingConsoleHandler(queue)
+        listener = QueueListener(queue, console)
+        listener.start()
+    # Format on the producer thread to preserve safe exception formatting and context.
+    _console_handler.setFormatter(
         JsonFormatter()
         if json_logs
         else logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
     )
     root = logging.getLogger()
     root.handlers.clear()
-    root.addHandler(handler)
     root.addHandler(ui_log_handler)
+    root.addHandler(_console_handler)
     root.setLevel(level.upper())
 
 

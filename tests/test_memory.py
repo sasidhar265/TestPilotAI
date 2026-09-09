@@ -155,3 +155,83 @@ async def test_pipeline_memory_hit_does_not_start_agent_runtime(tmp_path) -> Non
     assert result.suite.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
     assert result.trace[0].tool == "lookup_memory"
     assert "Copilot was not contacted" in result.trace[0].summary
+
+
+def test_legacy_database_retains_old_suite_until_refreshed(tmp_path) -> None:
+    import sqlite3
+
+    path = tmp_path / "legacy.db"
+    memory = OrganizationalMemory(path)
+    request = GenerateRequest(description="As a user, I want secure sign in.")
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "CREATE TABLE test_suite_memory (memory_key TEXT PRIMARY KEY, suite_json TEXT, "
+            "created_at TEXT, last_accessed_at TEXT, access_count INTEGER DEFAULT 0)"
+        )
+        connection.execute(
+            "INSERT INTO test_suite_memory VALUES (?, ?, 'created', 'accessed', 3)",
+            (memory.key_for(request), suite().model_dump_json()),
+        )
+    assert memory.get(request) is None
+    assert memory.count() == 1
+    with sqlite3.connect(path) as connection:
+        row = connection.execute(
+            "SELECT suite_json, access_count, generation_policy_version FROM test_suite_memory"
+        ).fetchone()
+    assert Suite.model_validate_json(row[0]).test_cases[0].title == "Valid login"
+    assert row[1:] == (3, 0)
+    updated = suite()
+    updated.test_cases[0].title = "Valid credentials open the account dashboard"
+    memory.put(request, updated)
+    recalled = OrganizationalMemory(path).get(request)
+    assert recalled is not None
+    assert recalled.test_cases[0].title == updated.test_cases[0].title
+    assert memory.count() == 1
+
+
+@pytest.mark.asyncio
+async def test_duplicate_refreshes_stale_knowledge_once_after_validation(tmp_path) -> None:
+    import sqlite3
+    from unittest.mock import AsyncMock
+
+    from app.agents import TestStorageAgent
+    from app.agents.test_case_validator import ValidationReport
+    from app.services import MultiAgentTestPipeline
+    from app.services.document_ingestion import InputAgent
+
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    request = GenerateRequest(description="As a user, I want secure sign in.")
+    memory.put(request, suite())
+    with sqlite3.connect(memory.path) as connection:
+        connection.execute("UPDATE test_suite_memory SET generation_policy_version = 0")
+    generated = suite()
+    generated.test_cases[0].title = "Valid credentials open the account dashboard"
+    generator = AsyncMock()
+    generator.generate.return_value = generated
+
+    class Validator:
+        passed = False
+
+        def validate(self, request, result):
+            return ValidationReport(
+                passed=self.passed,
+                score=100 if self.passed else 0,
+                acceptance_criteria_total=0,
+                acceptance_criteria_covered=0,
+            )
+
+    validator = Validator()
+    pipeline = MultiAgentTestPipeline(InputAgent(), generator, validator, TestStorageAgent(memory))
+    rejected = await pipeline.run(request)
+    assert not rejected.validation.passed
+    assert memory.get(request) is None
+    with sqlite3.connect(memory.path) as connection:
+        stored = connection.execute("SELECT suite_json FROM test_suite_memory").fetchone()[0]
+    assert Suite.model_validate_json(stored).test_cases[0].title == "Valid login"
+    validator.passed = True
+    await pipeline.run(request)
+    reused = await pipeline.run(request)
+    assert generator.generate.await_count == 2
+    assert reused.suite.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
+    assert reused.suite.test_cases[0].title == generated.test_cases[0].title
+    assert memory.count() == 1

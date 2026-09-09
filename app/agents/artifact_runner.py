@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import os
 import shutil
 import tempfile
 from collections.abc import Awaitable, Callable
@@ -20,6 +21,7 @@ from app.agents.runner import (
 )
 from app.config import Settings
 from app.generator import _codex_failure_message, _openai_output_text, _strict_json_schema
+from app.subprocess_cleanup import stop_process_tree
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +174,7 @@ class ArtifactGenerationRunner:
                 process = await asyncio.create_subprocess_exec(
                     *command,
                     cwd=directory,
+                    start_new_session=os.name == "posix",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -202,6 +205,5 @@ class ArtifactGenerationRunner:
         except ValueError as error:
             raise CopilotGenerationError("Codex returned invalid C# artifact JSON.") from error
         finally:
-            if process is not None and process.returncode is None:
-                process.kill()
-                await process.wait()
+            if process is not None:
+                await stop_process_tree(process)

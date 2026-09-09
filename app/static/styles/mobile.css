@@ -1,0 +1,42 @@
+/* Shared, labelled controls for touch layouts across workspace pages. */
+.mobile-control-label { display: none; }
+
+@media (max-width: 1080px) {
+  .app-shell, .shell { display: block; }
+  .sidebar { position: relative; top: auto; height: auto; padding: 12px 16px; flex-direction: column; align-items: stretch; gap: 12px; border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
+  .sidebar .brand { justify-content: flex-start; padding: 0; }
+  .sidebar .brand > span:last-child { display: block; }
+  .sidebar .brand-mark { flex-shrink: 0; }
+  .sidebar .primary-nav { display: flex; flex-direction: row; flex-wrap: wrap; margin: 0; gap: 6px; }
+  .sidebar .nav-label, .sidebar .side-status { display: none; }
+  .sidebar .nav-item { width: auto; min-height: 44px; padding: 8px 12px; justify-content: flex-start; gap: 8px; font-size: .82rem; }
+  .sidebar .nav-item > span:last-child { display: inline; }
+  .sidebar .nav-icon { width: 20px; flex-shrink: 0; }
+}
+
+@media (max-width: 820px) {
+  .mobile-control-label { display: inline; font-size: .8rem; font-weight: 650; }
+  .topbar { flex-direction: column; align-items: stretch; gap: 16px; }
+  .top-actions { flex-wrap: wrap; }
+  .notification-bell, #profile-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: auto; min-height: 44px; height: auto; padding: 8px 12px; border-radius: 10px; }
+  #profile-toggle::after { content: "Profile"; font-size: .8rem; font-weight: 650; }
+  .notification-panel, .profile-panel { position: fixed; top: 16px; right: 16px; left: 16px; width: auto; max-height: calc(100dvh - 32px); overflow-y: auto; }
+  .source-trigger, .rule-attachment-trigger { position: relative; right: auto; bottom: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; min-height: 44px; height: auto; margin: 8px 0; padding: 8px 12px; border-radius: 9px; }
+  .source-trigger[aria-expanded="true"] { transform: none; }
+  .character-count { position: static; display: block; padding-bottom: 8px; text-align: right; }
+  .requirement-source-menu { position: static; width: 100%; margin: 8px 0; }
+  .theme-gear { width: auto; min-height: 44px; height: auto; padding: 10px 14px; display: flex; gap: 8px; border-radius: 12px; }
+  .theme-gear:hover, .theme-gear[aria-expanded="true"] { transform: none; }
+  .workspace { padding-bottom: 90px; }
+  .case-expand-label > span { display: inline; }
+  .manual-case-accordion > summary { flex-wrap: wrap; gap: 10px; }
+  .tools .suite-menu > summary, .tools .suite-jira > summary, .suite-menu-options button, .quiet-button, .secondary { min-height: 44px; }
+  .suite-menu-options button { font-size: .85rem; }
+  .suite-menu-options button span { font-size: .8rem; }
+}
+
+@media (max-width: 580px) {
+  .workflow-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workflow-step { justify-content: flex-start; }
+  .workflow-step strong { font-size: .8rem; }
+}

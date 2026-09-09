@@ -67,6 +67,75 @@ class ReqnRollStepDefinitionAgent:
             settings.organizational_memory_path, settings.organizational_memory_enabled
         )
 
+    def generate_bindings(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
+        """Generate only binding declarations; never invoke implementation generation or memory."""
+        if not request.validation.passed:
+            raise ValueError("Step definitions require a Quality Gate-approved suite.")
+        methods: dict[tuple[str, str, tuple[tuple[str, str], ...]], str] = {}
+        sources: list[str] = []
+        coverage: list[StepCoverage] = []
+        seen: set[tuple[str, str]] = set()
+        for case in request.suite.test_cases:
+            if case.execution_mode != ExecutionMode.AUTOMATION:
+                continue
+            previous = "Given"
+            for line in (case.gherkin or "").splitlines():
+                match = _GHERKIN_STEP.match(line)
+                if not match:
+                    continue
+                keyword, text = match.groups()
+                keyword = previous if keyword in {"And", "But"} else keyword
+                previous = keyword
+                if (keyword, text) in seen:
+                    continue
+                seen.add((keyword, text))
+                pattern, parameters = _binding_pattern(text)
+                # Positional names avoid C# reserved words in outline parameter names.
+                parameters = [
+                    (kind, f"arg{index}") for index, (kind, _) in enumerate(parameters, 1)
+                ]
+                key = (keyword, pattern, tuple(parameters))
+                if key not in methods:
+                    name = f"{_method_name(keyword, text)}{len(methods) + 1}"
+                    methods[key] = name
+                    arguments = ", ".join(f"{kind} {name}" for kind, name in parameters)
+                    escaped = pattern.replace('"', '""')
+                    sources.append(
+                        f'    [{keyword}(@"{escaped}")]\n'
+                        f"    public void {name}({arguments})\n"
+                        "    {\n"
+                        "        throw new PendingStepException();\n"
+                        "    }"
+                    )
+                coverage.append(
+                    StepCoverage(
+                        gherkin_step=f"{keyword} {text}", status="blocked", binding=methods[key]
+                    )
+                )
+        if not sources:
+            raise ValueError(
+                "The suite has no automation Gherkin to convert into step definitions."
+            )
+        name = _method_name("", request.suite.feature_name) + "StepDefinitions"
+        return StepDefinitionArtifact(
+            files=[
+                StepDefinitionFile(
+                    path=f"StepDefinitions/{name}.cs",
+                    content="using Reqnroll;\n\nnamespace Generated.StepDefinitions;\n\n"
+                    f"[Binding]\npublic sealed class {name}\n{{\n" + "\n\n".join(sources) + "\n}\n",
+                )
+            ],
+            coverage=coverage,
+            notes=[
+                "Step definitions only: method stubs require implementation "
+                "in your test framework.",
+                "Steps remain pending until implemented; blocked coverage does not indicate "
+                "a generation failure.",
+                "No API clients, fixtures, helpers or full implementation pack were generated. "
+                "Choose Full C# pack to generate implementations separately.",
+            ],
+        )
+
     async def generate(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
         if not request.validation.passed:
             raise ValueError("Step definitions require a Quality Gate-approved suite.")

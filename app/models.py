@@ -99,10 +99,17 @@ class TestCase(BaseModel):
     scenario_group: str = Field(
         default="General scenario",
         min_length=1,
-        description="Business scenario that owns this test case and its shared coverage",
+        description=(
+            "Business journey or capability shared by related cases, such as Account sign-in; "
+            "not the individual test condition or expected outcome"
+        ),
     )
-    title: str
-    objective: str
+    title: str = Field(
+        description="Specific action, distinguishing condition and observable expected outcome"
+    )
+    objective: str = Field(
+        description="What this individual case verifies and which requirement or risk it covers"
+    )
     category: TestCategory
     priority: str = Field(description="One of P0, P1, P2, P3")
     execution_mode: ExecutionMode

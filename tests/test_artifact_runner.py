@@ -76,6 +76,7 @@ async def test_codex_uses_read_only_structured_artifact_output(monkeypatch) -> N
     monkeypatch.setattr("app.agents.artifact_runner.shutil.which", lambda _: "/test/codex")
     process = AsyncMock()
     process.returncode = 0
+    monkeypatch.setattr("app.agents.artifact_runner.stop_process_tree", AsyncMock())
     process.communicate.return_value = (artifact().model_dump_json().encode(), b"")
     spawn = AsyncMock(return_value=process)
     monkeypatch.setattr("app.agents.artifact_runner.asyncio.create_subprocess_exec", spawn)
@@ -96,6 +97,8 @@ async def test_codex_timeout_terminates_process(monkeypatch) -> None:
     from unittest.mock import Mock
 
     process.kill = Mock()
+    cleanup = AsyncMock()
+    monkeypatch.setattr("app.agents.artifact_runner.stop_process_tree", cleanup)
     monkeypatch.setattr(
         "app.agents.artifact_runner.asyncio.create_subprocess_exec", AsyncMock(return_value=process)
     )
@@ -108,8 +111,7 @@ async def test_codex_timeout_terminates_process(monkeypatch) -> None:
             settings(codex_timeout_seconds=30, codex_artifact_timeout_seconds=900)
         )._codex(STEP_DEFINITION_AGENT, "C#", "suite")
     assert wait_for.call_args.kwargs["timeout"] == 900
-    process.kill.assert_called_once()
-    process.wait.assert_awaited_once()
+    cleanup.assert_awaited_once_with(process)
 
 
 def require_implemented(value):

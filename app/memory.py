@@ -12,6 +12,9 @@ from app.models import GenerateRequest, GenerationSource, TestSuite
 class OrganizationalMemory:
     """Repository-local, exact-match memory for validated test suites."""
 
+    # Old suites must be regenerated with explicit scenario/case naming before reuse.
+    GENERATION_POLICY_VERSION = 1
+
     def __init__(self, path: Path, enabled: bool = True) -> None:
         self.path = path
         self.enabled = enabled
@@ -25,7 +28,7 @@ class OrganizationalMemory:
             "generation_target": request.generation_target.value,
             "manual_testing_type": request.manual_testing_type.value,
             "llm_model": request.llm_model.value,
-            # Bump when generation policy changes would make approved cached suites stale.
+            # Request identity version; naming-policy refreshes retain this key for replacement.
             "schema_version": 8,
         }
         value = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
@@ -37,9 +40,11 @@ class OrganizationalMemory:
         key = self.key_for(request)
         with closing(self._connect()) as connection:
             row = connection.execute(
-                "SELECT suite_json FROM test_suite_memory WHERE memory_key = ?", (key,)
+                "SELECT suite_json, generation_policy_version FROM test_suite_memory "
+                "WHERE memory_key = ?",
+                (key,),
             ).fetchone()
-            if row is None:
+            if row is None or row[1] != self.GENERATION_POLICY_VERSION:
                 return None
             connection.execute(
                 "UPDATE test_suite_memory SET last_accessed_at = ?, "
@@ -72,13 +77,15 @@ class OrganizationalMemory:
         with closing(self._connect()) as connection:
             connection.execute(
                 """INSERT INTO test_suite_memory
-                   (memory_key, suite_json, created_at, last_accessed_at, access_count)
-                   VALUES (?, ?, ?, ?, 0)
+                   (memory_key, suite_json, created_at, last_accessed_at, access_count,
+                    generation_policy_version)
+                   VALUES (?, ?, ?, ?, 0, ?)
                    ON CONFLICT(memory_key) DO UPDATE SET
                      suite_json = excluded.suite_json,
                      created_at = excluded.created_at,
-                     last_accessed_at = excluded.last_accessed_at""",
-                (key, stored.model_dump_json(), now, now),
+                     last_accessed_at = excluded.last_accessed_at,
+                     generation_policy_version = excluded.generation_policy_version""",
+                (key, stored.model_dump_json(), now, now, self.GENERATION_POLICY_VERSION),
             )
             connection.commit()
         return stored
@@ -101,9 +108,20 @@ class OrganizationalMemory:
                  suite_json TEXT NOT NULL,
                  created_at TEXT NOT NULL,
                  last_accessed_at TEXT NOT NULL,
-                 access_count INTEGER NOT NULL DEFAULT 0
+                 access_count INTEGER NOT NULL DEFAULT 0,
+                 generation_policy_version INTEGER NOT NULL DEFAULT 0
                )"""
         )
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")}
+        if "generation_policy_version" not in columns:
+            connection.execute("BEGIN IMMEDIATE")
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")}
+            if "generation_policy_version" not in columns:
+                connection.execute(
+                    "ALTER TABLE test_suite_memory ADD COLUMN "
+                    "generation_policy_version INTEGER NOT NULL DEFAULT 0"
+                )
+            connection.commit()
         return connection
 
     @staticmethod

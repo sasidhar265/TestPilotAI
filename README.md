@@ -45,9 +45,13 @@ BDD output is ready for SpecFlow/ReqnRoll feature files. Shared setup is promote
 `Background`, while repeated quoted and numeric values are parameterized for reusable C# bindings.
 Data-driven flows use `Scenario Outline` with parameter placeholders and `Examples` tables where
 appropriate. The results screen can copy a scenario or feature and generate, review, copy, and
-download ReqnRoll C# step definitions.
+download ReqnRoll C# step definitions. Choose **Step definitions (.cs)** for a single file
+containing reusable binding declarations and pending method stubs to implement in your framework.
+This option makes no AI calls and does not retrieve or generate implementation packs.
+Choose **Full C# pack** separately to generate implementations and supporting files, with a ZIP
+download. Both options require a validated suite containing automation Gherkin.
 
-The step-definition generator includes executable common API bindings for named JSON request
+The full C# pack generator includes executable common API bindings for named JSON request
 fixtures, explicit HTTP method/path submission, status checks, JSON field checks, and exact decimal
 comparisons. It supplies a scenario context and an `IHttpClientFactory`-backed client alongside the
 bindings. Download the ZIP and retain its separate `.cs` files in a .NET 8+ ReqnRoll project with
@@ -114,6 +118,17 @@ tells the user when an approved exact-match suite came from the knowledge base. 
 available from the adjacent profile menu rather than the sidebar.
 
 ## Run locally
+
+Saved suites carry a generation-policy version. A duplicate request matching older knowledge
+generates a fresh suite using the current scenario and test-case naming instructions. Only a
+Quality Gate-approved result replaces the saved suite; failed refreshes retain the earlier data.
+Subsequent duplicates reuse the refreshed version without another generation call.
+
+The LLM picker loads available routes from `/api/llm/models` instead of a fixed model list.
+Unconfigured providers, failed access checks, disabled Copilot models and exhausted reported
+Copilot quota are excluded. **Refresh models** checks access again; generation is disabled when
+no route passes. OpenAI model permissions and Codex sign-in are checked without generation calls;
+these checks do not establish remaining OpenAI billing credit or Codex usage allowance.
 
 1. Install Python 3.11 or newer.
 2. Create and activate a virtual environment:

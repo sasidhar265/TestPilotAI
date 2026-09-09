@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from app.config import Settings
+from app.models import LlmModel
 
 
 async def inspect_model_access(settings: Settings, requested_model: str) -> dict[str, Any]:
@@ -48,6 +49,34 @@ async def inspect_model_access(settings: Settings, requested_model: str) -> dict
             "check-failed",
             f"{name} access check failed: {failure_reason(settings, error)}",
         )
+
+
+async def available_model_options(settings: Settings) -> list[dict[str, Any]]:
+    """Only expose allowlisted routes whose account access checks pass."""
+
+    async def copilot_options() -> list[dict[str, Any]]:
+        try:
+            return await asyncio.wait_for(_inspect_copilot_inventory(settings), timeout=30)
+        except Exception:
+            # A failed inventory check must never expose unverified model choices.
+            return []
+
+    copilot, openai, codex = await asyncio.gather(
+        copilot_options(),
+        inspect_model_access(settings, "openai"),
+        inspect_model_access(settings, "codex"),
+    )
+    ready = [result for result in [openai, codex, *copilot] if result["can_use"]]
+    if not ready:
+        return []
+    automatic = _access_result(
+        "auto-fallback",
+        "Automatic · available providers",
+        True,
+        "available",
+        "Uses the available provider routes with automatic fallback.",
+    )
+    return [automatic, *ready]
 
 
 def failure_reason(settings: Settings, error: Exception) -> str:
@@ -148,6 +177,11 @@ async def _inspect_codex(settings: Settings) -> dict[str, Any]:
 
 
 async def _inspect_copilot(settings: Settings, requested_model: str) -> dict[str, Any]:
+    inventory = await _inspect_copilot_inventory(settings)
+    return next(item for item in inventory if item["model"] == requested_model)
+
+
+async def _inspect_copilot_inventory(settings: Settings) -> list[dict[str, Any]]:
     from copilot import CopilotClient
     from copilot.generated.rpc import AccountGetQuotaRequest
 
@@ -165,6 +199,14 @@ async def _inspect_copilot(settings: Settings, requested_model: str) -> dict[str
             AccountGetQuotaRequest(git_hub_token=settings.copilot_github_token or None)
         )
 
+    return [
+        _copilot_access_result(models, quota_result, model.value)
+        for model in LlmModel
+        if model not in {LlmModel.AUTO_FALLBACK, LlmModel.OPENAI, LlmModel.CODEX}
+    ]
+
+
+def _copilot_access_result(models: Any, quota_result: Any, requested_model: str) -> dict[str, Any]:
     selectable = [
         model
         for model in models

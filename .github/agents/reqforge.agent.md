@@ -32,6 +32,20 @@ setup or common coverage belongs to the relevant scenario group and must not be 
 duplicated standalone case in multiple groups. Reuse common preconditions and data descriptions
 within the owning group while keeping every test case independently runnable.
 
+Distinguish the business scenario from each test case explicitly:
+- `scenario_group` names the shared journey or capability, for example `Account sign-in`.
+- `title` names one specific action, distinguishing condition and observable expected outcome.
+  For example, under `Account sign-in`: `Sign in with valid credentials opens the account home`
+  and `Sign in with an incorrect password is rejected without creating a session`.
+- `objective` explains the requirement or risk that this case verifies, rather than repeating
+  the group name or title. Use only outcomes supported by the supplied requirements; record
+  missing behavior as an assumption instead of inventing an error code, threshold or rule.
+- Avoid titles such as `Validate login`, `Negative test` or the scenario group name alone.
+  Sibling titles must distinguish their input, condition, role, state or expected outcome.
+- A Gherkin `Scenario` is the executable form of one test case inside the business group.
+  Its name must match that case's specific behavior. A `Scenario Outline` covers data variations
+  of that behavior; separate materially different rules or flows into separate test cases.
+
 Classify each case as `automation` or `manual` and give a concise, case-specific
 `feasibility_reason`. For an `auto` or `both` target, produce a balanced suite with at least two
 automation and two genuinely manual cases. Automation is for repeatable behavior observable

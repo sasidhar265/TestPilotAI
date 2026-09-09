@@ -304,3 +304,56 @@ async def test_disabled_csharp_memory_does_not_write(tmp_path):
         result = await ReqnRollStepDefinitionAgent(settings).generate(request)
         assert all(item.status == "generated" for item in result.coverage)
     assert not settings.organizational_memory_path.exists()
+
+
+def test_bindings_only_never_generates_or_reads_full_pack(tmp_path, monkeypatch):
+    from unittest.mock import Mock
+
+    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    agent = ReqnRollStepDefinitionAgent(settings)
+    agent.memory.candidates = Mock(side_effect=AssertionError("Must not read full-pack memory"))
+    monkeypatch.setattr(
+        agent, "generate", Mock(side_effect=AssertionError("Must not generate pack"))
+    )
+    source = _suite(
+        gherkin=(
+            'Scenario Outline: Quote\n Given a "retail" client\n And status <class>\n'
+            " When it sends 2 requests\n Then a quote is returned\n"
+            "Examples:\n | class |\n | valid |"
+        )
+    )
+    source.test_cases.append(
+        source.test_cases[0].model_copy(
+            update={
+                "id": "TC-2",
+                "gherkin": 'Scenario: Other\n Given a "business" client',
+            }
+        )
+    )
+    artifact = agent.generate_bindings(
+        StepDefinitionRequest(suite=source, validation=_validation(True))
+    )
+    assert len(artifact.files) == 1
+    content = artifact.files[0].content
+    assert content.count("[Given(") == 2
+    assert "string arg1" in content
+    assert "int arg1" in content
+    assert content.count("PendingStepException") == 4
+    assert "ApiScenario" not in content
+    assert len(artifact.coverage) == 5
+    assert artifact.coverage[0].binding == artifact.coverage[-1].binding
+    assert all(item.status == "blocked" for item in artifact.coverage)
+    assert not settings.organizational_memory_path.exists()
+
+
+@pytest.mark.parametrize("manual,passed", [(True, True), (False, False)])
+def test_bindings_only_requires_approved_automation(manual, passed):
+    agent = ReqnRollStepDefinitionAgent(Settings(_env_file=None))
+    request = StepDefinitionRequest(
+        suite=_suite(
+            mode="manual" if manual else "automation", gherkin="Scenario: Status\n Then OK"
+        ),
+        validation=_validation(passed),
+    )
+    with pytest.raises(ValueError):
+        agent.generate_bindings(request)

@@ -1,3 +1,4 @@
+import asyncio
 import io
 import logging
 import os
@@ -89,7 +90,11 @@ from app.services.document_ingestion import (
     DocumentIngestionService,
     InputAgent,
 )
-from app.services.model_access import failure_reason, inspect_model_access
+from app.services.model_access import (
+    available_model_options,
+    failure_reason,
+    inspect_model_access,
+)
 from app.user_routes import router as user_router
 from app.users import authenticate
 
@@ -330,6 +335,12 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
             [settings.jira_base_url, settings.jira_email, settings.jira_api_token]
         ),
     }
+
+
+@app.get("/api/llm/models")
+async def llm_models(settings: Settings = Depends(get_settings)) -> dict[str, object]:
+    """List only configured, permitted model routes with available reported quota."""
+    return {"models": await available_model_options(settings)}
 
 
 @app.get("/api/llm/models/{model_id}/access")
@@ -712,12 +723,26 @@ async def accept_selected_tests(
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
+@app.post("/api/step-definitions/bindings", response_model=StepDefinitionArtifact)
+async def generate_binding_declarations(
+    request: StepDefinitionRequest,
+    agent: ReqnRollStepDefinitionAgent = Depends(get_reqnroll_step_definition_agent),
+) -> StepDefinitionArtifact:
+    """Return binding stubs only; full implementations require the separate pack action."""
+    try:
+        return agent.generate_bindings(request)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
 @app.post("/api/step-definitions/reqnroll", response_model=StepDefinitionArtifact)
 async def generate_reqnroll_step_definitions(
     request: StepDefinitionRequest,
     agent: ReqnRollStepDefinitionAgent = Depends(get_reqnroll_step_definition_agent),
 ) -> StepDefinitionArtifact:
     """Generate reviewable C# bindings from Quality Gate-approved automation scenarios."""
+    request_id = request_id_context.get()
+    generation_cancellations.register(request_id, "reqnroll_full_pack_generation")
     try:
         artifact = await agent.generate(request)
         complete_lifecycle_action(
@@ -729,11 +754,16 @@ async def generate_reqnroll_step_definitions(
             ),
         )
         return artifact
+    except asyncio.CancelledError as error:
+        raise HTTPException(status_code=499, detail="Full C# pack generation cancelled.") from error
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except CopilotGenerationError as error:
         log_operation_failure("generate_reqnroll_step_definitions", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    finally:
+        generation_cancellations.unregister(request_id)
+        lifecycle_events.complete(request_id)
 
 
 @app.post("/api/step-definitions/download")

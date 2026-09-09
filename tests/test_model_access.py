@@ -61,3 +61,53 @@ async def test_network_failure_is_reported(monkeypatch):
     result = await model_access.inspect_model_access(Settings(_env_file=None), "openai")
     assert not result["can_use"]
     assert "Connection refused" in result["reason"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("codex_ready", [True, False])
+async def test_available_options_exclude_failed_providers(monkeypatch, codex_ready):
+    async def copilot(*args):
+        raise RuntimeError("Not signed in")
+
+    async def inspect(settings, model):
+        return model_access._access_result(
+            model, model, model == "codex" and codex_ready, "checked", "Account check"
+        )
+
+    monkeypatch.setattr(model_access, "_inspect_copilot_inventory", copilot)
+    monkeypatch.setattr(model_access, "inspect_model_access", inspect)
+    options = await model_access.available_model_options(Settings(_env_file=None))
+    assert [item["model"] for item in options] == (
+        ["auto-fallback", "codex"] if codex_ready else []
+    )
+
+
+@pytest.mark.parametrize(
+    "remaining,enabled,expected", [(10, True, True), (0, True, False), (10, False, False)]
+)
+def test_copilot_options_respect_policy_and_quota(remaining, enabled, expected):
+    from types import SimpleNamespace
+
+    model = SimpleNamespace(
+        id="claude-haiku-4.5",
+        name="Claude Haiku 4.5",
+        billing=None,
+        policy=SimpleNamespace(state="enabled" if enabled else "disabled"),
+    )
+    quota = SimpleNamespace(
+        is_unlimited_entitlement=False,
+        remaining_percentage=remaining,
+        usage_allowed_with_exhausted_quota=False,
+        overage_allowed_with_exhausted_quota=False,
+        entitlement_requests=100,
+        used_requests=100 - remaining,
+        reset_date="2026-10-01",
+    )
+    result = model_access._copilot_access_result(
+        [model], SimpleNamespace(quota_snapshots={"premium_interactions": quota}), model.id
+    )
+    assert result["can_use"] is expected
+    missing = model_access._copilot_access_result(
+        [model], SimpleNamespace(quota_snapshots={}), "gpt-5.4"
+    )
+    assert not missing["can_use"]

@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260908-suite-files">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-case-hierarchy">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
+  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-mobile-labels">
 </head>
 <body>
   <div class="app-shell">
@@ -41,6 +42,7 @@
           <div class="notification-center">
             <button class="notification-bell" id="notification-bell" type="button" aria-label="Open notifications" aria-expanded="false" aria-controls="notification-panel">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+              <span class="mobile-control-label">Notifications</span>
               <span class="notification-count hidden" id="notification-count">0</span>
             </button>
             <section class="notification-panel hidden" id="notification-panel" aria-labelledby="notification-title">
@@ -82,7 +84,7 @@
             <div class="textarea-wrap">
               <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate positive, negative and boundary coverage for this feature…"></textarea>
               <span class="file-preview attached-requirement hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached requirement document">×</button></span>
-              <button class="source-trigger" id="add-requirement-source" type="button" aria-label="Add requirement from document or Jira" aria-expanded="false" aria-controls="requirement-source-menu">+</button>
+              <button class="source-trigger" id="add-requirement-source" type="button" aria-label="Add requirement from document or Jira" aria-expanded="false" aria-controls="requirement-source-menu"><span aria-hidden="true">+</span><span class="mobile-control-label">Add requirement</span></button>
               <span class="character-count" id="character-count">0 characters</span>
               <span class="inline-source-state" id="source-state"></span>
               <div class="requirement-source-menu hidden" id="requirement-source-menu" role="dialog" aria-label="Add requirement source">
@@ -115,6 +117,7 @@
                   <label class="rule-attachment-trigger" for="business-rules-file" aria-label="Attach business rules document" title="Attach business rules document">
                     <input class="upload-input" id="business-rules-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload a business rules document">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 17 7.7-7.7a3 3 0 0 0-4.2-4.2L4.8 12.8a5 5 0 0 0 7.1 7.1l7.4-7.4"/></svg>
+                    <span class="mobile-control-label">Attach rules</span>
                   </label>
                 </div>
                 <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. The repository BRD baseline and Quality Gate remain protected.</p>
@@ -144,17 +147,11 @@
                 </fieldset>
                 <fieldset class="generation-select-control">
                   <legend>LLM</legend>
-                  <select id="llm-model" name="llm_model" aria-label="LLM model">
-                    <option value="auto-fallback" selected>Automatic · Copilot → OpenAI → Codex</option>
-                    <option value="openai">OpenAI API · GPT-5.4</option>
-                    <option value="codex">Codex · signed-in account</option>
-                    <option value="organization-default">Organization default</option>
-                    <option value="auto">Copilot Auto</option>
-                    <option value="claude-haiku-4.5">Claude Haiku 4.5 · fast</option>
-                    <option value="gpt-5.3-codex">GPT-5.3-Codex · automation</option>
-                    <option value="gpt-5.4">GPT-5.4 · complex coverage</option>
+                  <select id="llm-model" name="llm_model" aria-label="LLM model" disabled data-access="checking" aria-describedby="llm-model-status">
+                    <option value="">Checking available models…</option>
                   </select>
-                  <small class="option-help">Automatic mode falls back when Copilot quota or access fails.</small>
+                  <small class="option-help" id="llm-model-status" role="status">Checking connected accounts and model permissions.</small>
+                  <button class="quiet-button" id="refresh-llm-models" type="button">Refresh models</button>
                 </fieldset>
               </div>
               <div class="generation-actions">
@@ -213,6 +210,7 @@
           <div><span class="section-kicker">Generated suite</span><h2 id="feature"></h2><div class="summary" id="summary"></div></div>
           <span class="review-badge" id="review-state">Review required</span>
         </div>
+        <p class="case-hierarchy-help">Business scenarios group a journey or capability. Each test case checks one specific condition and expected outcome. Automation cases include their BDD steps.</p>
         <div class="result-actions">
           <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
           <div class="suite-output-actions">
@@ -222,6 +220,7 @@
                 <div class="suite-menu-options" aria-label="View generated files">
                   <button id="view-feature" type="button">.feature <span>Feature file</span></button>
                   <button id="generate-step-definitions" type="button">.cs <span>Step definitions</span></button>
+                  <button id="view-csharp-pack" type="button" title="View the full C# pack, including bindings and implementations">.cs <span>Full C# pack</span></button>
                 </div>
               </details>
               <details class="suite-menu" id="suite-download-menu">
@@ -233,6 +232,7 @@
                   <button id="json" type="button">.json <span>JSON data</span></button>
                   <button id="download-feature" type="button">.feature <span>Feature file</span></button>
                   <button id="suite-download-cs" type="button">.cs <span>Step definition files</span></button>
+                  <button id="download-csharp-pack" type="button">.zip <span>Full C# pack</span></button>
                 </div>
               </details>
               <details class="suite-jira">
@@ -291,7 +291,7 @@
     <h3 id="cs-generation-title">Generating C# step definitions</h3>
     <p id="cs-generation-message" role="status">Creating reusable step definitions for your BDD scenarios. Your files will open when ready.</p>
     <div class="generation-progress" role="progressbar" aria-label="C# step definition generation in progress"><span class="generation-progress-bar"></span></div>
-    <div class="generation-dialog-footer"><span id="cs-generation-time">00:00 elapsed</span><button class="secondary" id="hide-cs-generation" type="button">Run in background</button></div>
+    <div class="generation-dialog-footer"><span id="cs-generation-time">00:00 elapsed</span><div class="cs-generation-actions"><button class="secondary" id="cancel-cs-generation" type="button">Cancel generation</button><button class="secondary" id="hide-cs-generation" type="button">Run in background</button></div></div>
   </dialog>
   <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
     <div class="generation-dialog">
@@ -341,11 +341,11 @@
         <button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button>
       </div>
     </div>
-    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span></button>
+    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button>
   </div>
   <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260908-suite-files" defer></script>
-  <script src="/static/scripts/suite-files.js?v=20260908-disabled-formats" defer></script>
+  <script src="/static/scripts/index.js?v=20260909-exclusive-header-menus" defer></script>
+  <script src="/static/scripts/suite-files.js?v=20260908-separate-csharp" defer></script>
 </body>
 </html>

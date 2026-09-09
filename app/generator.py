@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import re
 import shutil
 import tempfile
@@ -29,6 +30,7 @@ from app.models import (
     TestFormat,
     TestSuite,
 )
+from app.subprocess_cleanup import stop_process_tree
 
 logger = logging.getLogger(__name__)
 
@@ -291,6 +293,7 @@ class CodexGenerator:
             + "\n\n"
             + user_prompt(request, phase, existing_titles)
         )
+        process = None
         try:
             with tempfile.TemporaryDirectory(prefix="reqforge-codex-") as directory:
                 temp_path = Path(directory)
@@ -318,6 +321,7 @@ class CodexGenerator:
                 process = await asyncio.create_subprocess_exec(
                     *command,
                     cwd=directory,
+                    start_new_session=os.name == "posix",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -337,14 +341,14 @@ class CodexGenerator:
                     _normalize_suite_payload(json.loads(json_object(content)))
                 )
         except TimeoutError as error:
-            if "process" in locals() and process.returncode is None:
-                process.kill()
-                await process.wait()
             raise CopilotGenerationError("Codex CLI generation timed out. Try again.") from error
         except (OSError, json.JSONDecodeError, ValueError) as error:
             raise CopilotGenerationError(
                 "Codex CLI did not return a valid test suite. Check the server logs."
             ) from error
+        finally:
+            if process is not None:
+                await stop_process_tree(process)
         return finalize_suite(
             suite.model_copy(update={"generation_source": GenerationSource.CODEX}), request
         )

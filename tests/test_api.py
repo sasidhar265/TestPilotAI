@@ -135,10 +135,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="generation-background-events"' in response.text
     assert 'id="generation-agent"' not in response.text
     assert 'id="llm-model"' in response.text
-    assert 'value="auto-fallback" selected' in response.text
-    assert 'value="openai"' in response.text
-    assert 'value="codex"' in response.text
-    assert 'value="gpt-5.3-codex"' in response.text
+    assert 'data-access="checking"' in response.text
+    assert 'id="refresh-llm-models"' in response.text
+    assert 'value="gpt-5.3-codex"' not in response.text
     assert 'id="model-access-overlay"' in response.text
     assert 'id="close-model-access"' in response.text
     assert 'aria-label="Close model access details"' in response.text
@@ -161,9 +160,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
-    assert 'src="/static/scripts/index.js?v=20260908-suite-files"' in response.text
+    assert 'src="/static/scripts/index.js?v=' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
-    assert 'href="/static/styles/index.css?v=20260908-suite-files"' in response.text
+    assert 'href="/static/styles/index.css?v=' in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="theme-menu"' in response.text
     assert 'data-theme-option="light"' in response.text
@@ -671,3 +670,130 @@ def test_automation_document_downloads_are_rejected_by_server():
     source.test_cases[0].gherkin = None
     response = client.post("/api/export/csv", json=source.model_dump(mode="json"))
     assert response.status_code == 200
+
+
+def test_bindings_endpoint_returns_only_one_cs_file(monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgent
+
+    full_pack = AsyncMock(side_effect=AssertionError("Full pack must be an explicit request"))
+    monkeypatch.setattr(ReqnRollStepDefinitionAgent, "generate", full_pack)
+    payload = {
+        "suite": {
+            "feature_name": "Quotes",
+            "test_cases": [
+                {
+                    "id": "AUTO-1",
+                    "title": "Quote",
+                    "objective": "Verify quote response",
+                    "category": "smoke",
+                    "priority": "P1",
+                    "execution_mode": "automation",
+                    "feasibility_reason": "API test",
+                    "steps": [{"action": "Request quote", "expected_result": "Quote returned"}],
+                    "gherkin": (
+                        "Scenario: Quote\n When a quote is requested\n Then a quote is returned"
+                    ),
+                }
+            ],
+        },
+        "validation": {
+            "passed": True,
+            "score": 100,
+            "acceptance_criteria_total": 0,
+            "acceptance_criteria_covered": 0,
+        },
+    }
+    response = client.post("/api/step-definitions/bindings", json=payload)
+    assert response.status_code == 200
+    artifact = response.json()
+    assert len(artifact["files"]) == 1
+    assert "PendingStepException" in artifact["files"][0]["content"]
+    full_pack.assert_not_awaited()
+    # Binding stubs must never be mistaken for a complete, validated implementation pack.
+    assert client.post("/api/step-definitions/download", json=artifact).status_code == 422
+    payload["validation"]["passed"] = False
+    assert client.post("/api/step-definitions/bindings", json=payload).status_code == 422
+
+
+def test_model_picker_inventory_endpoint(monkeypatch):
+    from unittest.mock import AsyncMock
+
+    options = [{"model": "codex", "display_name": "Codex CLI", "can_use": True}]
+    monkeypatch.setattr("app.main.available_model_options", AsyncMock(return_value=options))
+    response = client.get("/api/llm/models")
+    assert response.status_code == 200
+    assert response.json() == {"models": options}
+
+
+def test_full_pack_can_be_cancelled_and_unregisters_request(monkeypatch) -> None:
+    from httpx import ASGITransport, AsyncClient
+
+    from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgent
+
+    async def exercise() -> None:
+        started = asyncio.Event()
+        stopped = asyncio.Event()
+
+        async def generate(self, request):
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.set()
+
+        monkeypatch.setattr(ReqnRollStepDefinitionAgent, "generate", generate)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        ) as ac:
+            task = asyncio.create_task(
+                ac.post(
+                    "/api/step-definitions/reqnroll",
+                    headers={"X-Request-ID": "cancel-full-pack-test"},
+                    json={
+                        "suite": {
+                            "feature_name": "Quotes",
+                            "test_cases": [
+                                {
+                                    "id": "TC-001",
+                                    "title": "Quote",
+                                    "objective": "Verify quote",
+                                    "category": "smoke",
+                                    "priority": "P1",
+                                    "execution_mode": "automation",
+                                    "feasibility_reason": "API test",
+                                    "steps": [
+                                        {
+                                            "action": "Request quote",
+                                            "expected_result": "Quote returned",
+                                        }
+                                    ],
+                                }
+                            ],
+                        },
+                        "validation": {
+                            "passed": True,
+                            "score": 100,
+                            "acceptance_criteria_total": 0,
+                            "acceptance_criteria_covered": 0,
+                        },
+                    },
+                )
+            )
+            try:
+                await asyncio.wait_for(started.wait(), timeout=5)
+                response = await ac.post("/api/generation/cancel-full-pack-test/cancel")
+                assert response.json()["cancelled"] is True
+                result = await asyncio.wait_for(task, timeout=5)
+                assert result.status_code == 499
+                assert result.json()["detail"] == "Full C# pack generation cancelled."
+                assert stopped.is_set()
+                response = await ac.post("/api/generation/cancel-full-pack-test/cancel")
+                assert response.json()["cancelled"] is False
+            finally:
+                if not task.done():
+                    task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(exercise())

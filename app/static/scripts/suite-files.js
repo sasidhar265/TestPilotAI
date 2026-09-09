@@ -2,6 +2,7 @@
 let featureFile = null;
 let stepDefinitionTask = null;
 let stepDefinitionTimer = null;
+let stepDefinitionRequest = null;
 const stepDefinitionCache = new Map();
 
 function closeStepDefinitionProgress() {
@@ -15,10 +16,13 @@ function showStepDefinitionProgress() {
 }
 
 function startStepDefinitionProgress() {
-  $('cs-generation-title').textContent = 'Generating C# step definitions';
-  $('cs-generation-message').textContent = 'Creating reusable step definitions for your BDD scenarios. Your files will open when ready.';
+  $('cs-generation-title').textContent = 'Generating full C# pack';
+  $('cs-generation-message').textContent = 'Creating bindings, implementations and supporting files. Your pack will open when ready.';
   $('cs-generation-dialog').querySelector('[role="progressbar"]').classList.remove('hidden');
   $('hide-cs-generation').textContent = 'Run in background';
+  $('cancel-cs-generation').classList.remove('hidden');
+  $('cancel-cs-generation').disabled = false;
+  $('cancel-cs-generation').textContent = 'Cancel generation';
   const started = Date.now();
   const update = () => {
     const seconds = Math.floor((Date.now() - started) / 1000);
@@ -50,7 +54,7 @@ function syncSuiteFileActions() {
   const approved = Boolean(suite?.test_cases.length && validationReport?.passed);
   const containsAutomation = Boolean(suite?.test_cases.some(c => c.execution_mode === 'automation'));
   const automation = approved && suite.test_cases.some(c => c.execution_mode === 'automation' && c.gherkin);
-  ['view-feature', 'download-feature', 'generate-step-definitions', 'suite-download-cs'].forEach(id => {
+  ['view-feature', 'download-feature', 'generate-step-definitions', 'suite-download-cs', 'view-csharp-pack', 'download-csharp-pack'].forEach(id => {
     $(id).disabled = !automation;
     $(id).title = automation ? '' : 'Requires a validated suite with BDD automation scenarios.';
   });
@@ -98,8 +102,7 @@ async function viewFeatureFile() {
 
 async function ensureStepDefinitions() {
   requireApprovedSuite();
-  if (stepDefinitionArtifact) return stepDefinitionArtifact;
-  const cacheKey = JSON.stringify(suite);
+  const cacheKey = 'full-pack:' + JSON.stringify(suite);
   if (stepDefinitionCache.has(cacheKey)) {
     stepDefinitionArtifact = stepDefinitionCache.get(cacheKey);
     return stepDefinitionArtifact;
@@ -110,30 +113,39 @@ async function ensureStepDefinitions() {
   }
   const snapshot = suite;
   const validation = validationReport;
-  $('status').textContent = 'Generating reusable C# step definitions…';
+  const generation = {requestId: crypto.randomUUID(), controller: new AbortController(), cancelled: false};
+  stepDefinitionRequest = generation;
+  $('status').textContent = 'Generating full C# pack…';
   startStepDefinitionProgress();
   const task = (async () => {
-    const response = await api('/api/step-definitions/reqnroll', {suite: snapshot, validation});
+    const response = await api('/api/step-definitions/reqnroll', {suite: snapshot, validation}, {
+      requestId: generation.requestId, signal: generation.controller.signal,
+    });
     const artifact = await response.json();
+    if (generation.cancelled) throw new DOMException('Generation cancelled', 'AbortError');
     if (suite !== snapshot) throw new Error('The suite changed. Generate C# for the current suite again.');
     stepDefinitionArtifact = artifact;
     stepDefinitionCache.set(cacheKey, artifact);
     if (stepDefinitionCache.size > 5) {
       stepDefinitionCache.delete(stepDefinitionCache.keys().next().value);
     }
-    $('status').textContent = 'C# step definitions are ready to view or download.';
+    $('status').textContent = 'Full C# pack is ready to view or download.';
     return artifact;
   })();
   stepDefinitionTask = task;
   let failed = false;
   try { return await task; }
   catch (error) {
+    if (generation.cancelled) {
+      throw new DOMException('Full C# pack generation cancelled.', 'AbortError');
+    }
     failed = true;
     if (stepDefinitionTask === task) {
       $('cs-generation-title').textContent = 'C# generation could not complete';
       $('cs-generation-message').textContent = error.message;
       $('cs-generation-dialog').querySelector('[role="progressbar"]').classList.add('hidden');
       $('hide-cs-generation').textContent = 'Close';
+      $('cancel-cs-generation').classList.add('hidden');
       showStepDefinitionProgress();
     }
     throw error;
@@ -141,6 +153,7 @@ async function ensureStepDefinitions() {
   finally {
     if (stepDefinitionTask === task) {
       stepDefinitionTask = null;
+      stepDefinitionRequest = null;
       clearInterval(stepDefinitionTimer);
       stepDefinitionTimer = null;
       if (!failed) closeStepDefinitionProgress();
@@ -148,10 +161,57 @@ async function ensureStepDefinitions() {
   }
 }
 
+async function cancelFullPackGeneration() {
+  const generation = stepDefinitionRequest;
+  if (!generation || generation.cancelled) return;
+  generation.cancelled = true;
+  $('cancel-cs-generation').disabled = true;
+  $('cancel-cs-generation').textContent = 'Cancelling…';
+  try {
+    const response = await fetch(`/api/generation/${encodeURIComponent(generation.requestId)}/cancel`, {
+      method: 'POST', signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) throw await responseError(response);
+    const result = await response.json();
+    if (!result.cancelled && stepDefinitionRequest === generation) {
+      throw new Error('Generation could not be stopped yet. Please try Cancel again.');
+    }
+    generation.controller.abort();
+  } catch (error) {
+    if (stepDefinitionRequest !== generation) return;
+    generation.cancelled = false;
+    $('cancel-cs-generation').disabled = false;
+    $('cancel-cs-generation').textContent = 'Cancel generation';
+    $('cs-generation-message').textContent = error.message;
+  }
+}
+
 async function viewStepDefinitions() {
-  const artifact = await ensureStepDefinitions();
+  const artifact = await ensureBindingsOnly();
   $('feature-file-view').classList.add('hidden');
   renderStepDefinitions(artifact);
+}
+
+async function ensureBindingsOnly() {
+  requireApprovedSuite();
+  const snapshot = suite;
+  const key = 'bindings:' + JSON.stringify(snapshot);
+  if (!stepDefinitionCache.has(key)) {
+    const response = await api('/api/step-definitions/bindings', {suite: snapshot, validation: validationReport});
+    const artifact = await response.json();
+    if (suite !== snapshot) throw new Error('The suite changed. Generate step definitions for the current suite.');
+    stepDefinitionCache.set(key, artifact);
+    if (stepDefinitionCache.size > 5) stepDefinitionCache.delete(stepDefinitionCache.keys().next().value);
+  }
+  stepDefinitionArtifact = stepDefinitionCache.get(key);
+  $('status').textContent = 'Step definitions are ready. Full C# pack generation is a separate option.';
+  return stepDefinitionArtifact;
+}
+
+async function downloadFullPack() {
+  const artifact = await ensureStepDefinitions();
+  const response = await api('/api/step-definitions/download', artifact);
+  download(await response.blob(), 'ReqnRollFullPack.zip');
 }
 
 function downloadCSharpFile(index) {
@@ -187,12 +247,23 @@ function suiteFileAction(action) {
 $('download-feature').onclick = suiteFileAction(() => convert('feature'));
 $('view-feature').onclick = suiteFileAction(viewFeatureFile);
 $('generate-step-definitions').onclick = suiteFileAction(viewStepDefinitions);
-$('suite-download-cs').onclick = suiteFileAction(chooseCSharpDownload);
+$('suite-download-cs').onclick = suiteFileAction(async () => {
+  const artifact = await ensureBindingsOnly();
+  const file = artifact.files[0];
+  download(new Blob([file.content], {type: 'text/plain;charset=utf-8'}), file.path.split('/').pop());
+});
+$('view-csharp-pack').onclick = suiteFileAction(async () => {
+  const artifact = await ensureStepDefinitions();
+  $('feature-file-view').classList.add('hidden');
+  renderStepDefinitions(artifact);
+});
+$('download-csharp-pack').onclick = suiteFileAction(downloadFullPack);
 $('copy-feature-file').onclick = () => featureFile && copyText(featureFile.content, featureFile.name);
 $('close-feature-view').onclick = () => $('feature-file-view').classList.add('hidden');
 $('close-step-view').onclick = () => $('step-definitions').classList.add('hidden');
 $('close-cs-download').onclick = () => $('cs-download-dialog').close();
 $('hide-cs-generation').onclick = () => $('cs-generation-dialog').close();
+$('cancel-cs-generation').onclick = cancelFullPackGeneration;
 $('download-step-definitions').onclick = suiteFileAction(async () => {
   const artifact = await ensureStepDefinitions();
   const response = await api('/api/step-definitions/download', artifact);
