@@ -520,7 +520,7 @@ async def save_review_feedback(
     )
     try:
         request = BusinessRulesAgent().enrich(review.request)
-        review_id = memory.save_review(request, review.suite, review.comments)
+        review_id = memory.save_review(request, review.suite, review.comments, review.test_case_id)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     publish_lifecycle_event(

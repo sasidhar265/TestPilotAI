@@ -88,7 +88,7 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert 'data-theme-option="light"' in response.text
     assert 'data-theme-option="dark"' in response.text
     assert 'data-theme-option="system"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
     assert "styles/login-feedback.css?v=20260902" in response.text
 
 
@@ -159,7 +159,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Metrics Agent" in response.text
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
     assert 'src="/static/scripts/index.js?v=' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
     assert 'href="/static/styles/index.css?v=' in response.text
@@ -219,7 +219,7 @@ def test_logs_page_has_search_and_navigation() -> None:
     assert 'id="search-logs"' in response.text
     assert 'href="/documentation"' in response.text
     assert 'id="theme-gear"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
 
 
 def test_documentation_page_is_not_cached() -> None:
@@ -233,8 +233,8 @@ def test_documentation_page_is_not_cached() -> None:
     assert 'id="profile-toggle"' in response.text
     assert 'class="profile-signout" id="logout"' in response.text
     assert 'href="/static/styles/documentation.css?v=20260904-current-ui"' in response.text
-    assert 'src="/static/scripts/documentation.js?v=20260904-current-ui"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260901-shared-theme"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=20260909-page-alignment"' in response.text
+    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
 
 
 def test_logs_can_be_searched_by_failure_reference_id() -> None:

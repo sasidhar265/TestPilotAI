@@ -253,3 +253,23 @@ def test_review_target_matching_rejects_unknown_and_supports_exact_titles(tmp_pa
         memory.save_review(request, example_suite(), "TC-0010: update result")
     assert memory.review_targets(example_suite(), "Valid login: update result") == {"TC-001"}
     assert memory.review_targets(example_suite(), "tc-001: update result") == {"TC-001"}
+
+
+@pytest.mark.asyncio
+async def test_explicit_case_review_does_not_expand_scope_from_comments(tmp_path):
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    request = GenerateRequest(description="Users sign in to their account")
+    original = example_suite()
+    original.test_cases.append(
+        original.test_cases[0].model_copy(update={"id": "TC-002", "title": "Other login"})
+    )
+    memory.save_review(request, original, "Match the wording used in TC-002", "TC-001")
+    reopened = OrganizationalMemory(memory.path)
+    assert reopened.latest_targeted_review(request)[1] == {"TC-001"}
+    assert '"test_case_id": "TC-001"' in reopened.with_reviews(request).additional_context
+    candidate = example_suite(title="Revised login")
+    result = await pipeline_for(reopened, candidate).run(request)
+    assert result.suite.test_cases[0].title == "Revised login"
+    assert result.suite.test_cases[1] == original.test_cases[1]
+    with pytest.raises(ValueError, match="unknown test ID"):
+        memory.save_review(request, original, "Revise expected result", "TC-999")

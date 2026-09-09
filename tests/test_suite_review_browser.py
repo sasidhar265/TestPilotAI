@@ -93,43 +93,55 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         page.locator("#description").fill(
             "Changed input must not replace the reviewed requirements"
         )
-        comments = "TC-001: add a precise expected rejection for an invalid password"
-        page.locator("#suite-review-comments").fill(comments)
-        page.locator("#save-review-regenerate").click()
-        playwright.expect(page.locator("#suite-review-status")).to_contain_text("Review saved")
+        playwright.expect(page.locator("#case-review-panel-0")).to_be_hidden()
+        page.get_by_role("button", name="Review TC-001", exact=True).click()
+        playwright.expect(page.locator("#case-review-panel-0")).to_be_visible()
+        page.get_by_role("button", name="Review TC-001", exact=True).click()
+        playwright.expect(page.locator("#case-review-panel-0")).to_be_hidden()
+        page.get_by_role("button", name="Review TC-001", exact=True).click()
+        comments = "add a precise expected rejection for an invalid password"
+        page.locator("#case-review-comments-0").fill(comments)
+        page.locator("#case-review-panel-0 .save-case-review").click()
+        playwright.expect(page.locator("#case-review-status-0")).to_contain_text("Review saved")
         page.wait_for_function(
-            "document.querySelector('#save-review-regenerate').textContent === 'Regenerating…'"
+            "document.querySelector('#case-review-panel-0 .save-case-review')"
+            ".textContent === 'Regenerating…'"
         )
         page.wait_for_timeout(100)
         assert reviews[0]["request"] == source
         assert reviews[0]["comments"] == comments
+        assert reviews[0]["test_case_id"] == "TC-001"
         assert generations[0] == source
         assert reviews[0]["suite"]["test_cases"][0]["execution_mode"] == mode
         pending.pop().fulfill(status=503, json={"detail": "Provider offline"})
-        playwright.expect(page.locator("#suite-review-status")).to_contain_text(
+        playwright.expect(page.locator("#case-review-status-0")).to_contain_text(
             "Review saved to knowledge. Provider offline"
         )
-        playwright.expect(page.locator("#suite-review-comments")).to_have_value(comments)
+        playwright.expect(page.locator("#case-review-comments-0")).to_have_value(comments)
         assert page.evaluate("suite.test_cases[0].title") == "Valid login"
-        page.locator("#save-review-regenerate").click()
-        playwright.expect(page.locator("#save-review-regenerate")).to_have_text("Regenerating…")
+        page.locator("#case-review-panel-0 .save-case-review").click()
+        playwright.expect(page.locator("#case-review-panel-0 .save-case-review")).to_have_text(
+            "Regenerating…"
+        )
         page.wait_for_timeout(100)
         suite["test_cases"][0]["title"] = "Invalid password is rejected"
         pending.pop().fulfill(
             json={"suite": suite, "validation": validation, "source_request": source}
         )
-        playwright.expect(page.locator("#suite-review-status")).to_contain_text(
+        playwright.expect(page.locator("#case-review-status-0")).to_contain_text(
             "Updated 1 test cases"
         )
         playwright.expect(page.locator("#review-state")).to_have_text("Review required")
-        playwright.expect(page.locator("#suite-review-comments")).to_have_value("")
+        playwright.expect(page.locator("#case-review-comments-0")).to_have_value("")
         assert page.evaluate("stepDefinitionArtifact === null")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        page.locator("#suite-review-comments").fill("Also add the locked account condition")
-        page.locator("#save-review-regenerate").click()
-        playwright.expect(page.locator("#save-review-regenerate")).to_have_text("Regenerating…")
+        page.locator("#case-review-comments-0").fill("Also add the locked account condition")
+        page.locator("#case-review-panel-0 .save-case-review").click()
+        playwright.expect(page.locator("#case-review-panel-0 .save-case-review")).to_have_text(
+            "Regenerating…"
+        )
         page.locator("#cancel-generation-overlay").click()
-        playwright.expect(page.locator("#suite-review-status")).to_contain_text(
+        playwright.expect(page.locator("#case-review-status-0")).to_contain_text(
             "Review saved to knowledge. Regeneration cancelled."
         )
         assert page.evaluate("suite.test_cases[0].title") == "Invalid password is rejected"

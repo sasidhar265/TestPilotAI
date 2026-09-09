@@ -114,20 +114,31 @@ class OrganizationalMemory:
             return None
         with closing(self._connect()) as connection:
             row = connection.execute(
-                "SELECT suite_json, comments FROM review_feedback WHERE request_key = ? "
+                "SELECT suite_json, comments, test_case_id FROM review_feedback "
+                "WHERE request_key = ? "
                 "ORDER BY created_at DESC, rowid DESC LIMIT 1",
                 (self.review_key_for(request),),
             ).fetchone()
         if row is None:
             return None
         suite = TestSuite.model_validate_json(row[0])
-        targets = self.review_targets(suite, row[1])
+        targets = {row[2]} if row[2] else self.review_targets(suite, row[1])
         return (suite, targets) if targets else None
 
-    def save_review(self, request: GenerateRequest, suite: TestSuite, comments: str) -> str:
+    def save_review(
+        self,
+        request: GenerateRequest,
+        suite: TestSuite,
+        comments: str,
+        test_case_id: str | None = None,
+    ) -> str:
         if not self.enabled:
             raise ValueError("Knowledge storage is disabled. Enable it before saving reviews.")
-        self.review_targets(suite, comments)
+        if test_case_id is not None:
+            if test_case_id not in {case.id for case in suite.test_cases}:
+                raise ValueError("Review names an unknown test ID.")
+        else:
+            self.review_targets(suite, comments)
         if len({case.id for case in suite.test_cases}) != len(suite.test_cases):
             raise ValueError("Test IDs must be unique before submitting a review.")
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -135,14 +146,14 @@ class OrganizationalMemory:
         key = self.review_key_for(request)
         suite_json = suite.model_dump_json()
         review_id = hashlib.sha256(
-            json.dumps([key, suite_json, comments]).encode("utf-8")
+            json.dumps([key, suite_json, comments, test_case_id]).encode("utf-8")
         ).hexdigest()
         with closing(self._connect()) as connection:
             connection.execute(
                 "INSERT INTO review_feedback "
-                "(review_id, request_key, comments, suite_json, created_at) "
-                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(review_id) DO NOTHING",
-                (review_id, key, comments, suite_json, self._now()),
+                "(review_id, request_key, comments, suite_json, created_at, test_case_id) "
+                "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(review_id) DO NOTHING",
+                (review_id, key, comments, suite_json, self._now(), test_case_id),
             )
             connection.commit()
         return review_id
@@ -152,7 +163,8 @@ class OrganizationalMemory:
             return request
         with closing(self._connect()) as connection:
             rows = connection.execute(
-                "SELECT comments, suite_json, review_id FROM review_feedback WHERE request_key = ? "
+                "SELECT comments, suite_json, review_id, test_case_id FROM review_feedback "
+                "WHERE request_key = ? "
                 "ORDER BY created_at DESC, rowid DESC LIMIT 10",
                 (self.review_key_for(request),),
             ).fetchall()
@@ -196,7 +208,8 @@ class OrganizationalMemory:
             + json.dumps(
                 {
                     "reviews": [
-                        {"review_id": row[2], "comments": row[0]} for row in reversed(rows)
+                        {"review_id": row[2], "comments": row[0], "test_case_id": row[3]}
+                        for row in reversed(rows)
                     ],
                     "previous_case_index": bounded_cases,
                     "previous_case_count": len(previous.test_cases),
@@ -243,6 +256,11 @@ class OrganizationalMemory:
         connection.execute(
             "CREATE INDEX IF NOT EXISTS review_feedback_request ON review_feedback(request_key)"
         )
+        review_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(review_feedback)")
+        }
+        if "test_case_id" not in review_columns:
+            connection.execute("ALTER TABLE review_feedback ADD COLUMN test_case_id TEXT")
         columns = {row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")}
         if "generation_policy_version" not in columns:
             connection.execute("BEGIN IMMEDIATE")

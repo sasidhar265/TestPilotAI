@@ -794,7 +794,11 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 
 .suite-review{margin:20px 0;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 .suite-review h3{margin:0 0 8px}.suite-review p{line-height:1.5;font-size:13px}
-.suite-review label{display:block;margin:12px 0 8px;font-weight:600}
-.suite-review textarea{display:block;box-sizing:border-box;width:100%;min-height:110px;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;font:inherit}
+.case-review-form { margin-top: 16px; }
+.case-review-comments { display: block; min-height: 120px; padding: 16px; }
 .suite-review-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px}
 .suite-review-actions span{font-size:12px}.suite-review [role=status]{overflow-wrap:anywhere}
+
+.case .case-review{margin:12px 0 0;padding:12px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent}
+.manual-case .case-review{margin:0 17px 14px 3px}
+.case-review-form.hidden{display:none}

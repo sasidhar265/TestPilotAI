@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-targeted-review">
-  <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
-  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-mobile-labels">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-review-layout">
+  <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
+  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
+  <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+      <div class="sidebar-header"><a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
         <span class="brand-mark" aria-hidden="true">Q</span>
         <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
-      </a>
+      </a><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-content"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div><div class="sidebar-content" id="sidebar-content">
 
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
-        <a class="nav-item active" href="/"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
+        <a class="nav-item active" href="/" aria-current="page"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
         <span class="nav-label">Explore</span>
         <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
         <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
@@ -29,7 +30,18 @@
         <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
         <div class="model">SECURE LOCAL WORKSPACE</div>
       </div>
-    </aside>
+    <div class="theme-settings">
+    <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
+      <strong id="theme-menu-title">Appearance</strong>
+      <span>Choose your workspace theme</span>
+      <div class="theme-options" role="group" aria-label="Color theme">
+        <button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button>
+        <button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button>
+        <button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button>
+      </div>
+    </div>
+    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button>
+  </div></div></aside>
 
     <main class="workspace">
       <header class="topbar">
@@ -250,16 +262,7 @@
           </div>
         </div>
         <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
-        <section class="suite-review" aria-labelledby="suite-review-title">
-          <h3 id="suite-review-title">Review comments</h3>
-          <p id="suite-review-help">Tell the agents what to improve in the manual or automation tests. Mention exact test case IDs or titles to update only those tests; all other tests stay unchanged. Without a specific test, comments apply to the whole suite. Saved comments guide future runs of these requirements.</p>
-          <form id="suite-review-form">
-            <label for="suite-review-comments">What should change?</label>
-            <textarea id="suite-review-comments" rows="4" minlength="3" maxlength="4000" required aria-describedby="suite-review-help suite-review-status" placeholder="For example: TC-003 needs an explicit expected result. Add boundary cases for the loan amount and include the response status in the BDD steps."></textarea>
-            <div class="suite-review-actions"><button class="primary compact" type="submit" id="save-review-regenerate" disabled>Save review &amp; regenerate</button><span>Revised tests need a fresh review and approval.</span></div>
-          </form>
-          <p id="suite-review-status" role="status" aria-live="polite"></p>
-        </section>
+
         <div class="cases" id="cases"></div>
         <section class="step-definitions hidden" id="feature-file-view" aria-live="polite" aria-labelledby="feature-file-title">
           <div class="step-definitions-head"><div><span class="section-kicker">BDD Gherkin</span><h3 id="feature-file-title">Feature file</h3></div><button class="secondary" id="close-feature-view" type="button">Close preview</button></div>
@@ -341,22 +344,11 @@
       <button class="primary" id="close-knowledge-notice" type="button">View generated suite</button>
     </section>
   </div>
-  <div class="theme-settings">
-    <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
-      <strong id="theme-menu-title">Appearance</strong>
-      <span>Choose your workspace theme</span>
-      <div class="theme-options" role="group" aria-label="Color theme">
-        <button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button>
-        <button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button>
-        <button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button>
-      </div>
-    </div>
-    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button>
-  </div>
-  <script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
+
+  <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260909-targeted-review" defer></script>
-  <script src="/static/scripts/suite-review.js?v=20260909-targeted-review" defer></script>
+  <script src="/static/scripts/index.js?v=20260909-review-layout" defer></script>
+  <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
   <script src="/static/scripts/suite-files.js?v=20260908-separate-csharp" defer></script>
 </body>
 </html>

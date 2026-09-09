@@ -15,5 +15,5 @@ $('search-logs').onclick=()=>loadLogs($('log-reference').value.trim());
 $('recent-logs').onclick=()=>{$('log-reference').value='';loadLogs()};
 $('log-reference').addEventListener('keydown',event=>{if(event.key==='Enter')loadLogs(event.target.value.trim())});
 $('log-results').addEventListener('click',event=>{const button=event.target.closest('.reference');if(!button)return;$('log-reference').value=button.dataset.reference;loadLogs(button.dataset.reference)});
-fetch('/api/health').then(response=>{if(!response.ok)throw new Error();$('service-state').textContent='● Service online';$('service-state').classList.add('online')}).catch(()=>{$('service-state').textContent='● Service unavailable'});
+fetch('/api/health').then(response=>{if(!response.ok)throw new Error();$('service-state').textContent='● Service online';$('service-state').classList.add('live')}).catch(()=>{$('service-state').textContent='● Service unavailable'});
 loadLogs();

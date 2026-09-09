@@ -156,6 +156,7 @@ class GenerateRequest(BaseModel):
 
 
 class ReviewFeedbackRequest(BaseModel):
+    test_case_id: str | None = Field(default=None, min_length=1)
     request: GenerateRequest
     suite: TestSuite
     comments: str = Field(min_length=3, max_length=4000)

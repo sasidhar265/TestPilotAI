@@ -6,6 +6,8 @@
   const gear = document.getElementById('theme-gear');
   const menu = document.getElementById('theme-menu');
   let preferredTheme = 'system';
+  const menuHome = menu?.parentElement;
+  const menuSibling = menu?.nextSibling;
 
   function readPreference() {
     try {
@@ -35,6 +37,12 @@
   function closeMenu() {
     if (!menu || !gear) return;
     menu.hidden = true;
+    if (menu.classList.contains('theme-flyout')) {
+      menuHome.insertBefore(menu, menuSibling);
+      menu.classList.remove('theme-flyout');
+      menu.style.removeProperty('left');
+      menu.style.removeProperty('top');
+    }
     gear.setAttribute('aria-expanded', 'false');
   }
 
@@ -44,6 +52,17 @@
   gear?.addEventListener('click', () => {
     if (!menu) return;
     const opening = menu.hidden;
+    closeMenu();
+    if (opening && gear.closest('.sidebar')?.dataset.collapsed === 'true'
+        && matchMedia('(min-width: 1081px)').matches) {
+      document.body.append(menu);
+      menu.classList.add('theme-flyout');
+      menu.hidden = false;
+      const anchor = gear.getBoundingClientRect();
+      const bounds = menu.getBoundingClientRect();
+      menu.style.left = `${Math.max(12, Math.min(anchor.right + 12, innerWidth - bounds.width - 12))}px`;
+      menu.style.top = `${Math.max(12, Math.min(anchor.bottom - bounds.height, innerHeight - bounds.height - 12))}px`;
+    }
     menu.hidden = !opening;
     gear.setAttribute('aria-expanded', String(opening));
     if (opening) menu.querySelector('.active')?.focus();
@@ -63,14 +82,16 @@
   });
 
   document.addEventListener('click', event => {
-    if (!event.target.closest('.theme-settings')) closeMenu();
+    if (!event.target.closest('.theme-settings') && !menu?.contains(event.target)) closeMenu();
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && menu && !menu.hidden) {
       closeMenu();
       gear?.focus();
     }
   });
+  window.addEventListener('appearance-close', closeMenu);
+  window.addEventListener('resize', closeMenu);
   systemTheme.addEventListener('change', () => {
     if (preferredTheme === 'system') applyTheme();
   });

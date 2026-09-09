@@ -4,18 +4,19 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>Manage users — Quality Lifecycle Studio</title>
-  <link rel="stylesheet" href="/static/styles/index.css">
-  <link rel="stylesheet" href="/static/styles/users.css?v=20260907-inline-radios">
-  <link rel="stylesheet" href="/static/styles/theme.css?v=20260901-shared-theme">
-  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-mobile-labels">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-case-review">
+  <link rel="stylesheet" href="/static/styles/users.css?v=20260909-page-alignment">
+  <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
+  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
+  <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
 </head>
 <body>
 <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+      <div class="sidebar-header"><a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
         <span class="brand-mark" aria-hidden="true">Q</span>
         <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
-      </a>
+      </a><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-content"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div><div class="sidebar-content" id="sidebar-content">
 
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
@@ -31,7 +32,7 @@
         <div class="status-line"><span class="pulse"></span><span>Administrator workspace</span></div>
         <div class="model">SECURE LOCAL WORKSPACE</div>
       </div>
-    </aside>
+    <div class="theme-settings"><div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden><strong id="theme-menu-title">Appearance</strong><span>Choose your workspace theme</span><div class="theme-options" role="group" aria-label="Color theme"><button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button><button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button><button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button></div></div><button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button></div></div></aside>
 
 <main class="workspace users-workspace" id="main-content">
   <header class="topbar">
@@ -74,8 +75,8 @@
   <section class="panel composer users-card" aria-labelledby="accounts-title"><div class="panel-head"><div><span class="eyebrow">Workspace access</span><h2 id="accounts-title">Accounts</h2><p>Select the edit icon to load an account into the form. Saved updates require a fresh sign-in.</p></div><span class="runtime-pill" id="user-count">Loading accounts…</span></div><div class="users-table" role="region" aria-label="User accounts, scroll horizontally on small screens" tabindex="0"><table><thead><tr><th scope="col">Name</th><th scope="col">Username</th><th scope="col">Role</th><th scope="col">Application access</th><th scope="col">Action</th></tr></thead><tbody id="users-list"><tr><td colspan="5">Loading accounts…</td></tr></tbody></table></div></section>
 </main>
 </div>
-<div class="theme-settings"><div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden><strong id="theme-menu-title">Appearance</strong><span>Choose your workspace theme</span><div class="theme-options" role="group" aria-label="Color theme"><button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button><button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button><button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button></div></div><button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button></div>
-<script src="/static/scripts/theme.js?v=20260901-shared-theme" defer></script>
+
+<script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
 <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
 <script src="/static/scripts/users.js?v=20260907-inline-radios" defer></script>
 </body>

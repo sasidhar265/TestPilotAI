@@ -48,3 +48,8 @@
 @media (max-width: 580px) {
   .theme-settings { right: 14px; bottom: 14px; }
 }
+
+/* Escape the sidebar's scrolling and backdrop-filter containing block. */
+.theme-menu.theme-flyout { position: fixed; z-index: 110; width: min(240px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 12px; }
+.theme-flyout .theme-options { grid-template-columns: 1fr; }
+.theme-flyout .theme-options button { min-height: 44px; display: flex; justify-content: flex-start; gap: 12px; padding: 10px; font-size: .75rem; }
