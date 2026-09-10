@@ -282,6 +282,9 @@ def test_health_reports_configuration() -> None:
     assert response.json()["agent_runtime_id"] == "automatic-fallback"
     assert response.json()["copilot_model"] == "organization-default"
     assert response.json()["openai_model"] == "gpt-5.4"
+    assert "gemini_model" in response.json()
+    assert isinstance(response.json()["gemini_configured"], bool)
+    assert "gemini_api_key" not in response.json()
     assert response.json()["codex_model"] == "account-default"
     assert response.json()["agent_profile"] == "auto-finance-quotation"
     assert response.json()["organizational_memory"] == "enabled"

@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5.4"
     openai_base_url: str = "https://api.openai.com/v1"
     openai_timeout_seconds: float = Field(default=300, gt=0, le=1800)
+    gemini_api_key: SecretStr = SecretStr("")
+    gemini_model: str = "gemini-3.8-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_timeout_seconds: float = Field(default=300, gt=0, le=1800)
     codex_executable: str = "codex"
     codex_model: str = ""
     codex_timeout_seconds: float = Field(default=300, gt=0, le=1800)
@@ -80,6 +84,10 @@ class Settings(BaseSettings):
     @property
     def openai_api_key_value(self) -> str:
         return self.openai_api_key.get_secret_value()
+
+    @property
+    def gemini_api_key_value(self) -> str:
+        return self.gemini_api_key.get_secret_value()
 
     @property
     def browser_login_enabled(self) -> bool:

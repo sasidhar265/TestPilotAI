@@ -265,6 +265,89 @@ class OpenAIGenerator:
         )
 
 
+class GeminiGenerator:
+    """Generate and validate test suites through Google's Gemini REST API."""
+
+    descriptor = AgentDescriptor(
+        runtime_id="gemini-api",
+        display_name="Gemini API Test Designer",
+        capabilities=CopilotGenerator.descriptor.capabilities,
+    )
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
+    async def generate(
+        self,
+        request: GenerateRequest,
+        phase: str = "initial",
+        existing_titles: list[str] | None = None,
+    ) -> TestSuite:
+        if not self.settings.gemini_api_key_value:
+            raise CopilotGenerationError(
+                "Gemini API is not configured. Add GEMINI_API_KEY to .env and restart."
+            )
+        body = {
+            "systemInstruction": {
+                "parts": [{"text": system_prompt(request, self.settings.agent_profile)}]
+            },
+            "contents": [
+                {"role": "user", "parts": [{"text": user_prompt(request, phase, existing_titles)}]}
+            ],
+            "generationConfig": {
+                "responseFormat": {
+                    "text": {
+                        "mimeType": "application/json",
+                        "schema": TestSuite.model_json_schema(),
+                    }
+                }
+            },
+        }
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.gemini_timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.settings.gemini_base_url.rstrip('/')}/models/"
+                    f"{self.settings.gemini_model}:generateContent",
+                    headers={"x-goog-api-key": self.settings.gemini_api_key_value},
+                    json=body,
+                )
+                response.raise_for_status()
+            candidate = response.json()["candidates"][0]
+            if candidate.get("finishReason") != "STOP":
+                raise ValueError("Gemini response was blocked or incomplete")
+            content = "".join(
+                part.get("text", "")
+                for part in candidate["content"]["parts"]
+                if not part.get("thought")
+            )
+            suite = TestSuite.model_validate(
+                _normalize_suite_payload(json.loads(json_object(content)))
+            )
+        except httpx.HTTPStatusError as error:
+            status = error.response.status_code
+            message = (
+                "Gemini API quota or rate limit is exhausted."
+                if status == 429
+                else f"Gemini API generation failed with HTTP {status}. "
+                "Check GEMINI_API_KEY and model access."
+            )
+            raise CopilotGenerationError(message) from error
+        except (
+            httpx.HTTPError,
+            ValueError,
+            KeyError,
+            IndexError,
+            TypeError,
+            AttributeError,
+        ) as error:
+            raise CopilotGenerationError(
+                "Gemini API did not return a valid, complete test suite."
+            ) from error
+        return finalize_suite(
+            suite.model_copy(update={"generation_source": GenerationSource.GEMINI}), request
+        )
+
+
 class CodexGenerator:
     """Use the locally authenticated Codex CLI in non-interactive read-only mode."""
 
@@ -355,7 +438,7 @@ class CodexGenerator:
 
 
 class FallbackGenerator:
-    """Route explicit selections or fail over Copilot -> OpenAI API -> Codex CLI."""
+    """Route explicit selections or fail over Copilot -> OpenAI API -> Gemini API -> Codex CLI."""
 
     descriptor = AgentDescriptor(
         runtime_id="automatic-fallback",
@@ -367,6 +450,7 @@ class FallbackGenerator:
         self.copilot = CopilotGenerator(settings)
         self.openai = OpenAIGenerator(settings)
         self.codex = CodexGenerator(settings)
+        self.gemini = GeminiGenerator(settings)
 
     async def generate(
         self,
@@ -376,6 +460,8 @@ class FallbackGenerator:
     ) -> TestSuite:
         if request.llm_model == LlmModel.OPENAI:
             return await self.openai.generate(request, phase, existing_titles)
+        if request.llm_model == LlmModel.GEMINI:
+            return await self.gemini.generate(request, phase, existing_titles)
         if request.llm_model == LlmModel.CODEX:
             return await self.codex.generate(request, phase, existing_titles)
         if request.llm_model != LlmModel.AUTO_FALLBACK:
@@ -385,6 +471,7 @@ class FallbackGenerator:
         routes: tuple[tuple[str, GeneratorProvider, LlmModel], ...] = (
             ("github-copilot", self.copilot, LlmModel.ORGANIZATION_DEFAULT),
             ("openai-api", self.openai, LlmModel.OPENAI),
+            ("gemini-api", self.gemini, LlmModel.GEMINI),
             ("codex-cli", self.codex, LlmModel.CODEX),
         )
         for route, provider, selection in routes:

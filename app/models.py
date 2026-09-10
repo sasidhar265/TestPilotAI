@@ -43,6 +43,7 @@ class LlmModel(StrEnum):
 
     AUTO_FALLBACK = "auto-fallback"
     OPENAI = "openai"
+    GEMINI = "gemini"
     CODEX = "codex"
     ORGANIZATION_DEFAULT = "organization-default"
     AUTO = "auto"
@@ -54,6 +55,7 @@ class LlmModel(StrEnum):
 class GenerationSource(StrEnum):
     COPILOT = "copilot"
     OPENAI = "openai"
+    GEMINI = "gemini"
     CODEX = "codex"
     ORGANIZATIONAL_MEMORY = "organizational-memory"
 

@@ -527,3 +527,15 @@ requires an authenticated admin browser session. Configure browser login before 
 Specific-test reviews: mention exact test IDs (for example, `TC-003`) or full test titles in review comments. Regeneration replaces only those tests and preserves every other test and its position. Unknown test IDs are rejected. Revisions that omit or duplicate a requested ID, or change its execution mode, fail without replacing the displayed suite. Comments without a specific test apply to the whole suite.
 
 Per-test review: click **Review** on a manual or automation test to reveal its comment form. **Save review & regenerate** saves feedback and updates only that test. The selected test ID is sent automatically; IDs mentioned within comments do not expand the review scope.
+
+## Gemini test generation
+
+Set `GEMINI_API_KEY` in the server `.env` and restart. `GEMINI_MODEL` defaults to
+`gemini-3.8-flash` and can select another model supported by your account. Gemini appears
+in the model picker when its metadata access check succeeds. The check does not verify
+remaining generation quota. Automatic test generation tries Copilot, OpenAI, Gemini,
+then Codex. Explicit Gemini selection uses Gemini only. Manual and BDD output use the
+existing validation and review flow; blocked, truncated, and invalid responses fail.
+
+The integration uses [Google’s structured-output REST API](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
+Gemini support applies to test suites; the full C# pack retains its existing providers.

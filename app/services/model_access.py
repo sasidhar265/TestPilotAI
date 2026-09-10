@@ -17,7 +17,7 @@ async def inspect_model_access(settings: Settings, requested_model: str) -> dict
         providers = await asyncio.gather(
             *(
                 inspect_model_access(settings, model)
-                for model in ("organization-default", "openai", "codex")
+                for model in ("organization-default", "openai", "gemini", "codex")
             )
         )
         can_use = any(provider["can_use"] for provider in providers)
@@ -25,17 +25,21 @@ async def inspect_model_access(settings: Settings, requested_model: str) -> dict
             requested_model,
             "Automatic fallback",
             can_use,
-            "Copilot → OpenAI API → Codex CLI",
+            "Copilot → OpenAI API → Gemini API → Codex CLI",
             "At least one provider is ready; unavailable providers will be skipped."
             if can_use
             else "No fallback provider is currently available.",
         )
         result["providers"] = providers
         return result
-    name = {"openai": "OpenAI API", "codex": "Codex CLI"}.get(requested_model, "GitHub Copilot")
+    name = {"openai": "OpenAI API", "gemini": "Gemini API", "codex": "Codex CLI"}.get(
+        requested_model, "GitHub Copilot"
+    )
     try:
         if requested_model == "openai":
             check = _inspect_openai(settings)
+        elif requested_model == "gemini":
+            check = _inspect_gemini(settings)
         elif requested_model == "codex":
             check = _inspect_codex(settings)
         else:
@@ -61,12 +65,13 @@ async def available_model_options(settings: Settings) -> list[dict[str, Any]]:
             # A failed inventory check must never expose unverified model choices.
             return []
 
-    copilot, openai, codex = await asyncio.gather(
+    copilot, openai, gemini, codex = await asyncio.gather(
         copilot_options(),
         inspect_model_access(settings, "openai"),
+        inspect_model_access(settings, "gemini"),
         inspect_model_access(settings, "codex"),
     )
-    ready = [result for result in [openai, codex, *copilot] if result["can_use"]]
+    ready = [result for result in [openai, gemini, codex, *copilot] if result["can_use"]]
     if not ready:
         return []
     automatic = _access_result(
@@ -87,6 +92,7 @@ def failure_reason(settings: Settings, error: Exception) -> str:
     for secret in (
         settings.copilot_github_token,
         settings.openai_api_key_value,
+        settings.gemini_api_key_value,
         settings.api_auth_token.get_secret_value(),
         settings.app_password.get_secret_value(),
         settings.session_secret.get_secret_value(),
@@ -133,6 +139,39 @@ async def _inspect_openai(settings: Settings) -> dict[str, Any]:
         True,
         "enabled",
         "The API key can access this model. Remaining spend is managed in the API dashboard.",
+    )
+
+
+async def _inspect_gemini(settings: Settings) -> dict[str, Any]:
+    name = f"Gemini API · {settings.gemini_model}"
+    if not settings.gemini_api_key_value:
+        return _access_result(
+            "gemini", name, False, "not-configured", "GEMINI_API_KEY is not configured."
+        )
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(
+                f"{settings.gemini_base_url.rstrip('/')}/models/{settings.gemini_model}",
+                headers={"x-goog-api-key": settings.gemini_api_key_value},
+            )
+            response.raise_for_status()
+        supported = "generateContent" in response.json().get("supportedGenerationMethods", [])
+    except httpx.HTTPStatusError as error:
+        return _access_result(
+            "gemini",
+            name,
+            False,
+            "denied",
+            f"Model access failed (HTTP {error.response.status_code}).",
+        )
+    return _access_result(
+        "gemini",
+        name,
+        supported,
+        "enabled" if supported else "unsupported",
+        "Model metadata is accessible. Generation quota is not verified by this check."
+        if supported
+        else "This model does not support content generation.",
     )
 
 
@@ -202,7 +241,7 @@ async def _inspect_copilot_inventory(settings: Settings) -> list[dict[str, Any]]
     return [
         _copilot_access_result(models, quota_result, model.value)
         for model in LlmModel
-        if model not in {LlmModel.AUTO_FALLBACK, LlmModel.OPENAI, LlmModel.CODEX}
+        if model not in {LlmModel.AUTO_FALLBACK, LlmModel.OPENAI, LlmModel.GEMINI, LlmModel.CODEX}
     ]
 
 

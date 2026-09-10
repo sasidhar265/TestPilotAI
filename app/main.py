@@ -323,6 +323,8 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
         "active_agent": FallbackGenerator.descriptor.display_name,
         "agent_runtime_id": FallbackGenerator.descriptor.runtime_id,
         "copilot_model": settings.copilot_model or "organization-default",
+        "gemini_model": settings.gemini_model,
+        "gemini_configured": bool(settings.gemini_api_key_value),
         "openai_model": settings.openai_model,
         "openai_configured": bool(settings.openai_api_key_value),
         "codex_model": settings.codex_model or "account-default",
