@@ -14,6 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agent_runtime import AgentEvent
 from app.agents import TestStorageAgent
+from app.agents.automation_execution_agent import AutomationExecutionAgent, AutomationExecutionError
 from app.agents.context_converter_agent import ContextConversionError, ContextConverterAgent
 from app.agents.lifecycle_agents import (
     BugReporterAgent,
@@ -53,6 +54,8 @@ from app.memory import OrganizationalMemory
 from app.models import (
     AcceptanceReceipt,
     AcceptSuiteRequest,
+    AutomationRunReport,
+    AutomationRunRequest,
     BusinessRule,
     BusinessRuleDocumentResult,
     DefectDraft,
@@ -417,6 +420,7 @@ async def list_agents() -> list[dict[str, object]]:
             TestStorageAgent.descriptor,
             TestDataAgent.descriptor,
             ExecutionAgent.descriptor,
+            AutomationExecutionAgent.descriptor,
             BugReporterAgent.descriptor,
             MetricsAgent.descriptor,
         )
@@ -480,6 +484,29 @@ async def summarize_execution(request: ExecutionRequest) -> ExecutionSummary:
         )
         return summary
     except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/api/automation/run", response_model=AutomationRunReport)
+async def run_automation(
+    request: AutomationRunRequest,
+    settings: Settings = Depends(get_settings),
+) -> AutomationRunReport:
+    """Run only the repository-approved C# BDD automation project."""
+    try:
+        report = await AutomationExecutionAgent(settings).run(request)
+        complete_lifecycle_action(
+            "Automation Execution Agent",
+            "run_csharp_bdd_suite",
+            f"Automation run {report.status}: {report.passed} passed, "
+            f"{report.failed} failed, {report.skipped} skipped.",
+        )
+        return report
+    except AutomationExecutionError as error:
+        publish_lifecycle_event(
+            "Automation Execution Agent", "run_csharp_bdd_suite", "failed", str(error)
+        )
+        lifecycle_events.complete(request_id_context.get())
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 

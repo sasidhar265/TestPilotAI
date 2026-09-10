@@ -291,6 +291,7 @@
           <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
           <article class="agent-card"><span class="agent-number">03</span><div><small>Test Data Agent</small><h3>Synthetic test data</h3><p>Fill missing case-aligned values safely.</p></div><button class="secondary lifecycle-action" id="generate-data" disabled>Generate data</button></article>
           <article class="agent-card"><span class="agent-number">04</span><div><small>Metrics Agent</small><h3>Design metrics</h3><p>Calculate suite coverage and automation signals.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Generate metrics</button></article>
+          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run C# BDD tests</h3><p>Execute the approved UI, API and security suite locally.</p></div><button class="primary lifecycle-action" id="run-automation" disabled>Run automation</button></article>
         </div>
         <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
         <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
@@ -347,7 +348,7 @@
 
   <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260910-gemini" defer></script>
+  <script src="/static/scripts/index.js?v=20260910-automation-agent" defer></script>
   <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
   <script src="/static/scripts/suite-files.js?v=20260908-separate-csharp" defer></script>
 </body>

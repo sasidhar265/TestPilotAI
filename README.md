@@ -95,6 +95,11 @@ scenarios; configure `QUALITY_LIFECYCLE_BASE_URL` (and, for protected environmen
 `API_AUTH_TOKEN`, `APP_USERNAME`, and `APP_PASSWORD`) before running it. See
 `automation/README.md` for setup and tag filters. The C# projects are grouped in
 `QualityLifecycleStudio.sln`.
+After a validated automation suite is displayed, the **Run automation** action invokes this
+fixed project through the local Automation Execution Agent. It does not accept shell commands
+from the browser; only approved environment values are passed to the process, output is bounded
+and secrets are redacted. The result remains reviewable in the workspace before defect or metric
+actions are used.
 
 The step `Given fixture <fixture> sets <customerType> and <productType> as <eligibility>`
 also supports quoted values and selects an approved eligibility fixture record. Its named fixture

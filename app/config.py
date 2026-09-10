@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=15 * 1024 * 1024, ge=1024)
     max_concurrent_requests: int = Field(default=20, ge=1, le=1000)
     max_concurrent_generations: int = Field(default=2, ge=1, le=100)
+    automation_project_path: Path = Path("automation/QualityLifecycle.Automation.csproj")
+    automation_timeout_seconds: float = Field(default=900, gt=0, le=3600)
     request_queue_timeout_seconds: float = Field(default=2.0, gt=0, le=60)
     model_directed_runtime_enabled: bool = True
     copilot_github_token: str = ""

@@ -396,9 +396,12 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "test-storage",
         "test-data",
         "execution",
+        "execution",
         "bug-reporter",
         "metrics",
     ]
+    assert agents[13]["id"] == "execution-agent"
+    assert agents[14]["id"] == "automation-execution-agent"
     assert agents[3]["runtime"] == "local-orchestrator"
     assert agents[4]["runtime"] == "local-router"
     assert agents[3]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"

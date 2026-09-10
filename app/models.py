@@ -288,6 +288,25 @@ class ExecutionSummary(BaseModel):
     pass_rate: float
 
 
+class AutomationRunRequest(SuiteRequest):
+    """Request to run the repository's fixed C# automation project."""
+
+    timeout_seconds: int | None = Field(default=None, ge=1, le=3600)
+
+
+class AutomationRunReport(BaseModel):
+    """Bounded, reviewable result from one controlled automation run."""
+
+    status: str
+    project: str
+    suite_case_count: int
+    passed: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    duration_ms: int = Field(ge=0)
+    output: str = Field(max_length=12_000)
+
+
 class DefectDraft(BaseModel):
     id: str
     title: str
