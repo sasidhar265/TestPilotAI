@@ -17,6 +17,6 @@ dist/
 .ruff_cache/
 tests/csharp/bin/
 tests/csharp/obj/
-tests/automation/bin/
-tests/automation/obj/
-tests/automation/Features/*.feature.cs
+automation/bin/
+automation/obj/
+automation/Features/*.feature.cs

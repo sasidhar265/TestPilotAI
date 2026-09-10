@@ -87,12 +87,14 @@ project contracts remain missing, the app reports the generation issue instead o
 The static check does not replace compiling and running the generated code in its target project.
 
 The repository also includes a live C# BDD automation project at
-`tests/automation/QualityLifecycle.Automation.csproj`. Its ReqnRoll features cover the UI
+`automation/QualityLifecycle.Automation.csproj`, separate from the Python unit and integration
+tests under `tests/`. Its ReqnRoll features cover the UI
 workspace, health and validation APIs, protected generation requests, and provider-secret
 redaction checks. The project uses Playwright for browser scenarios and `HttpClient` for API
 scenarios; configure `QUALITY_LIFECYCLE_BASE_URL` (and, for protected environments,
 `API_AUTH_TOKEN`, `APP_USERNAME`, and `APP_PASSWORD`) before running it. See
-`tests/automation/README.md` for setup and tag filters.
+`automation/README.md` for setup and tag filters. The C# projects are grouped in
+`QualityLifecycleStudio.sln`.
 
 The step `Given fixture <fixture> sets <customerType> and <productType> as <eligibility>`
 also supports quoted values and selects an approved eligibility fixture record. Its named fixture

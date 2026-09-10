@@ -9,15 +9,18 @@ Start the app, then run the API and security scenarios:
 ```bash
 QUALITY_LIFECYCLE_BASE_URL=http://127.0.0.1:8000 \
 API_AUTH_TOKEN="$API_AUTH_TOKEN" \
-dotnet test tests/automation/QualityLifecycle.Automation.csproj --filter "TestCategory=api|TestCategory=security"
+dotnet test automation/QualityLifecycle.Automation.csproj --filter "TestCategory=api|TestCategory=security"
 ```
 
 Install the Playwright browser once before UI runs:
 
 ```bash
-pwsh tests/automation/bin/Debug/net8.0/playwright.ps1 install chromium
-dotnet test tests/automation/QualityLifecycle.Automation.csproj --filter TestCategory=ui
+pwsh automation/bin/Debug/net8.0/playwright.ps1 install chromium
+dotnet test automation/QualityLifecycle.Automation.csproj --filter TestCategory=ui
 ```
 
 `QUALITY_LIFECYCLE_BASE_URL` defaults to `http://127.0.0.1:8000`. Security scenarios require
 `API_AUTH_TOKEN` to be configured and only assert behavior; they never print its value.
+
+The Python unit and integration suite remains under `tests/` and runs with `pytest`. The
+ReqnRoll project here is the live UI/API/security automation suite and runs with `dotnet test`.
