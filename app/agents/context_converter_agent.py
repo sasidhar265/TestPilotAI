@@ -194,7 +194,9 @@ class ContextConverterAgent:
         for case in suite.test_cases:
             if case.execution_mode.value != "automation":
                 continue
-            scenario = (case.gherkin or "").strip()
+            from app.workspace_policy import without_tags
+
+            scenario = without_tags(case.gherkin or "").strip()
             if not scenario.startswith(("Scenario:", "Scenario Outline:")):
                 given = _short_step(
                     case.preconditions[0] if case.preconditions else "prerequisites are satisfied"

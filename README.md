@@ -15,7 +15,7 @@ from the Mac as PDF or XLSX. A document-ingestion component extracts normalized 
 agent generates the suite, and an independent validator reports coverage, traceability,
 duplicates, clarity, and expected-result quality. Image extraction uses local Tesseract OCR.
 
-The application uses fifteen discoverable agents across the test lifecycle. In addition to
+The application uses eighteen discoverable agents across the test lifecycle. In addition to
 requirement ingestion, manual/automation generation, validation, conversion, and storage, it can
 normalize business rules, recall approved knowledge, fill privacy-safe test data, summarize test
 execution, draft defects, and calculate quality metrics. `GET /api/agents` lists every agent's
@@ -48,7 +48,7 @@ appropriate. The results screen can copy a scenario or feature and generate, rev
 download ReqnRoll C# step definitions. Choose **Step definitions (.cs)** for a single file
 containing reusable binding declarations and pending method stubs to implement in your framework.
 This option makes no AI calls and does not retrieve or generate implementation packs.
-Choose **Full C# pack** separately to generate implementations and supporting files, with a ZIP
+Choose **Automation pack** separately to generate implementations and supporting files, with a ZIP
 download. Both options require a validated suite containing automation Gherkin.
 
 The full C# pack generator includes executable common API bindings for named JSON request
@@ -95,11 +95,13 @@ scenarios; configure `QUALITY_LIFECYCLE_BASE_URL` (and, for protected environmen
 `API_AUTH_TOKEN`, `APP_USERNAME`, and `APP_PASSWORD`) before running it. See
 `automation/README.md` for setup and tag filters. The C# projects are grouped in
 `QualityLifecycleStudio.sln`.
-After a validated automation suite is displayed, the **Run automation** action invokes this
+After a validated automation suite is displayed, the **Run repository checks** action invokes this
 fixed project through the local Automation Execution Agent. It does not accept shell commands
 from the browser; only approved environment values are passed to the process, output is bounded
-and secrets are redacted. The result remains reviewable in the workspace before defect or metric
-actions are used.
+and secrets are redacted. The results describe the fixed repository checks, not the generated scenarios, and do not
+feed generated-suite metrics or defects. The runner reads structured TRX results, streams a
+bounded output tail, and terminates the process tree on timeout or cancellation. Missing
+results are reported as runner errors rather than invented test failures.
 
 The step `Given fixture <fixture> sets <customerType> and <productType> as <eligibility>`
 also supports quoted values and selects an approved eligibility fixture record. Its named fixture
@@ -475,7 +477,7 @@ generation. Jira receives only the cases selected in an explicit publish request
 
 ### Agent responsibilities
 
-The fifteen roles are grouped below by purpose so their relationship is easier to scan:
+The eighteen roles are grouped below by purpose so their relationship is easier to scan:
 
 | Group | Agents | Responsibility |
 | --- | --- | --- |
@@ -554,3 +556,53 @@ existing validation and review flow; blocked, truncated, and invalid responses f
 
 The integration uses [Google’s structured-output REST API](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
 Gemini support applies to test suites; the full C# pack retains its existing providers.
+
+## Shared rules, standards and automation languages
+
+The shared rules editor now reads and saves `workspace/business-rules.json` on the server.
+This is the single persistent placeholder for project rules. Start with an empty array and add
+objects such as `{"id": "BR-001", "description": "Your approved business rule"}`. Text and imported
+rules from the editor are saved here before generation. Every generation pipeline loads the file
+before knowledge lookup and provider calls. Existing API clients can still supply transient rules;
+conflicts with a shared rule ID are rejected. Rules and standards apply across this workspace,
+so shared edits affect other users. Keep the `workspace/` directory on persistent storage.
+
+Edit `workspace/automation-standards.md` for automation conventions and
+`workspace/feature-standards.md` for Gherkin conventions. Agents reread these files on generation.
+Changes to feature standards invalidate cached suites while retaining saved review feedback;
+C# implementation memory also incorporates the automation standards. Generated feature files have
+no tags, including scenario, outline and Examples tags. Tag-looking text inside doc strings is
+preserved as data. Existing repository smoke-test tags are independent of generated artifacts.
+
+Choose **Automation language** before requesting step definitions or an automation pack:
+C# (ReqnRoll), Java (Cucumber-JVM), Python (Behave), JavaScript or TypeScript (Cucumber-JS), or Ruby
+(Cucumber-Ruby). The Multi Language Support Agent supplies language-specific pending declarations
+for bindings-only requests. Full packs use the configured providers and the shared standards to
+implement the approved scenarios, with static validation before delivery. New language packs
+include dependency manifests, setup instructions and an untagged feature file. Missing project
+contracts or incomplete provider output cause generation to fail; static checks do not establish
+successful compilation or execution. Bindings-only adapters supply standard framework declarations;
+custom coding conventions are provided to full-pack generation. Gherkin natural-language dialect
+selection is separate from this programming-language selector and is not changed here.
+
+The new endpoints are `GET/PUT /api/workspace/rules`, `GET /api/workspace/standards`,
+`GET /api/automation/languages`, and `POST /api/step-definitions/languages/{bindings,pack,download}`.
+Legacy C# endpoints remain available. The generic download endpoint safely archives reviewable
+source files; it does not certify user-supplied files as complete implementations.
+The adapters follow [Cucumber step definitions](https://cucumber.io/docs/cucumber/step-definitions/)
+and [Behave regular expression matchers](https://behave.readthedocs.io/en/stable/tutorial/).
+
+## Workspace dashboard
+
+**Dashboard** shows running work and its latest lifecycle update, generation/pack history,
+repository execution details, and a test matrix with case IDs, modes, categories, priorities,
+requirement mappings and execution status. It refreshes every five seconds while the page is visible.
+You can record reviewed case results for the current generated suite; this records evidence and does
+not execute code. Repository checks never mark generated cases as passed. Recorded case results
+are associated with the exact suite content so unrelated suites cannot inherit their status.
+
+`GET /api/dashboard` returns the latest 200 completed actions, persisted in `dashboard.db` alongside
+`ORGANIZATIONAL_MEMORY_PATH`. Active work is scoped to the current server process; completed history
+survives restarts. History starts with this update and does not reconstruct earlier work. Dashboard
+metadata is shared with authenticated workspace users. It excludes provider prompts, credentials,
+and repository runner output. Use the same access and retention controls as organizational memory.

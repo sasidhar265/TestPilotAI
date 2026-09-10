@@ -129,6 +129,13 @@ class TestCase(BaseModel):
         description="Given/When/Then scenario when the requested format is BDD",
     )
 
+    @field_validator("gherkin")
+    @classmethod
+    def untagged_gherkin(cls, value: str | None) -> str | None:
+        from app.workspace_policy import without_tags
+
+        return without_tags(value) if value else value
+
 
 class TestSuite(BaseModel):
     feature_name: str
@@ -300,6 +307,8 @@ class AutomationRunReport(BaseModel):
     status: str
     project: str
     suite_case_count: int
+    execution_scope: str = "repository-checks"
+    error: str | None = None
     passed: int = Field(ge=0)
     failed: int = Field(ge=0)
     skipped: int = Field(ge=0)

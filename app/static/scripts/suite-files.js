@@ -4,6 +4,9 @@ let stepDefinitionTask = null;
 let stepDefinitionTimer = null;
 let stepDefinitionRequest = null;
 const stepDefinitionCache = new Map();
+function selectedLanguage(){return $('automation-language').value;}
+async function artifactPolicyKey(){const response=await fetch('/api/workspace/standards');if(!response.ok)throw await responseError(response);return JSON.stringify(await response.json());}
+$('automation-language').addEventListener('change',()=>{resetSuiteFiles();syncSuiteFileActions();});
 
 function closeStepDefinitionProgress() {
   clearInterval(stepDefinitionTimer);
@@ -16,7 +19,7 @@ function showStepDefinitionProgress() {
 }
 
 function startStepDefinitionProgress() {
-  $('cs-generation-title').textContent = 'Generating full C# pack';
+  $('cs-generation-title').textContent = 'Generating automation pack';
   $('cs-generation-message').textContent = 'Creating bindings, implementations and supporting files. Your pack will open when ready.';
   $('cs-generation-dialog').querySelector('[role="progressbar"]').classList.remove('hidden');
   $('hide-cs-generation').textContent = 'Run in background';
@@ -42,6 +45,7 @@ function resetSuiteFiles() {
   featureFile = null;
   stepDefinitionArtifact = null;
   stepDefinitionTask = null;
+  $('automation-language').disabled = false;
   $('feature-file-content').textContent = '';
   $('step-definition-files').replaceChildren();
   $('feature-file-view').classList.add('hidden');
@@ -102,7 +106,11 @@ async function viewFeatureFile() {
 
 async function ensureStepDefinitions() {
   requireApprovedSuite();
-  const cacheKey = 'full-pack:' + JSON.stringify(suite);
+  const snapshot = suite;
+  const validation = validationReport;
+  const language = selectedLanguage();
+  const cacheKey = 'full-pack:' + language + await artifactPolicyKey() + JSON.stringify(snapshot);
+  if(suite!==snapshot || selectedLanguage()!==language)throw new Error('Suite or language changed. Try again.');
   if (stepDefinitionCache.has(cacheKey)) {
     stepDefinitionArtifact = stepDefinitionCache.get(cacheKey);
     return stepDefinitionArtifact;
@@ -111,25 +119,24 @@ async function ensureStepDefinitions() {
     showStepDefinitionProgress();
     return stepDefinitionTask;
   }
-  const snapshot = suite;
-  const validation = validationReport;
   const generation = {requestId: crypto.randomUUID(), controller: new AbortController(), cancelled: false};
   stepDefinitionRequest = generation;
-  $('status').textContent = 'Generating full C# pack…';
+  $('status').textContent = 'Generating automation pack…';
+  $('automation-language').disabled = true;
   startStepDefinitionProgress();
   const task = (async () => {
-    const response = await api('/api/step-definitions/reqnroll', {suite: snapshot, validation}, {
+    const response = await api('/api/step-definitions/languages/pack', {suite: snapshot, validation, language}, {
       requestId: generation.requestId, signal: generation.controller.signal,
     });
     const artifact = await response.json();
     if (generation.cancelled) throw new DOMException('Generation cancelled', 'AbortError');
-    if (suite !== snapshot) throw new Error('The suite changed. Generate C# for the current suite again.');
+    if (suite !== snapshot || selectedLanguage() !== language) throw new Error('The suite or language changed. Generate code for the current suite again.');
     stepDefinitionArtifact = artifact;
     stepDefinitionCache.set(cacheKey, artifact);
     if (stepDefinitionCache.size > 5) {
       stepDefinitionCache.delete(stepDefinitionCache.keys().next().value);
     }
-    $('status').textContent = 'Full C# pack is ready to view or download.';
+    $('status').textContent = 'Automation pack is ready to view or download.';
     return artifact;
   })();
   stepDefinitionTask = task;
@@ -137,11 +144,11 @@ async function ensureStepDefinitions() {
   try { return await task; }
   catch (error) {
     if (generation.cancelled) {
-      throw new DOMException('Full C# pack generation cancelled.', 'AbortError');
+      throw new DOMException('Automation pack generation cancelled.', 'AbortError');
     }
     failed = true;
     if (stepDefinitionTask === task) {
-      $('cs-generation-title').textContent = 'C# generation could not complete';
+      $('cs-generation-title').textContent = 'Automation generation could not complete';
       $('cs-generation-message').textContent = error.message;
       $('cs-generation-dialog').querySelector('[role="progressbar"]').classList.add('hidden');
       $('hide-cs-generation').textContent = 'Close';
@@ -152,6 +159,7 @@ async function ensureStepDefinitions() {
   }
   finally {
     if (stepDefinitionTask === task) {
+      $('automation-language').disabled = false;
       stepDefinitionTask = null;
       stepDefinitionRequest = null;
       clearInterval(stepDefinitionTimer);
@@ -195,23 +203,24 @@ async function viewStepDefinitions() {
 async function ensureBindingsOnly() {
   requireApprovedSuite();
   const snapshot = suite;
-  const key = 'bindings:' + JSON.stringify(snapshot);
+  const language = selectedLanguage();
+  const key = 'bindings:' + language + await artifactPolicyKey() + JSON.stringify(snapshot);
   if (!stepDefinitionCache.has(key)) {
-    const response = await api('/api/step-definitions/bindings', {suite: snapshot, validation: validationReport});
+    const response = await api('/api/step-definitions/languages/bindings', {suite: snapshot, validation: validationReport, language});
     const artifact = await response.json();
-    if (suite !== snapshot) throw new Error('The suite changed. Generate step definitions for the current suite.');
+    if (suite !== snapshot || selectedLanguage() !== language) throw new Error('The suite or language changed. Generate step definitions for the current suite.');
     stepDefinitionCache.set(key, artifact);
     if (stepDefinitionCache.size > 5) stepDefinitionCache.delete(stepDefinitionCache.keys().next().value);
   }
   stepDefinitionArtifact = stepDefinitionCache.get(key);
-  $('status').textContent = 'Step definitions are ready. Full C# pack generation is a separate option.';
+  $('status').textContent = 'Step definitions are ready. Automation pack generation is a separate option.';
   return stepDefinitionArtifact;
 }
 
 async function downloadFullPack() {
   const artifact = await ensureStepDefinitions();
-  const response = await api('/api/step-definitions/download', artifact);
-  download(await response.blob(), 'ReqnRollFullPack.zip');
+  const response = await api('/api/step-definitions/languages/download', artifact);
+  download(await response.blob(), `automation-${artifact.language}.zip`);
 }
 
 function downloadCSharpFile(index) {
@@ -266,8 +275,8 @@ $('hide-cs-generation').onclick = () => $('cs-generation-dialog').close();
 $('cancel-cs-generation').onclick = cancelFullPackGeneration;
 $('download-step-definitions').onclick = suiteFileAction(async () => {
   const artifact = await ensureStepDefinitions();
-  const response = await api('/api/step-definitions/download', artifact);
-  download(await response.blob(), 'ReqnRollStepDefinitions.zip');
+  const response = await api('/api/step-definitions/languages/download', artifact);
+  download(await response.blob(), `automation-${artifact.language}.zip`);
 });
 $('step-definition-files').addEventListener('click', event => {
   const button = event.target.closest('.copy-step-definition');

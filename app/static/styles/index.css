@@ -802,3 +802,57 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .case .case-review{margin:12px 0 0;padding:12px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent}
 .manual-case .case-review{margin:0 17px 14px 3px}
 .case-review-form.hidden{display:none}
+
+/* Workspace history and test matrix */
+[data-workspace-page] { min-width: 0; }
+.workspace-page-panel, #work-dashboard { margin: 22px 0 0; padding: clamp(22px, 3vw, 34px); scroll-margin-top: 18px; }
+#work-dashboard p { font-size: .82rem; line-height: 1.6; color: var(--muted); }
+#work-dashboard select, #automation-language { max-width: 100%; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; }
+#work-dashboard > label { display: block; font-size: .78rem; font-weight: 650; margin: 20px 0 8px; }
+#dashboard-totals { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-block: 18px; padding: 0; }
+#dashboard-totals span { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); font-size: .75rem; }
+#dashboard-totals strong { font-size: 1.6rem; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.dashboard-table-wrap { overflow-x: auto; margin-block: 18px; border: 1px solid var(--line); border-radius: 10px; }
+.work-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .8rem; }
+.work-table th, .work-table td { padding: 12px; border-bottom: 1px solid var(--line); }
+.work-table th { background: var(--surface-soft); color: var(--muted); font-size: .72rem; }
+.work-table tr:last-child td { border-bottom: 0; }
+#work-dashboard > details { padding: 0 15px 14px; font-size: .82rem; }
+#work-dashboard > details summary { cursor: pointer; font-weight: 650; }
+#work-dashboard details label { display: block; margin: 12px 0 6px; font-size: .75rem; }
+#execution-actual { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); background: var(--surface); }
+#record-execution { margin-top: 12px; }
+#dashboard-history { max-height: 360px; overflow-y: auto; }
+#dashboard-history p { padding-block: 10px; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) {
+  #dashboard-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #dashboard-suite { width: 100%; font-size: .75rem; }
+  #dashboard-totals span { padding: 12px; }
+}
+
+/* Shared standalone workspace pages use the same panel and form rhythm as Home. */
+#work-dashboard .panel-head p { margin: 0; }
+#dashboard-progress { padding: 0 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+.execution-fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+.execution-fields > div { min-width: 0; }
+.execution-fields select, #dashboard-suite { width: 100%; }
+#work-dashboard select, #execution-actual { font-size: .82rem; min-height: 42px; }
+.work-table td { overflow-wrap: anywhere; }
+.work-table { min-width: 560px; }
+@media (max-width: 640px) {
+  .workspace-page-panel, #work-dashboard { padding: 19px; }
+  .execution-fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  #work-dashboard .panel-head > button { width: 100%; }
+}
+
+/* Run history follows the shared workspace cards. */
+#dashboard-history { max-height: none; overflow: visible; }
+.execution-run summary { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.execution-run summary > span:first-child { flex: 1; font-weight: 750; }
+.execution-run summary time { color: var(--muted); font-size: .72rem; }
+.run-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-block: 22px; }
+.run-details dt { color: var(--muted); font-size: .7rem; }
+.run-details dd { margin: 5px 0 0; overflow-wrap: anywhere; font-size: .82rem; }
+.run-output { max-height: 420px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: .75rem; line-height: 1.6; }
+.execution-run h3 { font-size: .85rem; margin-top: 20px; }
+@media (max-width: 640px) { .run-details { grid-template-columns: 1fr; } .execution-run summary time { width: 100%; } }

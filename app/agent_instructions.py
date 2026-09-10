@@ -98,6 +98,9 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
             sections.append(_instruction_body(specialist_override))
     sections.append(load_agent_instructions("quality-gate"))
     sections.append(load_agent_instructions("test-data"))
+    from app.workspace_policy import standards
+
+    sections.append(standards("feature"))
     quality_override = PROFILE_DIRECTORY / profile / "quality-gate.md"
     if quality_override.is_file():
         sections.append(_instruction_body(quality_override))
@@ -108,9 +111,13 @@ def step_definition_agent_instructions(
     profile: str = "auto-finance-quotation",
 ) -> str:
     """Return the base ReqnRoll policy plus the selected project's BRD profile."""
+    from app.workspace_policy import standards
+
     return "\n\n".join(
         [
             load_agent_instructions("reqnroll-step-definition-generator"),
             load_profile_instructions(profile, "reqnroll-step-definition-generator"),
+            standards("automation"),
+            standards("feature"),
         ]
     )

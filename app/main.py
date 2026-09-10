@@ -24,6 +24,7 @@ from app.agents.lifecycle_agents import (
     MetricsAgent,
     TestDataAgent,
 )
+from app.agents.multilanguage_agent import MultiLanguageAgent
 from app.agents.output_agent import OutputAgent
 from app.agents.reqnroll_step_definition_agent import (
     ReqnRollStepDefinitionAgent,
@@ -89,6 +90,7 @@ from app.observability import (
 )
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
+from app.services.dashboard import DashboardStore, suite_details
 from app.services.document_ingestion import (
     DocumentIngestionError,
     DocumentIngestionService,
@@ -101,6 +103,7 @@ from app.services.model_access import (
 )
 from app.user_routes import router as user_router
 from app.users import authenticate
+from app.workspace_routes import router as workspace_router
 
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
@@ -121,6 +124,8 @@ app.add_middleware(
     allowed_hosts=settings_at_startup.allowed_host_list,
 )
 app.include_router(user_router)
+app.include_router(workspace_router)
+
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
@@ -285,6 +290,8 @@ async def logout() -> Response:
     return response
 
 
+@app.get("/progress", include_in_schema=False)
+@app.get("/quality-lifecycle", include_in_schema=False)
 @app.get("/", include_in_schema=False)
 async def index() -> FileResponse:
     return FileResponse(INDEX, headers=HTML_HEADERS)
@@ -421,6 +428,7 @@ async def list_agents() -> list[dict[str, object]]:
             TestDataAgent.descriptor,
             ExecutionAgent.descriptor,
             AutomationExecutionAgent.descriptor,
+            MultiLanguageAgent.descriptor,
             BugReporterAgent.descriptor,
             MetricsAgent.descriptor,
         )
@@ -473,10 +481,19 @@ async def generate_test_data(request: SuiteRequest) -> TestSuite:
 
 
 @app.post("/api/execution", response_model=ExecutionSummary)
-async def summarize_execution(request: ExecutionRequest) -> ExecutionSummary:
+async def summarize_execution(
+    request: ExecutionRequest, settings: Settings = Depends(get_settings)
+) -> ExecutionSummary:
     """Validate and summarize results supplied by an approved execution source."""
     try:
         summary = ExecutionAgent().summarize(request)
+        dashboard = DashboardStore(settings.organizational_memory_path)
+        details = suite_details(request.suite, False)
+        statuses = {item.case_id: item.status.value for item in summary.results}
+        for case in details["cases"]:
+            case["execution"] = statuses.get(case["id"], "not_run")
+        details.update(summary.model_dump(mode="json", exclude={"results"}))
+        dashboard.finish(dashboard.start("case_execution"), "completed", details)
         complete_lifecycle_action(
             "Execution Agent",
             "summarize_execution",
@@ -493,8 +510,11 @@ async def run_automation(
     settings: Settings = Depends(get_settings),
 ) -> AutomationRunReport:
     """Run only the repository-approved C# BDD automation project."""
+    dashboard = DashboardStore(settings.organizational_memory_path)
+    run_id = dashboard.start("repository_checks")
     try:
         report = await AutomationExecutionAgent(settings).run(request)
+        dashboard.finish(run_id, report.status, report.model_dump())
         complete_lifecycle_action(
             "Automation Execution Agent",
             "run_csharp_bdd_suite",
@@ -508,6 +528,9 @@ async def run_automation(
         )
         lifecycle_events.complete(request_id_context.get())
         raise HTTPException(status_code=422, detail=str(error)) from error
+
+    finally:
+        dashboard.finish(run_id, "error")
 
 
 @app.post("/api/defects", response_model=list[DefectDraft])

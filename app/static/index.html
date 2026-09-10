@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260909-review-layout">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260910-page-layout">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
   <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
+  <style>[data-workspace-page][hidden] { display: none !important; }</style>
 </head>
 <body>
   <div class="app-shell">
@@ -21,6 +22,8 @@
       <nav class="primary-nav" aria-label="Primary navigation">
         <span class="nav-label">Workspace</span>
         <a class="nav-item active" href="/" aria-current="page"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
+        <a class="nav-item" href="/progress"><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a>
+        <a class="nav-item" href="/quality-lifecycle"><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a>
         <span class="nav-label">Explore</span>
         <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
         <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
@@ -73,6 +76,7 @@
         </div>
       </header>
 
+      <div data-workspace-page="/">
       <div class="workflow-rail" role="list" aria-label="Test design workflow">
         <div class="workflow-step active" role="listitem" aria-current="step"><span>1</span><strong>Define</strong><small>Add requirements</small></div>
         <div class="workflow-step" role="listitem"><span>2</span><strong>Review</strong><small>Inspect generated tests</small></div>
@@ -120,9 +124,9 @@
             <p class="field-help" id="description-help">Use business language. The active workspace profile supplies governed quality rules.</p>
 
             <details class="rule-control" id="rule-control">
-              <summary><span><b>Business requirements &amp; rules</b><small>Add governed rules for this generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
+              <summary><span><b>Business requirements &amp; rules</b><small>One shared source, fetched before generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
               <div class="rule-editor">
-                <label class="field-label" for="business-rules">Editable rule overlay</label>
+                <label class="field-label" for="business-rules">Shared business rules</label>
                 <div class="rule-textarea-wrap">
                   <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: Requests must reject invalid or expired input.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
                   <span class="file-preview attached-rule-document hidden" id="rule-file-preview"><span class="file-badge" id="rule-file-type"></span><span class="file-info"><span class="file-name" id="rule-file-name"></span><span class="file-size" id="rule-file-size"></span></span><button class="file-remove" id="rule-file-remove" type="button" aria-label="Remove attached business rules document">×</button></span>
@@ -132,8 +136,8 @@
                     <span class="mobile-control-label">Attach rules</span>
                   </label>
                 </div>
-                <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. The repository BRD baseline and Quality Gate remain protected.</p>
-                <div class="rule-actions"><button class="secondary" id="save-business-rules" type="button">Save rule overlay</button><button class="secondary" id="clear-business-rules" type="button">Clear</button><span id="rule-save-state" aria-live="polite">Stored in this browser only</span></div>
+                <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. Rules are saved in <code>workspace/business-rules.json</code> and shared across this workspace. Generation saves this editor first.</p>
+                <div class="rule-actions"><button class="secondary" id="save-business-rules" type="button">Save shared rules</button><button class="secondary" id="clear-business-rules" type="button">Clear</button><span id="rule-save-state" aria-live="polite">Loaded from workspace/business-rules.json</span></div>
               </div>
             </details>
 
@@ -227,12 +231,15 @@
           <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
           <div class="suite-output-actions">
             <div class="tools" aria-label="Generated suite actions">
+              <label for="automation-language">Automation language
+                <select id="automation-language"><option value="csharp">C# · ReqnRoll</option><option value="java">Java · Cucumber</option><option value="python">Python · Behave</option><option value="javascript">JavaScript · Cucumber</option><option value="typescript">TypeScript · Cucumber</option><option value="ruby">Ruby · Cucumber</option></select>
+              </label>
               <details class="suite-menu" id="suite-view-menu">
                 <summary class="secondary">View <span aria-hidden="true">▾</span></summary>
                 <div class="suite-menu-options" aria-label="View generated files">
                   <button id="view-feature" type="button">.feature <span>Feature file</span></button>
-                  <button id="generate-step-definitions" type="button">.cs <span>Step definitions</span></button>
-                  <button id="view-csharp-pack" type="button" title="View the full C# pack, including bindings and implementations">.cs <span>Full C# pack</span></button>
+                  <button id="generate-step-definitions" type="button">Code <span>Step definitions</span></button>
+                  <button id="view-csharp-pack" type="button" title="View the automation pack, including bindings and implementations">Code <span>Automation pack</span></button>
                 </div>
               </details>
               <details class="suite-menu" id="suite-download-menu">
@@ -243,8 +250,8 @@
                   <button id="pdf" type="button">.pdf <span>PDF document</span></button>
                   <button id="json" type="button">.json <span>JSON data</span></button>
                   <button id="download-feature" type="button">.feature <span>Feature file</span></button>
-                  <button id="suite-download-cs" type="button">.cs <span>Step definition files</span></button>
-                  <button id="download-csharp-pack" type="button">.zip <span>Full C# pack</span></button>
+                  <button id="suite-download-cs" type="button">Code <span>Step definition files</span></button>
+                  <button id="download-csharp-pack" type="button">.zip <span>Automation pack</span></button>
                 </div>
               </details>
               <details class="suite-jira">
@@ -269,19 +276,30 @@
           <article class="step-definition-file"><div><strong id="feature-file-name">automation-tests.feature</strong><button class="secondary" id="copy-feature-file" type="button">Copy</button></div><pre><code id="feature-file-content"></code></pre></article>
         </section>
         <section class="step-definitions hidden" id="step-definitions" aria-live="polite">
-          <div class="step-definitions-head"><div><span class="section-kicker">ReqnRoll automation</span><h3>Generated C# step definitions</h3><p>Review, copy or download the typed bindings for this suite.</p></div><button class="secondary" id="close-step-view" type="button">Close preview</button></div>
+          <div class="step-definitions-head"><div><span class="section-kicker">BDD automation</span><h3>Generated automation files</h3><p>Review, copy or download the typed bindings for this suite.</p></div><button class="secondary" id="close-step-view" type="button">Close preview</button></div>
           <div id="step-definition-files"></div>
           <details><summary>Step coverage and generation notes</summary><div id="step-definition-coverage"></div></details>
         </section>
         <dialog class="cs-download-dialog" id="cs-download-dialog" aria-labelledby="cs-download-title">
-          <div class="step-definitions-head"><div><h3 id="cs-download-title">Download step definitions</h3><p>Choose a .cs file, or download the complete set.</p></div><button class="secondary" id="close-cs-download" type="button">Close</button></div>
+          <div class="step-definitions-head"><div><h3 id="cs-download-title">Download step definitions</h3><p>Choose a source file, or download the complete set.</p></div><button class="secondary" id="close-cs-download" type="button">Close</button></div>
           <div id="cs-download-files"></div>
           <button class="primary" id="download-step-definitions" type="button">Download all files (.zip)</button>
         </dialog>
         <details class="subpanel"><summary>Assumptions and coverage intelligence</summary><div id="notes"></div></details>
       </section>
 
-      <section class="panel agent-workspace" id="agent-workspace" aria-labelledby="agent-workspace-title">
+      </div>
+      <div data-workspace-page="/progress" hidden>
+      <section class="panel workspace-page-panel" id="work-dashboard" aria-labelledby="work-dashboard-title">
+        <div class="panel-head"><div><span class="section-kicker">Workspace activity</span><h2 id="work-dashboard-title">Run history and execution details</h2><p>Review run status, elapsed time, execution output, and recorded activity.</p></div><button id="refresh-dashboard" class="secondary" type="button">Refresh</button></div>
+        <p id="dashboard-scope">Loading recorded work…</p>
+        <div id="dashboard-progress" aria-live="polite"></div>
+        <div id="dashboard-totals" class="dashboard-numbers"></div>
+        <div id="dashboard-history" aria-label="Execution history"></div>
+      </section>
+      </div>
+      <div data-workspace-page="/quality-lifecycle" hidden>
+      <section class="panel agent-workspace workspace-page-panel" id="agent-workspace" aria-labelledby="agent-workspace-title">
         <div class="panel-head compact-head">
           <div><span class="section-kicker">Quality lifecycle</span><h2 id="agent-workspace-title">Review and prepare the suite</h2><p id="lifecycle-guidance">Generate a test suite to activate coverage, knowledge, test-data and quality-metric actions.</p></div>
           <span class="secure">LOCAL ACTIONS</span>
@@ -291,20 +309,20 @@
           <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
           <article class="agent-card"><span class="agent-number">03</span><div><small>Test Data Agent</small><h3>Synthetic test data</h3><p>Fill missing case-aligned values safely.</p></div><button class="secondary lifecycle-action" id="generate-data" disabled>Generate data</button></article>
           <article class="agent-card"><span class="agent-number">04</span><div><small>Metrics Agent</small><h3>Design metrics</h3><p>Calculate suite coverage and automation signals.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Generate metrics</button></article>
-          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run C# BDD tests</h3><p>Execute the approved UI, API and security suite locally.</p></div><button class="primary lifecycle-action" id="run-automation" disabled>Run automation</button></article>
+          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run repository checks</h3><p>Check this application’s fixed UI, API and security tests. Generated scenarios are not executed.</p></div><button class="primary lifecycle-action" id="run-automation" disabled>Run repository checks</button></article>
         </div>
         <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
         <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
           <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Metrics</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate coverage metrics for the current designed suite.</p></div></article>
         </div>
       </section>
-
+      </div>
     </main>
   </div>
   <dialog class="cs-download-dialog" id="cs-generation-dialog" aria-labelledby="cs-generation-title" aria-describedby="cs-generation-message">
-    <h3 id="cs-generation-title">Generating C# step definitions</h3>
+    <h3 id="cs-generation-title">Generating automation files</h3>
     <p id="cs-generation-message" role="status">Creating reusable step definitions for your BDD scenarios. Your files will open when ready.</p>
-    <div class="generation-progress" role="progressbar" aria-label="C# step definition generation in progress"><span class="generation-progress-bar"></span></div>
+    <div class="generation-progress" role="progressbar" aria-label="Automation generation in progress"><span class="generation-progress-bar"></span></div>
     <div class="generation-dialog-footer"><span id="cs-generation-time">00:00 elapsed</span><div class="cs-generation-actions"><button class="secondary" id="cancel-cs-generation" type="button">Cancel generation</button><button class="secondary" id="hide-cs-generation" type="button">Run in background</button></div></div>
   </dialog>
   <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
@@ -346,10 +364,12 @@
     </section>
   </div>
 
+  <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
   <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260910-automation-agent" defer></script>
+  <script src="/static/scripts/index.js?v=20260910-workspace" defer></script>
   <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-  <script src="/static/scripts/suite-files.js?v=20260908-separate-csharp" defer></script>
+  <script src="/static/scripts/dashboard.js?v=20260910-execution" defer></script>
+  <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
 </body>
 </html>

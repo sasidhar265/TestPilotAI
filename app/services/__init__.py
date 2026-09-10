@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import sys
@@ -61,6 +62,25 @@ class MultiAgentTestPipeline:
         self.runtime = runtime
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
+        from app.services.dashboard import DashboardStore, suite_details
+
+        dashboard = DashboardStore(self.storage.memory.path)
+        run_id = dashboard.start("test_generation")
+        try:
+            result = await self._run(request)
+        except BaseException as error:
+            dashboard.finish(
+                run_id, "cancelled" if isinstance(error, asyncio.CancelledError) else "failed"
+            )
+            raise
+        dashboard.finish(
+            run_id,
+            "completed" if result.validation.passed else "validation_failed",
+            suite_details(result.suite, result.validation.passed),
+        )
+        return result
+
+    async def _run(self, request: GenerateRequest) -> PipelineResult:
         request = self.business_rules.enrich(request)
         targeted = self.storage.memory.latest_targeted_review(request)
         request = self.storage.memory.with_reviews(request)
@@ -202,7 +222,7 @@ class TestGenerationService:
 
     async def expand(self, expansion: ExpandRequest) -> TestSuite:
         return await self.registry.get_test_design_agent().generate(
-            expansion.request,
+            BusinessRulesAgent().enrich(expansion.request),
             phase="expand",
             existing_titles=expansion.existing_titles,
         )
@@ -216,6 +236,7 @@ class RequirementToTestCaseService:
         self.memory = memory
 
     async def convert(self, request: GenerateRequest) -> TestSuite:
+        request = BusinessRulesAgent().enrich(request)
         known_suite = self.memory.get(request)
         if known_suite is not None:
             return known_suite
@@ -226,7 +247,7 @@ class RequirementToTestCaseService:
     async def expand(self, expansion: ExpandRequest) -> TestSuite:
         agent = self.registry.get_requirement_to_test_case_agent()
         return await agent.generate(
-            expansion.request,
+            BusinessRulesAgent().enrich(expansion.request),
             phase="expand",
             existing_titles=expansion.existing_titles,
         )

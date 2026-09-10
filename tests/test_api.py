@@ -142,7 +142,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="close-model-access"' in response.text
     assert 'aria-label="Close model access details"' in response.text
     assert 'id="save-business-rules"' in response.text
-    assert "The repository BRD baseline and Quality Gate remain protected" in response.text
+    assert "workspace/business-rules.json" in response.text
+    assert 'id="automation-language"' in response.text
+    assert 'id="work-dashboard"' in response.text
     assert 'id="agent-workspace"' in response.text
     assert 'id="suite-view-menu"' in response.text
     assert 'id="suite-download-menu"' in response.text
@@ -397,6 +399,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "test-data",
         "execution",
         "execution",
+        "automation-test-generator",
         "bug-reporter",
         "metrics",
     ]

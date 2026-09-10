@@ -21,7 +21,7 @@ class OrganizationalMemory:
         self.enabled = enabled
 
     @staticmethod
-    def key_for(request: GenerateRequest) -> str:
+    def key_for(request: GenerateRequest, *, include_standards: bool = True) -> str:
         normalized = {
             "description": " ".join(request.description.casefold().split()),
             "additional_context": " ".join(request.additional_context.casefold().split()),
@@ -32,6 +32,10 @@ class OrganizationalMemory:
             # Request identity version; naming-policy refreshes retain this key for replacement.
             "schema_version": 8,
         }
+        if include_standards:
+            from app.workspace_policy import standards
+
+            normalized["feature_standards"] = standards("feature")
         value = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
@@ -94,7 +98,10 @@ class OrganizationalMemory:
     @classmethod
     def review_key_for(cls, request: GenerateRequest) -> str:
         # Review knowledge follows the requirement/testing mode across provider changes.
-        return cls.key_for(request.model_copy(update={"llm_model": LlmModel.AUTO_FALLBACK}))
+        return cls.key_for(
+            request.model_copy(update={"llm_model": LlmModel.AUTO_FALLBACK}),
+            include_standards=False,
+        )
 
     @staticmethod
     def review_targets(suite: TestSuite, comments: str) -> set[str]:

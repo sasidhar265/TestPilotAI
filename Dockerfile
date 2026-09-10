@@ -13,6 +13,7 @@ RUN apt-get update \
 WORKDIR /srv/app
 COPY pyproject.toml README.md ./
 COPY app ./app
+COPY workspace ./workspace
 COPY .github/agents ./.github/agents
 COPY .github/agent-profiles ./.github/agent-profiles
 RUN python -m pip install .

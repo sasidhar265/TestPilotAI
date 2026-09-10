@@ -71,11 +71,17 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
                 content_type=artifact.media_type,
                 headers={"Content-Disposition": f'attachment; filename="{artifact.filename}"'},
             )
-        elif path == "/api/step-definitions/bindings":
+        elif path == "/api/workspace/rules":
+            route.fulfill(json={"business_rules": []})
+        elif path == "/api/workspace/standards":
+            route.fulfill(json={"automation": "Use scenario state", "feature": "No tags"})
+        elif path == "/api/dashboard":
+            route.fulfill(json={"active": [], "history": [], "scope": "Test workspace"})
+        elif path == "/api/step-definitions/languages/bindings":
             route.fulfill(json=bindings.model_dump())
-        elif path == "/api/step-definitions/download":
+        elif path == "/api/step-definitions/languages/download":
             route.fulfill(body=b"test-zip", content_type="application/zip")
-        elif path == "/api/step-definitions/reqnroll":
+        elif path == "/api/step-definitions/languages/pack":
             pending_step_requests.append(route)
         elif path.startswith("/api/generation/") and path.endswith("/cancel"):
             route.fulfill(json={"cancelled": True})
@@ -108,8 +114,8 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         page.locator("#suite-view-menu summary").click()
         page.locator("#generate-step-definitions").click()
         playwright.expect(page.locator("#step-definitions")).to_be_visible()
-        assert paths.count("/api/step-definitions/reqnroll") == 0
-        assert paths.count("/api/step-definitions/bindings") == 1
+        assert paths.count("/api/step-definitions/languages/pack") == 0
+        assert paths.count("/api/step-definitions/languages/bindings") == 1
         assert (
             page.locator(".step-definition-file", has=page.locator(".copy-step-definition")).count()
             == 1
@@ -119,7 +125,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
             page.locator("#suite-download-cs").click()
         assert download.value.suggested_filename.endswith(".cs")
         assert "PendingStepException" in Path(download.value.path()).read_text()
-        assert paths.count("/api/step-definitions/reqnroll") == 0
+        assert paths.count("/api/step-definitions/languages/pack") == 0
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_visible()
@@ -150,19 +156,19 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         with page.expect_download() as download:
             page.locator("#download-csharp-pack").click()
         assert download.value.suggested_filename.endswith(".zip")
-        assert paths.count("/api/step-definitions/reqnroll") == 1
+        assert paths.count("/api/step-definitions/languages/pack") == 1
         page.locator("#suite-download-menu summary").click()
         with page.expect_download() as download:
             page.locator("#suite-download-cs").click()
         assert download.value.suggested_filename.endswith(".cs")
         assert "PendingStepException" in Path(download.value.path()).read_text()
-        assert paths.count("/api/step-definitions/bindings") == 1
+        assert paths.count("/api/step-definitions/languages/bindings") == 1
         page.evaluate("data => render(data)", source.model_dump(mode="json"))
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#step-definitions")).to_be_visible()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
-        assert paths.count("/api/step-definitions/reqnroll") == 1
+        assert paths.count("/api/step-definitions/languages/pack") == 1
         page.locator(".suite-jira summary").click()
         page.locator("#suite-download-menu summary").click()
         playwright.expect(page.locator(".suite-jira")).not_to_have_attribute("open", "")
@@ -203,7 +209,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_visible()
         page.wait_for_function("stepDefinitionTask !== null")
         # Allow the intercepted request to arrive before returning a server error.
-        with page.expect_response("**/api/step-definitions/reqnroll"):
+        with page.expect_response("**/api/step-definitions/languages/pack"):
             page.wait_for_timeout(100)
             pending_step_requests.pop().fulfill(status=500, json={"detail": "Generation failed"})
         playwright.expect(page.locator("#cs-generation-message")).to_have_text("Generation failed")
@@ -221,7 +227,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         page.locator("#cancel-cs-generation").click()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
         playwright.expect(page.locator("#status")).to_have_text(
-            "Full C# pack generation cancelled."
+            "Automation pack generation cancelled."
         )
         assert page.evaluate("stepDefinitionTask === null && stepDefinitionRequest === null")
         assert page.evaluate("stepDefinitionTimer === null && stepDefinitionArtifact === null")

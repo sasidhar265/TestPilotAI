@@ -130,3 +130,22 @@ explicit user operation.
 6. The quality gate validates automation/manual feasibility, deduplicates, caps, and formats the
    result.
 7. The suite is stored in organizational memory and rendered as manual test steps or SpecFlow Gherkin.
+
+### Shared workspace policies and multi-language artifacts
+
+`workspace/business-rules.json` is the canonical persistent rule store. The rules editor writes
+atomically to it; the business-rules enrichment boundary loads it before generation and knowledge
+lookup. Legacy request-specific rules are still accepted but cannot overwrite a conflicting shared ID.
+`workspace/feature-standards.md` and `workspace/automation-standards.md` are reread rather than cached.
+Feature standards enter generation cache identity without changing review identity. Generated
+Gherkin strips tag lines at the model and feature-export boundaries while preserving doc strings.
+
+`MultiLanguageAgent` routes C# through the existing ReqnRoll agent and provides Java, Python,
+JavaScript, TypeScript and Ruby declaration adapters. Full implementations use `ArtifactGenerationRunner`
+with language, coverage, source path, placeholder and configuration checks. These checks are static;
+compilation and live execution remain separate. The language selector is included in browser cache
+identity, along with the current standards. Artifacts from another language cannot satisfy a request.
+
+`DashboardStore` records bounded completed activity in a separate SQLite database beside organizational
+memory. Live progress uses the current process's activity and lifecycle registries. Test matrix rows
+use explicit case evidence matched by a content hash; repository-check counts are a separate operation.

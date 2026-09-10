@@ -26,6 +26,9 @@ class BusinessRulesAgent:
     )
 
     def enrich(self, request: GenerateRequest) -> GenerateRequest:
+        from app.workspace_policy import apply_rules
+
+        request = apply_rules(request)
         if not request.business_rules:
             return request
         rules = "\n".join(f"- {rule.id}: {rule.description}" for rule in request.business_rules)
