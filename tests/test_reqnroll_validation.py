@@ -21,7 +21,7 @@ def artifact(body='api.LoadFixture("approved");'):
     return StepDefinitionArtifact(
         files=[
             StepDefinitionFile(
-                path="Steps.cs",
+                path="StepDefinitions/ExampleStepDefinition.cs",
                 content="""
 using Reqnroll;
 [Binding]
@@ -44,6 +44,34 @@ public class Steps
             )
         ],
     )
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "using RestSharp;",
+        "class Transport { RestClient client; }",
+        "class Transport { System.Net.WebClient client; }",
+        "class Transport { System.Net.HttpWebRequest request; }",
+        "using Flurl.Http;",
+        "class Transport { Microsoft.Playwright.IAPIRequestContext client; }",
+    ],
+)
+def test_csharp_api_transport_rejects_alternative_clients(source):
+    result = artifact()
+    result.files.append(StepDefinitionFile(path="Services/TransportService.cs", content=source))
+    assert any("System.Net.Http.HttpClient" in item for item in implementation_findings(result))
+
+
+def test_csharp_httpclient_templates_allow_alternative_names_in_comments_and_strings():
+    result = artifact()
+    result.files.append(
+        StepDefinitionFile(
+            path="Services/TransportService.cs",
+            content='// RestSharp is forbidden\nclass Note { const string Text = "WebRequest"; }',
+        )
+    )
+    assert not implementation_findings(result)
 
 
 def request(step="the approved request is prepared"):
@@ -94,10 +122,25 @@ def test_placeholder_and_fake_success_methods_are_rejected(body) -> None:
     assert implementation_findings(artifact(body), {"Given the approved request is prepared"})
 
 
-def test_real_guard_and_workflow_are_allowed() -> None:
+def test_guards_belong_in_services_not_step_definitions() -> None:
     body = """if (api == null) throw new InvalidOperationException("No context");
 api.LoadFixture("https://fixture.example/a");"""
-    assert not implementation_findings(artifact(body), {"Given the approved request is prepared"})
+    assert any(
+        "step definitions must delegate" in finding
+        for finding in implementation_findings(
+            artifact(body), {"Given the approved request is prepared"}
+        )
+    )
+    value = artifact()
+    value.files.append(
+        StepDefinitionFile(
+            path="Services/PreparationService.cs",
+            content="public class PreparationService { public void Prepare(ApiScenario api) { "
+            + body
+            + " } }",
+        )
+    )
+    assert not implementation_findings(value, {"Given the approved request is prepared"})
 
 
 def test_placeholder_in_supporting_helper_is_rejected() -> None:

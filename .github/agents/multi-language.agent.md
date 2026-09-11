@@ -9,3 +9,7 @@ workspace/feature-standards.md on each generation. Keep bindings-only declaratio
 pending. Full packs must implement every approved step and document runtime prerequisites.
 Never substitute another language, invent application contracts, or claim execution success.
 Never emit feature tags. Keep repository-check evidence separate from generated-case execution.
+
+Every generated pack must use the folder and file conventions in
+workspace/automation-standards.md. Wire the selected runtime to this shared layout;
+populate the corresponding role folders and Input files on each generation.

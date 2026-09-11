@@ -99,7 +99,7 @@ def test_outline_and_literal_steps_share_implemented_bindings() -> None:
     assert "int expectedStatus" in content
     assert "await api.SendAsync(method, path)" in content
     assert {entry.status for entry in artifact.coverage} == {"generated", "reused"}
-    assert len(artifact.files) == 3
+    assert len(artifact.files) == 9
 
 
 @pytest.mark.parametrize(
@@ -195,7 +195,8 @@ def test_generated_csharp_compiles_and_executes(tmp_path) -> None:
         [Datum(name="valid", value='{"amount":"12.30"}', purpose="request")],
     )
     for source in (Path(__file__).parent / "csharp").iterdir():
-        shutil.copy(source, tmp_path / source.name)
+        if source.is_file():
+            shutil.copy(source, tmp_path / source.name)
     row = {
         "customerType": "private individual",
         "productType": "PCP",
@@ -230,6 +231,12 @@ def test_generated_csharp_compiles_and_executes(tmp_path) -> None:
         ],
     )
     artifact = ReqnRollStepDefinitionAgent._fallback_artifact("API", [case, eligibility])
+    input_directory = tmp_path / "Input"
+    input_directory.mkdir()
+    shutil.copy(
+        Path(__file__).parents[1] / "app/templates/framework/QuotationRequest.Json",
+        input_directory / "QuotationRequest.Json",
+    )
     for file in artifact.files:
         target = tmp_path / file.path
         target.parent.mkdir(parents=True, exist_ok=True)

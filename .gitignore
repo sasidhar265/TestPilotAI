@@ -20,3 +20,5 @@ tests/csharp/obj/
 automation/bin/
 automation/obj/
 automation/Features/*.feature.cs
+automation/TestResults/Reports/*
+!automation/TestResults/Reports/README.md

@@ -12,13 +12,19 @@ from app.config import Settings
 
 
 def report_directory(settings: Settings) -> Path:
-    return settings.organizational_memory_path.resolve().parent / "automation-reports"
+    return settings.automation_project_path.resolve().parent / "TestResults" / "Reports"
 
 
 def report_path(settings: Settings, identifier: str) -> Path:
     if not re.fullmatch(r"[a-f0-9]{32}", identifier):
         raise ValueError("Invalid report identifier")
-    return report_directory(settings) / f"{identifier}.html"
+    current = report_directory(settings) / f"{identifier}.html"
+    legacy = (
+        settings.organizational_memory_path.resolve().parent
+        / "automation-reports"
+        / f"{identifier}.html"
+    )
+    return legacy if not current.exists() and legacy.is_file() else current
 
 
 def _redact(value: object, secrets: list[str]) -> object:

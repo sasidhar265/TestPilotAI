@@ -50,8 +50,8 @@ internal static class Program
         Fails(() => isolated.AssertStatus(400));
 
         // Exercise the actual generated four-parameter binding from the reported failure.
-        var bindings = new APIStepDefinitions(api);
-        var eligibilityStep = typeof(APIStepDefinitions).GetMethods()
+        var bindings = new APIStepDefinition(api);
+        var eligibilityStep = typeof(APIStepDefinition).GetMethods()
             .Single(method => method.Name.StartsWith("Given") && method.GetParameters().Length == 4);
         eligibilityStep.Invoke(bindings,
             new object[] { "\"catalogue\"", "\"private individual\"", "\"PCP\"", "\"eligible\"" });
@@ -75,6 +75,7 @@ internal static class Program
         Fails(() => api.LoadEligibilityFixture("duplicate", "private individual", "PCP", "eligible"));
         Fails(() => api.LoadEligibilityFixture("inconsistent", "private individual", "PCP", "eligible"));
         Fails(() => api.LoadEligibilityFixture("valid", "private individual", "PCP", "eligible"));
+        await QuotationChecks.Run(api, handler);
         Console.WriteLine("Generated C# runtime checks passed.");
     }
 }

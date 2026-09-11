@@ -43,9 +43,69 @@ failures, so a missing Allure CLI never changes a pass/fail result.
 `ALLURE_EXECUTABLE` defaults to `allure`; `ALLURE_TIMEOUT_SECONDS` defaults to 120. The runner sets
 `ALLURE_CONFIG` for each execution, so concurrent result files and older results are never mixed.
 The runtime needs .NET 8, restored packages, Playwright Chromium, Java, Allure 2, and write access to
-the organizational-memory directory. The lightweight application Docker image does not bundle this
-local execution toolchain.
+the organizational-memory directory. The application Docker image bundles this toolchain and builds the project during deployment.
+Render runs target `http://127.0.0.1:10000`; `ALLOWED_HOSTS` must include `127.0.0.1`
+and `localhost` as well as the public hostname. Existing Render services must apply the
+updated environment values from `render.yaml` and redeploy the image. Local build
+outputs are excluded from the Docker context to keep restored paths platform-correct.
+The validation API scenario supplies the configured bearer token; the security scenario
+intentionally omits it.
 
 Pass/fail/not-run counts represent test scenarios (outline example rows are separate tests).
 Not run uses TRX `NotExecuted` outcomes, not skipped individual steps after a scenario failure.
 Authentication prerequisites and assertions remain those defined by the existing repository tests.
+
+## Framework folders
+
+The project now uses `Reqnroll`, `Features`, `StepDefinitions`, `Hooks`, `TestContext`,
+`Services`, `Builders`, `Models`, `Utilities`, `TestResults/Reports`, and `Input` as sibling
+folders. `Reqnroll/Repository.runsettings` configures TRX output. The project remains at
+`automation/QualityLifecycle.Automation.csproj`, so existing build and CI entry points work.
+
+`WorkspaceStepDefinition.cs` delegates transport/browser work to services and request
+construction to the builder/model. `Hooks/Hooks.cs` disposes scenario resources.
+`Input/TestData.Json` is copied to build output and read by the security scenario.
+
+Run with:
+
+```bash
+dotnet test automation/QualityLifecycle.Automation.csproj --results-directory automation/TestResults/Reports
+``` Live workspace Allure HTML reports now also go into
+`automation/TestResults/Reports`; old report links still resolve to the earlier storage location.
+Persist this directory on deployed hosts to retain new reports across redeployments.
+
+## Approved quotation payload builder
+
+C# API handling uses `System.Net.Http.HttpClient` in `Services/ApiService.cs`.
+Generated C# packs also use an injected HttpClient with `IHttpClientFactory`/`AddHttpClient`,
+asynchronous sends, and cancellation support. Generation validation rejects alternative
+HTTP clients such as RestSharp, Flurl, legacy WebRequest, and Playwright API request contexts.
+
+`Input/QuotationRequest.Json` contains the exact user-supplied Outlet/Finance/Vehicle/Parameters
+payload. `Models/QuotationRequestModel.cs` preserves every JSON name, including `Outlet.code`
+and `Vehicle.VehicleRegstrationDate`. `Builders/QuotationRequestbuilder.cs` exposes typed fluent
+setters for those existing fields; decimal fields remain decimal and the date remains a string.
+
+```csharp
+var request = QuotationRequestBuilder
+    .FromFile("Input/QuotationRequest.Json")
+    .WithDeposit(5000m)
+    .WithTerm(36)
+    .Build();
+```
+
+`QuotationRequestService` accepts `ApprovedQuotationRequestStrategy` for the unchanged payload
+or `ConfiguredQuotationRequestStrategy` with an action applying explicit typed builder overrides.
+Each build is an independent immutable snapshot. Unknown JSON fields and missing required members
+are rejected; the builder does not invent fields or validate unprovided business rules.
+The application workspace's own `/api/generate` request model remains separate from this finance
+endpoint payload.
+
+Generated packs receive the same model, builder, strategies and Input file. For quotation features,
+named request fixtures also go through the typed builder. The deterministic step
+`Given the approved quotation request` loads the exact default payload. Configure the actual
+method, endpoint and credentials separately; no finance endpoint or success result is inferred.
+
+Across all generated languages, StepDefinitions must delegate to services/strategies, with no
+if/else, switch/match/case, unless or ternary expressions. Static checks enforce this policy;
+ordinary validation guards remain allowed inside services.

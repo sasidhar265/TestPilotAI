@@ -16,6 +16,14 @@ _LABEL_CAPTURE = r'("[^"\r\n]+"|[^"\r\n]+?)'
 COMMON_STEPS = [
     (
         "Given",
+        r"the approved quotation request",
+        r"the approved quotation request",
+        [],
+        "api.LoadQuotationRequest();",
+        False,
+    ),
+    (
+        "Given",
         rf"fixture {_LABEL} sets {_LABEL} and {_LABEL} as {_LABEL}",
         rf"fixture {_LABEL_CAPTURE} sets {_LABEL_CAPTURE} "
         rf"and {_LABEL_CAPTURE} as {_LABEL_CAPTURE}",
@@ -99,6 +107,33 @@ def common_step(keyword: str, text: str) -> tuple[str, list[tuple[str, str]], st
 
 
 def support_files(cases: list[Any]) -> list[tuple[str, str]]:
+    literal = approved_fixture_json(cases).replace('"', '""')
+    source = (
+        "namespace Generated.StepDefinitions\n{\n"
+        "    internal static class ApprovedFixtures\n    {\n"
+        f'        internal const string Json = @"{literal}";\n'
+        "    }\n}\n"
+    )
+    templates = Path(__file__).parent.parent / "templates" / "reqnroll"
+    return [
+        ("TestContext/testcontext.cs", (templates / "testcontext.cs").read_text()),
+        ("Utilities/ApprovedFixturesUtility.cs", source),
+        ("Services/ApiService.cs", (templates / "ApiService.cs").read_text()),
+        ("Models/ApiResponseModel.cs", (templates / "ApiResponseModel.cs").read_text()),
+        ("Builders/ApiClientbuilder.cs", (templates / "ApiClientbuilder.cs").read_text()),
+        ("Models/QuotationRequestModel.cs", (templates / "QuotationRequestModel.cs").read_text()),
+        (
+            "Builders/QuotationRequestbuilder.cs",
+            (templates / "QuotationRequestbuilder.cs").read_text(),
+        ),
+        (
+            "Services/QuotationRequestService.cs",
+            (templates / "QuotationRequestService.cs").read_text(),
+        ),
+    ]
+
+
+def approved_fixture_json(cases: list[Any]) -> str:
     """Embed only supplied JSON fixtures; conflicting names require external configuration."""
     fixtures: dict[str, Any] = {}
     raw_fixtures: dict[str, str] = {}
@@ -120,20 +155,7 @@ def support_files(cases: list[Any]) -> list[tuple[str, str]]:
     for name in conflicts:
         raw_fixtures.pop(name, None)
     # Retain original JSON numeric tokens; a Python float round trip loses decimal precision.
-    literal = (
-        "{" + ",".join(json.dumps(name) + ":" + raw for name, raw in raw_fixtures.items()) + "}"
-    ).replace('"', '""')
-    source = (
-        "namespace Generated.StepDefinitions\n{\n"
-        "    internal static class ApprovedFixtures\n    {\n"
-        f'        internal const string Json = @"{literal}";\n'
-        "    }\n}\n"
-    )
-    template = Path(__file__).parent.parent / "templates" / "reqnroll" / "ApiScenario.cs"
-    return [
-        ("Support/ApiScenario.cs", template.read_text(encoding="utf-8")),
-        ("Support/ApprovedFixtures.cs", source),
-    ]
+    return "{" + ",".join(json.dumps(name) + ":" + raw for name, raw in raw_fixtures.items()) + "}"
 
 
 def _reject_constant(value: str) -> None:

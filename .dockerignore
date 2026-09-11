@@ -4,9 +4,12 @@
 .git
 .pytest_cache
 **/__pycache__
+**/bin
+**/obj
 *.py[cod]
 *.egg-info
 coverage.xml
 docs
 tests
 tools
+automation/TestResults/Reports

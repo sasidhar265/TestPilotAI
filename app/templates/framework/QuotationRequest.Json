@@ -1,0 +1,27 @@
+{
+    "Outlet": {
+        "code": "OUTLET001"
+    },
+    "Finance": {
+        "ProductId": "PROD123"
+    },
+    "Vehicle": {
+        "CapCode": "CAP456",
+        "VehicleRegistrationNumber": "REG789",
+        "VehicleRegstrationDate": "2023-01-01",
+        "VehicleMake": "Toyota",
+        "PriceTotal": 25000.00,
+        "YearOfManufacture": 2022,
+        "ExteriorColor": "Red",
+        "QualifyingOrMargin": "Qualifying"
+    },
+    "Parameters": {
+        "Deposit": 5000.00,
+        "Term": 36,
+        "AnnualMileage": 12000,
+        "CustomerRate": 5.5,
+        "PartExchange": 0.0,
+        "Settlement": 0.0,
+        "CalcTargetType": "Deposit"
+    }
+}

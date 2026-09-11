@@ -217,13 +217,21 @@ def test_complete_python_pack_and_registration_validation(request_model):
         [
             ArtifactFile(path="requirements.txt", content="behave\n"),
             ArtifactFile(path="README.md", content="Install requirements and run behave."),
+            ArtifactFile(
+                path="Hooks/Hooks.py",
+                content="def before_scenario(context, scenario):\n    context.response = None\n",
+            ),
+            ArtifactFile(
+                path="TestContext/testcontext.py",
+                content="class TestContext:\n    response = None\n",
+            ),
         ]
     )
     for mapping in artifact.coverage:
         mapping.status = "generated"
     validated = validate_pack(artifact, request_model, baseline)
-    assert validated.files[-1].path == "features/generated.feature"
-    assert "@smoke" not in validated.files[-1].content
+    feature = next(f for f in validated.files if f.path == "Features/generated.feature")
+    assert "@smoke" not in feature.content
     validated.files[0].content = validated.files[0].content.replace("@given", "#@given")
     # Comments must not count as registered Python steps.
     validated.files[0].content = "\n".join(
@@ -314,7 +322,18 @@ def test_browser_shared_rules_language_selection_and_dashboard(workspace, reques
             )
         assert selected == list(LANGUAGES)
         page.locator('.primary-nav a[href="/quality-lifecycle"]').click()
-        page.locator("#run-automation").click()
+        playwright.expect(page.locator("#metrics-dashboard")).to_contain_text(
+            "Requirement-to-test traceability"
+        )
+        playwright.expect(page.locator("#metrics-dashboard")).to_contain_text(
+            "Source rule inventory unavailable"
+        )
+        assert page.locator("#generate-data, #run-automation").count() == 0
+        page.set_viewport_size({"width": 390, "height": 844})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.set_viewport_size({"width": 1440, "height": 1000})
+        page.locator('.primary-nav a[href="/progress"]').click()
+        page.locator("#run-repository-bdd").click()
         playwright.expect(page.locator("#bdd-run-status")).to_contain_text("BDD execution passed")
         assert page.evaluate("executionSummary") is None
         page.locator("#refresh-dashboard").click()

@@ -19,8 +19,8 @@ client = TestClient(app)
 
 def test_step_definition_download_preserves_separate_sources() -> None:
     files = [
-        {"path": "StepDefinitions/Steps.cs", "content": "// bindings"},
-        {"path": "Support/ApiScenario.cs", "content": "// helper"},
+        {"path": "StepDefinitions/ExampleStepDefinition.cs", "content": "// bindings"},
+        {"path": "TestContext/testcontext.cs", "content": "// helper"},
     ]
     response = client.post("/api/step-definitions/download", json={"files": files})
     assert response.status_code == 200
@@ -48,7 +48,7 @@ def test_step_definition_download_rejects_old_placeholder_artifacts() -> None:
         json={
             "files": [
                 {
-                    "path": "Steps.cs",
+                    "path": "StepDefinitions/ExampleStepDefinition.cs",
                     "content": "public class Steps { public void Setup() { "
                     "throw new NotImplementedException(); } }",
                 }
@@ -150,7 +150,9 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="suite-download-menu"' in response.text
     assert 'class="panel agent-workspace workspace-page-panel"' in response.text
     assert 'class="panel agent-workspace hidden"' not in response.text
-    assert 'class="secondary lifecycle-action" id="generate-data" disabled' in response.text
+    assert 'id="generate-data"' not in response.text
+    assert 'id="stlc-workspace"' in response.text
+    assert 'id="stlc-cycle-form"' in response.text
     assert 'id="execution-dashboard"' not in response.text
     assert 'id="defects-dashboard"' not in response.text
     assert 'id="summarize-execution"' not in response.text
@@ -158,7 +160,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="metrics-dashboard"' in response.text
     assert "Business Rules Agent" in response.text
     assert "Bug Reporter Agent" not in response.text
-    assert "Metrics Agent" in response.text
+    assert "STLC reporting" in response.text
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
     assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text

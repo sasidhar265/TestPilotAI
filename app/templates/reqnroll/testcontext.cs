@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -22,6 +23,35 @@ namespace Generated.StepDefinitions
 
         internal ApiScenario(ApiClient client) { this.client = client; }
 
+        public void LoadQuotationRequest()
+        {
+            requestBody = null;
+            response = null;
+            var service = new QuotationRequestService(new ApprovedQuotationRequestStrategy());
+            requestBody = service.BuildJson(
+                Path.Combine(AppContext.BaseDirectory, "Input", "QuotationRequest.Json"));
+        }
+
+        public void LoadQuotationFixture(string name)
+        {
+            requestBody = null;
+            response = null;
+            requestBody = QuotationRequestBuilder.FromJson(ReadFixture(name).GetRawText()).BuildJson();
+        }
+
+        public void LoadQuotationEligibilityFixture(
+            string fixture, string customerType, string productType, string eligibility)
+        {
+            requestBody = null;
+            response = null;
+            var row = ReadFixture(fixture).GetProperty("eligibilityCases").EnumerateArray()
+                .Single(value => Matches(value, "customerType", customerType)
+                    && Matches(value, "productType", productType)
+                    && Matches(value, "eligibility", eligibility));
+            requestBody = QuotationRequestBuilder.FromJson(row.GetProperty("request").GetRawText())
+                .BuildJson();
+        }
+
         public void LoadFixture(string name)
         {
             requestBody = null;
@@ -33,8 +63,9 @@ namespace Generated.StepDefinitions
         private static JsonElement ReadFixture(string name)
         {
             var path = Environment.GetEnvironmentVariable("API_FIXTURE_FILE");
-            var json = string.IsNullOrWhiteSpace(path)
-                ? ApprovedFixtures.Json : File.ReadAllText(path);
+            var defaultPath = Path.Combine(AppContext.BaseDirectory, "Input", "TestData.Json");
+            var json = !string.IsNullOrWhiteSpace(path) ? File.ReadAllText(path)
+                : File.Exists(defaultPath) ? File.ReadAllText(defaultPath) : ApprovedFixtures.Json;
             using var fixtures = JsonDocument.Parse(json);
             if (!fixtures.RootElement.TryGetProperty(name, out var payload))
                 throw new InvalidOperationException($"Missing approved request fixture: {name}");
@@ -167,65 +198,4 @@ namespace Generated.StepDefinitions
         public void Dispose() => client.Dispose();
     }
 
-    public sealed class ApiResponse
-    {
-        public int Status { get; }
-        public string Body { get; }
-        public IReadOnlyDictionary<string, string> Headers { get; }
-
-        public ApiResponse(int status, string body, IReadOnlyDictionary<string, string> headers)
-        { Status = status; Body = body; Headers = headers; }
-    }
-
-    public sealed class ApiClient : IDisposable
-    {
-        private readonly HttpClient http;
-        public ApiClient(HttpClient http) { this.http = http; }
-
-        public async Task<ApiResponse> SendAsync(
-            string method, string path, string body, CancellationToken cancellationToken)
-        {
-            // Resolve against the configured API only, including when paths contain a leading slash.
-            if (http.BaseAddress == null)
-                throw new InvalidOperationException("Configure API_BASE_URL before sending requests.");
-            var target = new Uri(http.BaseAddress, path);
-            if (target.GetLeftPart(UriPartial.Authority) !=
-                http.BaseAddress.GetLeftPart(UriPartial.Authority))
-                throw new InvalidOperationException("Request path must use the configured API origin.");
-            using var request = new HttpRequestMessage(new HttpMethod(method), target);
-            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-            using var response = await http.SendAsync(request, cancellationToken);
-            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var header in response.Headers)
-                headers[header.Key] = string.Join(",", header.Value);
-            foreach (var header in response.Content.Headers)
-                headers[header.Key] = string.Join(",", header.Value);
-            return new ApiResponse((int)response.StatusCode, responseBody, headers);
-        }
-
-        public void Dispose() => http.Dispose();
-    }
-
-    internal static class ApiClientFactory
-    {
-        // Only transport infrastructure is shared. Requests and results belong to ApiScenario.
-        private static readonly Lazy<ServiceProvider> Services = new Lazy<ServiceProvider>(() =>
-        {
-            var services = new ServiceCollection();
-            services.AddHttpClient("GeneratedApi", client =>
-            {
-                client.BaseAddress = new Uri(ApiScenario.RequiredSetting("API_BASE_URL"));
-                var token = Environment.GetEnvironmentVariable("API_BEARER_TOKEN");
-                if (!string.IsNullOrWhiteSpace(token))
-                    client.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            { AllowAutoRedirect = false, UseCookies = false });
-            return services.BuildServiceProvider();
-        });
-
-        public static HttpClient CreateClient() =>
-            Services.Value.GetRequiredService<IHttpClientFactory>().CreateClient("GeneratedApi");
-    }
 }

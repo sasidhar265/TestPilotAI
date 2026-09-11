@@ -419,7 +419,7 @@ textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .generation-options { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 14px 12px; min-width: 0; }
 .manual-type-control, .generation-select-control { width: 100%; min-width: 0; }
-.manual-type-control select, .generation-select-control select { width: 100%; height: 49px; padding: 0 36px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: .72rem; font-weight: 700; }
+.manual-type-control select, .generation-select-control select, #work-dashboard #bdd-status-filter { width: 100%; height: 49px; padding: 0 36px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: .72rem; font-weight: 700; }
 .manual-type-control.is-disabled { opacity: .5; }
 .option-help { margin-top: 6px; display: block; color: var(--muted); font-size: .59rem; line-height: 1.4; }
 .generation-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
@@ -484,6 +484,9 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .chip { padding: 5px 8px; border-radius: 999px; color: #64697d; background: #f0f1f5; font-size: .61rem; font-weight: 700; }
 .result-actions { padding: 14px 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); }
 .selection-actions, .tools { display: flex; flex-wrap: wrap; gap: 7px; }
+.tools { align-items: center; }
+.automation-language-control { position: relative; display: inline-flex; max-width: 100%; }
+.automation-language-control > span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink); font-size: .7rem; }
 .suite-output-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
 .suite-menu { position: relative; }
 .suite-menu > summary { display: flex; align-items: center; gap: 16px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 9px; cursor: pointer; list-style: none; font-size: .7rem; font-weight: 700; }
@@ -808,6 +811,7 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .workspace-page-panel, #work-dashboard { margin: 22px 0 0; padding: clamp(22px, 3vw, 34px); scroll-margin-top: 18px; }
 #work-dashboard p { font-size: .82rem; line-height: 1.6; color: var(--muted); }
 #work-dashboard select, #automation-language { max-width: 100%; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; }
+.tools #automation-language { appearance: none; padding: 8px 36px 8px 12px; border-radius: 9px; font-size: .7rem; font-weight: 700; line-height: inherit; cursor: pointer; }
 #work-dashboard > label { display: block; font-size: .78rem; font-weight: 650; margin: 20px 0 8px; }
 #dashboard-totals { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-block: 18px; padding: 0; }
 #dashboard-totals span { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); font-size: .75rem; }
@@ -877,3 +881,35 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .bdd-legend .not-run i { background: #9b864e; }
 .bdd-legend small { display: block; max-width: 330px; color: var(--muted); font-size: .75rem; line-height: 1.6; }
 .allure-download { display: inline-block; margin-block: 16px; padding: 10px 16px; line-height: 1.4; text-decoration: none; }
+
+/* Current-suite traceability and STLC reporting. */
+.stlc-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 20px 0; }
+.stlc-metric { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.stlc-metric strong { font-size: 1.6rem; color: var(--ink); }
+.stlc-metric span { font-weight: 700; font-size: .8rem; }
+.stlc-metric small { font-size: .72rem; color: var(--muted); line-height: 1.5; }
+.stlc-section { border-top: 1px solid var(--line); padding: 22px 0; }
+.stlc-section h3 { font-size: 1rem; margin: 0 0 12px; }
+.stlc-section p, .stlc-section li, .stlc-section summary { font-size: .8rem; line-height: 1.7; overflow-wrap: anywhere; }
+.stlc-section details { margin-top: 14px; }
+.stlc-table-wrap { overflow-x: auto; }
+.stlc-table-wrap table { width: 100%; border-collapse: collapse; font-size: .78rem; text-align: left; }
+.stlc-table-wrap th, .stlc-table-wrap td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; min-width: 100px; overflow-wrap: anywhere; }
+.stlc-table-wrap thead { background: var(--surface-soft); }
+.stlc-distributions { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 24px; }
+.stlc-bar { display: grid; grid-template-columns: 80px 1fr 85px; align-items: center; gap: 8px; font-size: .72rem; margin: 12px 0; }
+.stlc-bar meter { width: 100%; }
+.stlc-readiness { display: grid; gap: 12px; font-size: .8rem; line-height: 1.6; }
+.stlc-readiness > div { display: grid; grid-template-columns: minmax(130px, 1fr) 3fr; gap: 16px; }
+.stlc-readiness dt { font-weight: 700; }
+.stlc-readiness dd { margin: 0; }
+.stlc-form { display: grid; gap: 14px; padding: 18px 0; max-width: 850px; }
+.stlc-form label { display: grid; gap: 7px; font-size: .8rem; font-weight: 650; }
+.stlc-form input:not([type="checkbox"]), .stlc-form textarea, .stlc-form select, #stlc-active-cycle { width: 100%; min-width: 0; max-width: 100%; padding: 10px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); background: var(--surface); }
+.stlc-form fieldset { padding: 12px; border: 1px solid var(--line); border-radius: 8px; }
+.stlc-form fieldset label { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.stlc-form textarea { min-height: 85px; }
+.stlc-form button { justify-self: start; }
+#stlc-status { font-size: .85rem; overflow-wrap: anywhere; }
+#stlc-workspace .subpanel > summary { font-size: .9rem; }
+#stlc-workspace .subpanel { min-width: 0; }

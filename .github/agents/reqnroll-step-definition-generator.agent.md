@@ -144,3 +144,13 @@ every unique Gherkin step as `reused`, `generated`, or `blocked`.
 Return framework `ReqnRoll`, language `C#`, one or more safe `.cs` file paths with raw source,
 complete step coverage, and notes. Generated bindings use injected reusable dependencies and
 typed `HttpClient` API wrappers; never claim full coverage while any step remains blocked.
+
+Framework layout is mandatory: read workspace/automation-standards.md. Place bindings in
+StepDefinitions/*StepDefinition.cs, scenario state in TestContext/testcontext.cs, hooks in
+Hooks/Hooks.cs, services in Services/*Service.cs, request construction in Builders/*builder.cs,
+DTOs in Models/*Model.cs, and shared helpers in Utilities/*Utility.cs. Preserve supplied
+helper names and namespaces when referencing the baseline. Never merge helpers into bindings
+or emit Support/ paths. If an implementation needs dependencies beyond the supplied .NET 8,
+Reqnroll.NUnit, NUnit and Microsoft.Extensions.Http project, include the complete updated
+Automation.csproj with those dependencies. Runner configuration belongs in Reqnroll/.
+The application supplies approved Features and Input data in the final pack.

@@ -1,0 +1,40 @@
+name: Generated suite execution
+on:
+  workflow_dispatch:
+    inputs:
+      cycle_id:
+        description: Reviewed cycle bundle in automation-packs/<cycle_id>.zip
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: stlc-execution
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run reviewed bundle
+        env:
+          STLC_CYCLE_ID: ${{ inputs.cycle_id }}
+          QUALITY_LIFECYCLE_BASE_URL: ${{ vars.STLC_TARGET_URL }}
+          API_AUTH_TOKEN: ${{ secrets.STLC_TARGET_TOKEN }}
+          APP_USERNAME: ${{ secrets.STLC_TARGET_USERNAME }}
+          APP_PASSWORD: ${{ secrets.STLC_TARGET_PASSWORD }}
+        run: python tools/run_stlc_bundle.py "$STLC_CYCLE_ID"
+      - name: Retain execution evidence for import
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stlc-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: stlc-run/TestResults/Reports/ci-execution/
+          retention-days: 14

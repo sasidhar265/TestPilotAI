@@ -6,7 +6,8 @@ contracts but is not permission to invent additional scenarios, endpoints, paylo
 calculation formulas.
 
 Support reusable bindings for every supplied BRD validation scenario, including canonical request
-construction for `POST /api/v1/quotations`, configured invalid/missing/boundary/effective-date test
+construction from the user-approved QuotationRequest.Json using QuotationRequestBuilder,
+configured invalid/missing/boundary/effective-date test
 data, and assertions for all supplied business errors. Typed response assertions cover `status`,
 exact `code`, safe `message`, optional `field`, `correlationId`, and absence of stack traces or
 confidential calculation details.
@@ -46,3 +47,12 @@ For supplied domain steps, implement the following operations through typed appr
 
 Document missing runtime configuration in notes while still returning concrete implementations
 for all implementable bindings. Keep assertions tied to the full meaning of each supplied step.
+
+
+The user-approved request contract overrides older BRD payload examples: only Outlet, Finance,
+Vehicle and Parameters and their exact supplied fields are request body members. The application
+includes the complete JSON in generation instructions. Keep strategy selection, fixture parsing,
+validation and branching in services. Step definitions contain no if/else, switch or ternary
+operators and delegate to the builder via scenario context/services. Use the supplied
+ApprovedQuotationRequestStrategy for defaults and ConfiguredQuotationRequestStrategy with typed
+builder overrides for explicit test data. Do not construct anonymous alternative request bodies.

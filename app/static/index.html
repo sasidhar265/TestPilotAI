@@ -6,10 +6,11 @@
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle — Governed quality engineering</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911">
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260911-bdd-20260910-page-layout">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260912-shared-select">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
   <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
+  <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260912-shared-select">
   <style>[data-workspace-page][hidden] { display: none !important; }</style>
 </head>
 <body>
@@ -232,9 +233,10 @@
           <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
           <div class="suite-output-actions">
             <div class="tools" aria-label="Generated suite actions">
-              <label for="automation-language">Automation language
-                <select id="automation-language"><option value="csharp">C# · ReqnRoll</option><option value="java">Java · Cucumber</option><option value="python">Python · Behave</option><option value="javascript">JavaScript · Cucumber</option><option value="typescript">TypeScript · Cucumber</option><option value="ruby">Ruby · Cucumber</option></select>
-              </label>
+              <div class="automation-language-control">
+                <select id="automation-language" class="secondary" aria-label="Coding language" title="Coding language"><option value="csharp">C# · ReqnRoll</option><option value="java">Java · Cucumber</option><option value="python">Python · Behave</option><option value="javascript">JavaScript · Cucumber</option><option value="typescript">TypeScript · Cucumber</option><option value="ruby">Ruby · Cucumber</option></select>
+                <span aria-hidden="true">▾</span>
+              </div>
               <details class="suite-menu" id="suite-view-menu">
                 <summary class="secondary">View <span aria-hidden="true">▾</span></summary>
                 <div class="suite-menu-options" aria-label="View generated files">
@@ -292,31 +294,61 @@
       </div>
       <div data-workspace-page="/progress" hidden>
       <section class="panel workspace-page-panel" id="work-dashboard" aria-labelledby="work-dashboard-title">
-        <div class="panel-head"><div><span class="section-kicker">Workspace activity</span><h2 id="work-dashboard-title">BDD automation execution</h2><p>Run the existing repository feature files and step definitions. Review results and download an Allure report for each run.</p></div><button id="refresh-dashboard" class="secondary" type="button">Refresh</button></div>
-        <div class="bdd-run-actions"><button id="run-repository-bdd" class="primary" type="button">Run BDD tests</button><p id="bdd-run-status" role="status"></p></div>
+        <div class="bdd-heading"><div><span class="section-kicker">QUALITY / EXECUTION</span><h2 id="work-dashboard-title">BDD run dashboard</h2><p>Your test runs, results, and reports. One clear view.</p></div><div class="bdd-heading-actions"><button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button><button id="run-repository-bdd" class="primary" type="button"><span aria-hidden="true">▶</span> Run BDD tests</button></div></div>
+        <div class="bdd-context"><span class="bdd-context-label">C# · ReqnRoll</span><span>Repository suite</span><div id="dashboard-progress" aria-live="polite"></div></div>
+        <p id="bdd-run-status" role="status"></p>
+        <div id="dashboard-totals" class="dashboard-numbers" aria-label="Execution metrics"></div>
+        <div class="bdd-overview"><section id="bdd-result-summary" aria-label="Selected run results"></section><section class="bdd-trend-card"><div class="bdd-card-heading"><div><span class="section-kicker">RUN ACTIVITY</span><h3>Recent outcomes</h3></div><span class="bdd-subtle">Last 12 runs</span></div><div id="bdd-run-trend" aria-label="Recent run results"></div><p class="bdd-trend-caption">Select a run to explore its results.</p></section></div>
+        <section class="bdd-history-card" aria-labelledby="bdd-history-title"><div class="bdd-history-heading"><div><span class="section-kicker">EXECUTION LOG</span><h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3></div><div class="bdd-history-controls"><label class="bdd-search"><span aria-hidden="true">⌕</span><input id="bdd-history-search" type="search" placeholder="Search runs or project…" aria-label="Search run history"></label><select id="bdd-status-filter" aria-label="Filter runs by status"><option value="all">All statuses</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="error">Error</option></select></div></div><div id="dashboard-history" aria-label="Execution history"></div></section>
         <p id="dashboard-scope">Loading BDD execution history…</p>
-        <div id="dashboard-progress" aria-live="polite"></div>
-        <section id="bdd-result-summary" aria-label="Selected run results"></section>
-        <div id="dashboard-totals" class="dashboard-numbers"></div>
-        <div id="dashboard-history" aria-label="Execution history"></div>
       </section>
       </div>
       <div data-workspace-page="/quality-lifecycle" hidden>
+      <section class="panel workspace-page-panel" id="stlc-workspace" aria-labelledby="stlc-title">
+        <div class="panel-head"><div><span class="section-kicker">Requirements and execution</span><h2 id="stlc-title">Manage the testing lifecycle</h2><p>Baseline requirements, review a suite version, and collect execution evidence against a named build and environment.</p></div><button id="stlc-refresh" class="secondary" type="button">Refresh records</button></div>
+        <p id="stlc-status" role="status" aria-live="polite"></p>
+        <details class="subpanel"><summary>1. Requirement register and review</summary>
+          <form id="stlc-requirement-form" class="stlc-form">
+            <label>Project<input name="project" value="default" required pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,99}"></label>
+            <label>Requirement key<input name="key" placeholder="BR-001" required></label>
+            <label>Title<input name="title" required></label><label>Owner<input name="owner" required></label>
+            <label>Source reference<input name="source" placeholder="Jira issue, document section or source URL" required></label>
+            <label>Description<textarea name="description" required></textarea></label>
+            <label>Acceptance criteria, one per line<textarea name="acceptance_criteria" required></textarea></label>
+            <label>Change reason<input name="change_reason" required></label>
+            <input name="expected_version" type="hidden" value="0">
+            <button class="primary" type="submit">Save requirement version</button><button class="secondary" id="stlc-new-requirement" type="button">New requirement</button>
+          </form><div id="stlc-requirements"></div>
+        </details>
+        <details class="subpanel"><summary>2. Baselines and suite versions</summary>
+          <form id="stlc-baseline-form" class="stlc-form"><label>Project<input name="project" value="default" required></label><label>Baseline name<input name="name" required></label><fieldset><legend>Approved requirement versions</legend><div id="stlc-baseline-options"></div></fieldset><button class="primary" type="submit">Create baseline</button></form>
+          <div id="stlc-baselines"></div>
+          <form id="stlc-suite-form" class="stlc-form"><p>Capture the current generated suite with explicit requirement mappings. Review the saved snapshot before approval.</p><label>Approved baseline<select id="stlc-suite-baseline" name="baseline_id" required></select></label><div id="stlc-suite-mappings"></div><button class="primary" type="submit">Save current suite version</button></form>
+          <div id="stlc-suites"></div><div id="stlc-impacts"></div>
+        </details>
+        <details class="subpanel"><summary>3. Test cycles, results and defects</summary>
+          <form id="stlc-cycle-form" class="stlc-form"><label>Approved suite<select id="stlc-cycle-suite" name="suite_id" required></select></label><label>Cycle name<input name="name" required></label><label>Application build<input name="build" placeholder="Release or commit identifier" required></label><label>Environment<input name="environment" placeholder="QA staging" required></label><div id="stlc-assignments"></div><button class="primary" type="submit">Create execution cycle</button></form>
+          <label>Execution cycle<select id="stlc-active-cycle"></select></label><div id="stlc-cycle-report"></div>
+          <form id="stlc-attempt-form" class="stlc-form"><h3>Record manual execution or retest</h3><label>Test case<select id="stlc-attempt-case" name="case_id" required></select></label><div id="stlc-step-evidence"></div><label>Overall result<select name="status"><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option><option value="not-run">Not run</option></select></label><label>Actual outcome / blocked reason<textarea name="actual" required></textarea></label><label>Evidence URLs, one per line<textarea name="evidence"></textarea></label><label>Retest of failed or blocked attempt<select id="stlc-retest" name="retest_of"><option value="">New execution</option></select></label><button class="primary" type="submit">Record attempt</button></form>
+          <form id="stlc-import-form" class="stlc-form"><h3>Import automation results</h3><p>Upload results.json from the reviewed CI bundle. Unknown cases or mismatched build/environment are rejected without importing partial results.</p><label>Results JSON<input name="file" type="file" accept=".json" required></label><button class="secondary" type="submit">Import results</button></form>
+          <form id="stlc-defect-form" class="stlc-form"><h3>Create a linked defect</h3><label>Failed attempt<select id="stlc-failed-attempt" name="attempt_id" required></select></label><label>Defect title<input name="title" required></label><label>Severity<select name="severity"><option value="major">Major</option><option value="critical">Critical</option><option value="minor">Minor</option></select></label><button class="secondary" type="submit">Create defect</button></form><div id="stlc-defects"></div>
+        </details>
+        <details class="subpanel"><summary>4. Prepare reviewed C# automation for CI</summary><form id="stlc-pack-form" class="stlc-form"><p>Select a cycle above and generate its C# automation pack in the workspace. The downloaded bundle includes the reviewed files and result mappings. Commit it under automation-packs/ and run the Generated suite execution workflow.</p><label>C# project path<input name="project_path" placeholder="Automation.csproj" required></label><label>Exact TRX test name to case ID mappings (JSON object)<textarea name="test_mappings" placeholder='{"ScenarioName":"TC-001"}' required></textarea></label><label>Code review notes<textarea name="review_comment" required></textarea></label><button class="secondary" type="submit">Download reviewed CI bundle</button></form></details>
+        <details class="subpanel"><summary>Audit history</summary><div id="stlc-audit"></div></details>
+      </section>
       <section class="panel agent-workspace workspace-page-panel" id="agent-workspace" aria-labelledby="agent-workspace-title">
         <div class="panel-head compact-head">
-          <div><span class="section-kicker">Quality lifecycle</span><h2 id="agent-workspace-title">Review and prepare the suite</h2><p id="lifecycle-guidance">Generate a test suite to activate coverage, knowledge, test-data and quality-metric actions.</p></div>
-          <span class="secure">LOCAL ACTIONS</span>
+          <div><span class="section-kicker">Quality lifecycle</span><h2 id="agent-workspace-title">Traceability and STLC reporting</h2><p id="lifecycle-guidance">Generate a suite to inspect requirement coverage, design quality and lifecycle readiness.</p></div>
+          <span class="secure">CURRENT SUITE</span>
         </div>
         <div class="agent-grid">
           <article class="agent-card"><span class="agent-number">01</span><div><small>Business Rules Agent</small><h3>Requirement alignment</h3><p>Review traceability to BRD rules.</p></div><button class="secondary lifecycle-action" id="show-rule-coverage" disabled>Review coverage</button></article>
           <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
-          <article class="agent-card"><span class="agent-number">03</span><div><small>Test Data Agent</small><h3>Synthetic test data</h3><p>Fill missing case-aligned values safely.</p></div><button class="secondary lifecycle-action" id="generate-data" disabled>Generate data</button></article>
-          <article class="agent-card"><span class="agent-number">04</span><div><small>Metrics Agent</small><h3>Design metrics</h3><p>Calculate suite coverage and automation signals.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Generate metrics</button></article>
-          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run repository checks</h3><p>Check this application’s fixed UI, API and security tests. Generated scenarios are not executed.</p></div><button class="primary" id="run-automation">Run BDD tests</button></article>
+          <article class="agent-card"><span class="agent-number">03</span><div><small>STLC reporting</small><h3>Traceability and quality</h3><p>Inspect coverage gaps, risk distribution and validation findings.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Refresh report</button></article>
         </div>
         <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
         <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
-          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Metrics</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate coverage metrics for the current designed suite.</p></div></article>
+          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Traceability and STLC report</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate a suite to see its traceability and quality report.</p></div></article>
         </div>
       </section>
       </div>
@@ -370,9 +402,11 @@
   <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
   <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260911-bdd" defer></script>
+  <script src="/static/scripts/index.js?v=20260911-stlc" defer></script>
   <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-  <script src="/static/scripts/dashboard.js?v=20260911-allure" defer></script>
+  <script src="/static/scripts/dashboard.js?v=20260912-modern" defer></script>
+  <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
+  <script src="/static/scripts/stlc-workspace.js?v=20260911-plan1" defer></script>
   <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
 </body>
 </html>

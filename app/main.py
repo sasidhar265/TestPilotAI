@@ -7,7 +7,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -42,6 +42,7 @@ from app.agents.test_case_generator_agent import (
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.auth import SESSION_COOKIE, issue_browser_session, valid_session
+from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
 from app.dependencies import (
     get_multi_agent_pipeline,
@@ -101,6 +102,8 @@ from app.services.model_access import (
     failure_reason,
     inspect_model_access,
 )
+from app.services.stlc import LifecycleError
+from app.stlc_routes import router as stlc_router
 from app.user_routes import router as user_router
 from app.users import authenticate
 from app.workspace_routes import router as workspace_router
@@ -125,6 +128,13 @@ app.add_middleware(
 )
 app.include_router(user_router)
 app.include_router(workspace_router)
+app.include_router(stlc_router)
+
+
+@app.exception_handler(LifecycleError)
+async def lifecycle_error(request: Request, error: LifecycleError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": str(error)})
+
 
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 INDEX = Path(__file__).parent / "static" / "index.html"
@@ -860,6 +870,10 @@ async def generate_reqnroll_step_definitions(
 @app.post("/api/step-definitions/download")
 async def download_step_definitions(artifact: StepDefinitionArtifact) -> Response:
     """Keep bindings and their supporting C# files separate in a downloadable archive."""
+    try:
+        validate_layout(artifact.files)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     findings = implementation_findings(artifact)
     if findings:
         raise HTTPException(

@@ -12,6 +12,23 @@ from app.services.automation_reports import generate_report, report_path
 from app.services.dashboard import DashboardStore
 
 
+def test_report_layout_keeps_legacy_downloads_accessible(tmp_path):
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        automation_project_path=tmp_path / "automation" / "Tests.csproj",
+    )
+    identifier = "a" * 32
+    legacy = tmp_path / "automation-reports" / f"{identifier}.html"
+    legacy.parent.mkdir()
+    legacy.write_text("historical report")
+    assert report_path(settings, identifier) == legacy
+    current = tmp_path / "automation" / "TestResults" / "Reports" / f"{identifier}.html"
+    current.parent.mkdir(parents=True)
+    current.write_text("new report")
+    assert report_path(settings, identifier) == current
+
+
 def test_bdd_history_isolated_from_generation_and_survives_restart(tmp_path):
     store = DashboardStore(tmp_path / "memory.db")
     bdd = store.start("repository_checks")
@@ -77,7 +94,11 @@ async def test_allure_single_html_and_redacted_native_results(tmp_path, monkeypa
         return Process()
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
-    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        automation_project_path=tmp_path / "automation" / "Tests.csproj",
+    )
     identifier, error = await generate_report(settings, results, ["secret-value"])
     assert error is None and identifier
     assert "--single-file" in captured["command"]
@@ -100,10 +121,14 @@ async def test_report_cli_failure_keeps_test_results_separate(tmp_path, monkeypa
 
 
 def test_history_and_report_download_endpoints(tmp_path):
-    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        automation_project_path=tmp_path / "automation" / "Tests.csproj",
+    )
     identifier = "a" * 32
     path = report_path(settings, identifier)
-    path.parent.mkdir()
+    path.parent.mkdir(parents=True)
     path.write_text("<html>Real report fixture</html>")
     store = DashboardStore(settings.organizational_memory_path)
     store.finish(store.start("repository_checks"), "passed", {"report_id": identifier})
@@ -131,7 +156,11 @@ async def test_run_endpoint_records_failures_without_inventing_counts(tmp_path, 
     from app.agents.automation_execution_agent import AutomationExecutionError
     from app.models import AutomationRunRequest
 
-    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        automation_project_path=tmp_path / "automation" / "Tests.csproj",
+    )
     monkeypatch.setattr(
         main.AutomationExecutionAgent,
         "run",
@@ -152,7 +181,11 @@ async def test_run_endpoint_rejects_overlapping_runs(tmp_path):
     from app import main
     from app.models import AutomationRunRequest
 
-    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        automation_project_path=tmp_path / "automation" / "Tests.csproj",
+    )
     async with main._automation_run_lock:
         with pytest.raises(main.HTTPException) as error:
             await main.run_automation(AutomationRunRequest(), settings)
@@ -234,13 +267,27 @@ def test_bdd_chart_history_download_and_run_without_suite():
             "href", "/api/automation/reports/" + report_id
         )
         page.locator('[data-run-id="older"] > summary').click()
-        page.locator('[data-chart-run="older"]').click()
+        page.locator('.execution-run [data-chart-run="older"]').click()
         playwright.expect(wheel).to_have_attribute("aria-label", "6 passed, 0 failed, 0 not run")
+        page.locator("#bdd-status-filter").select_option("failed")
+        playwright.expect(page.locator(".execution-run")).to_have_count(1)
+        page.locator("#bdd-history-search").fill("no matching run")
+        playwright.expect(page.locator("#dashboard-history")).to_contain_text(
+            "No runs match your filters"
+        )
+        page.locator("#bdd-history-search").fill("")
+        page.locator("#bdd-status-filter").select_option("all")
+        page.locator('.bdd-trend-run[data-chart-run="recent"]').click()
+        playwright.expect(wheel).to_have_attribute("aria-label", "2 passed, 1 failed, 3 not run")
+        page.screenshot(path="/tmp/bdd-dashboard-desktop.png", full_page=True)
         page.locator("#run-repository-bdd").click()
         playwright.expect(page.locator("#bdd-run-status")).to_contain_text("BDD execution passed")
         assert submitted == [{}]
         assert page.evaluate("suite") is None
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path="/tmp/bdd-dashboard-mobile.png", full_page=True)
+        page.evaluate("document.documentElement.dataset.theme = 'dark'")
+        page.screenshot(path="/tmp/bdd-dashboard-dark.png", full_page=True)
         assert not errors
         browser.close()

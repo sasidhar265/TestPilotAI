@@ -159,3 +159,27 @@ Python package discovery explicitly includes only `app` and its regular subpacka
 `workspace/` policy files are copied separately by Docker, so they cannot be mistaken for an
 additional Python namespace package during a clean Render build. Frontend assets and C# templates
 are explicitly included as package data. A clean-context wheel build checks this boundary in CI.
+
+
+## Automation artifact layout
+
+`app/automation_layout.py` defines a shared path policy for every language. Generation,
+download and reviewed CI export apply it before returning artifacts. Root dependency manifests
+remain native to the selected language; Reqnroll contains discovery/runner configuration.
+C# deterministic helpers are split into context, service, builder, model and utility templates.
+`app/automation_pack.py` refreshes approved features and input data for each full pack, including
+when implementation source is reused from memory. Python uses a temporary Behave discovery tree
+so the authored framework layout remains consistent. Generated code is still executed only in
+reviewed external CI; the application runner executes the fixed repository BDD project.
+
+New standalone repository reports are stored in TestResults/Reports beside the configured
+.csproj; legacy report lookup remains available next to the organizational-memory database.
+Both database storage and the new report directory require persistence for deployment retention.
+
+The user-supplied quotation payload in `app/templates/framework/QuotationRequest.Json` is the
+current request-shape authority. Generation instructions embed it after older profile guidance;
+C# baseline artifacts supply a fixed typed model, fluent builder and injectable request strategies.
+Provider output cannot replace these supplied C# contract sources, and reused source must match
+the current contract. Explicit value overrides use the builder; metadata and response oracles stay
+outside the body. The same JSON is included in every pack's Input folder. Static step-definition
+checks reject conditional dispatch across languages, including cached C# implementations.

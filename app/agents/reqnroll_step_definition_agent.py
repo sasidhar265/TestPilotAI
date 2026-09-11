@@ -15,8 +15,11 @@ from app.agents.reqnroll_memory import ReqnRollMemory
 from app.agents.reqnroll_validation import implementation_findings
 from app.agents.runner import CopilotGenerationError, StructuredAgentDefinition
 from app.agents.test_case_validator import ValidationReport
+from app.automation_layout import LAYOUT_INSTRUCTIONS, validate_layout
+from app.automation_pack import csharp_assets
 from app.config import Settings
 from app.models import ExecutionMode, TestSuite
+from app.quotation_contract import quotation_feature, quotation_sources
 
 logger = logging.getLogger(__name__)
 _GHERKIN_STEP = re.compile(r"^\s*(Given|When|Then|And|But)\s+(.+?)\s*$")
@@ -30,7 +33,7 @@ class StepCoverage(BaseModel):
 
 
 class StepDefinitionFile(BaseModel):
-    path: str = Field(pattern=r"^[A-Za-z0-9_./-]+\.cs$")
+    path: str = Field(pattern=r"^[A-Za-z0-9_./-]+\.(?:cs|csproj|json|Json|runsettings|md|feature)$")
     content: str = Field(min_length=1)
 
 
@@ -116,7 +119,7 @@ class ReqnRollStepDefinitionAgent:
             raise ValueError(
                 "The suite has no automation Gherkin to convert into step definitions."
             )
-        name = _method_name("", request.suite.feature_name) + "StepDefinitions"
+        name = _method_name("", request.suite.feature_name) + "StepDefinition"
         return StepDefinitionArtifact(
             files=[
                 StepDefinitionFile(
@@ -137,6 +140,25 @@ class ReqnRollStepDefinitionAgent:
         )
 
     async def generate(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
+        artifact = await self._generate_sources(request)
+        assets = csharp_assets(request.suite, artifact.notes)
+        artifact.files = [
+            file
+            for file in artifact.files
+            if not file.path.endswith(".feature")
+            and file.path
+            not in {"Input/TestData.Json", "Input/CaseData.Json", "Input/QuotationRequest.Json"}
+        ]
+        existing = {file.path for file in artifact.files}
+        artifact.files.extend(
+            StepDefinitionFile(path=path, content=content)
+            for path, content in assets.items()
+            if path not in existing
+        )
+        validate_layout(artifact.files)
+        return artifact
+
+    async def _generate_sources(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
         if not request.validation.passed:
             raise ValueError("Step definitions require a Quality Gate-approved suite.")
         automation_cases = [
@@ -152,9 +174,12 @@ class ReqnRollStepDefinitionAgent:
         schema = json.dumps(StepDefinitionArtifact.model_json_schema(), separators=(",", ":"))
         suite = request.suite.model_copy(update={"test_cases": automation_cases})
         source = suite.model_dump_json()
-        instructions = step_definition_agent_instructions(self.settings.agent_profile)
+        instructions = (
+            step_definition_agent_instructions(self.settings.agent_profile) + LAYOUT_INSTRUCTIONS
+        )
         scope, scenarios = self.memory.identity(suite, self.settings.agent_profile, instructions)
         baseline = self._fallback_artifact(request.suite.feature_name, automation_cases)
+        approved_quotation_sources = quotation_sources()
         expected_steps = {item.gherkin_step for item in baseline.coverage}
         knowledge: list[str] = []
         for exact, stored in self.memory.candidates(scope, scenarios):
@@ -163,6 +188,16 @@ class ReqnRollStepDefinitionAgent:
             except ValueError:
                 continue
             if implementation_findings(cached, expected_steps if exact else None):
+                continue
+            if any(
+                file.path in approved_quotation_sources
+                and file.content != approved_quotation_sources[file.path]
+                for file in cached.files
+            ):
+                continue
+            try:
+                validate_layout(cached.files)
+            except ValueError:
                 continue
             if exact:
                 for item in cached.coverage:
@@ -178,7 +213,9 @@ class ReqnRollStepDefinitionAgent:
             self.memory.put(scope, scenarios, baseline)
             return baseline
         reusable_files = {
-            file.path: file for file in baseline.files if file.path.startswith("Support/")
+            file.path: file
+            for file in baseline.files
+            if not file.path.startswith("StepDefinitions/")
         }
         prompt = (
             f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}\n\n"
@@ -191,8 +228,8 @@ class ReqnRollStepDefinitionAgent:
             "in notes; do not classify executable configurable code as blocked solely because "
             "those runtime values have not been supplied. Do not replace working "
             "implementations with TODOs, pending steps, empty bodies or invented assertions."
-            " The Support/ files in the baseline are supplied automatically in the final "
-            "download. Reference them directly and OMIT unchanged Support/ files from your "
+            " The helper files in the baseline are supplied automatically in the final "
+            "download. Reference them directly and OMIT unchanged helper files from your "
             "response to avoid regenerating existing code. Return only binding files and "
             "new or changed helpers, plus complete coverage and notes."
             "\n\nREQUIRED COVERAGE KEYS\n"
@@ -210,18 +247,27 @@ class ReqnRollStepDefinitionAgent:
                 + "\nReuse compatible existing bindings and helpers for duplicate scenarios. "
                 "Current approved requirements take precedence. Return one coherent complete "
                 "artifact for the current suite, with no duplicate bindings or helper classes. "
-                "Include all required files other than the unchanged baseline Support/ files."
+                "Include all required files other than the unchanged baseline helper files."
             )
 
         def validate(artifact: StepDefinitionArtifact) -> StepDefinitionArtifact:
             # Keep provider output immutable so repair prompts do not repeat local helpers.
             artifact = artifact.model_copy(deep=True)
+            for file in artifact.files:
+                if file.path in approved_quotation_sources and (
+                    file.content != approved_quotation_sources[file.path]
+                ):
+                    raise ValueError(
+                        "Reuse the supplied quotation model, builder and strategies unchanged. "
+                        "Use typed builder overrides or a separate strategy for variations."
+                    )
             returned_paths = {file.path for file in artifact.files}
             artifact.files.extend(
                 file.model_copy(deep=True)
                 for path, file in reusable_files.items()
                 if path not in returned_paths
             )
+            validate_layout(artifact.files)
             findings = implementation_findings(artifact, expected_steps)
             if findings:
                 missing_inputs = " ".join(artifact.notes)
@@ -275,6 +321,10 @@ class ReqnRollStepDefinitionAgent:
             implementation = common_step(keyword, text)
             if implementation:
                 pattern, parameters, body, asynchronous = implementation
+                if quotation_feature(feature_name):
+                    body = body.replace("api.LoadFixture(", "api.LoadQuotationFixture(").replace(
+                        "api.LoadEligibilityFixture(", "api.LoadQuotationEligibilityFixture("
+                    )
             else:
                 pattern, parameters = _binding_pattern(text)
                 body = ""
@@ -340,7 +390,7 @@ class ReqnRollStepDefinitionAgent:
         has_implementation = any(binding["implemented"] for binding in bindings.values())
         constructor = (
             "    private readonly ApiScenario api;\n\n"
-            f"    public {class_name}StepDefinitions(ApiScenario api)\n"
+            f"    public {class_name}StepDefinition(ApiScenario api)\n"
             "    {\n        this.api = api;\n    }\n\n"
             if has_implementation
             else ""
@@ -351,7 +401,7 @@ class ReqnRollStepDefinitionAgent:
             "using Reqnroll;\n\n"
             "namespace Generated.StepDefinitions;\n\n"
             "[Binding]\n"
-            f"public sealed class {class_name}StepDefinitions\n"
+            f"public sealed class {class_name}StepDefinition\n"
             "{\n" + constructor + "\n\n".join(methods) + "\n}\n"
         )
         return StepDefinitionArtifact(
@@ -359,7 +409,7 @@ class ReqnRollStepDefinitionAgent:
                 *(
                     [
                         StepDefinitionFile(
-                            path=f"StepDefinitions/{class_name}StepDefinitions.cs", content=content
+                            path=f"StepDefinitions/{class_name}StepDefinition.cs", content=content
                         )
                     ]
                     if has_implementation

@@ -17,6 +17,7 @@ from app.agents.multilanguage_agent import (
     safe_files,
 )
 from app.agents.runner import CopilotGenerationError
+from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
 from app.models import BusinessRule
 from app.observability import generation_cancellations, request_id_context
@@ -137,6 +138,7 @@ async def download(artifact: LanguageArtifact) -> Response:
     # This endpoint archives reviewable user-supplied source; it makes no implementation claim.
     try:
         safe_files(artifact)
+        validate_layout(artifact.files)
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
     output = io.BytesIO()

@@ -607,7 +607,8 @@ The page refreshes every five seconds and preserves the selected historical run.
 The native `Allure.Reqnroll` adapter records scenarios and their steps. After execution, Allure 2
 CLI generates a standalone HTML report with `--single-file`. Each report has a **Download Allure
 report (.html)** link and opens locally without a report server. Install Java and Allure 2 CLI on
-the execution host and restore the BDD project before running; see `automation/README.md`.
+a local execution host and restore the BDD project before running; the Docker image already
+bundles these prerequisites. For Render configuration, see `automation/README.md`.
 Missing Allure prerequisites do not change the test result: the run shows a separate report error.
 Older runs without Allure results cannot be retroactively given a report.
 
@@ -617,7 +618,100 @@ Older runs without Allure results cannot be retroactively given a report.
 other workspace clients. One BDD run may execute at a time per server process.
 
 History persists in `dashboard.db` beside `ORGANIZATIONAL_MEMORY_PATH`, retaining 200 BDD runs
-independently of other activity. The latest 200 HTML reports are retained in `automation-reports/`
-beside that database. Keep this directory on persistent storage. Active runs are process-local.
+independently of other activity. The latest 200 new HTML reports are retained in `automation/TestResults/Reports/`
+(beside the configured automation project). Keep this directory on persistent storage.
+Existing downloads also resolve historical reports from `automation-reports/` beside the database. Active runs are process-local.
 Reports contain native scenario/step results and redacted text diagnostics; raw attachments are
 excluded. Access uses the workspace's existing authentication settings.
+
+## Plan 1: versioned requirements and execution evidence
+
+Open **Quality Lifecycle → Manage the testing lifecycle**. Records persist in `stlc.db`
+beside `ORGANIZATIONAL_MEMORY_PATH`; use persistent storage on the deployment host to
+retain them across redeployments. This is a shared workspace, consistent with the existing
+shared business rules. Project identifiers organize records; they are not tenant access boundaries.
+
+1. Save a requirement with its project, stable key, owner, source, acceptance criteria and
+   change reason. Submit it for review, then approve or reject with a recorded comment.
+   Missing criteria and a small set of potentially ambiguous phrases prevent approval;
+   this check supplements human review rather than proving requirement completeness.
+2. Select approved requirement versions to create a baseline. Review and approve the
+   baseline, then save the generated suite with explicit case-to-requirement mappings.
+   Review its saved test snapshot and approve the suite version.
+3. Create a cycle tied to that suite version, application build and environment, assigning
+   each case. Record manual step outcomes and evidence URLs, or import CI `results.json`.
+   Attempts are append-only. Imported run keys are idempotent; unknown cases, duplicate
+   results and build/environment mismatches reject the whole import.
+4. Create defects from failed attempts. Link an existing Jira issue or explicitly publish
+   a Jira Bug, then synchronize its remote status. Jira status is displayed separately from
+   local defect disposition: closing locally requires a passing linked retest. If remote
+   creation times out, reconcile with Jira and link the created issue instead of retrying
+   blindly. Jira projects must support the `Bug` issue type and the configured account must
+   have the relevant issue permissions.
+5. Revise a requirement to create a new version. The impact view identifies affected tests,
+   suite versions and cycles. A changed baseline cannot start new cycles; review new
+   requirements, baseline and suite snapshots first. Historical execution remains linked to
+   its original version. Retesting a fixed build uses a new cycle for the same suite version
+   and can reference a failure in an earlier cycle.
+
+The cycle report counts the latest attempt per case, retains complete attempt history, and
+shows whether all tests linked to a requirement passed. Pass rate uses passed plus failed
+cases as its denominator; blocked and not-run cases remain visible separately. No execution
+produces an unavailable pass rate. A passing requirement row describes that baseline only;
+change-impact warnings identify newer requirements requiring review.
+
+### Reviewed C# execution in CI
+
+The application host never executes uploaded generated code. Generate and review a C# pack
+for a saved suite, select its cycle, and download a reviewed CI bundle. Provide the project's
+relative `.csproj` path and explicit mappings from exact TRX test names to stable case IDs.
+Outline rows may map to the same case; one failed row fails the aggregated case, and any
+unexecuted row prevents a passing case result. Unmapped or missing cases stop conversion.
+
+Commit the bundle as `automation-packs/<cycle_id>.zip` through your repository review process.
+Configure the GitHub Actions environment `stlc-execution` with required reviewers, variable
+`STLC_TARGET_URL`, and only the target-test credentials needed by the reviewed suite:
+`STLC_TARGET_TOKEN`, `STLC_TARGET_USERNAME`, `STLC_TARGET_PASSWORD`. Manually dispatch
+**Generated suite execution** with its cycle ID. The workflow verifies bundle hashes, builds
+and runs on an ephemeral GitHub-hosted worker with timeouts, and retains TRX plus importable
+JSON artifacts. Download `results.json` and import it into the matching cycle. The initial
+implementation deliberately uses explicit import rather than giving generated code credentials
+to write to the lifecycle application. Build errors yield CI diagnostics, not fabricated results.
+
+GitHub environment/reviewer configuration and a real target environment are external setup
+steps. The local application cannot configure those accounts automatically. See
+[GitHub's runner security guidance](https://docs.github.com/en/actions/reference/security/secure-use)
+and [Jira's issue API](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/).
+
+The `/api/stlc` API exposes requirement versions, baselines, suite versions, cycles, manual
+attempts, imports, defects, Jira actions and reviewed bundle export. Audit actors come from
+the signed-in session; bearer-token calls are identified as `api-service`. Open local
+installations record `local-development`. Lifecycle snapshots and audit history survive
+application restarts. Formal closure/sign-off and multi-framework CI remain subsequent work.
+
+
+## Shared automation framework structure
+
+The repository BDD project and all new automation packs use the folder structure in
+[automation/README.md](automation/README.md) and
+[workspace/automation-standards.md](workspace/automation-standards.md): `Reqnroll`,
+`Features`, `StepDefinitions`, `Hooks`, `TestContext`, `Services`, `Builders`, `Models`,
+`Utilities`, `TestResults/Reports`, and `Input`. These are sibling folders; build/dependency
+manifests remain at the project root. `Reqnroll` is the configuration-folder name across
+C#, Java, Python, JavaScript, TypeScript and Ruby; each retains its own BDD runtime.
+
+Generation places bindings and helpers in their corresponding role folders and refreshes
+`Features/generated.feature`, `Input/TestData.Json` (approved JSON request fixtures), and
+`Input/CaseData.Json` (all supplied per-case data). Unused role folders contain documentation.
+A C# full pack includes `Automation.csproj`; run it from the extracted root with
+`dotnet test Automation.csproj --results-directory TestResults/Reports`.
+Python packs run with `python Reqnroll/run.py`. The adapter temporarily stages the
+[discovery tree required by Behave](https://behave.readthedocs.io/en/stable/gherkin/),
+loading the authored StepDefinitions and Hooks while writing reports into the shared layout.
+Other language packs must supply runner configuration for the same folder names.
+
+Generation, download and reviewed CI bundle validation reject the previous `Support/`,
+`src/test/`, and lowercase `features/` layouts; regenerate old packs before downloading or
+exporting a new reviewed CI bundle. Existing repository project paths remain compatible.
+The CI runner places TRX and importable JSON under `TestResults/Reports/ci-execution` in the
+extracted framework, and uploads that directory as execution evidence.

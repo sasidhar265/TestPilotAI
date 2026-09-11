@@ -132,11 +132,11 @@ async def test_ai_output_reuses_local_support_files(monkeypatch, tmp_path) -> No
     from app.agents.reqnroll_validation import implementation_findings
 
     async def generate(*args, **kwargs):
-        assert "OMIT unchanged Support/ files" in kwargs["prompt"]
+        assert "OMIT unchanged helper files" in kwargs["prompt"]
         return StepDefinitionArtifact(
             files=[
                 {
-                    "path": "Steps.cs",
+                    "path": "StepDefinitions/ExampleStepDefinition.cs",
                     "content": """using Reqnroll;
 namespace Generated.StepDefinitions;
 [Binding]
@@ -166,11 +166,16 @@ public class Steps {
             validation=_validation(True),
         )
     )
-    assert {file.path for file in result.files} == {
-        "Steps.cs",
-        "Support/ApiScenario.cs",
-        "Support/ApprovedFixtures.cs",
-    }
+    assert {
+        "StepDefinitions/ExampleStepDefinition.cs",
+        "TestContext/testcontext.cs",
+        "Utilities/ApprovedFixturesUtility.cs",
+        "Services/ApiService.cs",
+        "Models/ApiResponseModel.cs",
+        "Builders/ApiClientbuilder.cs",
+        "Input/TestData.Json",
+        "Automation.csproj",
+    } <= {file.path for file in result.files}
     assert implementation_findings(result, {"Then the HTTP status should be 200"}) == []
 
     async def unavailable(*args, **kwargs):
@@ -204,7 +209,9 @@ async def test_csharp_memory_reuses_duplicate_scenarios_after_restart(tmp_path, 
     provider = AsyncMock(side_effect=AssertionError("Duplicate scenarios must not call AI"))
     monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", provider)
     result = await ReqnRollStepDefinitionAgent(settings).generate(request)
-    assert result.files == original.files
+    assert [f for f in result.files if f.path.endswith(".cs")] == [
+        f for f in original.files if f.path.endswith(".cs")
+    ]
     assert all(item.status == "reused" for item in result.coverage)
     assert "organizational memory" in result.notes[-1]
     provider.assert_not_awaited()

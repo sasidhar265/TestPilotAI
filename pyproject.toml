@@ -86,6 +86,7 @@ exclude = ["tools/"]
 app = [
   "py.typed",
   "templates/reqnroll/*.cs",
+  "templates/framework/*",
   "static/*.html",
   "static/scripts/*.js",
   "static/styles/*.css",

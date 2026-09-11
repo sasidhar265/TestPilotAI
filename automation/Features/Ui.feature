@@ -7,7 +7,7 @@ Feature: Quality Lifecycle Studio workspace
   Scenario: Workspace loads its guarded generation controls
     Given the Quality Lifecycle Studio is available
     When I open the workspace in a browser
-    Then the page title contains "Quality Lifecycle Studio"
+    Then the page title contains "AI Quality Lifecycle"
     And the generation form is visible
     And the generation submit button is disabled until requirements are supplied
 

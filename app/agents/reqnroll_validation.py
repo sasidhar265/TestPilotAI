@@ -6,6 +6,8 @@ This is a static completeness check, not a substitute for compiling the target p
 import re
 from typing import TYPE_CHECKING
 
+from app.automation_style import step_style_findings
+
 if TYPE_CHECKING:
     from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
 
@@ -38,11 +40,23 @@ def implementation_findings(
         if file.path in paths or any(part in {"", ".", ".."} for part in file.path.split("/")):
             findings.append(f"Unsafe or duplicate file path: {file.path}")
         paths.add(file.path)
+        if not file.path.endswith(".cs"):
+            continue
+        findings.extend(step_style_findings(file.path, file.content))
         if _PLACEHOLDER.search(file.content):
             findings.append(
                 f"{file.path}: replace placeholder or pending implementation with real code."
             )
         code = _NON_CODE.sub(lambda match: " " * len(match.group()), file.content)
+        if re.search(
+            r"\b(?:RestSharp|RestClient|RestRequest|WebClient|WebRequest|HttpWebRequest|"
+            r"Flurl|IFlurlClient|IFlurlRequest|IAPIRequestContext|APIRequest)\b",
+            code,
+        ):
+            findings.append(
+                f"{file.path}: C# API handling must use System.Net.Http.HttpClient "
+                "through a typed service; alternative HTTP clients are not allowed."
+            )
         for match in _METHOD.finditer(code):
             name = match["name"].lstrip("@")
             kinds = set(re.findall(r"\[\s*(Given|When|Then)(?:Attribute)?\b", match["attributes"]))
