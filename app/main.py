@@ -504,11 +504,21 @@ async def summarize_execution(
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
+_automation_run_lock = asyncio.Lock()
+
+
 @app.post("/api/automation/run", response_model=AutomationRunReport)
 async def run_automation(
     request: AutomationRunRequest,
     settings: Settings = Depends(get_settings),
 ) -> AutomationRunReport:
+    if _automation_run_lock.locked():
+        raise HTTPException(409, "A repository BDD run is already in progress")
+    async with _automation_run_lock:
+        return await _run_automation(request, settings)
+
+
+async def _run_automation(request: AutomationRunRequest, settings: Settings) -> AutomationRunReport:
     """Run only the repository-approved C# BDD automation project."""
     dashboard = DashboardStore(settings.organizational_memory_path)
     run_id = dashboard.start("repository_checks")
@@ -523,6 +533,7 @@ async def run_automation(
         )
         return report
     except AutomationExecutionError as error:
+        dashboard.finish(run_id, "error", {"error": str(error), "results_available": False})
         publish_lifecycle_event(
             "Automation Execution Agent", "run_csharp_bdd_suite", "failed", str(error)
         )
@@ -530,7 +541,7 @@ async def run_automation(
         raise HTTPException(status_code=422, detail=str(error)) from error
 
     finally:
-        dashboard.finish(run_id, "error")
+        dashboard.finish(run_id, "error", {"results_available": False})
 
 
 @app.post("/api/defects", response_model=list[DefectDraft])

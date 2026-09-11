@@ -6,7 +6,7 @@ import zipfile
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from app.agents.multilanguage_agent import (
@@ -20,6 +20,7 @@ from app.agents.runner import CopilotGenerationError
 from app.config import Settings, get_settings
 from app.models import BusinessRule
 from app.observability import generation_cancellations, request_id_context
+from app.services.automation_reports import report_path
 from app.services.dashboard import DashboardStore
 from app.workspace_policy import load_business_rules, save_business_rules, standards
 
@@ -63,6 +64,38 @@ async def languages() -> list[dict[str, str]]:
 @router.get("/dashboard")
 async def dashboard(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, object]:
     return DashboardStore(settings.organizational_memory_path).snapshot()
+
+
+@router.get("/automation/history")
+async def automation_history(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, object]:
+    snapshot = DashboardStore(settings.organizational_memory_path).snapshot("repository_checks")
+    for item in snapshot["history"]:
+        details = item.get("details", {})
+        identifier = details.get("report_id")
+        details["report_available"] = bool(
+            identifier and report_path(settings, identifier).is_file()
+        )
+    return snapshot
+
+
+@router.get("/automation/reports/{identifier}")
+async def download_automation_report(
+    identifier: str, settings: Annotated[Settings, Depends(get_settings)]
+) -> FileResponse:
+    try:
+        path = report_path(settings, identifier)
+    except ValueError as error:
+        raise HTTPException(404, "Report not found") from error
+    if not path.is_file():
+        raise HTTPException(404, "Report not found or no longer retained")
+    return FileResponse(
+        path,
+        media_type="text/html",
+        filename=f"bdd-allure-{identifier}.html",
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
+    )
 
 
 @router.post("/step-definitions/languages/bindings", response_model=LanguageArtifact)

@@ -13,5 +13,6 @@
     <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageReference Include="Reqnroll.NUnit" Version="3.3.4" />
+    <PackageReference Include="Allure.Reqnroll" Version="2.15.0" />
   </ItemGroup>
 </Project>

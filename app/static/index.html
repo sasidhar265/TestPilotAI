@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle Agent — Governed quality engineering</title>
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260910-page-layout">
+  <link rel="stylesheet" href="/static/styles/index.css?v=20260911-bdd-20260910-page-layout">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
   <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
@@ -291,9 +291,11 @@
       </div>
       <div data-workspace-page="/progress" hidden>
       <section class="panel workspace-page-panel" id="work-dashboard" aria-labelledby="work-dashboard-title">
-        <div class="panel-head"><div><span class="section-kicker">Workspace activity</span><h2 id="work-dashboard-title">Run history and execution details</h2><p>Review run status, elapsed time, execution output, and recorded activity.</p></div><button id="refresh-dashboard" class="secondary" type="button">Refresh</button></div>
-        <p id="dashboard-scope">Loading recorded work…</p>
+        <div class="panel-head"><div><span class="section-kicker">Workspace activity</span><h2 id="work-dashboard-title">BDD automation execution</h2><p>Run the existing repository feature files and step definitions. Review results and download an Allure report for each run.</p></div><button id="refresh-dashboard" class="secondary" type="button">Refresh</button></div>
+        <div class="bdd-run-actions"><button id="run-repository-bdd" class="primary" type="button">Run BDD tests</button><p id="bdd-run-status" role="status"></p></div>
+        <p id="dashboard-scope">Loading BDD execution history…</p>
         <div id="dashboard-progress" aria-live="polite"></div>
+        <section id="bdd-result-summary" aria-label="Selected run results"></section>
         <div id="dashboard-totals" class="dashboard-numbers"></div>
         <div id="dashboard-history" aria-label="Execution history"></div>
       </section>
@@ -309,7 +311,7 @@
           <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
           <article class="agent-card"><span class="agent-number">03</span><div><small>Test Data Agent</small><h3>Synthetic test data</h3><p>Fill missing case-aligned values safely.</p></div><button class="secondary lifecycle-action" id="generate-data" disabled>Generate data</button></article>
           <article class="agent-card"><span class="agent-number">04</span><div><small>Metrics Agent</small><h3>Design metrics</h3><p>Calculate suite coverage and automation signals.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Generate metrics</button></article>
-          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run repository checks</h3><p>Check this application’s fixed UI, API and security tests. Generated scenarios are not executed.</p></div><button class="primary lifecycle-action" id="run-automation" disabled>Run repository checks</button></article>
+          <article class="agent-card"><span class="agent-number">05</span><div><small>Automation Execution Agent</small><h3>Run repository checks</h3><p>Check this application’s fixed UI, API and security tests. Generated scenarios are not executed.</p></div><button class="primary" id="run-automation">Run BDD tests</button></article>
         </div>
         <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
         <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
@@ -367,9 +369,9 @@
   <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
   <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260910-workspace" defer></script>
+  <script src="/static/scripts/index.js?v=20260911-bdd" defer></script>
   <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-  <script src="/static/scripts/dashboard.js?v=20260910-execution" defer></script>
+  <script src="/static/scripts/dashboard.js?v=20260911-allure" defer></script>
   <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
 </body>
 </html>

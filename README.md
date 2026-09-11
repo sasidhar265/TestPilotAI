@@ -95,8 +95,8 @@ scenarios; configure `QUALITY_LIFECYCLE_BASE_URL` (and, for protected environmen
 `API_AUTH_TOKEN`, `APP_USERNAME`, and `APP_PASSWORD`) before running it. See
 `automation/README.md` for setup and tag filters. The C# projects are grouped in
 `QualityLifecycleStudio.sln`.
-After a validated automation suite is displayed, the **Run repository checks** action invokes this
-fixed project through the local Automation Execution Agent. It does not accept shell commands
+The **Run BDD tests** action on **Progress & execution** invokes this fixed project through the
+local Automation Execution Agent, without requiring a generated suite. It does not accept shell commands
 from the browser; only approved environment values are passed to the process, output is bounded
 and secrets are redacted. The results describe the fixed repository checks, not the generated scenarios, and do not
 feed generated-suite metrics or defects. The runner reads structured TRX results, streams a
@@ -592,17 +592,32 @@ source files; it does not certify user-supplied files as complete implementation
 The adapters follow [Cucumber step definitions](https://cucumber.io/docs/cucumber/step-definitions/)
 and [Behave regular expression matchers](https://behave.readthedocs.io/en/stable/tutorial/).
 
-## Workspace dashboard
+## BDD execution history and Allure reports
 
-**Dashboard** shows running work and its latest lifecycle update, generation/pack history,
-repository execution details, and a test matrix with case IDs, modes, categories, priorities,
-requirement mappings and execution status. It refreshes every five seconds while the page is visible.
-You can record reviewed case results for the current generated suite; this records evidence and does
-not execute code. Repository checks never mark generated cases as passed. Recorded case results
-are associated with the exact suite content so unrelated suites cannot inherit their status.
+**Progress & execution** shows only runs of the existing repository BDD project,
+`automation/QualityLifecycle.Automation.csproj`. **Run BDD tests** works without generating a suite.
+Python/C# unit tests, test generation, automation-pack creation, and manually entered case results
+are excluded from this view.
 
-`GET /api/dashboard` returns the latest 200 completed actions, persisted in `dashboard.db` alongside
-`ORGANIZATIONAL_MEMORY_PATH`. Active work is scoped to the current server process; completed history
-survives restarts. History starts with this update and does not reconstruct earlier work. Dashboard
-metadata is shared with authenticated workspace users. It excludes provider prompts, credentials,
-and repository runner output. Use the same access and retention controls as organizational memory.
+Each run records its timestamp, duration, status, bounded redacted output, and measured pass/fail/not-run
+counts. Select **Show in chart** to view a historical run in the doughnut chart. Not run means the
+runner reported a skipped test; missing results display as unavailable rather than inferred counts.
+The page refreshes every five seconds and preserves the selected historical run.
+
+The native `Allure.Reqnroll` adapter records scenarios and their steps. After execution, Allure 2
+CLI generates a standalone HTML report with `--single-file`. Each report has a **Download Allure
+report (.html)** link and opens locally without a report server. Install Java and Allure 2 CLI on
+the execution host and restore the BDD project before running; see `automation/README.md`.
+Missing Allure prerequisites do not change the test result: the run shows a separate report error.
+Older runs without Allure results cannot be retroactively given a report.
+
+`POST /api/automation/run` accepts `{}` (legacy suite payloads remain accepted but do not select tests).
+`GET /api/automation/history` returns only repository BDD runs. Authenticated report downloads use
+`GET /api/automation/reports/{report_id}`. The existing `/api/dashboard` API remains available for
+other workspace clients. One BDD run may execute at a time per server process.
+
+History persists in `dashboard.db` beside `ORGANIZATIONAL_MEMORY_PATH`, retaining 200 BDD runs
+independently of other activity. The latest 200 HTML reports are retained in `automation-reports/`
+beside that database. Keep this directory on persistent storage. Active runs are process-local.
+Reports contain native scenario/step results and redacted text diagnostics; raw attachments are
+excluded. Access uses the workspace's existing authentication settings.

@@ -58,17 +58,23 @@ class DashboardStore:
             connection.execute("INSERT INTO work_history(record) VALUES (?)", (json.dumps(record),))
             connection.execute(
                 "DELETE FROM work_history WHERE id NOT IN "
-                "(SELECT id FROM work_history ORDER BY id DESC LIMIT 200)"
+                "(SELECT id FROM work_history WHERE json_extract(record, '$.operation') "
+                "= 'repository_checks' ORDER BY id DESC LIMIT 200) AND id NOT IN "
+                "(SELECT id FROM work_history WHERE json_extract(record, '$.operation') "
+                "!= 'repository_checks' ORDER BY id DESC LIMIT 200)"
             )
 
-    def snapshot(self) -> dict[str, Any]:
+    def snapshot(self, operation: str | None = None) -> dict[str, Any]:
         history = []
         if self.path.exists():
             with closing(sqlite3.connect(self.path)) as connection:
                 history = [
                     json.loads(row[0])
                     for row in connection.execute(
-                        "SELECT record FROM work_history ORDER BY id DESC LIMIT 200"
+                        "SELECT record FROM work_history "
+                        "WHERE (? IS NULL OR json_extract(record, '$.operation') = ?) "
+                        "ORDER BY id DESC LIMIT 200",
+                        (operation, operation),
                     )
                 ]
         active = [
@@ -76,6 +82,7 @@ class DashboardStore:
             | {"duration_ms": round((time.monotonic() - item["clock"]) * 1000)}
             for item in _ACTIVE.values()
             if item["path"] == str(self.path)
+            and (operation is None or item["operation"] == operation)
         ]
         from app.observability import lifecycle_events
 
@@ -88,7 +95,11 @@ class DashboardStore:
         return {
             "active": active,
             "history": history,
-            "scope": "Last 200 completed workspace actions; active work on this server process.",
+            "scope": (
+                "Last 200 repository BDD runs; active runs on this server process."
+                if operation == "repository_checks"
+                else "Last 200 completed workspace actions; active work on this server process."
+            ),
         }
 
 

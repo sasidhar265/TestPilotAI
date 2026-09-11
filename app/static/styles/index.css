@@ -856,3 +856,24 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .run-output { max-height: 420px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: .75rem; line-height: 1.6; }
 .execution-run h3 { font-size: .85rem; margin-top: 20px; }
 @media (max-width: 640px) { .run-details { grid-template-columns: 1fr; } .execution-run summary time { width: 100%; } }
+
+.bdd-run-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-block: 20px; }
+#bdd-result-summary { margin-top: 24px; padding: 22px; border: 1px solid var(--line); border-radius: 14px; }
+#bdd-result-summary h3 { font-size: .95rem; margin: 0 0 18px; }
+.bdd-chart-layout { display: flex; align-items: center; flex-wrap: wrap; gap: 28px; }
+.bdd-wheel { width: 200px; max-width: 100%; height: 200px; flex-shrink: 0; }
+.bdd-wheel circle { fill: none; stroke-width: 13; transform: rotate(-90deg); transform-origin: center; }
+.bdd-wheel .track { stroke: var(--line); }
+.bdd-wheel .passed { stroke: var(--success); }
+.bdd-wheel .failed { stroke: var(--danger); }
+.bdd-wheel .not-run { stroke: #9b864e; }
+.bdd-wheel text { fill: var(--ink); text-anchor: middle; font-size: 20px; font-weight: 750; }
+.bdd-wheel .wheel-caption { fill: var(--muted); font-size: 8px; font-weight: 500; }
+.bdd-legend { flex: 1; min-width: 170px; }
+.bdd-legend p { display: flex; align-items: center; gap: 10px; }
+.bdd-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.bdd-legend .passed i { background: var(--success); }
+.bdd-legend .failed i { background: var(--danger); }
+.bdd-legend .not-run i { background: #9b864e; }
+.bdd-legend small { display: block; max-width: 330px; color: var(--muted); font-size: .75rem; line-height: 1.6; }
+.allure-download { display: inline-block; margin-block: 16px; padding: 10px 16px; line-height: 1.4; text-decoration: none; }

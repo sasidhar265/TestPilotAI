@@ -83,18 +83,13 @@ async def test_automation_agent_uses_fixed_project_and_redacts_output(monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_automation_agent_requires_automation_cases():
-    suite = automation_suite().model_copy(
-        update={
-            "test_cases": [
-                automation_suite().test_cases[0].model_copy(update={"execution_mode": "manual"})
-            ]
-        }
-    )
-    with pytest.raises(AutomationExecutionError, match="no automation cases"):
-        await AutomationExecutionAgent(Settings(_env_file=None)).run(
-            AutomationRunRequest(suite=suite)
-        )
+async def test_repository_run_requires_no_generated_suite(monkeypatch):
+    async def spawn(*args, **kwargs):
+        raise OSError("dotnet unavailable")
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    with pytest.raises(AutomationExecutionError, match="Unable to start"):
+        await AutomationExecutionAgent(Settings(_env_file=None)).run(AutomationRunRequest())
 
 
 @pytest.mark.parametrize("content", [None, "broken XML", "<TestRun/>"])

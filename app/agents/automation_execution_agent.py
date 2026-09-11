@@ -1,6 +1,7 @@
 """Controlled execution of the repository's approved C# automation project."""
 
 import asyncio
+import json
 import os
 import signal
 import tempfile
@@ -11,11 +12,16 @@ from pathlib import Path
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.config import Settings
 from app.models import AutomationRunReport, AutomationRunRequest
+from app.services.automation_reports import generate_report
 
 _OUTPUT_LIMIT = 12_000
 _SAFE_ENVIRONMENT = (
     "PATH",
     "DOTNET_ROOT",
+    "HOME",
+    "DOTNET_CLI_HOME",
+    "NUGET_PACKAGES",
+    "PLAYWRIGHT_BROWSERS_PATH",
     "QUALITY_LIFECYCLE_BASE_URL",
     "API_AUTH_TOKEN",
     "API_BEARER_TOKEN",
@@ -44,15 +50,6 @@ class AutomationExecutionAgent:
         self.settings = settings
 
     async def run(self, request: AutomationRunRequest) -> AutomationRunReport:
-        automation_cases = [
-            case
-            for case in request.suite.test_cases
-            if getattr(case.execution_mode, "value", case.execution_mode) == "automation"
-        ]
-        if not automation_cases:
-            raise AutomationExecutionError(
-                "The suite contains no automation cases. Generate BDD automation coverage first."
-            )
         root = Path.cwd().resolve()
         project = Path(self.settings.automation_project_path).resolve()
         if root not in project.parents or project.suffix != ".csproj" or not project.is_file():
@@ -74,6 +71,12 @@ class AutomationExecutionAgent:
         )
         # Each run owns its result directory, preventing stale or concurrent result reuse.
         with tempfile.TemporaryDirectory(prefix="automation-results-") as results:
+            allure_results = Path(results) / "allure-results"
+            allure_config = Path(results) / "allureConfig.json"
+            allure_config.write_text(
+                json.dumps({"allure": {"directory": str(allure_results)}}), encoding="utf-8"
+            )
+            environment["ALLURE_CONFIG"] = str(allure_config)
             command = (
                 "dotnet",
                 "test",
@@ -107,6 +110,7 @@ class AutomationExecutionAgent:
                     "C# automation execution exceeded its time limit."
                 ) from error
             passed, failed, skipped, result_error = _read_results(Path(results) / "results.trx")
+            report_id, report_error = await generate_report(self.settings, allure_results, secrets)
             return AutomationRunReport(
                 status=(
                     "error"
@@ -116,10 +120,14 @@ class AutomationExecutionAgent:
                     else "passed"
                 ),
                 project=str(project.relative_to(root)),
-                suite_case_count=len(automation_cases),
+                suite_case_count=passed + failed + skipped,
                 passed=passed,
                 failed=failed,
                 skipped=skipped,
+                not_run=skipped,
+                results_available=result_error is None,
+                report_id=report_id,
+                report_error=report_error,
                 duration_ms=round((time.perf_counter() - started) * 1000),
                 output=output,
                 error=result_error

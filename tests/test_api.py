@@ -148,7 +148,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="agent-workspace"' in response.text
     assert 'id="suite-view-menu"' in response.text
     assert 'id="suite-download-menu"' in response.text
-    assert 'class="panel agent-workspace"' in response.text
+    assert 'class="panel agent-workspace workspace-page-panel"' in response.text
     assert 'class="panel agent-workspace hidden"' not in response.text
     assert 'class="secondary lifecycle-action" id="generate-data" disabled' in response.text
     assert 'id="execution-dashboard"' not in response.text

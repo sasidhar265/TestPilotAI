@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     max_concurrent_generations: int = Field(default=2, ge=1, le=100)
     automation_project_path: Path = Path("automation/QualityLifecycle.Automation.csproj")
     automation_timeout_seconds: float = Field(default=900, gt=0, le=3600)
+    allure_executable: str = "allure"
+    allure_timeout_seconds: float = Field(default=120, gt=0, le=600)
     request_queue_timeout_seconds: float = Field(default=2.0, gt=0, le=60)
     model_directed_runtime_enabled: bool = True
     copilot_github_token: str = ""

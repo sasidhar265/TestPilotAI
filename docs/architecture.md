@@ -147,5 +147,10 @@ compilation and live execution remain separate. The language selector is include
 identity, along with the current standards. Artifacts from another language cannot satisfy a request.
 
 `DashboardStore` records bounded completed activity in a separate SQLite database beside organizational
-memory. Live progress uses the current process's activity and lifecycle registries. Test matrix rows
-use explicit case evidence matched by a content hash; repository-check counts are a separate operation.
+memory. The BDD history view filters repository-check operations and retains the latest 200 BDD
+runs independently of generation activity. Live progress is process-local. The fixed Reqnroll
+project emits TRX counts and native Allure results in isolated temporary directories. Allure 2
+generates a standalone HTML report from redacted result JSON; raw attachments are excluded.
+Reports persist beside the database with authenticated downloads and a 200-report retention limit.
+Generated suites do not gate or select repository execution. A process-local lock prevents
+overlapping runs from rebuilding the same project concurrently.

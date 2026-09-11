@@ -295,9 +295,10 @@ class ExecutionSummary(BaseModel):
     pass_rate: float
 
 
-class AutomationRunRequest(SuiteRequest):
+class AutomationRunRequest(BaseModel):
     """Request to run the repository's fixed C# automation project."""
 
+    suite: TestSuite | None = None  # Accepted for compatibility; never selects executed tests.
     timeout_seconds: int | None = Field(default=None, ge=1, le=3600)
 
 
@@ -314,6 +315,10 @@ class AutomationRunReport(BaseModel):
     skipped: int = Field(ge=0)
     duration_ms: int = Field(ge=0)
     output: str = Field(max_length=12_000)
+    not_run: int = Field(default=0, ge=0)
+    results_available: bool = True
+    report_id: str | None = None
+    report_error: str | None = None
 
 
 class DefectDraft(BaseModel):

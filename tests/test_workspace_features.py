@@ -262,8 +262,8 @@ def test_browser_shared_rules_language_selection_and_dashboard(workspace, reques
             route.fulfill(json={"business_rules": [r.model_dump() for r in load_business_rules()]})
         elif path == "/api/workspace/standards":
             route.fulfill(json={"automation": "Use shared standards", "feature": "No tags"})
-        elif path == "/api/dashboard":
-            route.fulfill(json=store.snapshot())
+        elif path == "/api/automation/history":
+            route.fulfill(json=store.snapshot("repository_checks"))
         elif path == "/api/step-definitions/languages/bindings":
             request = LanguageRequest.model_validate(route.request.post_data_json)
             selected.append(request.language)
@@ -313,12 +313,14 @@ def test_browser_shared_rules_language_selection_and_dashboard(workspace, reques
                 "." + LANGUAGES[language][2]
             )
         assert selected == list(LANGUAGES)
+        page.locator('.primary-nav a[href="/quality-lifecycle"]').click()
         page.locator("#run-automation").click()
-        playwright.expect(page.locator("#agent-output")).to_contain_text("Repository checks")
+        playwright.expect(page.locator("#bdd-run-status")).to_contain_text("BDD execution passed")
         assert page.evaluate("executionSummary") is None
         page.locator("#refresh-dashboard").click()
-        playwright.expect(page.locator("#dashboard-matrix")).to_contain_text("TC-001")
-        playwright.expect(page.locator("#dashboard-matrix")).to_contain_text("not_run")
+        playwright.expect(page.locator("#bdd-result-summary")).to_contain_text(
+            "No completed BDD runs"
+        )
         page.screenshot(path="/tmp/workspace-dashboard-desktop.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
