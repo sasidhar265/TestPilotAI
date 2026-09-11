@@ -154,3 +154,8 @@ generates a standalone HTML report from redacted result JSON; raw attachments ar
 Reports persist beside the database with authenticated downloads and a 200-report retention limit.
 Generated suites do not gate or select repository execution. A process-local lock prevents
 overlapping runs from rebuilding the same project concurrently.
+
+Python package discovery explicitly includes only `app` and its regular subpackages. Shared
+`workspace/` policy files are copied separately by Docker, so they cannot be mistaken for an
+additional Python namespace package during a clean Render build. Frontend assets and C# templates
+are explicitly included as package data. A clean-context wheel build checks this boundary in CI.

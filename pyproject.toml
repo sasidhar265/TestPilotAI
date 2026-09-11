@@ -83,4 +83,14 @@ ignore_missing_imports = true
 exclude = ["tools/"]
 
 [tool.setuptools.package-data]
-app = ["py.typed", "templates/reqnroll/*.cs"]
+app = [
+  "py.typed",
+  "templates/reqnroll/*.cs",
+  "static/*.html",
+  "static/scripts/*.js",
+  "static/styles/*.css",
+]
+
+[tool.setuptools.packages.find]
+include = ["app", "app.*"]
+namespaces = false
