@@ -18,7 +18,7 @@
     });
     const heading = document.querySelector('.topbar h1');
     heading.textContent = titles[path];
-    document.title = `${titles[path]} — Quality Lifecycle Studio`;
+    document.title = `${titles[path]} — AI Quality Lifecycle`;
     if (focus) {
       heading.tabIndex = -1;
       heading.focus();
