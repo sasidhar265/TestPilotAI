@@ -33,6 +33,7 @@ duplicated standalone case in multiple groups. Reuse common preconditions and da
 within the owning group while keeping every test case independently runnable.
 
 Distinguish the business scenario from each test case explicitly:
+
 - `scenario_group` names the shared journey or capability, for example `Account sign-in`.
 - `title` names one specific action, distinguishing condition and observable expected outcome.
   For example, under `Account sign-in`: `Sign in with valid credentials opens the account home`

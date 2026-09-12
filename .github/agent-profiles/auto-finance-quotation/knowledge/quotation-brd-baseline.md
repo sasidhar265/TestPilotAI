@@ -115,36 +115,36 @@ maintenance, VAT, CAC/commission where applicable, versions, response, and corre
 
 ## Core requirements
 
-| ID | Required capability |
-|---|---|
-| `BR-QT-001` | Generate supported UK automotive quotations |
-| `BR-QT-002` | Support all seven products |
-| `BR-QT-003` | Support all eleven named brands |
-| `BR-QT-004` | Support S, SM and SMT maintenance |
-| `BR-QT-005` | Validate brand/product eligibility |
-| `BR-QT-006` | Validate customer/product eligibility |
-| `BR-QT-007` | Calculate amount of credit where applicable |
-| `BR-QT-008` | Calculate monthly finance instalments |
-| `BR-QT-009` | Calculate monthly leasing rentals |
-| `BR-QT-010` | Calculate APR where applicable |
-| `BR-QT-011` | Calculate total charge for credit where applicable |
-| `BR-QT-012` | Calculate total amount payable |
-| `BR-QT-013` | Calculate GFV/final payments where applicable |
-| `BR-QT-014` | Incorporate residual values |
-| `BR-QT-015` | Calculate VAT where applicable |
-| `BR-QT-016` | Return ex-VAT and inc-VAT amounts where required |
-| `BR-QT-017` | Calculate maintenance payments |
-| `BR-QT-018` | Support campaign contributions |
-| `BR-QT-019` | Support manufacturer/dealer contributions |
-| `BR-QT-020` | Support configurable fees |
-| `BR-QT-021` | Support configurable CAC, subject to definition approval |
-| `BR-QT-022` | Provide calculation traceability |
-| `BR-QT-023` | Support effective-dated pricing |
-| `BR-QT-024` | Apply approved rounding rules |
+| ID          | Required capability                                         |
+| ----------- | ----------------------------------------------------------- |
+| `BR-QT-001` | Generate supported UK automotive quotations                 |
+| `BR-QT-002` | Support all seven products                                  |
+| `BR-QT-003` | Support all eleven named brands                             |
+| `BR-QT-004` | Support S, SM and SMT maintenance                           |
+| `BR-QT-005` | Validate brand/product eligibility                          |
+| `BR-QT-006` | Validate customer/product eligibility                       |
+| `BR-QT-007` | Calculate amount of credit where applicable                 |
+| `BR-QT-008` | Calculate monthly finance instalments                       |
+| `BR-QT-009` | Calculate monthly leasing rentals                           |
+| `BR-QT-010` | Calculate APR where applicable                              |
+| `BR-QT-011` | Calculate total charge for credit where applicable          |
+| `BR-QT-012` | Calculate total amount payable                              |
+| `BR-QT-013` | Calculate GFV/final payments where applicable               |
+| `BR-QT-014` | Incorporate residual values                                 |
+| `BR-QT-015` | Calculate VAT where applicable                              |
+| `BR-QT-016` | Return ex-VAT and inc-VAT amounts where required            |
+| `BR-QT-017` | Calculate maintenance payments                              |
+| `BR-QT-018` | Support campaign contributions                              |
+| `BR-QT-019` | Support manufacturer/dealer contributions                   |
+| `BR-QT-020` | Support configurable fees                                   |
+| `BR-QT-021` | Support configurable CAC, subject to definition approval    |
+| `BR-QT-022` | Provide calculation traceability                            |
+| `BR-QT-023` | Support effective-dated pricing                             |
+| `BR-QT-024` | Apply approved rounding rules                               |
 | `BR-QT-025` | Produce consistent output for identical input/configuration |
-| `BR-QT-026` | Return validation errors instead of invalid calculations |
-| `BR-QT-027` | Retain pricing/calculation versions for persisted quotes |
-| `BR-QT-028` | Support downstream regulated disclosures |
+| `BR-QT-026` | Return validation errors instead of invalid calculations    |
+| `BR-QT-027` | Retain pricing/calculation versions for persisted quotes    |
+| `BR-QT-028` | Support downstream regulated disclosures                    |
 
 ## Non-functional and release gates
 

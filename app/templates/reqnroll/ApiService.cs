@@ -14,7 +14,10 @@ namespace Generated.StepDefinitions
     public sealed class ApiClient : IDisposable
     {
         private readonly HttpClient http;
-        public ApiClient(HttpClient http) { this.http = http; }
+        public ApiClient(HttpClient http)
+        {
+            this.http = http;
+        }
 
         public async Task<ApiResponse> SendAsync(
             string method, string path, string body, CancellationToken cancellationToken)

@@ -50,7 +50,6 @@ For supplied domain steps, implement the following operations through typed appr
 Document missing runtime configuration in notes while still returning concrete implementations
 for all implementable bindings. Keep assertions tied to the full meaning of each supplied step.
 
-
 The user-approved request contract overrides older BRD payload examples: only Outlet, Finance,
 Vehicle and Parameters and their exact supplied fields are request body members. The application
 includes the complete JSON in generation instructions. Keep strategy selection, fixture parsing,

@@ -8,7 +8,10 @@ public sealed class Hooks(AutomationContext context)
     [AfterScenario]
     public async Task Cleanup()
     {
-        try { await context.Browser.DisposeAsync(); }
+        try
+        {
+            await context.Browser.DisposeAsync();
+        }
         finally { context.Api.Dispose(); }
     }
 }

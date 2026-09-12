@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from app.agent_instructions import load_agent_section
 from app.agents.reqnroll_validation import IncompleteImplementationError
 from app.agents.runner import (
     CopilotAgentRunner,
@@ -85,9 +86,9 @@ class ArtifactGenerationRunner:
                         + str(error)
                         + "\nPREVIOUS ARTIFACT\n"
                         + artifact.model_dump_json()
-                        + "\nReturn concrete implementations and complete coverage. Preserve "
-                        "working code. Use documented runtime configuration for unavailable "
-                        "environment values; never invent business rules or passing assertions."
+                        + load_agent_section(
+                            "automation-test-generator", "Implementation repair policy"
+                        )
                     )
                 else:
                     logger.info("artifact_implementation_complete route=%s", name)

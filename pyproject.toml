@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Governed agentic test design from requirements to accepted quality artifacts."
 requires-python = ">=3.11"
 readme = "README.md"
-license = {text = "Proprietary"}
-authors = [{name = "Quality Engineering"}]
+license = { text = "Proprietary" }
+authors = [{ name = "Quality Engineering" }]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Framework :: FastAPI",
@@ -85,11 +85,13 @@ exclude = ["tools/"]
 [tool.setuptools.package-data]
 app = [
   "py.typed",
+  "documentation/*.md",
   "templates/reqnroll/*.cs",
   "templates/framework/*",
   "static/*.html",
   "static/scripts/*.js",
   "static/styles/*.css",
+  "static/vendor/swagger-ui/*",
 ]
 
 [tool.setuptools.packages.find]

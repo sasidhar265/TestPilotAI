@@ -20,3 +20,19 @@
 
 Pull requests should describe user impact, security considerations, verification, and rollback.
 AI-generated output requires human review.
+
+## Repository formatting
+
+Run `make format` to align Python (including tools), frontend source, Markdown, YAML,
+JSON inputs, and C# files. Run `make format-check` to verify formatting without rewriting
+files. These commands require Python with the dev dependencies, Node.js/npm, and the .NET SDK.
+The pinned Prettier version is downloaded by npm on its first run.
+
+`.editorconfig` defines indentation and line endings; `.prettierrc.yaml` defines web and
+Markdown formatting. Markdown prose and embedded code examples retain their intentional
+line breaks. Keep XML project and runner configuration files indented with two spaces.
+Gherkin uses two spaces for scenario headings, four for steps, and aligned Examples tables.
+
+Preserve approved input values when formatting JSON. Upstream vendor distributions, generated
+build output, runtime data, and binary documents retain their original formatting. Their
+exclusions are recorded in `.gitignore` and `.prettierignore`.

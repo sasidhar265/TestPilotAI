@@ -8,10 +8,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.agent_instructions import load_agent_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.implementation_approval import (
-    IMPLEMENTATION_APPROVAL_POLICY,
+    implementation_approval_policy,
     require_implementation_approval,
 )
 from app.agents.reqnroll_step_definition_agent import (
@@ -21,7 +22,7 @@ from app.agents.reqnroll_step_definition_agent import (
     _binding_pattern,
 )
 from app.agents.runner import StructuredAgentDefinition
-from app.automation_layout import LAYOUT_INSTRUCTIONS, validate_layout
+from app.automation_layout import layout_instructions, validate_layout
 from app.automation_pack import TEMPLATES, shared_assets
 from app.automation_style import step_style_findings
 from app.config import Settings
@@ -183,18 +184,14 @@ class MultiLanguageAgent:
             artifact = LanguageArtifact(**(result.model_dump() | {"language": "csharp"}))
             return artifact
         instructions = (
-            "Generate a complete BDD automation implementation pack as JSON. "
-            "Implement every baseline binding, preserving its method name and regex. "
-            "Do not invent API contracts, selectors or business behavior; report missing contracts "
-            "instead of inventing implementations. Include dependency manifest, "
-            "runner configuration "
-            "and README.md with setup and execution commands. Never execute generated code.\n"
+            load_agent_instructions("multi-language")
+            + "\n\n"
             + standards("automation")
             + "\n"
             + standards("feature")
-            + LAYOUT_INSTRUCTIONS
+            + layout_instructions()
             + quotation_instructions()
-            + IMPLEMENTATION_APPROVAL_POLICY
+            + implementation_approval_policy()
         )
         definition = StructuredAgentDefinition(
             output_model=LanguageArtifact,

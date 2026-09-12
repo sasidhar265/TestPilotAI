@@ -76,7 +76,7 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert response.status_code == 200
     assert 'id="login-form"' in response.text
     assert "AI-assisted quality engineering" in response.text
-    assert "manual and automated tests" in response.text
+    assert "manual and automated tests" in " ".join(response.text.split())
     assert 'src="/static/scripts/login.js?v=20260902-login-feedback"' in response.text
     assert 'id="auth-overlay"' in response.text
     assert 'id="dismiss-auth-error"' in response.text
@@ -142,7 +142,7 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'id="close-model-access"' in response.text
     assert 'aria-label="Close model access details"' in response.text
     assert 'id="save-business-rules"' in response.text
-    assert "workspace/business-rules.json" in response.text
+    assert ".github/agents/business-rules.agent.md" in response.text
     assert 'id="automation-language"' in response.text
     assert 'id="work-dashboard"' in response.text
     assert 'id="agent-workspace"' in response.text
@@ -237,7 +237,7 @@ def test_documentation_page_is_not_cached() -> None:
     assert 'id="profile-toggle"' in response.text
     assert 'class="profile-signout" id="logout"' in response.text
     assert 'href="/static/styles/documentation.css?v=20260912-clear-guide"' in response.text
-    assert 'src="/static/scripts/documentation.js?v=20260912-clear-guide"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=20260912-planning-documents"' in response.text
     assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
 
 

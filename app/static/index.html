@@ -1,379 +1,1020 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f7fb">
-  <title>AI Quality Lifecycle — Governed quality engineering</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911">
-  <link rel="stylesheet" href="/static/styles/index.css?v=20260912-shared-select">
-  <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
-  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
-  <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
-  <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260912-scroll-history">
-  <style>[data-workspace-page][hidden] { display: none !important; }</style>
-</head>
-<body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="sidebar-header"><a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
-        <span class="brand-mark" aria-hidden="true">Q</span>
-        <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
-      </a><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-content"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div><div class="sidebar-content" id="sidebar-content">
-
-      <nav class="primary-nav" aria-label="Primary navigation">
-        <span class="nav-label">Workspace</span>
-        <a class="nav-item active" href="/" aria-current="page"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
-        <a class="nav-item" href="/progress"><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a>
-        <a class="nav-item" href="/quality-lifecycle"><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a>
-        <span class="nav-label">Explore</span>
-        <a class="nav-item" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
-        <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
-      </nav>
-
-      <div class="side-status">
-        <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
-        <div class="model">SECURE LOCAL WORKSPACE</div>
-      </div>
-    <div class="theme-settings">
-    <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
-      <strong id="theme-menu-title">Appearance</strong>
-      <span>Choose your workspace theme</span>
-      <div class="theme-options" role="group" aria-label="Color theme">
-        <button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button>
-        <button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button>
-        <button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button>
-      </div>
-    </div>
-    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button>
-  </div></div></aside>
-
-    <main class="workspace">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">AI quality lifecycle workspace</div>
-          <h1>Design trusted quality coverage with AI agents.</h1>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>AI Quality Lifecycle — Governed quality engineering</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/index.css?v=20260912-shared-select" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+    <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260912-scroll-history" />
+    <style>
+      [data-workspace-page][hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
         </div>
-        <div class="top-actions">
-          <span class="runtime-pill" id="runtime-health">● Checking service…</span>
-          <div class="notification-center">
-            <button class="notification-bell" id="notification-bell" type="button" aria-label="Open notifications" aria-expanded="false" aria-controls="notification-panel">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-              <span class="mobile-control-label">Notifications</span>
-              <span class="notification-count hidden" id="notification-count">0</span>
-            </button>
-            <section class="notification-panel hidden" id="notification-panel" aria-labelledby="notification-title">
-              <div class="notification-panel-head"><div><span>Activity centre</span><h2 id="notification-title">Notifications</h2></div><button id="clear-notifications" type="button">Clear all</button></div>
-              <ol id="notification-list"><li class="notification-empty">Run activity and system updates will appear here.</li></ol>
-            </section>
-          </div>
-          <div class="profile-menu">
-            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">?</button>
-            <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
-              <div><span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true">?</span><p><strong id="profile-name">User</strong><small id="profile-role">Workspace account</small></p></div>
-              <a class="profile-signout hidden" id="manage-users" href="/admin/users">Manage users</a>
-              <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
-            </section>
-          </div>
-        </div>
-      </header>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <a class="nav-item active" href="/" aria-current="page"
+              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
+            >
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+            >
+            <span class="nav-label">Explore</span>
+            <a class="nav-item" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+          </nav>
 
-      <div data-workspace-page="/">
-      <div class="workflow-rail" role="list" aria-label="Test design workflow">
-        <div class="workflow-step active" role="listitem" aria-current="step"><span>1</span><strong>Define</strong><small>Add requirements</small></div>
-        <div class="workflow-step" role="listitem"><span>2</span><strong>Review</strong><small>Inspect generated tests</small></div>
-        <div class="workflow-step" role="listitem"><span>3</span><strong>Validate</strong><small>Run quality actions</small></div>
-        <div class="workflow-step" role="listitem"><span>4</span><strong>Deliver</strong><small>Export or publish</small></div>
-      </div>
-
-      <section class="studio-layout">
-        <section class="panel composer" id="test-studio">
-          <div class="panel-head">
-            <div>
-              <span class="section-kicker">New test suite</span>
-              <h2>What should we test?</h2>
-              <p>Paste a requirement or attach a project document. The AI Quality Lifecycle Agent will generate traceable manual and automation coverage.</p>
-            </div>
-            <span class="secure">PRIVATE BY DESIGN</span>
+          <div class="side-status">
+            <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
+            <div class="model">SECURE LOCAL WORKSPACE</div>
           </div>
-
-          <form id="generate-form">
-            <label class="field-label" for="description">Requirement or acceptance criteria</label>
-            <div class="textarea-wrap">
-              <textarea id="description" minlength="10" aria-describedby="description-help" placeholder="Example: Generate positive, negative and boundary coverage for this feature…"></textarea>
-              <span class="file-preview attached-requirement hidden" id="file-preview"><span class="file-badge" id="file-type"></span><span class="file-info"><span class="file-name" id="file-name"></span><span class="file-size" id="file-size"></span></span><button class="file-remove" id="file-remove" type="button" aria-label="Remove attached requirement document">×</button></span>
-              <button class="source-trigger" id="add-requirement-source" type="button" aria-label="Add requirement from document or Jira" aria-expanded="false" aria-controls="requirement-source-menu"><span aria-hidden="true">+</span><span class="mobile-control-label">Add requirement</span></button>
-              <span class="character-count" id="character-count">0 characters</span>
-              <span class="inline-source-state" id="source-state"></span>
-              <div class="requirement-source-menu hidden" id="requirement-source-menu" role="dialog" aria-label="Add requirement source">
-                <div class="source-menu-head"><span><b>Add requirement</b><small>Imported content remains editable</small></span><button id="close-requirement-source" type="button" aria-label="Close requirement source menu">×</button></div>
-                <label class="source-menu-option" id="upload-zone" for="requirement-file">
-                  <input class="upload-input" id="requirement-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload requirements document">
-                  <span class="source-icon document-icon">↑</span>
-                  <span class="upload-copy" id="upload-copy"><b>Upload document</b><small>Attach now and process during generation</small></span>
-                </label>
-                <button class="source-menu-option" id="show-jira-link" type="button">
-                  <span class="source-icon">J</span><span><b>Link Jira ticket</b><small>Issue key or browse link</small></span>
-                  <span class="menu-chevron" aria-hidden="true">›</span>
+          <div class="theme-settings">
+            <div
+              class="theme-menu"
+              id="theme-menu"
+              role="dialog"
+              aria-labelledby="theme-menu-title"
+              hidden
+            >
+              <strong id="theme-menu-title">Appearance</strong>
+              <span>Choose your workspace theme</span>
+              <div class="theme-options" role="group" aria-label="Color theme">
+                <button type="button" data-theme-option="light">
+                  <span aria-hidden="true">☀</span>Light
                 </button>
-                <div class="jira-link-panel hidden" id="jira-link-panel">
-                  <button class="jira-back" id="jira-link-back" type="button" aria-label="Back to source options">‹</button>
-                  <span><b>Link Jira ticket</b><small>Paste an issue key or full browse URL</small></span>
-                  <div class="jira-row"><input id="jira-source-key" type="text" placeholder="PROJ-123 or paste Jira link" aria-label="Source Jira issue key or URL"><button class="secondary" id="load-jira" type="button">Connect</button></div>
-                </div>
+                <button type="button" data-theme-option="dark">
+                  <span aria-hidden="true">◐</span>Dark
+                </button>
+                <button type="button" data-theme-option="system">
+                  <span aria-hidden="true">◫</span>System
+                </button>
               </div>
             </div>
-            <p class="field-help" id="description-help">Use business language. The active workspace profile supplies governed quality rules.</p>
+            <button
+              class="theme-gear"
+              id="theme-gear"
+              type="button"
+              aria-label="Open appearance settings"
+              aria-expanded="false"
+              aria-controls="theme-menu"
+            >
+              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
+            </button>
+          </div>
+        </div>
+      </aside>
 
-            <details class="rule-control" id="rule-control">
-              <summary><span><b>Business requirements &amp; rules</b><small>One shared source, fetched before generation</small></span><span class="rule-count" id="rule-count">0 rules</span></summary>
-              <div class="rule-editor">
-                <label class="field-label" for="business-rules">Shared business rules</label>
-                <div class="rule-textarea-wrap">
-                  <textarea id="business-rules" maxlength="200000" placeholder="BR-CUSTOM-001: Requests must reject invalid or expired input.&#10;BR-CUSTOM-002: Every response must include a correlation ID."></textarea>
-                  <span class="file-preview attached-rule-document hidden" id="rule-file-preview"><span class="file-badge" id="rule-file-type"></span><span class="file-info"><span class="file-name" id="rule-file-name"></span><span class="file-size" id="rule-file-size"></span></span><button class="file-remove" id="rule-file-remove" type="button" aria-label="Remove attached business rules document">×</button></span>
-                  <label class="rule-attachment-trigger" for="business-rules-file" aria-label="Attach business rules document" title="Attach business rules document">
-                    <input class="upload-input" id="business-rules-file" type="file" accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg" aria-label="Upload a business rules document">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 17 7.7-7.7a3 3 0 0 0-4.2-4.2L4.8 12.8a5 5 0 0 0 7.1 7.1l7.4-7.4"/></svg>
-                    <span class="mobile-control-label">Attach rules</span>
-                  </label>
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">AI quality lifecycle workspace</div>
+            <h1>Design trusted quality coverage with AI agents.</h1>
+          </div>
+          <div class="top-actions">
+            <span class="runtime-pill" id="runtime-health">● Checking service…</span>
+            <div class="notification-center">
+              <button
+                class="notification-bell"
+                id="notification-bell"
+                type="button"
+                aria-label="Open notifications"
+                aria-expanded="false"
+                aria-controls="notification-panel"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+                </svg>
+                <span class="mobile-control-label">Notifications</span>
+                <span class="notification-count hidden" id="notification-count">0</span>
+              </button>
+              <section
+                class="notification-panel hidden"
+                id="notification-panel"
+                aria-labelledby="notification-title"
+              >
+                <div class="notification-panel-head">
+                  <div>
+                    <span>Activity centre</span>
+                    <h2 id="notification-title">Notifications</h2>
+                  </div>
+                  <button id="clear-notifications" type="button">Clear all</button>
                 </div>
-                <p class="field-help">Enter one rule per line using <code>BR-ID: description</code>. Rules are validated, sent to the Business Rules Agent, and must be traced by generated tests. Rules are saved in <code>workspace/business-rules.json</code> and shared across this workspace. Generation saves this editor first.</p>
-                <div class="rule-actions"><button class="secondary" id="save-business-rules" type="button">Save shared rules</button><button class="secondary" id="clear-business-rules" type="button">Clear</button><span id="rule-save-state" aria-live="polite">Loaded from workspace/business-rules.json</span></div>
-              </div>
-            </details>
-
-            <div class="controls">
-              <div class="generation-options">
-                <fieldset class="generation-select-control">
-                  <legend>Output format</legend>
-                  <select id="output-target" name="output_target" aria-label="Output format">
-                    <option value="manual">Manual</option>
-                    <option value="automation" selected>Automation (BDD / Gherkin)</option>
-                    <option value="both">Both manual and automation</option>
-                  </select>
-                  <small class="option-help">OrchestratorAgent passes this output intent to DecisionAgent for specialist routing.</small>
-                </fieldset>
-                <fieldset class="manual-type-control" id="manual-type-control">
-                  <legend>Manual testing type</legend>
-                  <select id="manual-testing-type" name="manual_testing_type" aria-label="Manual testing type">
-                    <option value="api">API testing</option>
-                    <option value="ui">UI testing</option>
-                    <option value="performance">Performance testing</option>
-                    <option value="database">Database testing</option>
-                  </select>
-                </fieldset>
-                <fieldset class="generation-select-control">
-                  <legend>LLM</legend>
-                  <select id="llm-model" name="llm_model" aria-label="LLM model" disabled data-access="checking" aria-describedby="llm-model-status">
-                    <option value="">Checking available models…</option>
-                  </select>
-                  <small class="option-help" id="llm-model-status" role="status">Checking connected accounts and model permissions.</small>
-                  <button class="quiet-button" id="refresh-llm-models" type="button">Refresh models</button>
-                </fieldset>
-              </div>
-              <div class="generation-actions">
-                <button class="stop hidden" id="stop-generation" type="button"><span class="stop-icon"></span><span>Stop</span></button>
-                <button class="primary" id="generate" type="submit" disabled><span>Generate test suite</span><span class="arrow">→</span></button>
-              </div>
+                <ol id="notification-list">
+                  <li class="notification-empty">
+                    Run activity and system updates will appear here.
+                  </li>
+                </ol>
+              </section>
             </div>
-          </form>
-
-          <div class="run-state" aria-live="polite">
-            <div class="status" id="status"><span class="status-dot"></span>Agent ready. Add requirements to begin.</div>
-            <div class="timer hidden" id="timer" role="timer">00:00</div>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
           </div>
-        </section>
+        </header>
 
-        <aside class="context-panel" aria-label="Runtime context">
-          <div class="context-head"><span class="section-kicker">Active workspace</span><span class="live-badge">LIVE</span></div>
-          <h2>AI Quality Lifecycle Agent</h2>
-          <p>Requirement-grounded quality design with governed AI execution.</p>
-          <dl class="context-list">
-            <div><dt>Host</dt><dd id="server-location">Detecting…</dd></div>
-            <div><dt>Agent</dt><dd id="active-agent">Detecting…</dd></div>
-            <div><dt>Runtime</dt><dd id="runtime-id">Detecting…</dd></div>
-            <div><dt>Model</dt><dd id="model-name">Detecting…</dd></div>
-            <div><dt>Authentication</dt><dd id="auth-mode">Detecting…</dd></div>
-            <div><dt>Knowledge</dt><dd id="memory-status">Detecting…</dd></div>
-          </dl>
-          <div class="trust-note"><span>✓</span><p><strong>Governed generation</strong>Requirements are validated against typed schemas and the active Quality Gate.</p></div>
-        </aside>
-      </section>
-
-      <details class="runtime-disclosure">
-        <summary><span><b>How this run is governed</b><small>Inspect the model, agent and orchestration boundaries</small></span><span class="summary-icon">＋</span></summary>
-        <div class="runtime-panel" aria-labelledby="runtime-title">
-          <div class="runtime-title" id="runtime-title">Restricted execution flow</div>
-          <div class="flow" role="img" aria-label="Request flows through input, generation, validation and storage">
-            <div class="flow-node"><span>01</span><div><b>Input Agent</b><small>Normalizes text, documents and images</small></div></div>
-            <div class="flow-node"><span>02</span><div><b>OrchestratorAgent → DecisionAgent</b><small id="flow-server">Copilot SDK + CLI</small></div></div>
-            <div class="flow-node"><span>03</span><div><b>Quality Gate</b><small>Checks traceability and deterministic rules</small></div></div>
-            <div class="flow-node"><span>04</span><div><b>Test Storage</b><small>Retains approved exact-match suites</small></div></div>
+        <div data-workspace-page="/">
+          <div class="workflow-rail" role="list" aria-label="Test design workflow">
+            <div class="workflow-step active" role="listitem" aria-current="step">
+              <span>1</span><strong>Define</strong><small>Add requirements</small>
+            </div>
+            <div class="workflow-step" role="listitem">
+              <span>2</span><strong>Review</strong><small>Inspect generated tests</small>
+            </div>
+            <div class="workflow-step" role="listitem">
+              <span>3</span><strong>Validate</strong><small>Run quality actions</small>
+            </div>
+            <div class="workflow-step" role="listitem">
+              <span>4</span><strong>Deliver</strong><small>Export or publish</small>
+            </div>
           </div>
-          <section class="live-agent-feed" aria-labelledby="live-agent-feed-title">
-            <div class="live-agent-feed-head"><div><span>Live orchestration</span><h3 id="live-agent-feed-title">Actual agent activity</h3></div><small id="live-agent-feed-state">WAITING</small></div>
-            <ol id="live-agent-events" aria-live="polite"><li class="empty-event">Start generation to inspect payload-free lifecycle events.</li></ol>
+
+          <section class="studio-layout">
+            <section class="panel composer" id="test-studio">
+              <div class="panel-head">
+                <div>
+                  <span class="section-kicker">New test suite</span>
+                  <h2>What should we test?</h2>
+                  <p>
+                    Paste a requirement or attach a project document. The AI Quality Lifecycle Agent
+                    will generate traceable manual and automation coverage.
+                  </p>
+                </div>
+                <span class="secure">PRIVATE BY DESIGN</span>
+              </div>
+
+              <form id="generate-form">
+                <label class="field-label" for="description"
+                  >Requirement or acceptance criteria</label
+                >
+                <div class="textarea-wrap">
+                  <textarea
+                    id="description"
+                    minlength="10"
+                    aria-describedby="description-help"
+                    placeholder="Example: Generate positive, negative and boundary coverage for this feature…"
+                  ></textarea>
+                  <span class="file-preview attached-requirement hidden" id="file-preview"
+                    ><span class="file-badge" id="file-type"></span
+                    ><span class="file-info"
+                      ><span class="file-name" id="file-name"></span
+                      ><span class="file-size" id="file-size"></span></span
+                    ><button
+                      class="file-remove"
+                      id="file-remove"
+                      type="button"
+                      aria-label="Remove attached requirement document"
+                    >
+                      ×
+                    </button></span
+                  >
+                  <button
+                    class="source-trigger"
+                    id="add-requirement-source"
+                    type="button"
+                    aria-label="Add requirement from document or Jira"
+                    aria-expanded="false"
+                    aria-controls="requirement-source-menu"
+                  >
+                    <span aria-hidden="true">+</span
+                    ><span class="mobile-control-label">Add requirement</span>
+                  </button>
+                  <span class="character-count" id="character-count">0 characters</span>
+                  <span class="inline-source-state" id="source-state"></span>
+                  <div
+                    class="requirement-source-menu hidden"
+                    id="requirement-source-menu"
+                    role="dialog"
+                    aria-label="Add requirement source"
+                  >
+                    <div class="source-menu-head">
+                      <span
+                        ><b>Add requirement</b
+                        ><small>Imported content remains editable</small></span
+                      ><button
+                        id="close-requirement-source"
+                        type="button"
+                        aria-label="Close requirement source menu"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <label class="source-menu-option" id="upload-zone" for="requirement-file">
+                      <input
+                        class="upload-input"
+                        id="requirement-file"
+                        type="file"
+                        accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg"
+                        aria-label="Upload requirements document"
+                      />
+                      <span class="source-icon document-icon">↑</span>
+                      <span class="upload-copy" id="upload-copy"
+                        ><b>Upload document</b
+                        ><small>Attach now and process during generation</small></span
+                      >
+                    </label>
+                    <button class="source-menu-option" id="show-jira-link" type="button">
+                      <span class="source-icon">J</span
+                      ><span><b>Link Jira ticket</b><small>Issue key or browse link</small></span>
+                      <span class="menu-chevron" aria-hidden="true">›</span>
+                    </button>
+                    <div class="jira-link-panel hidden" id="jira-link-panel">
+                      <button
+                        class="jira-back"
+                        id="jira-link-back"
+                        type="button"
+                        aria-label="Back to source options"
+                      >
+                        ‹
+                      </button>
+                      <span
+                        ><b>Link Jira ticket</b
+                        ><small>Paste an issue key or full browse URL</small></span
+                      >
+                      <div class="jira-row">
+                        <input
+                          id="jira-source-key"
+                          type="text"
+                          placeholder="PROJ-123 or paste Jira link"
+                          aria-label="Source Jira issue key or URL"
+                        /><button class="secondary" id="load-jira" type="button">Connect</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="field-help" id="description-help">
+                  Use business language. The active workspace profile supplies governed quality
+                  rules.
+                </p>
+
+                <details class="rule-control" id="rule-control">
+                  <summary>
+                    <span
+                      ><b>Business requirements &amp; rules</b
+                      ><small>One shared source, fetched before generation</small></span
+                    ><span class="rule-count" id="rule-count">0 rules</span>
+                  </summary>
+                  <div class="rule-editor">
+                    <label class="field-label" for="business-rules">Shared business rules</label>
+                    <div class="rule-textarea-wrap">
+                      <textarea
+                        id="business-rules"
+                        maxlength="200000"
+                        placeholder="BR-CUSTOM-001: Requests must reject invalid or expired input.&#10;BR-CUSTOM-002: Every response must include a correlation ID."
+                      ></textarea>
+                      <span
+                        class="file-preview attached-rule-document hidden"
+                        id="rule-file-preview"
+                        ><span class="file-badge" id="rule-file-type"></span
+                        ><span class="file-info"
+                          ><span class="file-name" id="rule-file-name"></span
+                          ><span class="file-size" id="rule-file-size"></span></span
+                        ><button
+                          class="file-remove"
+                          id="rule-file-remove"
+                          type="button"
+                          aria-label="Remove attached business rules document"
+                        >
+                          ×
+                        </button></span
+                      >
+                      <label
+                        class="rule-attachment-trigger"
+                        for="business-rules-file"
+                        aria-label="Attach business rules document"
+                        title="Attach business rules document"
+                      >
+                        <input
+                          class="upload-input"
+                          id="business-rules-file"
+                          type="file"
+                          accept=".docx,.pdf,.xlsx,.pages,.numbers,.png,.jpg,.jpeg"
+                          aria-label="Upload a business rules document"
+                        />
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            d="m9 17 7.7-7.7a3 3 0 0 0-4.2-4.2L4.8 12.8a5 5 0 0 0 7.1 7.1l7.4-7.4"
+                          />
+                        </svg>
+                        <span class="mobile-control-label">Attach rules</span>
+                      </label>
+                    </div>
+                    <p class="field-help">
+                      Enter one rule per line using <code>BR-ID: description</code>. Rules are
+                      validated, sent to the Business Rules Agent, and must be traced by generated
+                      tests. Rules are saved in
+                      <code>.github/agents/business-rules.agent.md</code> and shared across this
+                      workspace. Generation saves this editor first.
+                    </p>
+                    <div class="rule-actions">
+                      <button class="secondary" id="save-business-rules" type="button">
+                        Save shared rules</button
+                      ><button class="secondary" id="clear-business-rules" type="button">
+                        Clear</button
+                      ><span id="rule-save-state" aria-live="polite"
+                        >Loaded from .github/agents/business-rules.agent.md</span
+                      >
+                    </div>
+                  </div>
+                </details>
+
+                <div class="controls">
+                  <div class="generation-options">
+                    <fieldset class="generation-select-control">
+                      <legend>Output format</legend>
+                      <select id="output-target" name="output_target" aria-label="Output format">
+                        <option value="manual">Manual</option>
+                        <option value="automation" selected>Automation (BDD / Gherkin)</option>
+                        <option value="both">Both manual and automation</option>
+                      </select>
+                      <small class="option-help"
+                        >OrchestratorAgent passes this output intent to DecisionAgent for specialist
+                        routing.</small
+                      >
+                    </fieldset>
+                    <fieldset class="manual-type-control" id="manual-type-control">
+                      <legend>Manual testing type</legend>
+                      <select
+                        id="manual-testing-type"
+                        name="manual_testing_type"
+                        aria-label="Manual testing type"
+                      >
+                        <option value="api">API testing</option>
+                        <option value="ui">UI testing</option>
+                        <option value="performance">Performance testing</option>
+                        <option value="database">Database testing</option>
+                      </select>
+                    </fieldset>
+                    <fieldset class="generation-select-control">
+                      <legend>LLM</legend>
+                      <select
+                        id="llm-model"
+                        name="llm_model"
+                        aria-label="LLM model"
+                        disabled
+                        data-access="checking"
+                        aria-describedby="llm-model-status"
+                      >
+                        <option value="">Checking available models…</option>
+                      </select>
+                      <small class="option-help" id="llm-model-status" role="status"
+                        >Checking connected accounts and model permissions.</small
+                      >
+                      <button class="quiet-button" id="refresh-llm-models" type="button">
+                        Refresh models
+                      </button>
+                    </fieldset>
+                  </div>
+                  <div class="generation-actions">
+                    <button class="stop hidden" id="stop-generation" type="button">
+                      <span class="stop-icon"></span><span>Stop</span>
+                    </button>
+                    <button class="primary" id="generate" type="submit" disabled>
+                      <span>Generate test suite</span><span class="arrow">→</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <div class="run-state" aria-live="polite">
+                <div class="status" id="status">
+                  <span class="status-dot"></span>Agent ready. Add requirements to begin.
+                </div>
+                <div class="timer hidden" id="timer" role="timer">00:00</div>
+              </div>
+            </section>
+
+            <aside class="context-panel" aria-label="Runtime context">
+              <div class="context-head">
+                <span class="section-kicker">Active workspace</span
+                ><span class="live-badge">LIVE</span>
+              </div>
+              <h2>AI Quality Lifecycle Agent</h2>
+              <p>Requirement-grounded quality design with governed AI execution.</p>
+              <dl class="context-list">
+                <div>
+                  <dt>Host</dt>
+                  <dd id="server-location">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Agent</dt>
+                  <dd id="active-agent">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Runtime</dt>
+                  <dd id="runtime-id">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Model</dt>
+                  <dd id="model-name">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Authentication</dt>
+                  <dd id="auth-mode">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Knowledge</dt>
+                  <dd id="memory-status">Detecting…</dd>
+                </div>
+              </dl>
+              <div class="trust-note">
+                <span>✓</span>
+                <p>
+                  <strong>Governed generation</strong>Requirements are validated against typed
+                  schemas and the active Quality Gate.
+                </p>
+              </div>
+            </aside>
           </section>
-          <div class="runtime-details">
-            <article class="runtime-card" id="llm-details"><span>LLM layer</span><h3>GitHub-managed model</h3><p id="llm-model-detail">Organization default</p></article>
-            <article class="runtime-card" id="agent-details"><span>Agent layer</span><h3>Test Designer</h3><p>Markdown policies + active BRD profile</p></article>
-            <article class="runtime-card" id="orchestration-details"><span>Application layer</span><h3>Model-directed coordinator</h3><p><code>AgentRuntime</code> · governed tools · Pydantic · SQLite</p></article>
-          </div>
-        </div>
-      </details>
 
-      <section class="panel results hidden" id="results">
-        <div class="results-header">
-          <div><span class="section-kicker">Generated suite</span><h2 id="feature"></h2><div class="summary" id="summary"></div></div>
-          <span class="review-badge" id="review-state">Review required</span>
-        </div>
-        <p class="case-hierarchy-help">Business scenarios group a journey or capability. Each test case checks one specific condition and expected outcome. Automation cases include their BDD steps.</p>
-        <div class="result-actions">
-          <div class="selection-actions"><button id="select-all" class="quiet-button">Select all</button><button id="select-none" class="quiet-button">Clear</button></div>
-          <div class="suite-output-actions">
-            <div class="tools" aria-label="Generated suite actions">
-              <div class="automation-language-control">
-                <select id="automation-language" class="secondary" aria-label="Coding language" title="Coding language"><option value="csharp">C# · ReqnRoll</option><option value="java">Java · Cucumber</option><option value="python">Python · Behave</option><option value="javascript">JavaScript · Cucumber</option><option value="typescript">TypeScript · Cucumber</option><option value="ruby">Ruby · Cucumber</option></select>
-                <span aria-hidden="true">▾</span>
-              </div>
-              <details class="suite-menu" id="suite-view-menu">
-                <summary class="secondary">View <span aria-hidden="true">▾</span></summary>
-                <div class="suite-menu-options" aria-label="View generated files">
-                  <button id="view-feature" type="button">.feature <span>Feature file</span></button>
-                  <button id="generate-step-definitions" type="button">Code <span>Step definitions</span></button>
-                  <button id="view-csharp-pack" type="button" title="View the automation pack, including bindings and implementations">Code <span>Automation pack</span></button>
+          <details class="runtime-disclosure">
+            <summary>
+              <span
+                ><b>How this run is governed</b
+                ><small>Inspect the model, agent and orchestration boundaries</small></span
+              ><span class="summary-icon">＋</span>
+            </summary>
+            <div class="runtime-panel" aria-labelledby="runtime-title">
+              <div class="runtime-title" id="runtime-title">Restricted execution flow</div>
+              <div
+                class="flow"
+                role="img"
+                aria-label="Request flows through input, generation, validation and storage"
+              >
+                <div class="flow-node">
+                  <span>01</span>
+                  <div><b>Input Agent</b><small>Normalizes text, documents and images</small></div>
                 </div>
-              </details>
-              <details class="suite-menu" id="suite-download-menu">
-                <summary class="secondary">Download <span aria-hidden="true">▾</span></summary>
-                <div class="suite-menu-options" aria-label="Download generated files">
-                  <button id="xlsx" type="button">.xlsx <span>Excel workbook</span></button>
-                  <button id="csv" type="button">.csv <span>CSV spreadsheet</span></button>
-                  <button id="pdf" type="button">.pdf <span>PDF document</span></button>
-                  <button id="json" type="button">.json <span>JSON data</span></button>
-                  <button id="download-feature" type="button">.feature <span>Feature file</span></button>
-                  <button id="suite-download-cs" type="button">Code <span>Step definition files</span></button>
-                  <button id="download-csharp-pack" type="button">.zip <span>Automation pack</span></button>
+                <div class="flow-node">
+                  <span>02</span>
+                  <div>
+                    <b>OrchestratorAgent → DecisionAgent</b
+                    ><small id="flow-server">Copilot SDK + CLI</small>
+                  </div>
                 </div>
-              </details>
-              <details class="suite-jira">
-                <summary class="secondary">↗ Jira</summary>
-                <div class="jira-popover"><label for="jira-key">Destination issue</label><div class="jira-row"><div class="jira-key-field"><input id="jira-key" type="text" placeholder="PROJ-123" aria-label="Jira issue key" aria-describedby="jira-key-error"><span class="jira-key-error hidden" id="jira-key-error" role="alert">Enter a valid Jira issue key, such as PROJ-123.</span></div><button class="primary compact" id="jira">Attach selected</button></div></div>
-              </details>
-            </div>
-            <div class="suite-approval" aria-label="Approve selected generated test cases">
-              <div class="reviewer-field">
-                <input id="accepted-by" type="text" maxlength="100" placeholder="Reviewer name or ID" aria-label="Approved by" aria-describedby="reviewer-error">
-                <span class="reviewer-error hidden" id="reviewer-error" role="alert">Enter the reviewer name or ID.</span>
+                <div class="flow-node">
+                  <span>03</span>
+                  <div>
+                    <b>Quality Gate</b><small>Checks traceability and deterministic rules</small>
+                  </div>
+                </div>
+                <div class="flow-node">
+                  <span>04</span>
+                  <div><b>Test Storage</b><small>Retains approved exact-match suites</small></div>
+                </div>
               </div>
-              <button class="primary compact" id="accept-selected" type="button">✓ Approve selected</button>
+              <section class="live-agent-feed" aria-labelledby="live-agent-feed-title">
+                <div class="live-agent-feed-head">
+                  <div>
+                    <span>Live orchestration</span>
+                    <h3 id="live-agent-feed-title">Actual agent activity</h3>
+                  </div>
+                  <small id="live-agent-feed-state">WAITING</small>
+                </div>
+                <ol id="live-agent-events" aria-live="polite">
+                  <li class="empty-event">
+                    Start generation to inspect payload-free lifecycle events.
+                  </li>
+                </ol>
+              </section>
+              <div class="runtime-details">
+                <article class="runtime-card" id="llm-details">
+                  <span>LLM layer</span>
+                  <h3>GitHub-managed model</h3>
+                  <p id="llm-model-detail">Organization default</p>
+                </article>
+                <article class="runtime-card" id="agent-details">
+                  <span>Agent layer</span>
+                  <h3>Test Designer</h3>
+                  <p>Markdown policies + active BRD profile</p>
+                </article>
+                <article class="runtime-card" id="orchestration-details">
+                  <span>Application layer</span>
+                  <h3>Model-directed coordinator</h3>
+                  <p><code>AgentRuntime</code> · governed tools · Pydantic · SQLite</p>
+                </article>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
+          </details>
 
-        <div class="cases" id="cases"></div>
-        <section class="step-definitions hidden" id="feature-file-view" aria-live="polite" aria-labelledby="feature-file-title">
-          <div class="step-definitions-head"><div><span class="section-kicker">BDD Gherkin</span><h3 id="feature-file-title">Feature file</h3></div><button class="secondary" id="close-feature-view" type="button">Close preview</button></div>
-          <article class="step-definition-file"><div><strong id="feature-file-name">automation-tests.feature</strong><button class="secondary" id="copy-feature-file" type="button">Copy</button></div><pre><code id="feature-file-content"></code></pre></article>
-        </section>
-        <section class="step-definitions hidden" id="step-definitions" aria-live="polite">
-          <div class="step-definitions-head"><div><span class="section-kicker">BDD automation</span><h3>Generated automation files</h3><p>Review, copy or download the typed bindings for this suite.</p></div><button class="secondary" id="close-step-view" type="button">Close preview</button></div>
-          <div id="step-definition-files"></div>
-          <details><summary>Step coverage and generation notes</summary><div id="step-definition-coverage"></div></details>
-        </section>
-        <dialog class="cs-download-dialog" id="cs-download-dialog" aria-labelledby="cs-download-title">
-          <div class="step-definitions-head"><div><h3 id="cs-download-title">Download step definitions</h3><p>Choose a source file, or download the complete set.</p></div><button class="secondary" id="close-cs-download" type="button">Close</button></div>
-          <div id="cs-download-files"></div>
-          <button class="primary" id="download-step-definitions" type="button">Download all files (.zip)</button>
-        </dialog>
-        <details class="subpanel"><summary>Assumptions and coverage intelligence</summary><div id="notes"></div></details>
-      </section>
+          <section class="panel results hidden" id="results">
+            <div class="results-header">
+              <div>
+                <span class="section-kicker">Generated suite</span>
+                <h2 id="feature"></h2>
+                <div class="summary" id="summary"></div>
+              </div>
+              <span class="review-badge" id="review-state">Review required</span>
+            </div>
+            <p class="case-hierarchy-help">
+              Business scenarios group a journey or capability. Each test case checks one specific
+              condition and expected outcome. Automation cases include their BDD steps.
+            </p>
+            <div class="result-actions">
+              <div class="selection-actions">
+                <button id="select-all" class="quiet-button">Select all</button
+                ><button id="select-none" class="quiet-button">Clear</button>
+              </div>
+              <div class="suite-output-actions">
+                <div class="tools" aria-label="Generated suite actions">
+                  <div class="automation-language-control">
+                    <select
+                      id="automation-language"
+                      class="secondary"
+                      aria-label="Coding language"
+                      title="Coding language"
+                    >
+                      <option value="csharp">C# · ReqnRoll</option>
+                      <option value="java">Java · Cucumber</option>
+                      <option value="python">Python · Behave</option>
+                      <option value="javascript">JavaScript · Cucumber</option>
+                      <option value="typescript">TypeScript · Cucumber</option>
+                      <option value="ruby">Ruby · Cucumber</option>
+                    </select>
+                    <span aria-hidden="true">▾</span>
+                  </div>
+                  <details class="suite-menu" id="suite-view-menu">
+                    <summary class="secondary">View <span aria-hidden="true">▾</span></summary>
+                    <div class="suite-menu-options" aria-label="View generated files">
+                      <button id="view-feature" type="button">
+                        .feature <span>Feature file</span>
+                      </button>
+                      <button id="generate-step-definitions" type="button">
+                        Code <span>Step definitions</span>
+                      </button>
+                      <button
+                        id="view-csharp-pack"
+                        type="button"
+                        title="View the automation pack, including bindings and implementations"
+                      >
+                        Code <span>Automation pack</span>
+                      </button>
+                    </div>
+                  </details>
+                  <details class="suite-menu" id="suite-download-menu">
+                    <summary class="secondary">Download <span aria-hidden="true">▾</span></summary>
+                    <div class="suite-menu-options" aria-label="Download generated files">
+                      <button id="xlsx" type="button">.xlsx <span>Excel workbook</span></button>
+                      <button id="csv" type="button">.csv <span>CSV spreadsheet</span></button>
+                      <button id="pdf" type="button">.pdf <span>PDF document</span></button>
+                      <button id="json" type="button">.json <span>JSON data</span></button>
+                      <button id="download-feature" type="button">
+                        .feature <span>Feature file</span>
+                      </button>
+                      <button id="suite-download-cs" type="button">
+                        Code <span>Step definition files</span>
+                      </button>
+                      <button id="download-csharp-pack" type="button">
+                        .zip <span>Automation pack</span>
+                      </button>
+                    </div>
+                  </details>
+                  <details class="suite-jira">
+                    <summary class="secondary">↗ Jira</summary>
+                    <div class="jira-popover">
+                      <label for="jira-key">Destination issue</label>
+                      <div class="jira-row">
+                        <div class="jira-key-field">
+                          <input
+                            id="jira-key"
+                            type="text"
+                            placeholder="PROJ-123"
+                            aria-label="Jira issue key"
+                            aria-describedby="jira-key-error"
+                          /><span class="jira-key-error hidden" id="jira-key-error" role="alert"
+                            >Enter a valid Jira issue key, such as PROJ-123.</span
+                          >
+                        </div>
+                        <button class="primary compact" id="jira">Attach selected</button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <div class="suite-approval" aria-label="Approve selected generated test cases">
+                  <div class="reviewer-field">
+                    <input
+                      id="accepted-by"
+                      type="text"
+                      maxlength="100"
+                      placeholder="Reviewer name or ID"
+                      aria-label="Approved by"
+                      aria-describedby="reviewer-error"
+                    />
+                    <span class="reviewer-error hidden" id="reviewer-error" role="alert"
+                      >Enter the reviewer name or ID.</span
+                    >
+                  </div>
+                  <button class="primary compact" id="accept-selected" type="button">
+                    ✓ Approve selected
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="acceptance-receipt hidden" id="acceptance-receipt" aria-live="polite"></div>
 
-      </div>
-      <div data-workspace-page="/progress" hidden>
-      <section class="panel workspace-page-panel" id="work-dashboard" aria-labelledby="work-dashboard-title">
-        <div class="bdd-heading"><div><span class="section-kicker">QUALITY / EXECUTION</span><h2 id="work-dashboard-title">BDD run dashboard</h2><p>Your test runs, results, and reports. One clear view.</p></div><div class="bdd-heading-actions"><button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button><button id="run-repository-bdd" class="primary" type="button"><span aria-hidden="true">▶</span> Run BDD tests</button></div></div>
-        <div class="bdd-context"><span class="bdd-context-label">C# · ReqnRoll</span><span>Repository suite</span><div id="dashboard-progress" aria-live="polite"></div></div>
-        <p id="bdd-run-status" role="status"></p>
-        <div id="dashboard-totals" class="dashboard-numbers" aria-label="Execution metrics"></div>
-        <div class="bdd-overview"><section id="bdd-result-summary" aria-label="Selected run results"></section><section class="bdd-trend-card"><div class="bdd-card-heading"><div><span class="section-kicker">RUN ACTIVITY</span><h3>Recent outcomes</h3></div><span class="bdd-subtle">Last 12 runs</span></div><div id="bdd-run-trend" aria-label="Recent run results"></div><p class="bdd-trend-caption">Select a run to explore its results.</p></section></div>
-        <section class="bdd-history-card" aria-labelledby="bdd-history-title"><div class="bdd-history-heading"><div><span class="section-kicker">EXECUTION LOG</span><h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3></div><div class="bdd-history-controls"><label class="bdd-search"><span aria-hidden="true">⌕</span><input id="bdd-history-search" type="search" placeholder="Search runs or project…" aria-label="Search run history"></label><select id="bdd-status-filter" aria-label="Filter runs by status"><option value="all">All statuses</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="error">Error</option></select></div></div><div id="dashboard-history" role="region" tabindex="0" aria-label="Execution history"></div></section>
-        <p id="dashboard-scope">Loading BDD execution history…</p>
-      </section>
-      </div>
-      <div data-workspace-page="/quality-lifecycle" hidden>
-      <section class="panel agent-workspace workspace-page-panel" id="agent-workspace" aria-labelledby="agent-workspace-title">
-        <div class="panel-head compact-head">
-          <div><span class="section-kicker">Quality lifecycle</span><h2 id="agent-workspace-title">Traceability and STLC reporting</h2><p id="lifecycle-guidance">Generate a suite to inspect requirement coverage, design quality and lifecycle readiness.</p></div>
-          <span class="secure">CURRENT SUITE</span>
+            <div class="cases" id="cases"></div>
+            <section
+              class="step-definitions hidden"
+              id="feature-file-view"
+              aria-live="polite"
+              aria-labelledby="feature-file-title"
+            >
+              <div class="step-definitions-head">
+                <div>
+                  <span class="section-kicker">BDD Gherkin</span>
+                  <h3 id="feature-file-title">Feature file</h3>
+                </div>
+                <button class="secondary" id="close-feature-view" type="button">
+                  Close preview
+                </button>
+              </div>
+              <article class="step-definition-file">
+                <div>
+                  <strong id="feature-file-name">automation-tests.feature</strong
+                  ><button class="secondary" id="copy-feature-file" type="button">Copy</button>
+                </div>
+                <pre><code id="feature-file-content"></code></pre>
+              </article>
+            </section>
+            <section class="step-definitions hidden" id="step-definitions" aria-live="polite">
+              <div class="step-definitions-head">
+                <div>
+                  <span class="section-kicker">BDD automation</span>
+                  <h3>Generated automation files</h3>
+                  <p>Review, copy or download the typed bindings for this suite.</p>
+                </div>
+                <button class="secondary" id="close-step-view" type="button">Close preview</button>
+              </div>
+              <div id="step-definition-files"></div>
+              <details>
+                <summary>Step coverage and generation notes</summary>
+                <div id="step-definition-coverage"></div>
+              </details>
+            </section>
+            <dialog
+              class="cs-download-dialog"
+              id="cs-download-dialog"
+              aria-labelledby="cs-download-title"
+            >
+              <div class="step-definitions-head">
+                <div>
+                  <h3 id="cs-download-title">Download step definitions</h3>
+                  <p>Choose a source file, or download the complete set.</p>
+                </div>
+                <button class="secondary" id="close-cs-download" type="button">Close</button>
+              </div>
+              <div id="cs-download-files"></div>
+              <button class="primary" id="download-step-definitions" type="button">
+                Download all files (.zip)
+              </button>
+            </dialog>
+            <details class="subpanel">
+              <summary>Assumptions and coverage intelligence</summary>
+              <div id="notes"></div>
+            </details>
+          </section>
         </div>
-        <div class="agent-grid">
-          <article class="agent-card"><span class="agent-number">01</span><div><small>Business Rules Agent</small><h3>Requirement alignment</h3><p>Review traceability to BRD rules.</p></div><button class="secondary lifecycle-action" id="show-rule-coverage" disabled>Review coverage</button></article>
-          <article class="agent-card"><span class="agent-number">02</span><div><small>Knowledge Agent</small><h3>Source intelligence</h3><p>Inspect whether approved knowledge was reused.</p></div><button class="secondary lifecycle-action" id="show-knowledge" disabled>Inspect source</button></article>
-          <article class="agent-card"><span class="agent-number">03</span><div><small>STLC reporting</small><h3>Traceability and quality</h3><p>Inspect coverage gaps, risk distribution and validation findings.</p></div><button class="secondary lifecycle-action" id="generate-metrics" disabled>Refresh report</button></article>
+        <div data-workspace-page="/progress" hidden>
+          <section
+            class="panel workspace-page-panel"
+            id="work-dashboard"
+            aria-labelledby="work-dashboard-title"
+          >
+            <div class="bdd-heading">
+              <div>
+                <span class="section-kicker">QUALITY / EXECUTION</span>
+                <h2 id="work-dashboard-title">BDD run dashboard</h2>
+                <p>Your test runs, results, and reports. One clear view.</p>
+              </div>
+              <div class="bdd-heading-actions">
+                <button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button
+                ><button id="run-repository-bdd" class="primary" type="button">
+                  <span aria-hidden="true">▶</span> Run BDD tests
+                </button>
+              </div>
+            </div>
+            <div class="bdd-context">
+              <span class="bdd-context-label">C# · ReqnRoll</span><span>Repository suite</span>
+              <div id="dashboard-progress" aria-live="polite"></div>
+            </div>
+            <p id="bdd-run-status" role="status"></p>
+            <div
+              id="dashboard-totals"
+              class="dashboard-numbers"
+              aria-label="Execution metrics"
+            ></div>
+            <div class="bdd-overview">
+              <section id="bdd-result-summary" aria-label="Selected run results"></section>
+              <section class="bdd-trend-card">
+                <div class="bdd-card-heading">
+                  <div>
+                    <span class="section-kicker">RUN ACTIVITY</span>
+                    <h3>Recent outcomes</h3>
+                  </div>
+                  <span class="bdd-subtle">Last 12 runs</span>
+                </div>
+                <div id="bdd-run-trend" aria-label="Recent run results"></div>
+                <p class="bdd-trend-caption">Select a run to explore its results.</p>
+              </section>
+            </div>
+            <section class="bdd-history-card" aria-labelledby="bdd-history-title">
+              <div class="bdd-history-heading">
+                <div>
+                  <span class="section-kicker">EXECUTION LOG</span>
+                  <h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3>
+                </div>
+                <div class="bdd-history-controls">
+                  <label class="bdd-search"
+                    ><span aria-hidden="true">⌕</span
+                    ><input
+                      id="bdd-history-search"
+                      type="search"
+                      placeholder="Search runs or project…"
+                      aria-label="Search run history" /></label
+                  ><select id="bdd-status-filter" aria-label="Filter runs by status">
+                    <option value="all">All statuses</option>
+                    <option value="passed">Passed</option>
+                    <option value="failed">Failed</option>
+                    <option value="error">Error</option>
+                  </select>
+                </div>
+              </div>
+              <div
+                id="dashboard-history"
+                role="region"
+                tabindex="0"
+                aria-label="Execution history"
+              ></div>
+            </section>
+            <p id="dashboard-scope">Loading BDD execution history…</p>
+          </section>
         </div>
-        <div class="agent-output" id="agent-output">Select an available lifecycle action to inspect its result.</div>
-        <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
-          <article class="lifecycle-dashboard"><div class="dashboard-title"><span>Traceability and STLC report</span><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span></div><div id="metrics-dashboard"><p>Generate a suite to see its traceability and quality report.</p></div></article>
+        <div data-workspace-page="/quality-lifecycle" hidden>
+          <section
+            class="panel agent-workspace workspace-page-panel"
+            id="agent-workspace"
+            aria-labelledby="agent-workspace-title"
+          >
+            <div class="panel-head compact-head">
+              <div>
+                <span class="section-kicker">Quality lifecycle</span>
+                <h2 id="agent-workspace-title">Traceability and STLC reporting</h2>
+                <p id="lifecycle-guidance">
+                  Generate a suite to inspect requirement coverage, design quality and lifecycle
+                  readiness.
+                </p>
+              </div>
+              <span class="secure">CURRENT SUITE</span>
+            </div>
+            <div class="agent-grid">
+              <article class="agent-card">
+                <span class="agent-number">01</span>
+                <div>
+                  <small>Business Rules Agent</small>
+                  <h3>Requirement alignment</h3>
+                  <p>Review traceability to BRD rules.</p>
+                </div>
+                <button class="secondary lifecycle-action" id="show-rule-coverage" disabled>
+                  Review coverage
+                </button>
+              </article>
+              <article class="agent-card">
+                <span class="agent-number">02</span>
+                <div>
+                  <small>Knowledge Agent</small>
+                  <h3>Source intelligence</h3>
+                  <p>Inspect whether approved knowledge was reused.</p>
+                </div>
+                <button class="secondary lifecycle-action" id="show-knowledge" disabled>
+                  Inspect source
+                </button>
+              </article>
+              <article class="agent-card">
+                <span class="agent-number">03</span>
+                <div>
+                  <small>STLC reporting</small>
+                  <h3>Traceability and quality</h3>
+                  <p>Inspect coverage gaps, risk distribution and validation findings.</p>
+                </div>
+                <button class="secondary lifecycle-action" id="generate-metrics" disabled>
+                  Refresh report
+                </button>
+              </article>
+            </div>
+            <div class="agent-output" id="agent-output">
+              Select an available lifecycle action to inspect its result.
+            </div>
+            <div class="lifecycle-dashboards design-metrics" aria-label="Test-design dashboard">
+              <article class="lifecycle-dashboard">
+                <div class="dashboard-title">
+                  <span>Traceability and STLC report</span
+                  ><span class="dashboard-state" id="metrics-dashboard-state">AWAITING DATA</span>
+                </div>
+                <div id="metrics-dashboard">
+                  <p>Generate a suite to see its traceability and quality report.</p>
+                </div>
+              </article>
+            </div>
+          </section>
         </div>
-      </section>
-      </div>
-    </main>
-  </div>
-  <dialog class="cs-download-dialog" id="cs-generation-dialog" aria-labelledby="cs-generation-title" aria-describedby="cs-generation-message">
-    <h3 id="cs-generation-title">Generating automation files</h3>
-    <p id="cs-generation-message" role="status">Creating reusable step definitions for your BDD scenarios. Your files will open when ready.</p>
-    <div class="generation-progress" role="progressbar" aria-label="Automation generation in progress"><span class="generation-progress-bar"></span></div>
-    <div class="generation-dialog-footer"><span id="cs-generation-time">00:00 elapsed</span><div class="cs-generation-actions"><button class="secondary" id="cancel-cs-generation" type="button">Cancel generation</button><button class="secondary" id="hide-cs-generation" type="button">Run in background</button></div></div>
-  </dialog>
-  <div class="generation-overlay hidden" id="generation-overlay" role="dialog" aria-modal="true" aria-labelledby="generation-overlay-title" aria-describedby="generation-overlay-message">
-    <div class="generation-dialog">
-      <div class="generation-orbit" aria-hidden="true"><span></span><span></span><span></span><b>✦</b></div>
-      <span class="section-kicker">DecisionAgent is working</span>
-      <h2 id="generation-overlay-title">Generating test cases</h2>
-      <p id="generation-overlay-message">The specialist agents are designing and validating your coverage.</p>
-      <dl class="generation-llm-details" aria-label="Active LLM details">
-        <div><dt>Provider</dt><dd id="generation-llm-provider">Detecting…</dd></div>
-        <div><dt>Model</dt><dd id="generation-llm-model">Detecting…</dd></div>
-        <div><dt>Authentication</dt><dd id="generation-llm-auth">Detecting…</dd></div>
-      </dl>
-      <div class="generation-agent-pulse" aria-label="Generation stages"><span>Analyze</span><span>Design</span><span>Validate</span></div>
-      <section class="generation-background-process" aria-labelledby="generation-background-title">
-        <div><h3 id="generation-background-title">Background process</h3><span id="generation-background-state">STARTING</span></div>
-        <ol id="generation-background-events" aria-live="polite"><li class="empty-event">Waiting for the first agent update…</li></ol>
-      </section>
-      <div class="generation-progress"><span class="generation-progress-bar"></span></div>
-      <div class="generation-dialog-footer"><span id="generation-overlay-time">00:00 elapsed</span><button class="secondary" id="cancel-generation-overlay" type="button">Cancel generation</button></div>
+      </main>
     </div>
-  </div>
-  <div class="model-access-overlay hidden" id="model-access-overlay" role="dialog" aria-modal="true" aria-labelledby="model-access-title">
-    <section class="model-access-popup">
-      <button class="model-access-close" id="close-model-access" type="button" aria-label="Close model access details">×</button>
-      <span class="section-kicker">LLM access check</span>
-      <h2 id="model-access-title">Checking model access…</h2>
-      <p id="model-access-summary">Verifying account permissions and usage limits without consuming a generation request.</p>
-      <dl class="model-access-details" id="model-access-details"></dl>
-    </section>
-  </div>
-  <div class="knowledge-notice-overlay hidden" id="knowledge-notice-overlay" role="dialog" aria-modal="true" aria-labelledby="knowledge-notice-title">
-    <section class="knowledge-notice">
-      <span class="knowledge-notice-icon" aria-hidden="true">◎</span>
-      <span class="section-kicker">Knowledge base match</span>
-      <h2 id="knowledge-notice-title">Approved test knowledge reused</h2>
-      <p>This suite was retrieved from a previously validated knowledge-base entry instead of consuming a new AI generation request.</p>
-      <button class="primary" id="close-knowledge-notice" type="button">View generated suite</button>
-    </section>
-  </div>
+    <dialog
+      class="cs-download-dialog"
+      id="cs-generation-dialog"
+      aria-labelledby="cs-generation-title"
+      aria-describedby="cs-generation-message"
+    >
+      <h3 id="cs-generation-title">Generating automation files</h3>
+      <p id="cs-generation-message" role="status">
+        Creating reusable step definitions for your BDD scenarios. Your files will open when ready.
+      </p>
+      <div
+        class="generation-progress"
+        role="progressbar"
+        aria-label="Automation generation in progress"
+      >
+        <span class="generation-progress-bar"></span>
+      </div>
+      <div class="generation-dialog-footer">
+        <span id="cs-generation-time">00:00 elapsed</span>
+        <div class="cs-generation-actions">
+          <button class="secondary" id="cancel-cs-generation" type="button">
+            Cancel generation</button
+          ><button class="secondary" id="hide-cs-generation" type="button">
+            Run in background
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <div
+      class="generation-overlay hidden"
+      id="generation-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="generation-overlay-title"
+      aria-describedby="generation-overlay-message"
+    >
+      <div class="generation-dialog">
+        <div class="generation-orbit" aria-hidden="true">
+          <span></span><span></span><span></span><b>✦</b>
+        </div>
+        <span class="section-kicker">DecisionAgent is working</span>
+        <h2 id="generation-overlay-title">Generating test cases</h2>
+        <p id="generation-overlay-message">
+          The specialist agents are designing and validating your coverage.
+        </p>
+        <dl class="generation-llm-details" aria-label="Active LLM details">
+          <div>
+            <dt>Provider</dt>
+            <dd id="generation-llm-provider">Detecting…</dd>
+          </div>
+          <div>
+            <dt>Model</dt>
+            <dd id="generation-llm-model">Detecting…</dd>
+          </div>
+          <div>
+            <dt>Authentication</dt>
+            <dd id="generation-llm-auth">Detecting…</dd>
+          </div>
+        </dl>
+        <div class="generation-agent-pulse" aria-label="Generation stages">
+          <span>Analyze</span><span>Design</span><span>Validate</span>
+        </div>
+        <section
+          class="generation-background-process"
+          aria-labelledby="generation-background-title"
+        >
+          <div>
+            <h3 id="generation-background-title">Background process</h3>
+            <span id="generation-background-state">STARTING</span>
+          </div>
+          <ol id="generation-background-events" aria-live="polite">
+            <li class="empty-event">Waiting for the first agent update…</li>
+          </ol>
+        </section>
+        <div class="generation-progress"><span class="generation-progress-bar"></span></div>
+        <div class="generation-dialog-footer">
+          <span id="generation-overlay-time">00:00 elapsed</span
+          ><button class="secondary" id="cancel-generation-overlay" type="button">
+            Cancel generation
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      class="model-access-overlay hidden"
+      id="model-access-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="model-access-title"
+    >
+      <section class="model-access-popup">
+        <button
+          class="model-access-close"
+          id="close-model-access"
+          type="button"
+          aria-label="Close model access details"
+        >
+          ×
+        </button>
+        <span class="section-kicker">LLM access check</span>
+        <h2 id="model-access-title">Checking model access…</h2>
+        <p id="model-access-summary">
+          Verifying account permissions and usage limits without consuming a generation request.
+        </p>
+        <dl class="model-access-details" id="model-access-details"></dl>
+      </section>
+    </div>
+    <div
+      class="knowledge-notice-overlay hidden"
+      id="knowledge-notice-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="knowledge-notice-title"
+    >
+      <section class="knowledge-notice">
+        <span class="knowledge-notice-icon" aria-hidden="true">◎</span>
+        <span class="section-kicker">Knowledge base match</span>
+        <h2 id="knowledge-notice-title">Approved test knowledge reused</h2>
+        <p>
+          This suite was retrieved from a previously validated knowledge-base entry instead of
+          consuming a new AI generation request.
+        </p>
+        <button class="primary" id="close-knowledge-notice" type="button">
+          View generated suite
+        </button>
+      </section>
+    </div>
 
-  <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
-  <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-  <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/index.js?v=20260911-stlc" defer></script>
-  <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-  <script src="/static/scripts/dashboard.js?v=20260912-scroll-history" defer></script>
-  <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-  <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
-</body>
+    <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
+    <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
+    <script src="/static/scripts/index.js?v=20260911-stlc" defer></script>
+    <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
+    <script src="/static/scripts/dashboard.js?v=20260912-scroll-history" defer></script>
+    <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
+  </body>
 </html>

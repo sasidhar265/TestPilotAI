@@ -39,6 +39,9 @@ def test_clean_docker_context_builds_only_application_package(tmp_path):
         files = set(wheel.namelist())
     assert {
         "app/main.py",
+        "app/documentation/company-project-prerequisites.md",
+        "app/documentation/company-solution-requirements.md",
+        "app/documentation/company-implementation-checklist.md",
         "app/agents/automation_execution_agent.py",
         "app/services/automation_reports.py",
         "app/templates/reqnroll/testcontext.cs",
@@ -46,6 +49,11 @@ def test_clean_docker_context_builds_only_application_package(tmp_path):
         "app/templates/framework/Automation.csproj",
         "app/templates/framework/run.py",
         "app/static/index.html",
+        "app/static/api-docs.html",
+        "app/static/scripts/api-docs.js",
+        "app/static/vendor/swagger-ui/swagger-ui-bundle.js",
+        "app/static/vendor/swagger-ui/swagger-ui.css",
+        "app/static/vendor/swagger-ui/LICENSE",
         "app/static/scripts/dashboard.js",
         "app/static/styles/index.css",
     } <= files

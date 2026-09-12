@@ -1,13 +1,13 @@
 """Load repository-owned Markdown agent policies for the governed runtime."""
 
 import re
-from functools import lru_cache
 from pathlib import Path
 
 AGENT_DIRECTORY = Path(__file__).parent.parent / ".github" / "agents"
 PROFILE_DIRECTORY = Path(__file__).parent.parent / ".github" / "agent-profiles"
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
+    "multi-language": "multi-language.agent.md",
     "business-rules": "business-rules.agent.md",
     "reqforge": "reqforge.agent.md",
     "decision-agent": "reqforge.agent.md",
@@ -41,7 +41,6 @@ def _instruction_body(path: Path) -> str:
     return body
 
 
-@lru_cache(maxsize=len(AGENT_FILES))
 def load_agent_instructions(agent_id: str) -> str:
     """Return the instruction body from an allowlisted custom-agent Markdown file."""
     filename = AGENT_FILES.get(agent_id)
@@ -50,7 +49,6 @@ def load_agent_instructions(agent_id: str) -> str:
     return _instruction_body(AGENT_DIRECTORY / filename)
 
 
-@lru_cache(maxsize=64)
 def load_profile_instructions(profile: str, agent_id: str | None = None) -> str:
     """Load common and optional per-agent project policy from a safe profile directory."""
     if not _PROFILE_NAME.fullmatch(profile):
@@ -97,7 +95,6 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
         if specialist_override.is_file():
             sections.append(_instruction_body(specialist_override))
     sections.append(load_agent_instructions("quality-gate"))
-    sections.append(load_agent_instructions("test-data"))
     from app.workspace_policy import standards
 
     sections.append(standards("feature"))
@@ -107,13 +104,6 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
     quality_override = PROFILE_DIRECTORY / profile / "quality-gate.md"
     if quality_override.is_file():
         sections.append(_instruction_body(quality_override))
-    sections.append(
-        "The application produces the structured Quality Gate report after generation. "
-        "Do not insert a competing passed/failed Quality Gate verdict or conversion permission "
-        "into TestSuite assumptions or coverage_notes. Use those fields to identify specific "
-        "missing requirements, unresolved contradictions and required runtime data instead. "
-        "Do not hide missing business semantics or describe unexecuted tests as passed."
-    )
     return "\n\n".join(sections)
 
 
@@ -133,3 +123,28 @@ def step_definition_agent_instructions(
             quotation_instructions(),
         ]
     )
+
+
+def load_agent_section(agent_id: str, heading: str) -> str:
+    """Read an explicitly named policy section afresh for every invocation."""
+    body = load_agent_instructions(agent_id)
+    marker = f"## {heading}\n"
+    sections = body.split(marker)
+    if len(sections) != 2:
+        raise ValueError(f"Agent {agent_id} must define exactly one {heading!r} section")
+    section = re.split(r"^## ", sections[1], maxsplit=1, flags=re.MULTILINE)[0].strip()
+    if not section:
+        raise ValueError(f"Agent {agent_id} has an empty {heading!r} section")
+    return "\n" + section + "\n"
+
+
+def policy_fingerprint() -> str:
+    """Invalidate generated-suite reuse when agent policy or project knowledge changes."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    for directory in (AGENT_DIRECTORY, PROFILE_DIRECTORY):
+        for path in sorted(directory.rglob("*.md")):
+            digest.update(str(path.relative_to(directory)).encode())
+            digest.update(path.read_bytes())
+    return digest.hexdigest()

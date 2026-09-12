@@ -25,7 +25,10 @@ namespace Generated.StepDefinitions
                     client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            { AllowAutoRedirect = false, UseCookies = false });
+            {
+                AllowAutoRedirect = false,
+                UseCookies = false
+            });
             return services.BuildServiceProvider();
         });
 

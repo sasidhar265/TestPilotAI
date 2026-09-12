@@ -15,7 +15,10 @@ internal static class QuotationChecks
 
     private static void Reject(string json)
     {
-        try { QuotationRequestBuilder.FromJson(json).Build(); }
+        try
+        {
+            QuotationRequestBuilder.FromJson(json).Build();
+        }
         catch (JsonException) { return; }
         throw new Exception("Unknown or missing quotation fields were accepted.");
     }
@@ -52,9 +55,15 @@ internal static class QuotationChecks
         api.LoadQuotationRequest();
         await api.SendAsync("POST", "/configured-test-endpoint");
         Equal(supplied, handler.Body);
-        try { api.LoadQuotationFixture("valid"); }
+        try
+        {
+            api.LoadQuotationFixture("valid");
+        }
         catch (JsonException) { }
-        try { await api.SendAsync("POST", "/configured-test-endpoint"); }
+        try
+        {
+            await api.SendAsync("POST", "/configured-test-endpoint");
+        }
         catch (InvalidOperationException)
         {
             Console.WriteLine("Quotation builder, strategies and wire-payload checks passed.");

@@ -148,7 +148,7 @@ def test_current_service_scope_is_not_replaced_by_default_quotation_profile():
         step_definition_agent_instructions(),
     ):
         assert "Current explicit\nrequirements take precedence" in body
-        assert "Preserve supplied FR-* and BR-* identifiers" in body
+        assert "Preserve supplied FR-* and BR-* identifiers" in body.replace("`", "")
         assert "as the sole" not in body
     assert "Do not insert a competing passed/failed Quality Gate verdict" in (
         generation_agent_instructions("automation")

@@ -31,7 +31,9 @@ def workspace(tmp_path, monkeypatch):
     from app import workspace_policy
 
     monkeypatch.setattr(workspace_policy, "WORKSPACE", tmp_path)
-    (tmp_path / "business-rules.json").write_text("[]")
+    rules_path = tmp_path / "business-rules.agent.md"
+    rules_path.write_text(workspace_policy.RULES_PATH.read_text())
+    monkeypatch.setattr(workspace_policy, "RULES_PATH", rules_path)
     (tmp_path / "feature-standards.md").write_text("No feature tags")
     (tmp_path / "automation-standards.md").write_text("Use scenario-scoped state")
     return tmp_path
@@ -338,7 +340,7 @@ def test_browser_shared_rules_language_selection_and_dashboard(workspace, reques
         assert page.evaluate("executionSummary") is None
         page.locator("#refresh-dashboard").click()
         playwright.expect(page.locator("#bdd-result-summary")).to_contain_text(
-            "No completed BDD runs"
+            "Your first run starts here"
         )
         page.screenshot(path="/tmp/workspace-dashboard-desktop.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})

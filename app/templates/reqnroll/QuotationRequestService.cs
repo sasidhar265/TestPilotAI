@@ -20,7 +20,9 @@ public sealed class ConfiguredQuotationRequestStrategy : IQuotationRequestStrate
 {
     private readonly Action<QuotationRequestBuilder> configure;
     public ConfiguredQuotationRequestStrategy(Action<QuotationRequestBuilder> configure)
-    { this.configure = configure; }
+    {
+        this.configure = configure;
+    }
 
     public QuotationRequestModel Build(QuotationRequestBuilder builder)
     {
@@ -32,7 +34,10 @@ public sealed class ConfiguredQuotationRequestStrategy : IQuotationRequestStrate
 public sealed class QuotationRequestService
 {
     private readonly IQuotationRequestStrategy strategy;
-    public QuotationRequestService(IQuotationRequestStrategy strategy) { this.strategy = strategy; }
+    public QuotationRequestService(IQuotationRequestStrategy strategy)
+    {
+        this.strategy = strategy;
+    }
 
     public string BuildJson(string approvedPayloadPath) => JsonSerializer.Serialize(
         strategy.Build(QuotationRequestBuilder.FromFile(approvedPayloadPath)));

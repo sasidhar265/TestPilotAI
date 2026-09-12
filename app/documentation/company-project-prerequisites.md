@@ -2,13 +2,13 @@
 
 ## Document control
 
-| Field | Value |
-|---|---|
-| Project | Quality Lifecycle Studio — Governed Test Design Platform |
-| Document | Company implementation prerequisites |
-| Status | Draft for organizational review |
-| Owners | Product, Quality Engineering, Platform Engineering, Security |
-| Review cycle | Before pilot and before every production expansion |
+| Field        | Value                                                        |
+| ------------ | ------------------------------------------------------------ |
+| Project      | Quality Lifecycle Studio — Governed Test Design Platform     |
+| Document     | Company implementation prerequisites                         |
+| Status       | Draft for organizational review                              |
+| Owners       | Product, Quality Engineering, Platform Engineering, Security |
+| Review cycle | Before pilot and before every production expansion           |
 
 ## Purpose
 
@@ -28,18 +28,18 @@ must be satisfied before Quality Lifecycle Studio is developed, piloted, or depl
 
 ## Required stakeholders
 
-| Role | Responsibility |
-|---|---|
-| Business sponsor | Funding, organizational priority, escalation |
-| Product owner | Requirements, backlog, adoption, benefits measurement |
-| QA owner | Test-design policy, validation rules, approval criteria |
-| Engineering owner | Architecture, implementation, code ownership |
-| Platform/DevOps | Environments, CI/CD, monitoring, backups, recovery |
-| Security | Threat modelling, secrets, vulnerability and incident policy |
-| Privacy/legal | Data classification, retention, provider approval |
-| GitHub administrator | Copilot licences, CLI policy, model policy |
-| Jira administrator | Service account, permissions, project integration |
-| Support owner | Runbooks, service requests, incidents, user communication |
+| Role                 | Responsibility                                               |
+| -------------------- | ------------------------------------------------------------ |
+| Business sponsor     | Funding, organizational priority, escalation                 |
+| Product owner        | Requirements, backlog, adoption, benefits measurement        |
+| QA owner             | Test-design policy, validation rules, approval criteria      |
+| Engineering owner    | Architecture, implementation, code ownership                 |
+| Platform/DevOps      | Environments, CI/CD, monitoring, backups, recovery           |
+| Security             | Threat modelling, secrets, vulnerability and incident policy |
+| Privacy/legal        | Data classification, retention, provider approval            |
+| GitHub administrator | Copilot licences, CLI policy, model policy                   |
+| Jira administrator   | Service account, permissions, project integration            |
+| Support owner        | Runbooks, service requests, incidents, user communication    |
 
 ## GitHub Copilot prerequisites
 

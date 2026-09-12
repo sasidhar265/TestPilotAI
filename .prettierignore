@@ -1,0 +1,22 @@
+# Third-party distributions retain upstream formatting and license notices.
+app/static/vendor/
+# Generated output, reports, and local runtime data.
+.agent-memory/
+.copilot-runtime/
+.venv/
+**/bin/
+**/obj/
+**/__pycache__/
+build/
+dist/
+output/
+*.egg-info/
+automation/Features/*.feature.cs
+automation/TestResults/Reports/*
+!automation/TestResults/Reports/README.md
+# Binary documents have their own authoring tools.
+*.pdf
+*.pptx
+*.xlsx
+*.docx
+*.zip

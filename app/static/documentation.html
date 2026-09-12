@@ -1,90 +1,617 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f6f7fb">
-  <title>AI Quality Lifecycle — Product guide</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911">
-  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide">
-  <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment">
-  <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
-  <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
-  <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav">
-</head>
-<body>
-  <div class="docs-shell">
-    <aside class="sidebar">
-      <div class="sidebar-header"><a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
-        <span class="brand-mark" aria-hidden="true">Q</span>
-        <span><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span>
-      </a><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-content"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div><div class="sidebar-content" id="sidebar-content">
-      <nav class="primary-nav" aria-label="Primary navigation">
-        <span class="nav-label">Workspace</span>
-        <a class="nav-item" href="/"><span class="nav-icon">✦</span><span>Quality workspace</span></a>
-        <a class="nav-item" href="/progress"><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a>
-        <a class="nav-item" href="/quality-lifecycle"><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a>
-        <span class="nav-label">Explore</span>
-        <a class="nav-item active" aria-current="page" href="/documentation"><span class="nav-icon">□</span><span>Documentation</span></a>
-        <a class="nav-item" href="/logs"><span class="nav-icon">⌁</span><span>Runtime logs</span></a>
-      </nav>
-      <nav class="docs-nav" aria-label="On this page">
-        <span class="nav-label">On this page</span>
-        <a href="#overview">Overview</a>
-        <a href="#workflow">Get started</a>
-        <a href="#use-cases">Application pages</a>
-        <a href="#agents">Agent roles</a>
-        <a href="#inputs">Requirements and files</a>
-        <a href="#test-standard">Review tests</a>
-        <a href="#outputs">Downloads and sharing</a>
-        <a href="#execution">Execution results</a>
-        <a href="#architecture">How it works</a>
-        <a href="#company-documents">Deployment planning</a>
-        <a href="#integrations">API reference</a>
-      </nav>
-      <div class="side-status">
-        <div class="status-line" id="status"><span class="pulse"></span><span class="status-copy">Checking agent registry…</span></div>
-        <div class="model">SECURE LOCAL WORKSPACE</div>
-      </div>
-    <div class="theme-settings">
-    <div class="theme-menu" id="theme-menu" role="dialog" aria-labelledby="theme-menu-title" hidden>
-      <strong id="theme-menu-title">Appearance</strong><span>Choose your workspace theme</span>
-      <div class="theme-options" role="group" aria-label="Color theme"><button type="button" data-theme-option="light"><span aria-hidden="true">☀</span>Light</button><button type="button" data-theme-option="dark"><span aria-hidden="true">◐</span>Dark</button><button type="button" data-theme-option="system"><span aria-hidden="true">◫</span>System</button></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>AI Quality Lifecycle — Product guide</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
+    <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+  </head>
+  <body>
+    <div class="docs-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <a class="nav-item" href="/"
+              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
+            >
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+            >
+            <span class="nav-label">Explore</span>
+            <a class="nav-item active" aria-current="page" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+          </nav>
+          <nav class="docs-nav" aria-label="On this page">
+            <span class="nav-label">On this page</span>
+            <a href="#overview">Overview</a>
+            <a href="#workflow">Get started</a>
+            <a href="#use-cases">Application pages</a>
+            <a href="#agents">Agent roles</a>
+            <a href="#inputs">Requirements and files</a>
+            <a href="#test-standard">Review tests</a>
+            <a href="#outputs">Downloads and sharing</a>
+            <a href="#execution">Execution results</a>
+            <a href="#architecture">How it works</a>
+            <a href="#company-documents">Deployment planning</a>
+            <a href="#integrations">API reference</a>
+          </nav>
+          <div class="side-status">
+            <div class="status-line" id="status">
+              <span class="pulse"></span><span class="status-copy">Checking agent registry…</span>
+            </div>
+            <div class="model">SECURE LOCAL WORKSPACE</div>
+          </div>
+          <div class="theme-settings">
+            <div
+              class="theme-menu"
+              id="theme-menu"
+              role="dialog"
+              aria-labelledby="theme-menu-title"
+              hidden
+            >
+              <strong id="theme-menu-title">Appearance</strong
+              ><span>Choose your workspace theme</span>
+              <div class="theme-options" role="group" aria-label="Color theme">
+                <button type="button" data-theme-option="light">
+                  <span aria-hidden="true">☀</span>Light</button
+                ><button type="button" data-theme-option="dark">
+                  <span aria-hidden="true">◐</span>Dark</button
+                ><button type="button" data-theme-option="system">
+                  <span aria-hidden="true">◫</span>System
+                </button>
+              </div>
+            </div>
+            <button
+              class="theme-gear"
+              id="theme-gear"
+              type="button"
+              aria-label="Open appearance settings"
+              aria-expanded="false"
+              aria-controls="theme-menu"
+            >
+              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace docs-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Product guide</div>
+            <h1>Documentation</h1>
+          </div>
+          <div class="top-actions">
+            <a class="api-link" href="/docs">API reference ↗</a>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
+          </div>
+        </header>
+
+        <article class="content">
+          <header class="hero" id="overview">
+            <div class="hero-copy">
+              <span class="eyebrow">Application guide</span>
+              <h1>Turn requirements into tests you can review and use.</h1>
+              <p>
+                AI Quality Lifecycle helps you create manual test cases and automation scenarios,
+                check requirement coverage, and export test files. Start with a requirement,
+                document or Jira story.
+              </p>
+              <div class="actions">
+                <a class="button primary" href="/">Open Quality workspace →</a
+                ><a class="button secondary" href="#workflow">Get started</a>
+              </div>
+            </div>
+            <aside class="hero-card">
+              <span class="card-label">Key terms</span>
+              <h2>What the words mean</h2>
+              <p><strong>Test suite:</strong> a collection of test cases.</p>
+              <p>
+                <strong>Agent:</strong> a component with one job, such as preparing input or
+                checking tests.
+              </p>
+              <p>
+                <strong>BDD / Gherkin:</strong> scenarios written as Given (setup), When (action)
+                and Then (expected result).
+              </p>
+              <p><strong>Quality Gate:</strong> automated checks on the test design.</p>
+            </aside>
+          </header>
+          <div class="callout">
+            <span>Design quality and test results are different</span>
+            <p>
+              A Quality Gate pass means the generated test design passed the application’s checks. A
+              test passes execution only after it runs against an application and its expected
+              result is confirmed.
+            </p>
+          </div>
+          <section class="section" id="workflow">
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <div>
+                <h2>Create your first test suite</h2>
+                <p>Follow these steps in Quality workspace.</p>
+              </div>
+            </div>
+            <ol class="guide-steps">
+              <li>
+                <strong>Add the requirement.</strong> Paste text, or use the + control to upload a
+                document or link a Jira issue. Include the expected behaviour and acceptance
+                criteria.
+              </li>
+              <li>
+                <strong>Check shared rules.</strong> Open Business requirements &amp; rules. Add one
+                rule per line as <code>BR-ID: description</code>. These rules are shared across the
+                workspace; generation saves the editor first.
+              </li>
+              <li>
+                <strong>Choose the output.</strong> Select Manual, Automation (BDD / Gherkin), or
+                Both. For manual tests, choose API, UI, performance or database testing. Select an
+                available LLM (the AI model used for generation).
+              </li>
+              <li>
+                <strong>Generate and review.</strong> Inspect each test’s purpose, steps, expected
+                results and requirement links. Use Review to request a change to an individual case.
+                Check any Quality Gate findings.
+              </li>
+              <li>
+                <strong>Approve and export.</strong> Select the reviewed cases, enter your reviewer
+                name and choose Approve selected to record acceptance. Use View or Download for the
+                available file formats. Jira attachment is a separate action.
+              </li>
+            </ol>
+          </section>
+          <section class="section" id="use-cases">
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <div>
+                <h2>Where to find each feature</h2>
+                <p>Use the navigation to move between the application’s main pages.</p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Quality workspace</h3>
+                <p>
+                  Create and review suites. View generated files, download artifacts, approve
+                  selected cases or attach them to Jira.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Progress &amp; execution</h3>
+                <p>
+                  Run the repository BDD suite and inspect its recorded outcomes. Click a run in Run
+                  history to select its results. Search by run or project, filter by status, and
+                  scroll within the history. Expand a run for details and available report
+                  downloads.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Quality Lifecycle</h3>
+                <p>
+                  Review the current suite’s requirement links, coverage gaps, priorities, test
+                  categories and validation findings. Inspect whether saved knowledge was reused.
+                  Generate a suite first to enable these actions.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Runtime logs</h3>
+                <p>
+                  Search using a request reference ID and choose a Status filter. The filter applies
+                  to the loaded entries, up to 100 per request. Scroll through the logs and expand
+                  available event or technical details. Clear the search field and search again to
+                  return to recent logs.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Documentation</h3>
+                <p>
+                  Use this guide for daily tasks. Deployment planning documents and the API
+                  reference are available further down this page.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Profile and appearance</h3>
+                <p>
+                  Use the profile menu to sign out. Administrators can open Manage users. The
+                  appearance control offers light, dark and system themes.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="agents">
+            <div class="section-heading">
+              <span class="section-number">03</span>
+              <div>
+                <h2>Agents and responsibilities</h2>
+                <p>
+                  Each agent has a specific job. Some use AI; others use application rules, stored
+                  data or a test runner. They run when their task is needed, so the list does not
+                  mean every agent runs for every request.
+                </p>
+              </div>
+            </div>
+            <div class="callout">
+              <span>The usual generation flow</span>
+              <p>
+                Prepare the input → apply business rules → look for a saved match → plan and write
+                tests → check the design → store validated results. Export and execution are
+                separate actions.
+              </p>
+            </div>
+            <div class="agents" id="agent-list">
+              <article class="card loading-card">Loading registered agents…</article>
+            </div>
+          </section>
+          <section class="section" id="inputs">
+            <div class="section-heading">
+              <span class="section-number">04</span>
+              <div>
+                <h2>What you can provide</h2>
+                <p>Clear requirements give the agents a better basis for useful tests.</p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Requirement text</h3>
+                <p>
+                  Enter 10–30,000 characters. Describe the feature, valid and invalid behaviour, and
+                  expected outcomes. Supply approved request examples and expected values when exact
+                  API or calculation checks are needed.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Documents and images</h3>
+                <p>
+                  Upload DOCX, text-based PDF, XLSX, Pages, Numbers, PNG or JPEG, up to 15 MB. Image
+                  text extraction requires Tesseract on the application host. Scanned PDFs need text
+                  recognition first; export unreadable Pages or Numbers files to PDF or XLSX.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Jira stories</h3>
+                <p>
+                  Use + → Link Jira ticket, enter an issue key or browse URL, then choose Connect.
+                  The application imports the summary, description and available acceptance criteria
+                  for you to review.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Business rules</h3>
+                <p>
+                  Shared rules apply to generation across this workspace. Project profiles add
+                  domain-specific guidance. Rule IDs and business constraints depend on your
+                  project; quotation-specific rules are not universal requirements.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="test-standard">
+            <div class="section-heading">
+              <span class="section-number">05</span>
+              <div>
+                <h2>How to review generated tests</h2>
+                <p>Check the business meaning as well as the automated validation result.</p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Manual tests</h3>
+                <p>
+                  Review the objective, preconditions, actions and expected result for each step.
+                  Confirm that a person could perform the test and judge its outcome. Check any
+                  supplied test data.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Automation scenarios</h3>
+                <p>
+                  Check the Given / When / Then scenario and any example rows. Confirm that the
+                  scenario describes observable behaviour and uses the correct inputs. Generated
+                  code still needs review and target configuration before execution.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Coverage and validation</h3>
+                <p>
+                  Traceability links show which requirements a test is intended to cover. The
+                  Quality Gate checks structure and applicable design rules. Inspect errors,
+                  warnings and missing coverage before accepting the suite.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Review and acceptance</h3>
+                <p>
+                  Review lets you submit comments and regenerate an individual case. Approve
+                  selected records acceptance under the reviewer name you enter. Downloads become
+                  available according to suite validation and output type; human acceptance is a
+                  separate record.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="outputs">
+            <div class="section-heading">
+              <span class="section-number">06</span>
+              <div>
+                <h2>View, download and share</h2>
+                <p>Available actions depend on the generated suite.</p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Manual suite downloads</h3>
+                <p>
+                  Validated manual-only suites can be downloaded as Excel, CSV, PDF or JSON.
+                  Spreadsheet and document downloads are disabled when the suite contains automation
+                  cases.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Automation files</h3>
+                <p>
+                  View or download the Gherkin feature, step definitions or full automation pack.
+                  Choose C#, Java, Python, JavaScript, TypeScript or Ruby. C# packs use ReqnRoll,
+                  which connects Gherkin steps to C# code.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Full automation packs</h3>
+                <p>
+                  Packs include scenarios, bindings, supporting implementations, input data and
+                  framework configuration. Review the files, supply the target settings and run the
+                  pack in its configured environment.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Jira and accepted outputs</h3>
+                <p>
+                  Use the Jira action to attach selected tests to the chosen issue. Approve selected
+                  stores acceptance artifacts and shows a receipt. These actions require the
+                  relevant fields and, for Jira, a configured connection.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="execution">
+            <div class="section-heading">
+              <span class="section-number">07</span>
+              <div>
+                <h2>Understand execution results</h2>
+                <p>
+                  The Run BDD tests button runs the repository’s configured C# suite. It does not
+                  execute the automation pack you just generated.
+                </p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Read the dashboard</h3>
+                <p>
+                  Recorded runs, latest pass rate, failures and duration come from repository BDD
+                  history. The selected-run chart shows passed, failed and not-run counts when
+                  results are available. A missing result is shown as unavailable.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Run generated tests</h3>
+                <p>
+                  Download and review the generated pack, configure its target URL and required
+                  credentials, and run it using its framework. For a C# pack, run
+                  <code>dotnet test Automation.csproj</code> from the extracted pack directory.
+                  Inspect the discovered scenarios and execution results.
+                </p>
+              </article>
+            </div>
+            <div class="callout">
+              <span>Use the right evidence</span>
+              <p>
+                A repository BDD pass describes that repository run. It does not demonstrate that a
+                generated suite passed against your target application.
+              </p>
+            </div>
+          </section>
+          <section class="section" id="architecture">
+            <div class="section-heading">
+              <span class="section-number">08</span>
+              <div>
+                <h2>How the application works</h2>
+                <p>
+                  This is useful background when setting up the application or investigating a
+                  problem.
+                </p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>AI generation</h3>
+                <p>
+                  The LLM selector shows models available through connected accounts. Automatic
+                  fallback, when selected, tries Copilot, OpenAI, Gemini and Codex in that order.
+                  Model availability depends on the deployment and account permissions.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Rules and stored knowledge</h3>
+                <p>
+                  Agent instructions and project profiles guide generation. Application code checks
+                  outputs and manages exports. Validated exact-match suites can be stored and
+                  rechecked for reuse; accepted output artifacts have a separate approval record.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Data handling</h3>
+                <p>
+                  Document text extraction happens on the application host. Requirements and
+                  relevant context are passed to the selected AI provider for generation. Shared
+                  rules and saved records belong to the deployed workspace.
+                </p>
+              </article>
+              <article class="card">
+                <h3>When something fails</h3>
+                <p>
+                  Read the message, copy its reference ID and search Runtime logs. If no models are
+                  available, use Refresh models and check the connected account. If document
+                  extraction fails, try a supported text-based export. Log entries are held in
+                  memory and clear when the application restarts.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="company-documents">
+            <div class="section-heading">
+              <span class="section-number">09</span>
+              <div>
+                <span class="eyebrow">Organizational readiness</span>
+                <h2>Deployment planning documents</h2>
+                <p>
+                  These documents cover prerequisites, solution requirements and rollout tasks. They
+                  describe deployment planning; use this guide for the current application screens.
+                </p>
+              </div>
+            </div>
+            <div class="doc-tabs" role="tablist" aria-label="Company implementation documents">
+              <button class="doc-tab active" type="button" data-document="prerequisites" role="tab">
+                Project prerequisites</button
+              ><button class="doc-tab" type="button" data-document="requirements" role="tab">
+                Solution requirements</button
+              ><button class="doc-tab" type="button" data-document="checklist" role="tab">
+                Implementation checklist
+              </button>
+            </div>
+            <article class="document-reader" id="document-reader" aria-live="polite">
+              <p class="doc-loading">Loading company prerequisites…</p>
+            </article>
+          </section>
+
+          <section class="section" id="integrations">
+            <div class="section-heading">
+              <span class="section-number">10</span>
+              <div>
+                <h2>Integrations and API</h2>
+                <p>
+                  For developers and administrators. The API reference lists the complete request
+                  fields and responses.
+                </p>
+              </div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Generation and agent registry</h3>
+                <p>
+                  <code>POST /api/agent/run</code> generates from text;
+                  <code>POST /api/generate/document</code> accepts a document.
+                  <code>GET /api/agents</code> lists registered roles. Registration does not verify
+                  model credentials or execution readiness.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Code and acceptance</h3>
+                <p>
+                  <code>POST /api/step-definitions/bindings</code> generates bindings in a selected
+                  language. <code>POST /api/step-definitions/reqnroll</code> provides C# generation.
+                  <code>POST /api/output/accept</code> records selected-case acceptance.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Execution and logs</h3>
+                <p>
+                  <code>POST /api/automation/run</code> runs repository BDD tests.
+                  <code>GET /api/automation/history</code> returns their history.
+                  <code>GET /api/logs</code> returns recent entries or entries for a reference ID.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Additional API workflows</h3>
+                <p>
+                  The APIs also support test-data helpers, supplied-result summaries, defect drafts
+                  and metrics. Formal requirement versions, baselines, cycles and audit records are
+                  available under <code>/api/stlc</code>; these management forms are not part of the
+                  Quality Lifecycle page.
+                </p>
+              </article>
+            </div>
+            <div class="api-cta">
+              <div>
+                <h3>Need setup details or request fields?</h3>
+                <p>
+                  Open the API reference. Jira actions require configured Jira credentials and issue
+                  permissions; automation requires its runner and target configuration.
+                </p>
+              </div>
+              <a class="button primary" href="/docs">Open API Docs ↗</a>
+            </div>
+          </section>
+        </article>
+      </main>
     </div>
-    <button class="theme-gear" id="theme-gear" type="button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="theme-menu"><span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span></button>
-  </div></div></aside>
 
-    <main class="workspace docs-main">
-      <header class="topbar"><div><div class="eyebrow">Product guide</div><h1>Documentation</h1></div><div class="top-actions"><a class="api-link" href="/docs">API reference ↗</a>          <div class="profile-menu">
-            <button class="avatar" id="profile-toggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-panel">?</button>
-            <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
-              <div><span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true">?</span><p><strong id="profile-name">User</strong><small id="profile-role">Workspace account</small></p></div>
-              <a class="profile-signout hidden" id="manage-users" href="/admin/users">Manage users</a>
-              <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
-            </section>
-          </div></div></header>
-
-<article class="content">
-<header class="hero" id="overview"><div class="hero-copy"><span class="eyebrow">Application guide</span><h1>Turn requirements into tests you can review and use.</h1><p>AI Quality Lifecycle helps you create manual test cases and automation scenarios, check requirement coverage, and export test files. Start with a requirement, document or Jira story.</p><div class="actions"><a class="button primary" href="/">Open Quality workspace →</a><a class="button secondary" href="#workflow">Get started</a></div></div><aside class="hero-card"><span class="card-label">Key terms</span><h2>What the words mean</h2><p><strong>Test suite:</strong> a collection of test cases.</p><p><strong>Agent:</strong> a component with one job, such as preparing input or checking tests.</p><p><strong>BDD / Gherkin:</strong> scenarios written as Given (setup), When (action) and Then (expected result).</p><p><strong>Quality Gate:</strong> automated checks on the test design.</p></aside></header>
-<div class="callout"><span>Design quality and test results are different</span><p>A Quality Gate pass means the generated test design passed the application’s checks. A test passes execution only after it runs against an application and its expected result is confirmed.</p></div>
-<section class="section" id="workflow"><div class="section-heading"><span class="section-number">01</span><div><h2>Create your first test suite</h2><p>Follow these steps in Quality workspace.</p></div></div><ol class="guide-steps">
-<li><strong>Add the requirement.</strong> Paste text, or use the + control to upload a document or link a Jira issue. Include the expected behaviour and acceptance criteria.</li>
-<li><strong>Check shared rules.</strong> Open Business requirements &amp; rules. Add one rule per line as <code>BR-ID: description</code>. These rules are shared across the workspace; generation saves the editor first.</li>
-<li><strong>Choose the output.</strong> Select Manual, Automation (BDD / Gherkin), or Both. For manual tests, choose API, UI, performance or database testing. Select an available LLM (the AI model used for generation).</li>
-<li><strong>Generate and review.</strong> Inspect each test’s purpose, steps, expected results and requirement links. Use Review to request a change to an individual case. Check any Quality Gate findings.</li>
-<li><strong>Approve and export.</strong> Select the reviewed cases, enter your reviewer name and choose Approve selected to record acceptance. Use View or Download for the available file formats. Jira attachment is a separate action.</li>
-</ol></section><section class="section" id="use-cases"><div class="section-heading"><span class="section-number">02</span><div><h2>Where to find each feature</h2><p>Use the navigation to move between the application’s main pages.</p></div></div><div class="grid two"><article class="card"><h3>Quality workspace</h3><p>Create and review suites. View generated files, download artifacts, approve selected cases or attach them to Jira.</p></article><article class="card"><h3>Progress &amp; execution</h3><p>Run the repository BDD suite and inspect its recorded outcomes. Click a run in Run history to select its results. Search by run or project, filter by status, and scroll within the history. Expand a run for details and available report downloads.</p></article><article class="card"><h3>Quality Lifecycle</h3><p>Review the current suite’s requirement links, coverage gaps, priorities, test categories and validation findings. Inspect whether saved knowledge was reused. Generate a suite first to enable these actions.</p></article><article class="card"><h3>Runtime logs</h3><p>Search using a request reference ID and choose a Status filter. The filter applies to the loaded entries, up to 100 per request. Scroll through the logs and expand available event or technical details. Clear the search field and search again to return to recent logs.</p></article><article class="card"><h3>Documentation</h3><p>Use this guide for daily tasks. Deployment planning documents and the API reference are available further down this page.</p></article><article class="card"><h3>Profile and appearance</h3><p>Use the profile menu to sign out. Administrators can open Manage users. The appearance control offers light, dark and system themes.</p></article></div></section><section class="section" id="agents"><div class="section-heading"><span class="section-number">03</span><div><h2>Agents and responsibilities</h2><p>Each agent has a specific job. Some use AI; others use application rules, stored data or a test runner. They run when their task is needed, so the list does not mean every agent runs for every request.</p></div></div><div class="callout"><span>The usual generation flow</span><p>Prepare the input → apply business rules → look for a saved match → plan and write tests → check the design → store validated results. Export and execution are separate actions.</p></div><div class="agents" id="agent-list"><article class="card loading-card">Loading registered agents…</article></div></section><section class="section" id="inputs"><div class="section-heading"><span class="section-number">04</span><div><h2>What you can provide</h2><p>Clear requirements give the agents a better basis for useful tests.</p></div></div><div class="grid two"><article class="card"><h3>Requirement text</h3><p>Enter 10–30,000 characters. Describe the feature, valid and invalid behaviour, and expected outcomes. Supply approved request examples and expected values when exact API or calculation checks are needed.</p></article><article class="card"><h3>Documents and images</h3><p>Upload DOCX, text-based PDF, XLSX, Pages, Numbers, PNG or JPEG, up to 15 MB. Image text extraction requires Tesseract on the application host. Scanned PDFs need text recognition first; export unreadable Pages or Numbers files to PDF or XLSX.</p></article><article class="card"><h3>Jira stories</h3><p>Use + → Link Jira ticket, enter an issue key or browse URL, then choose Connect. The application imports the summary, description and available acceptance criteria for you to review.</p></article><article class="card"><h3>Business rules</h3><p>Shared rules apply to generation across this workspace. Project profiles add domain-specific guidance. Rule IDs and business constraints depend on your project; quotation-specific rules are not universal requirements.</p></article></div></section><section class="section" id="test-standard"><div class="section-heading"><span class="section-number">05</span><div><h2>How to review generated tests</h2><p>Check the business meaning as well as the automated validation result.</p></div></div><div class="grid two"><article class="card"><h3>Manual tests</h3><p>Review the objective, preconditions, actions and expected result for each step. Confirm that a person could perform the test and judge its outcome. Check any supplied test data.</p></article><article class="card"><h3>Automation scenarios</h3><p>Check the Given / When / Then scenario and any example rows. Confirm that the scenario describes observable behaviour and uses the correct inputs. Generated code still needs review and target configuration before execution.</p></article><article class="card"><h3>Coverage and validation</h3><p>Traceability links show which requirements a test is intended to cover. The Quality Gate checks structure and applicable design rules. Inspect errors, warnings and missing coverage before accepting the suite.</p></article><article class="card"><h3>Review and acceptance</h3><p>Review lets you submit comments and regenerate an individual case. Approve selected records acceptance under the reviewer name you enter. Downloads become available according to suite validation and output type; human acceptance is a separate record.</p></article></div></section><section class="section" id="outputs"><div class="section-heading"><span class="section-number">06</span><div><h2>View, download and share</h2><p>Available actions depend on the generated suite.</p></div></div><div class="grid two"><article class="card"><h3>Manual suite downloads</h3><p>Validated manual-only suites can be downloaded as Excel, CSV, PDF or JSON. Spreadsheet and document downloads are disabled when the suite contains automation cases.</p></article><article class="card"><h3>Automation files</h3><p>View or download the Gherkin feature, step definitions or full automation pack. Choose C#, Java, Python, JavaScript, TypeScript or Ruby. C# packs use ReqnRoll, which connects Gherkin steps to C# code.</p></article><article class="card"><h3>Full automation packs</h3><p>Packs include scenarios, bindings, supporting implementations, input data and framework configuration. Review the files, supply the target settings and run the pack in its configured environment.</p></article><article class="card"><h3>Jira and accepted outputs</h3><p>Use the Jira action to attach selected tests to the chosen issue. Approve selected stores acceptance artifacts and shows a receipt. These actions require the relevant fields and, for Jira, a configured connection.</p></article></div></section><section class="section" id="execution"><div class="section-heading"><span class="section-number">07</span><div><h2>Understand execution results</h2><p>The Run BDD tests button runs the repository’s configured C# suite. It does not execute the automation pack you just generated.</p></div></div><div class="grid two"><article class="card"><h3>Read the dashboard</h3><p>Recorded runs, latest pass rate, failures and duration come from repository BDD history. The selected-run chart shows passed, failed and not-run counts when results are available. A missing result is shown as unavailable.</p></article><article class="card"><h3>Run generated tests</h3><p>Download and review the generated pack, configure its target URL and required credentials, and run it using its framework. For a C# pack, run <code>dotnet test Automation.csproj</code> from the extracted pack directory. Inspect the discovered scenarios and execution results.</p></article></div><div class="callout"><span>Use the right evidence</span><p>A repository BDD pass describes that repository run. It does not demonstrate that a generated suite passed against your target application.</p></div></section><section class="section" id="architecture"><div class="section-heading"><span class="section-number">08</span><div><h2>How the application works</h2><p>This is useful background when setting up the application or investigating a problem.</p></div></div><div class="grid two"><article class="card"><h3>AI generation</h3><p>The LLM selector shows models available through connected accounts. Automatic fallback, when selected, tries Copilot, OpenAI, Gemini and Codex in that order. Model availability depends on the deployment and account permissions.</p></article><article class="card"><h3>Rules and stored knowledge</h3><p>Agent instructions and project profiles guide generation. Application code checks outputs and manages exports. Validated exact-match suites can be stored and rechecked for reuse; accepted output artifacts have a separate approval record.</p></article><article class="card"><h3>Data handling</h3><p>Document text extraction happens on the application host. Requirements and relevant context are passed to the selected AI provider for generation. Shared rules and saved records belong to the deployed workspace.</p></article><article class="card"><h3>When something fails</h3><p>Read the message, copy its reference ID and search Runtime logs. If no models are available, use Refresh models and check the connected account. If document extraction fails, try a supported text-based export. Log entries are held in memory and clear when the application restarts.</p></article></div></section>        <section class="section" id="company-documents">
-          <div class="section-heading"><span class="section-number">09</span><div><span class="eyebrow">Organizational readiness</span><h2>Deployment planning documents</h2><p>These documents cover prerequisites, solution requirements and rollout tasks. They describe deployment planning; use this guide for the current application screens.</p></div></div>
-          <div class="doc-tabs" role="tablist" aria-label="Company implementation documents"><button class="doc-tab active" type="button" data-document="prerequisites" role="tab">Project prerequisites</button><button class="doc-tab" type="button" data-document="requirements" role="tab">Solution requirements</button><button class="doc-tab" type="button" data-document="checklist" role="tab">Implementation checklist</button></div>
-          <article class="document-reader" id="document-reader" aria-live="polite"><p class="doc-loading">Loading company prerequisites…</p></article>
-        </section>
-
-<section class="section" id="integrations"><div class="section-heading"><span class="section-number">10</span><div><h2>Integrations and API</h2><p>For developers and administrators. The API reference lists the complete request fields and responses.</p></div></div><div class="grid two"><article class="card"><h3>Generation and agent registry</h3><p><code>POST /api/agent/run</code> generates from text; <code>POST /api/generate/document</code> accepts a document. <code>GET /api/agents</code> lists registered roles. Registration does not verify model credentials or execution readiness.</p></article><article class="card"><h3>Code and acceptance</h3><p><code>POST /api/step-definitions/bindings</code> generates bindings in a selected language. <code>POST /api/step-definitions/reqnroll</code> provides C# generation. <code>POST /api/output/accept</code> records selected-case acceptance.</p></article><article class="card"><h3>Execution and logs</h3><p><code>POST /api/automation/run</code> runs repository BDD tests. <code>GET /api/automation/history</code> returns their history. <code>GET /api/logs</code> returns recent entries or entries for a reference ID.</p></article><article class="card"><h3>Additional API workflows</h3><p>The APIs also support test-data helpers, supplied-result summaries, defect drafts and metrics. Formal requirement versions, baselines, cycles and audit records are available under <code>/api/stlc</code>; these management forms are not part of the Quality Lifecycle page.</p></article></div><div class="api-cta"><div><h3>Need setup details or request fields?</h3><p>Open the API reference. Jira actions require configured Jira credentials and issue permissions; automation requires its runner and target configuration.</p></div><a class="button primary" href="/docs">Open API Docs ↗</a></div></section></article>
-    </main>
-  </div>
-
-  <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-  <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script><script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/documentation.js?v=20260912-clear-guide" defer></script>
-</body>
+    <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
+    <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
+    <script src="/static/scripts/documentation.js?v=20260912-planning-documents" defer></script>
+  </body>
 </html>

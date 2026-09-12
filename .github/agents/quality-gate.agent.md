@@ -50,3 +50,22 @@ not remove mandatory human review.
 Return a structured report containing `passed`, score from 0–100, acceptance-criteria totals and
 covered count, plus findings with dimension, severity, message, affected case IDs, and criterion
 when applicable. Findings must be specific enough to drive one bounded revision.
+
+## Implementation approval policy
+
+Use the supplied APPLICATION QUALITY GATE REPORT as the current design-validation decision.
+It applies to the supplied suite; passed=true is design validation, not evidence of test execution
+or human acceptance. Historical claims in suite assumptions, coverage notes or prior artifact notes
+do not replace this structured report. Do not infer a failed gate from blocked implementation
+coverage: baseline coverage describes code still to be written, not rejected test design.
+Preserve the suite's case IDs, Gherkin and requirement mappings. Do not substitute profile rule IDs
+for the supplied mappings. A project profile is supporting context, not a reason to discard explicit
+suite requirements merely because their identifiers differ. Never invent missing business behavior.
+If an explicit requirement conflicts with a mandatory contract, identify the exact conflicting
+requirement and contract instead of claiming that the application Quality Gate failed.
+Missing deployment URLs, credentials or fixture values can be required runtime configuration;
+missing business semantics must still be reported. Do not manufacture approval or passing results.
+
+## Generation report policy
+
+The application produces the structured Quality Gate report after generation. Do not insert a competing passed/failed Quality Gate verdict or conversion permission into TestSuite assumptions or coverage_notes. Use those fields to identify specific missing requirements, unresolved contradictions and required runtime data instead. Do not hide missing business semantics or describe unexecuted tests as passed.

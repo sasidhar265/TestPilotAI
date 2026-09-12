@@ -328,7 +328,7 @@ class OrganizationHttpMiddleware:
         session = cookie.get(SESSION_COOKIE)
         if session is not None and valid_session(session.value, self.settings):
             return True
-        if not path.startswith("/api/"):
+        if not path.startswith("/api/") and path not in {"/docs", "/openapi.json"}:
             return not self.settings.browser_login_enabled
         if not expected:
             return not self.settings.browser_login_enabled
@@ -439,7 +439,7 @@ class OrganizationHttpMiddleware:
                     b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
                     b"script-src 'self'; style-src 'self' 'unsafe-inline'"
                 )
-                if not self.settings.is_production and scope.get("path") in {"/docs", "/redoc"}:
+                if not self.settings.is_production and scope.get("path") == "/redoc":
                     content_security_policy = (
                         b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
                         b"form-action 'self'; object-src 'none'; img-src 'self' data:; "

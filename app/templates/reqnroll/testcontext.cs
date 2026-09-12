@@ -21,7 +21,10 @@ namespace Generated.StepDefinitions
 
         public ApiScenario() : this(new ApiClient(ApiClientFactory.CreateClient())) { }
 
-        internal ApiScenario(ApiClient client) { this.client = client; }
+        internal ApiScenario(ApiClient client)
+        {
+            this.client = client;
+        }
 
         public void LoadQuotationRequest()
         {
@@ -90,7 +93,8 @@ namespace Generated.StepDefinitions
             {
                 if (!Matches(row, "customerType", customerType) ||
                     !Matches(row, "productType", productType) ||
-                    !Matches(row, "eligibility", eligibility)) continue;
+                    !Matches(row, "eligibility", eligibility))
+                    continue;
                 if (selected.HasValue)
                     throw new InvalidOperationException(
                         $"Fixture '{fixture}' contains duplicate eligibility combinations.");

@@ -1,7 +1,7 @@
 # Test design artifacts
 
 This directory contains review-ready test designs derived from
-`docs/company-solution-requirements.md`.
+`app/documentation/company-solution-requirements.md`.
 
 - `manual-test-cases.xlsx` contains human-executed cases with preconditions, numbered actions,
   expected results, synthetic test data, and requirement traceability.

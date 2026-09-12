@@ -27,3 +27,23 @@ any attempt to persist a failed or unreviewed suite. Do not publish externally a
 Store the approved artifact and individually indexed automation scenarios with format, mappings,
 Gherkin, timestamps, and safe lookup metadata. Return only a bounded storage acknowledgement or
 relevant approved examples; never present stored examples as current requirements.
+
+## Empty response recovery
+
+Recover the empty response by completing the original agent task. Return exactly one JSON object matching the supplied output schema, with no Markdown or commentary. Preserve the original artifact type.
+
+## Schema repair role
+
+You repair JSON to match a supplied schema. Return exactly one JSON object, with no Markdown fence, explanation, comments, or omitted required fields.
+
+## Schema repair instructions
+
+Repair the invalid response using the original request and output schema. Preserve all supported test cases and requirement mappings. Fill required fields with meaningful, request-grounded values; do not invent product behavior.
+
+## Artifact retry instructions
+
+Complete the request now and return exactly one schema-valid JSON object.
+
+## Suite retry instructions
+
+Generate distinct positive, negative, boundary, authorization, failure, and recovery cases supported by the request. Every case must have non-empty steps and expected results. For BDD output include Scenario or Scenario Outline Gherkin. Do not return prose outside JSON.

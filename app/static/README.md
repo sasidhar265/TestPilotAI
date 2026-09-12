@@ -7,9 +7,9 @@ without learning a framework first.
 
 Each webpage has three matching files:
 
-| Page | Structure | Appearance | Behaviour |
-| --- | --- | --- | --- |
-| Test Designer | `index.html` | `styles/index.css` | `scripts/index.js` |
+| Page              | Structure            | Appearance                 | Behaviour                  |
+| ----------------- | -------------------- | -------------------------- | -------------------------- |
+| Test Designer     | `index.html`         | `styles/index.css`         | `scripts/index.js`         |
 | Application Guide | `documentation.html` | `styles/documentation.css` | `scripts/documentation.js` |
 
 Read them from left to right:
@@ -27,3 +27,8 @@ the `/static` route configured in `app/main.py`.
 The JavaScript calls backend URLs beginning with `/api/`. Keeping those URLs in
 the script makes it easy to trace a button click from the browser to the
 corresponding FastAPI route.
+
+The OpenAPI reference at `/docs` uses `api-docs.html`, `scripts/api-docs.js`, and
+`styles/api-docs.css`. Swagger UI assets and their license are bundled under
+`vendor/swagger-ui/` so the viewer works without CDN access. The schema remains at
+`/openapi.json`; both routes use the application authentication checks in every environment.

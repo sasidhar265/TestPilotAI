@@ -28,3 +28,14 @@ an inferred domain convention into an authoritative rule.
 Provide the downstream generator with preserved rule IDs and wording, identified conflicts, and
 missing decisions. Ensure applicable case mappings use `acceptance_criteria_covered`; record
 unresolved conflicts in suite assumptions and coverage notes rather than choosing silently.
+
+## Shared business rules
+
+Edit the Markdown bullets between the markers below, or use the workspace rules editor.
+Use `- BR-ID: description` for each approved rule; indent continuation lines by two spaces.
+Keep agent guidance and training examples outside this section. An empty section means there
+are no shared rules. The editor replaces only the marked section and preserves this guidance.
+
+<!-- shared-business-rules:start -->
+
+<!-- shared-business-rules:end -->

@@ -70,7 +70,9 @@ Run with:
 
 ```bash
 dotnet test automation/QualityLifecycle.Automation.csproj --results-directory automation/TestResults/Reports
-``` Live workspace Allure HTML reports now also go into
+```
+
+Live workspace Allure HTML reports now also go into
 `automation/TestResults/Reports`; old report links still resolve to the earlier storage location.
 Persist this directory on deployed hosts to retain new reports across redeployments.
 

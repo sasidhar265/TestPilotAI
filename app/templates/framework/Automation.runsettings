@@ -1,4 +1,10 @@
 <RunSettings>
-  <RunConfiguration><ResultsDirectory>../TestResults/Reports</ResultsDirectory></RunConfiguration>
-  <LoggerRunSettings><Loggers><Logger friendlyName="trx" enabled="True" /></Loggers></LoggerRunSettings>
+  <RunConfiguration>
+    <ResultsDirectory>../TestResults/Reports</ResultsDirectory>
+  </RunConfiguration>
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="trx" enabled="True" />
+    </Loggers>
+  </LoggerRunSettings>
 </RunSettings>

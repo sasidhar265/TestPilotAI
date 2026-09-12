@@ -52,12 +52,12 @@ manual test, exploratory, and usability. Ambiguous or neutral requests fan out t
    gated immediately after generation; both manual and automation output receive one
    findings-driven revision and cannot proceed if the revised suite still fails.
 10. `ContextConverterAgent` accepts only a passing validation report and produces Xray-oriented
-   CSV, Excel, JSON, or Gherkin `.feature` interchange files.
+    CSV, Excel, JSON, or Gherkin `.feature` interchange files.
 11. `OutputAgent` stores converted artifacts and exposes relevant approved examples as a bounded
-   organizational knowledge source. This is retrieval-augmented generation, not model training;
-   current business requirements always take precedence over retrieved examples. Feature files
-   are retained as artifacts, while each Scenario or Scenario Outline is also stored as an
-   individually indexed record with its mode, Gherkin, and requirement mappings.
+    organizational knowledge source. This is retrieval-augmented generation, not model training;
+    current business requirements always take precedence over retrieved examples. Feature files
+    are retained as artifacts, while each Scenario or Scenario Outline is also stored as an
+    individually indexed record with its mode, Gherkin, and requirement mappings.
 12. `TestStorageAgent` retrieves and stores validated suites in repository-local SQLite memory.
 13. `ExecutionAgent` validates results supplied by an approved manual or automation run.
 14. `BugReporterAgent` creates review-required defect drafts for failed tests.
@@ -133,11 +133,11 @@ explicit user operation.
 
 ### Shared workspace policies and multi-language artifacts
 
-`workspace/business-rules.json` is the canonical persistent rule store. The rules editor writes
-atomically to it; the business-rules enrichment boundary loads it before generation and knowledge
+`.github/agents/business-rules.agent.md` is the canonical persistent rule store. The rules editor writes
+atomically to its marked Markdown bullet section, preserving surrounding instructions; the business-rules enrichment boundary loads it before generation and knowledge
 lookup. Legacy request-specific rules are still accepted but cannot overwrite a conflicting shared ID.
 `workspace/feature-standards.md` and `workspace/automation-standards.md` are reread rather than cached.
-Feature standards enter generation cache identity without changing review identity. Generated
+Feature standards and agent/profile Markdown enter generation cache identity without changing review identity. Generated
 Gherkin strips tag lines at the model and feature-export boundaries while preserving doc strings.
 
 `MultiLanguageAgent` routes C# through the existing ReqnRoll agent and provides Java, Python,
@@ -159,7 +159,6 @@ Python package discovery explicitly includes only `app` and its regular subpacka
 `workspace/` policy files are copied separately by Docker, so they cannot be mistaken for an
 additional Python namespace package during a clean Render build. Frontend assets and C# templates
 are explicitly included as package data. A clean-context wheel build checks this boundary in CI.
-
 
 ## Automation artifact layout
 

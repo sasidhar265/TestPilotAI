@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  background: #fafafa;
+}
+.api-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  font:
+    16px system-ui,
+    sans-serif;
+}
+.api-header a {
+  color: #174ea6;
+}
+#api-docs-status {
+  margin: 24px;
+  font:
+    16px system-ui,
+    sans-serif;
+}

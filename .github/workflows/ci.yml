@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Upgrade packaging tools
         run: python -m pip install --upgrade 'pip>=26.2' 'setuptools>=83'
       - name: Install
@@ -32,7 +35,7 @@ jobs:
       - name: Lint
         run: ruff check app tests
       - name: Format policy
-        run: ruff format --check app tests
+        run: make format-check
       - name: Type check
         run: mypy app
       - name: Dependency vulnerability audit

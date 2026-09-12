@@ -29,15 +29,15 @@ quality-engineering judgment, executable automation code, or evidence from test 
 
 ## 3. Suggested 10-minute agenda
 
-| Time | Topic | Outcome |
-|---|---|---|
-| 0:00–1:00 | Business problem | Establish the test-design bottleneck |
-| 1:00–2:00 | Architecture and governance | Explain the Copilot-only runtime |
-| 2:00–4:00 | Normal scenario generation | Show concise, structured test coverage |
-| 4:00–7:00 | SpecFlow BDD generation | Show copy-ready scenarios and outlines |
-| 7:00–8:00 | Export and Jira workflow | Demonstrate controlled downstream use |
-| 8:00–9:00 | Security and limitations | Set responsible expectations |
-| 9:00–10:00 | Questions and next steps | Agree potential pilot scope |
+| Time       | Topic                       | Outcome                                |
+| ---------- | --------------------------- | -------------------------------------- |
+| 0:00–1:00  | Business problem            | Establish the test-design bottleneck   |
+| 1:00–2:00  | Architecture and governance | Explain the Copilot-only runtime       |
+| 2:00–4:00  | Normal scenario generation  | Show concise, structured test coverage |
+| 4:00–7:00  | SpecFlow BDD generation     | Show copy-ready scenarios and outlines |
+| 7:00–8:00  | Export and Jira workflow    | Demonstrate controlled downstream use  |
+| 8:00–9:00  | Security and limitations    | Set responsible expectations           |
+| 9:00–10:00 | Questions and next steps    | Agree potential pilot scope            |
 
 ## 4. Presenter preparation
 
@@ -191,18 +191,18 @@ Add Attachments, and Add Comments permissions.
 
 ## 10. Security and governance narrative
 
-| Control | POC implementation |
-|---|---|
-| Approved AI runtime | GitHub Copilot only |
-| Runtime enforcement | Fail-closed registry checks `github-copilot` |
-| Provider fallback | None |
-| Model output | Validated using typed Pydantic contracts |
-| Test data | Prompt requires synthetic data only |
-| Agent tools | Disabled during generation |
-| Workspace mutation | Disabled during generation |
-| Jira publication | Explicit, user-initiated action |
-| Automated tests | External AI and Jira calls are mocked |
-| Secrets | Environment configuration; excluded from source control |
+| Control             | POC implementation                                      |
+| ------------------- | ------------------------------------------------------- |
+| Approved AI runtime | GitHub Copilot only                                     |
+| Runtime enforcement | Fail-closed registry checks `github-copilot`            |
+| Provider fallback   | None                                                    |
+| Model output        | Validated using typed Pydantic contracts                |
+| Test data           | Prompt requires synthetic data only                     |
+| Agent tools         | Disabled during generation                              |
+| Workspace mutation  | Disabled during generation                              |
+| Jira publication    | Explicit, user-initiated action                         |
+| Automated tests     | External AI and Jira calls are mocked                   |
+| Secrets             | Environment configuration; excluded from source control |
 
 Client-specific security, privacy, retention, residency, and acceptable-use requirements must be
 validated against the client's GitHub organization policies before production deployment.

@@ -11,7 +11,9 @@
   font-weight: 750;
 }
 
-.password-field { position: relative; }
+.password-field {
+  position: relative;
+}
 .password-field input {
   width: 100%;
   padding-right: 50px;
@@ -47,9 +49,15 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.password-toggle .eye-closed { display: none; }
-.password-toggle[aria-pressed="true"] .eye-open { display: none; }
-.password-toggle[aria-pressed="true"] .eye-closed { display: block; }
+.password-toggle .eye-closed {
+  display: none;
+}
+.password-toggle[aria-pressed="true"] .eye-open {
+  display: none;
+}
+.password-toggle[aria-pressed="true"] .eye-closed {
+  display: block;
+}
 .forgot-password {
   min-height: auto;
   width: max-content;
@@ -70,13 +78,17 @@
   background: linear-gradient(145deg, #7474ea, #5050c5);
   box-shadow: 0 10px 24px rgba(91, 91, 214, 0.22);
 }
-.auth-overlay.help .error-eyebrow { color: var(--primary); }
+.auth-overlay.help .error-eyebrow {
+  color: var(--primary);
+}
 .auth-overlay.help .auth-dialog-button {
   background: var(--primary);
   box-shadow: 0 9px 24px rgba(91, 91, 214, 0.2);
 }
 
-.dialog-open { overflow: hidden; }
+.dialog-open {
+  overflow: hidden;
+}
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -88,7 +100,9 @@
   backdrop-filter: blur(8px);
   animation: overlay-in 0.18s ease-out;
 }
-.auth-overlay[hidden] { display: none; }
+.auth-overlay[hidden] {
+  display: none;
+}
 .auth-dialog {
   width: min(440px, 100%);
   padding: 30px;
@@ -124,7 +138,9 @@
   font-size: 0.82rem;
   line-height: 1.55;
 }
-.error-eyebrow { color: #cf2f3f; }
+.error-eyebrow {
+  color: #cf2f3f;
+}
 .auth-dialog-button {
   grid-column: 1 / -1;
   justify-content: center;
@@ -132,17 +148,31 @@
   background: #cf2f3f;
   box-shadow: 0 9px 24px rgba(207, 47, 63, 0.2);
 }
-.auth-dialog-button:hover { background: #aa2130; }
+.auth-dialog-button:hover {
+  background: #aa2130;
+}
 
 @keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes dialog-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .auth-overlay,
-  .auth-dialog { animation: none; }
+  .auth-dialog {
+    animation: none;
+  }
 }

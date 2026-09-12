@@ -11,7 +11,10 @@ internal static class Program
 {
     private static void Fails(Action action)
     {
-        try { action(); }
+        try
+        {
+            action();
+        }
         catch (InvalidOperationException) { return; }
         throw new Exception("Expected the assertion or precondition to fail.");
     }
@@ -26,7 +29,8 @@ internal static class Program
         api.LoadFixture("valid");
         await api.SendAsync("POST", "/quotes");
         if (handler.Method != "POST" || handler.Path != "/quotes" ||
-            !handler.Body.Contains("12.30")) throw new Exception("Wrong request sent.");
+            !handler.Body.Contains("12.30"))
+            throw new Exception("Wrong request sent.");
         api.AssertStatus(201);
         api.AssertField("quote.id", "q-1");
         api.AssertFieldPresent("quote.id");
@@ -39,10 +43,13 @@ internal static class Program
         Fails(() => api.AssertDecimal("quote.total", 12.31m));
         api.LoadFixture("valid");
         Fails(() => api.AssertStatus(201)); // Loading a new request clears the prior response.
-        try { await api.SendAsync("POST", "https://other.test/quotes"); }
+        try
+        {
+            await api.SendAsync("POST", "https://other.test/quotes");
+        }
         catch (InvalidOperationException) { goto originRejected; }
         throw new Exception("Cross-origin request was accepted.");
-        originRejected:
+    originRejected:
         handler.Status = HttpStatusCode.BadRequest;
         await api.SendAsync("POST", "/quotes");
         api.AssertStatus(400); // Negative HTTP responses remain available for assertions.
@@ -68,7 +75,8 @@ internal static class Program
         eligibilityStep.Invoke(bindings,
             new object[] { "catalogue", "limited company", "HP", "ineligible" });
         await api.SendAsync("POST", "/quotes");
-        if (!handler.Body.Contains("15.60")) throw new Exception("Wrong eligibility row selected.");
+        if (!handler.Body.Contains("15.60"))
+            throw new Exception("Wrong eligibility row selected.");
         Fails(() => api.LoadEligibilityFixture("catalogue", "private individual", "PCP", "unknown"));
         Fails(() => api.AssertStatus(400));
         Fails(() => api.SendAsync("POST", "/quotes").GetAwaiter().GetResult());

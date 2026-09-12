@@ -114,9 +114,9 @@ app = FastAPI(
     title="Quality Lifecycle Studio API",
     version="0.1.0",
     description="Governed multi-agent conversion of product requirements into validated tests.",
-    docs_url=None if settings_at_startup.is_production else "/docs",
+    docs_url=None,
     redoc_url=None if settings_at_startup.is_production else "/redoc",
-    openapi_url=None if settings_at_startup.is_production else "/openapi.json",
+    openapi_url="/openapi.json",
 )
 app.add_middleware(
     OrganizationHttpMiddleware,
@@ -253,15 +253,15 @@ class LoginRequest(BaseModel):
 COMPANY_DOCUMENTS = {
     "prerequisites": (
         "Company project prerequisites",
-        Path(__file__).parent.parent / "docs" / "company-project-prerequisites.md",
+        Path(__file__).parent / "documentation" / "company-project-prerequisites.md",
     ),
     "requirements": (
         "Company solution requirements",
-        Path(__file__).parent.parent / "docs" / "company-solution-requirements.md",
+        Path(__file__).parent / "documentation" / "company-solution-requirements.md",
     ),
     "checklist": (
         "Company implementation checklist",
-        Path(__file__).parent.parent / "docs" / "company-implementation-checklist.md",
+        Path(__file__).parent / "documentation" / "company-implementation-checklist.md",
     ),
 }
 
@@ -307,6 +307,14 @@ async def index() -> FileResponse:
     return FileResponse(INDEX, headers=HTML_HEADERS)
 
 
+@app.get("/docs", include_in_schema=False)
+async def api_documentation() -> FileResponse:
+    return FileResponse(
+        DOCUMENTATION.with_name("api-docs.html"),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 @app.get("/documentation", include_in_schema=False)
 async def documentation() -> FileResponse:
     return FileResponse(DOCUMENTATION, headers=HTML_HEADERS)
@@ -323,7 +331,16 @@ async def company_document(document_id: str) -> CompanyDocument:
     if document is None:
         raise HTTPException(status_code=404, detail="Unknown company document")
     title, path = document
-    return CompanyDocument(id=document_id, title=title, content=path.read_text(encoding="utf-8"))
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError as error:
+        logger.error("company_document_unavailable document_id=%s", document_id)
+        raise HTTPException(
+            status_code=503,
+            detail="This planning document is unavailable in this deployment. "
+            "Contact the administrator to restore the documentation files.",
+        ) from error
+    return CompanyDocument(id=document_id, title=title, content=content)
 
 
 @app.get("/api/health")

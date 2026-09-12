@@ -9,6 +9,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
+from app.agent_instructions import load_agent_section
 from app.config import Settings
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
@@ -191,10 +192,7 @@ class CopilotAgentRunner:
             )
             content = await self.invoke(
                 instructions=(
-                    instructions
-                    + "\nRecover the empty response by completing the original agent task. "
-                    "Return exactly one JSON object matching the supplied output schema, "
-                    "with no Markdown or commentary. Preserve the original artifact type."
+                    instructions + load_agent_section("output", "Empty response recovery")
                 ),
                 prompt=_compact_empty_retry_prompt(prompt),
                 timeout_error=definition.timeout_error,
@@ -220,10 +218,7 @@ class CopilotAgentRunner:
                 prompt, content or "", definition.output_model, first_paths
             )
             repaired = await self.invoke(
-                instructions=(
-                    "You repair JSON to match a supplied schema. Return exactly one JSON object, "
-                    "with no Markdown fence, explanation, comments, or omitted required fields."
-                ),
+                instructions=(load_agent_section("output", "Schema repair role")),
                 prompt=repair_prompt,
                 timeout_error=definition.timeout_error,
                 empty_error=definition.empty_error,
@@ -301,10 +296,8 @@ def _schema_repair_prompt(
     schema = json.dumps(output_model.model_json_schema(), separators=(",", ":"))
     request_context = original_prompt.partition("\n\nOUTPUT SCHEMA\n")[0]
     return (
-        "Repair the invalid response using the original request and output schema. Preserve all "
-        "supported test cases and requirement mappings. Fill required fields with meaningful, "
-        "request-grounded values; do not invent product behavior.\n\n"
-        f"INVALID FIELD LOCATIONS\n{json.dumps(validation_paths)}\n\n"
+        load_agent_section("output", "Schema repair instructions")
+        + f"INVALID FIELD LOCATIONS\n{json.dumps(validation_paths)}\n\n"
         f"ORIGINAL REQUEST\n{request_context}\n\n"
         f"INVALID RESPONSE\n{invalid_content}\n\n"
         f"CANONICAL OUTPUT SCHEMA\n{schema}"
@@ -316,14 +309,13 @@ def _compact_empty_retry_prompt(original_prompt: str) -> str:
     request, separator, schema = original_prompt.partition("\n\nOUTPUT SCHEMA\n")
     if not separator:
         return (
-            f"{original_prompt}\n\nRETRY REQUIREMENT\nComplete the request now and return "
-            "exactly one schema-valid JSON object."
+            original_prompt
+            + "\n\nRETRY REQUIREMENT\n"
+            + load_agent_section("output", "Artifact retry instructions")
         )
     return (
-        f"{request}\n\nRECOVERY REQUIREMENTS\n"
-        "Generate distinct positive, negative, boundary, authorization, failure, and recovery "
-        "cases supported by the request. Every case must have non-empty steps and expected "
-        "results. For BDD output include Scenario or Scenario Outline Gherkin. Do not return "
-        "prose outside JSON.\n\n"
-        f"OUTPUT SCHEMA\n{schema}"
+        request
+        + "\n\nRECOVERY REQUIREMENTS\n"
+        + load_agent_section("output", "Suite retry instructions")
+        + f"\n\nOUTPUT SCHEMA\n{schema}"
     )

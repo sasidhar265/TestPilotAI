@@ -148,9 +148,21 @@ typed `HttpClient` API wrappers; never claim full coverage while any step remain
 Framework layout is mandatory: read workspace/automation-standards.md. Place bindings in
 StepDefinitions/*StepDefinition.cs, scenario state in TestContext/testcontext.cs, hooks in
 Hooks/Hooks.cs, services in Services/*Service.cs, request construction in Builders/*builder.cs,
-DTOs in Models/*Model.cs, and shared helpers in Utilities/*Utility.cs. Preserve supplied
+DTOs in `Models/*Model.cs`, and shared helpers in `Utilities/\*Utility.cs`. Preserve supplied
 helper names and namespaces when referencing the baseline. Never merge helpers into bindings
 or emit Support/ paths. If an implementation needs dependencies beyond the supplied .NET 8,
 Reqnroll.NUnit, NUnit and Microsoft.Extensions.Http project, include the complete updated
 Automation.csproj with those dependencies. Runner configuration belongs in Reqnroll/.
 The application supplies approved Features and Input data in the final pack.
+
+## Coverage keys
+
+Return exactly one coverage item for each key above. Copy each gherkin_step verbatim, including its Given/When/Then prefix and original <parameter> text. Do not replace coverage keys with Examples values. Binding regex patterns must match substituted runtime values, while coverage keys retain original source text.
+
+## Reuse conditions
+
+Reuse compatible existing bindings and helpers for duplicate scenarios. Current approved requirements take precedence. Return one coherent complete artifact for the current suite, with no duplicate bindings or helper classes. Include all required files other than the unchanged baseline helper files.
+
+## Implementation instructions
+
+Implement executable C# method bodies and include every referenced helper file. Reuse the implemented common API bindings when compatible. Implement domain steps using the approved behavior and typed runtime configuration for missing deployment values, fixtures and independent oracle expectations. Document required configuration in notes; do not classify executable configurable code as blocked solely because those runtime values have not been supplied. Do not replace working implementations with TODOs, pending steps, empty bodies or invented assertions. The helper files in the baseline are supplied automatically in the final download. Reference them directly and OMIT unchanged helper files from your response to avoid regenerating existing code. Return only binding files and new or changed helpers, plus complete coverage and notes.

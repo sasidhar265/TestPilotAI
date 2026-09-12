@@ -105,3 +105,29 @@ request “succeeds”.
 For API cases, tags should identify relevant method, resource, expected status, and test type, for
 example `api`, `POST`, `quotes`, `http-status:201`, and `calculation`. Never use tags as a substitute
 for an expected result or requirement mapping.
+
+## Implementation repair policy
+
+Return concrete implementations and complete coverage. Preserve working code. Use documented runtime configuration for unavailable environment values; never invent business rules or passing assertions.
+
+## Framework layout
+
+MANDATORY AUTOMATION FRAMEWORK LAYOUT (all languages):
+Use sibling folders Reqnroll/, Features/, StepDefinitions/, Hooks/, TestContext/,
+Services/, Builders/, Models/, Utilities/, TestResults/Reports/, Input/.
+Keep dependency manifests and README.md at the framework root. Reqnroll is the
+runner/configuration folder name for EVERY language; retain the selected BDD runtime.
+Use Features/*.feature, StepDefinitions/*StepDefinition.<ext>, Hooks/Hooks.<ext>,
+TestContext/testcontext.<ext>, Services/*Service.<ext>, Builders/*builder.<ext>,
+Models/*Model.<ext>, Utilities/*Utility.<ext>, and Input/TestData.Json.
+Use the selected language's extension and valid class/module identifiers.
+Put real created artifacts into their role's folder, never Support/, src/, or features/.
+Do not invent unnecessary business models or fixture values to fill unused folders.
+Wire imports, feature discovery, hook registration and test-data loading to these paths.
+Runner configuration belongs in Reqnroll; output belongs in TestResults/Reports.
+Python uses the supplied Reqnroll/run.py adapter to stage Behave's conventional runtime
+tree temporarily: author hooks in Hooks/Hooks.py and bindings in StepDefinitions/.
+Java must configure Maven testSourceDirectory to the framework root with explicit
+includes for the source folders, resources from Features and Input, and a runner
+under Reqnroll. Cucumber-JS/TS and Ruby must explicitly load Hooks and StepDefinitions.
+Root build/dependency manifests are allowed, but no source code at the root.

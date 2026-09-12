@@ -48,7 +48,6 @@ output under TestResults/Reports. Configure discovery/imports and hooks for this
 Python packs run with `python Reqnroll/run.py`, which stages Behave's required discovery tree
 in a temporary directory; authored files remain in the shared layout.
 
-
 ## Request builders and strategies
 
 For every C# automation pack, handle API requests with `System.Net.Http.HttpClient`.

@@ -13,12 +13,25 @@ namespace Generated.StepDefinitions
 {
     public sealed class ApiResponse
     {
-        public int Status { get; }
-        public string Body { get; }
-        public IReadOnlyDictionary<string, string> Headers { get; }
+        public int Status
+        {
+            get;
+        }
+        public string Body
+        {
+            get;
+        }
+        public IReadOnlyDictionary<string, string> Headers
+        {
+            get;
+        }
 
         public ApiResponse(int status, string body, IReadOnlyDictionary<string, string> headers)
-        { Status = status; Body = body; Headers = headers; }
+        {
+            Status = status;
+            Body = body;
+            Headers = headers;
+        }
     }
 
 }

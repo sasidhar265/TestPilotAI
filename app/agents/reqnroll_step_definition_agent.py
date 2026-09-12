@@ -8,10 +8,10 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.agent_instructions import step_definition_agent_instructions
+from app.agent_instructions import load_agent_section, step_definition_agent_instructions
 from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.implementation_approval import (
-    IMPLEMENTATION_APPROVAL_POLICY,
+    implementation_approval_policy,
     implementation_approval_prompt,
     require_implementation_approval,
 )
@@ -20,7 +20,7 @@ from app.agents.reqnroll_memory import ReqnRollMemory
 from app.agents.reqnroll_validation import IncompleteImplementationError, implementation_findings
 from app.agents.runner import CopilotGenerationError, StructuredAgentDefinition
 from app.agents.test_case_validator import ValidationReport
-from app.automation_layout import LAYOUT_INSTRUCTIONS, validate_layout
+from app.automation_layout import layout_instructions, validate_layout
 from app.automation_pack import csharp_assets
 from app.config import Settings
 from app.models import ExecutionMode, TestSuite
@@ -179,8 +179,8 @@ class ReqnRollStepDefinitionAgent:
         source = suite.model_dump_json()
         instructions = (
             step_definition_agent_instructions(self.settings.agent_profile)
-            + LAYOUT_INSTRUCTIONS
-            + IMPLEMENTATION_APPROVAL_POLICY
+            + layout_instructions()
+            + implementation_approval_policy()
         )
         scope, scenarios = self.memory.identity(suite, self.settings.agent_profile, instructions)
         baseline = self._fallback_artifact(request.suite.feature_name, automation_cases)
@@ -227,33 +227,19 @@ class ReqnRollStepDefinitionAgent:
             + f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}\n\n"
             "IMPLEMENTATION BASELINE\n"
             f"{baseline.model_dump_json()}\n\n"
-            "Implement executable C# method bodies and include every referenced helper file. "
-            "Reuse the implemented common API bindings when compatible. Implement domain steps "
-            "using the approved behavior and typed runtime configuration for missing deployment "
-            "values, fixtures and independent oracle expectations. Document required configuration "
-            "in notes; do not classify executable configurable code as blocked solely because "
-            "those runtime values have not been supplied. Do not replace working "
-            "implementations with TODOs, pending steps, empty bodies or invented assertions."
-            " The helper files in the baseline are supplied automatically in the final "
-            "download. Reference them directly and OMIT unchanged helper files from your "
-            "response to avoid regenerating existing code. Return only binding files and "
-            "new or changed helpers, plus complete coverage and notes."
-            "\n\nREQUIRED COVERAGE KEYS\n"
+            + load_agent_section(
+                "reqnroll-step-definition-generator", "Implementation instructions"
+            )
+            + "\n\nREQUIRED COVERAGE KEYS\n"
             + json.dumps(sorted(expected_steps))
-            + "\nReturn exactly one coverage item for each key above. Copy each gherkin_step "
-            "verbatim, including its Given/When/Then prefix and original <parameter> text. "
-            "Do not replace coverage keys with Examples values. Binding regex patterns must "
-            "match substituted runtime values, while coverage keys retain original source text."
+            + load_agent_section("reqnroll-step-definition-generator", "Coverage keys")
         )
         runner = ArtifactGenerationRunner(self.settings, self.client_factory)
         if knowledge:
             prompt += (
                 "\n\nVALIDATED C# KNOWLEDGE FOR OVERLAPPING SCENARIOS\n"
                 + "\n".join(knowledge)
-                + "\nReuse compatible existing bindings and helpers for duplicate scenarios. "
-                "Current approved requirements take precedence. Return one coherent complete "
-                "artifact for the current suite, with no duplicate bindings or helper classes. "
-                "Include all required files other than the unchanged baseline helper files."
+                + load_agent_section("reqnroll-step-definition-generator", "Reuse conditions")
             )
 
         def validate(artifact: StepDefinitionArtifact) -> StepDefinitionArtifact:

@@ -173,15 +173,17 @@ def test_production_responses_include_transport_and_browser_protections() -> Non
     assert response.headers["cross-origin-opener-policy"] == "same-origin"
 
 
-def test_development_api_docs_allow_only_the_required_swagger_cdn() -> None:
+def test_api_docs_use_local_assets_with_strict_script_policy() -> None:
     client = TestClient(app)
 
     response = client.get("/docs")
 
     assert response.status_code == 200
     policy = response.headers["content-security-policy"]
-    assert "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net" in policy
-    assert "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net" in policy
+    assert "script-src 'self';" in policy
+    assert "cdn.jsdelivr.net" not in policy
+    assert 'src="/static/vendor/swagger-ui/swagger-ui-bundle.js"' in response.text
+    assert 'src="/static/scripts/api-docs.js"' in response.text
     assert "cdn.jsdelivr.net" not in client.get("/").headers["content-security-policy"]
 
 

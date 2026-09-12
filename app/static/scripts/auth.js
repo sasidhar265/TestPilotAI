@@ -7,7 +7,7 @@ let audioContext = null;
 let lastHeartbeatSecond = null;
 let workspaceBusy = false;
 
-const style = document.createElement('style');
+const style = document.createElement("style");
 style.textContent = `
   .session-overlay[hidden]{display:none}.session-overlay{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:24px;background:rgba(20,22,39,.48);backdrop-filter:blur(8px)}
   .session-dialog{width:min(440px,100%);padding:28px;border:1px solid var(--line,#e5e7ef);border-radius:20px;color:var(--ink,#171a2b);background:var(--surface,#fff);box-shadow:0 30px 90px rgba(21,24,45,.3)}
@@ -17,12 +17,12 @@ style.textContent = `
 `;
 document.head.append(style);
 
-const overlay = document.createElement('div');
-overlay.className = 'session-overlay';
+const overlay = document.createElement("div");
+overlay.className = "session-overlay";
 overlay.hidden = true;
-overlay.setAttribute('role', 'dialog');
-overlay.setAttribute('aria-modal', 'true');
-overlay.setAttribute('aria-labelledby', 'session-title');
+overlay.setAttribute("role", "dialog");
+overlay.setAttribute("aria-modal", "true");
+overlay.setAttribute("aria-labelledby", "session-title");
 overlay.innerHTML = `
   <div class="session-dialog">
     <span class="session-kicker">Session security</span>
@@ -33,15 +33,17 @@ overlay.innerHTML = `
   </div>`;
 document.body.append(overlay);
 
-const seconds = document.getElementById('session-seconds');
-const continueButton = document.getElementById('continue-session');
-const closeButton = document.getElementById('close-session');
+const seconds = document.getElementById("session-seconds");
+const continueButton = document.getElementById("continue-session");
+const closeButton = document.getElementById("close-session");
 
 async function signOut() {
   if (signingOut) return;
   signingOut = true;
-  try { await fetch('/api/auth/logout', {method: 'POST'}); } finally {
-    window.location.replace('/login');
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } finally {
+    window.location.replace("/login");
   }
 }
 
@@ -50,16 +52,16 @@ function enableAlertAudio() {
     const AudioEngine = window.AudioContext || window.webkitAudioContext;
     if (AudioEngine) audioContext = new AudioEngine();
   }
-  if (audioContext?.state === 'suspended') audioContext.resume().catch(() => {});
+  if (audioContext?.state === "suspended") audioContext.resume().catch(() => {});
 }
 
 function playHeartbeat() {
-  if (!audioContext || audioContext.state !== 'running') return;
+  if (!audioContext || audioContext.state !== "running") return;
   const start = audioContext.currentTime;
   [0, 0.16].forEach((offset, index) => {
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
-    oscillator.type = 'sine';
+    oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(index === 0 ? 72 : 58, start + offset);
     gain.gain.setValueAtTime(0.0001, start + offset);
     gain.gain.exponentialRampToValueAtTime(index === 0 ? 0.22 : 0.14, start + offset + 0.015);
@@ -76,7 +78,7 @@ function continueSession() {
   warningOpen = false;
   overlay.hidden = true;
   lastHeartbeatSecond = null;
-  document.body.classList.remove('dialog-open');
+  document.body.classList.remove("dialog-open");
 }
 
 function noteActivity() {
@@ -84,24 +86,24 @@ function noteActivity() {
   if (!warningOpen) lastActivity = Date.now();
 }
 
-window.addEventListener('workspace-busy-change', event => {
+window.addEventListener("workspace-busy-change", (event) => {
   workspaceBusy = Boolean(event.detail?.busy);
   lastActivity = Date.now();
   lastHeartbeatSecond = null;
   if (workspaceBusy && warningOpen) {
     warningOpen = false;
     overlay.hidden = true;
-    document.body.classList.remove('dialog-open');
+    document.body.classList.remove("dialog-open");
   }
 });
 
-['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(name =>
-  window.addEventListener(name, noteActivity, {passive: true}),
+["pointerdown", "keydown", "touchstart", "scroll"].forEach((name) =>
+  window.addEventListener(name, noteActivity, { passive: true }),
 );
-continueButton.addEventListener('click', continueSession);
-closeButton.addEventListener('click', signOut);
-document.getElementById('logout')?.addEventListener('click', async () => {
-  const button = document.getElementById('logout');
+continueButton.addEventListener("click", continueSession);
+closeButton.addEventListener("click", signOut);
+document.getElementById("logout")?.addEventListener("click", async () => {
+  const button = document.getElementById("logout");
   button.disabled = true;
   await signOut();
 });
@@ -126,7 +128,7 @@ setInterval(() => {
     if (!warningOpen) {
       warningOpen = true;
       overlay.hidden = false;
-      document.body.classList.add('dialog-open');
+      document.body.classList.add("dialog-open");
       continueButton.focus();
     }
   }

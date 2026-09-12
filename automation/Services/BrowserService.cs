@@ -7,7 +7,10 @@ public sealed class BrowserService : IAsyncDisposable
 {
     private IPlaywright? playwright;
     private IBrowser? browser;
-    public IPage? Page { get; private set; }
+    public IPage? Page
+    {
+        get; private set;
+    }
     private string BaseUrl => ConfigurationUtility.BaseUrl;
     public async Task OpenBrowserAsync()
     {
@@ -36,7 +39,8 @@ public sealed class BrowserService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (browser is not null) await browser.DisposeAsync();
+        if (browser is not null)
+            await browser.DisposeAsync();
         playwright?.Dispose();
     }
 }

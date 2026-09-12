@@ -1,7 +1,7 @@
 """Shared, reloadable project rules and generation standards."""
 
-import json
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -10,6 +10,22 @@ from pydantic import TypeAdapter
 from app.models import BusinessRule, GenerateRequest
 
 WORKSPACE = Path(__file__).resolve().parent.parent / "workspace"
+RULES_PATH = WORKSPACE.parent / ".github" / "agents" / "business-rules.agent.md"
+RULES_START = "<!-- shared-business-rules:start -->"
+RULES_END = "<!-- shared-business-rules:end -->"
+
+
+def _rule_document() -> tuple[str, str, str]:
+    if RULES_PATH.stat().st_size > 200_000:
+        raise ValueError("Shared business rules exceed 200 KB")
+    content = RULES_PATH.read_text(encoding="utf-8")
+    if content.count(RULES_START) != 1 or content.count(RULES_END) != 1:
+        raise ValueError("Business Rules Agent must contain one shared-business-rules section")
+    before, body = content.split(RULES_START)
+    if RULES_END not in body:
+        raise ValueError("Shared business rule section markers are out of order")
+    body, after = body.split(RULES_END)
+    return before, body, after
 
 
 def standards(name: str) -> str:
@@ -19,10 +35,17 @@ def standards(name: str) -> str:
 
 
 def load_business_rules() -> list[BusinessRule]:
-    path = WORKSPACE / "business-rules.json"
-    if path.stat().st_size > 200_000:
-        raise ValueError("Shared business rules exceed 200 KB")
-    return validate_rules(json.loads(path.read_text(encoding="utf-8")))
+    _, body, _ = _rule_document()
+    entries: list[dict[str, str]] = []
+    for line in body.strip("\n").splitlines():
+        match = re.fullmatch(r"- (BR-[A-Za-z0-9_-]+): (.*)", line)
+        if match:
+            entries.append({"id": match[1], "description": match[2]})
+        elif line.startswith("  ") and entries:
+            entries[-1]["description"] += "\n" + line[2:]
+        elif line.strip():
+            raise ValueError("Shared rules must use '- BR-ID: description' Markdown bullets")
+    return validate_rules(entries)
 
 
 def validate_rules(value: object) -> list[BusinessRule]:
@@ -34,14 +57,23 @@ def validate_rules(value: object) -> list[BusinessRule]:
 
 def save_business_rules(rules: list[BusinessRule]) -> None:
     validate_rules(rules)
-    content = json.dumps([r.model_dump() for r in rules], indent=2) + "\n"
-    if len(content.encode()) > 200_000:
+    before, _, after = _rule_document()
+    bullets = []
+    for rule in rules:
+        description = rule.description.replace("\n", "\n  ")
+        if RULES_START in description or RULES_END in description or "\r" in description:
+            raise ValueError("Rule descriptions cannot contain section markers or carriage returns")
+        bullets.append(f"- {rule.id}: {description}")
+    content = before + RULES_START + "\n" + "\n".join(bullets) + "\n" + RULES_END + after
+    if len(content.encode("utf-8")) > 200_000:
         raise ValueError("Shared business rules exceed 200 KB")
-    with tempfile.NamedTemporaryFile(mode="w", dir=WORKSPACE, delete=False) as stream:
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=RULES_PATH.parent, delete=False
+    ) as stream:
         temporary = Path(stream.name)
         stream.write(content)
     try:
-        os.replace(temporary, WORKSPACE / "business-rules.json")
+        os.replace(temporary, RULES_PATH)
     finally:
         temporary.unlink(missing_ok=True)
 

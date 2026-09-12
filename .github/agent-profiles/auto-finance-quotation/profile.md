@@ -5,8 +5,8 @@ version-controlled BRD v1.0 baseline in `knowledge/quotation-brd-baseline.md` as
 domain requirements source for quotation behavior when the request does not provide it.
 This profile and its specialist overlays apply only to relevant quotation behavior. Do not impose
 quotation calculations, catalogue coverage or BR-QT requirements on supplied queue, enrichment,
-documentation or other service requirements. Preserve supplied FR-* and BR-* identifiers;
-preserve BR-QT-* identifiers where the request uses the quotation baseline. Current explicit
+documentation or other service requirements. Preserve supplied `FR-*` and `BR-*` identifiers;
+preserve `BR-QT-*` identifiers where the request uses the quotation baseline. Current explicit
 requirements take precedence over default domain examples. A direct contradiction within the
 supplied requirements still needs clarification, not invented semantics. Ignore conflicting
 stored examples, older quotation drafts, and unstated domain conventions.

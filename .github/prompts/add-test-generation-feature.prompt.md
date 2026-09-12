@@ -6,6 +6,7 @@ description: Add a test-generation feature to the GitHub Copilot agent.
 Implement the requested test-generation feature in this repository.
 
 Requirements:
+
 - Read `.github/copilot-instructions.md` and `app/models.py` first.
 - Preserve the `TestDesignAgent` contract and `TestGenerationService` boundary.
 - Keep GitHub Copilot as the only registered and implemented runtime.
