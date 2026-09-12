@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle — Application logs</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911">
-  <link rel="stylesheet" href="/static/styles/logs.css?v=20260831-fluid-layout">
+  <link rel="stylesheet" href="/static/styles/logs.css?v=20260912-taller-logs">
   <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
@@ -35,16 +35,26 @@
               <button class="profile-signout" id="logout" type="button"><span aria-hidden="true">↪</span> Sign out</button>
             </section>
           </div></div></header>
-    <section class="search-card" aria-labelledby="search-title">
-      <div class="search-heading"><div><span class="kicker">Correlation search</span><h2 id="search-title">Find a request</h2></div><button class="ghost" id="recent-logs" type="button">View recent activity</button></div>
+    <section class="results-card">
+      <div class="results-head"><div><span class="kicker">Activity</span><h2 id="result-title">Recent logs</h2></div><div class="log-controls"><details class="log-status-menu" id="log-status-menu">
+        <summary aria-label="Filter logs by status">Status: <span id="log-status-label">All</span> <span aria-hidden="true">▾</span></summary>
+        <div class="log-status-options" aria-label="Log status">
+          <button type="button" data-log-level="all" aria-pressed="true">All</button>
+          <button type="button" data-log-level="DEBUG" aria-pressed="false">Debug</button>
+          <button type="button" data-log-level="INFO" aria-pressed="false">Info</button>
+          <button type="button" data-log-level="WARNING" aria-pressed="false">Warning</button>
+          <button type="button" data-log-level="ERROR" aria-pressed="false">Error</button>
+          <button type="button" data-log-level="CRITICAL" aria-pressed="false">Critical</button>
+        </div></details><div class="count" id="log-count" aria-live="polite">—</div></div></div>
+    <section class="logs-search" aria-label="Search logs">
       <div class="search-row"><input id="log-reference" type="search" autocomplete="off" spellcheck="false" placeholder="Paste a reference ID" aria-label="Search logs by reference ID"><button class="primary" id="search-logs" type="button">Search logs <span>→</span></button></div>
       <p class="search-help">Example: <code>550e8400-e29b-41d4-a716-446655440000</code></p>
     </section>
-    <section class="results-card">
-      <div class="results-head"><div><span class="kicker">Activity</span><h2 id="result-title">Recent logs</h2></div><div class="count" id="log-count">—</div></div>
+      <div class="logs-scroll" tabindex="0" role="region" aria-labelledby="result-title">
       <div class="empty-state" id="log-state"><span class="empty-icon">⌕</span><h3>Ready to investigate</h3><p>Search with a failure reference ID, or load recent activity.</p></div>
       <div class="log-results" id="log-results" aria-live="polite"></div>
+      </div>
     </section>
   </main>
-</div><script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script><script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script><script src="/static/scripts/logs.js?v=20260909-page-alignment" defer></script></body>
+</div><script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script><script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script><script src="/static/scripts/logs.js?v=20260912-search-cleanup" defer></script></body>
 </html>

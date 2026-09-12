@@ -151,8 +151,8 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert 'class="panel agent-workspace workspace-page-panel"' in response.text
     assert 'class="panel agent-workspace hidden"' not in response.text
     assert 'id="generate-data"' not in response.text
-    assert 'id="stlc-workspace"' in response.text
-    assert 'id="stlc-cycle-form"' in response.text
+    assert 'id="stlc-workspace"' not in response.text
+    assert 'id="stlc-cycle-form"' not in response.text
     assert 'id="execution-dashboard"' not in response.text
     assert 'id="defects-dashboard"' not in response.text
     assert 'id="summarize-execution"' not in response.text
@@ -231,13 +231,13 @@ def test_documentation_page_is_not_cached() -> None:
 
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store, max-age=0"
-    assert "Markdown-directed, Python-governed" in response.text
+    assert "How the application works" in response.text
     assert "/api/step-definitions/reqnroll" in response.text
     assert 'id="theme-gear"' in response.text
     assert 'id="profile-toggle"' in response.text
     assert 'class="profile-signout" id="logout"' in response.text
-    assert 'href="/static/styles/documentation.css?v=20260904-current-ui"' in response.text
-    assert 'src="/static/scripts/documentation.js?v=20260909-page-alignment"' in response.text
+    assert 'href="/static/styles/documentation.css?v=20260912-clear-guide"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=20260912-clear-guide"' in response.text
     assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
 
 
@@ -422,11 +422,11 @@ def test_documentation_page_describes_agents_and_use_cases() -> None:
     response = client.get("/documentation")
     assert response.status_code == 200
     assert "Agents and responsibilities" in response.text
-    assert "Application use cases" in response.text
+    assert "Where to find each feature" in response.text
     assert "GET /api/agents" in response.text
-    assert "Document-to-tests" in response.text
-    assert "Generated Suite actions" in response.text
-    assert "Activity and reuse notices" in response.text
+    assert "Documents and images" in response.text
+    assert "View, download and share" in response.text
+    assert "Understand execution results" in response.text
     assert 'href="/#agent-workspace"' not in response.text
     assert 'id="company-documents"' in response.text
     assert 'data-document="requirements"' in response.text

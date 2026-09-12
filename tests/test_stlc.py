@@ -411,14 +411,12 @@ def test_retest_on_new_build_preserves_original_cycle(storage):
 @pytest.mark.skipif(
     __import__("os").environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check"
 )
-def test_browser_records_manual_execution_and_reloads_evidence(tmp_path):
+def test_browser_quality_lifecycle_focuses_on_reporting(tmp_path):
     import mimetypes
     from urllib.parse import urlparse
 
     pw = pytest.importorskip("playwright.sync_api")
     settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
-    storage = LifecycleStore(settings.organizational_memory_path)
-    *_, cycle = prepared(storage)
     static = Path(__file__).parents[1] / "app/static"
     app.dependency_overrides[get_settings] = lambda: settings
     try:
@@ -460,20 +458,11 @@ def test_browser_records_manual_execution_and_reloads_evidence(tmp_path):
 
             page.route("**/*", handle)
             page.goto("http://localhost/quality-lifecycle")
-            page.locator("#stlc-workspace > details").nth(2).locator("summary").first.click()
-            page.locator("#stlc-active-cycle").select_option(cycle["id"])
-            page.locator("#stlc-attempt-case").select_option("TC-001")
-            page.locator("[data-step-actual]").fill("HTTP 403 observed")
-            page.locator('#stlc-attempt-form textarea[name="actual"]').fill(
-                "Locked account rejected"
-            )
-            page.locator('#stlc-attempt-form button[type="submit"]').click()
-            pw.expect(page.locator("#stlc-status")).to_contain_text("Saved.")
-            pw.expect(page.locator("#stlc-cycle-report")).to_contain_text("All linked cases passed")
+            pw.expect(page.locator("#stlc-workspace")).to_have_count(0)
+            pw.expect(page.locator("#agent-workspace")).to_be_visible()
+            pw.expect(page.locator("#metrics-dashboard")).to_be_visible()
             page.reload()
-            page.locator("#stlc-workspace > details").nth(2).locator("summary").first.click()
-            page.locator("#stlc-active-cycle").select_option(cycle["id"])
-            pw.expect(page.locator("#stlc-cycle-report")).to_contain_text("Locked account rejected")
+            pw.expect(page.locator("#agent-workspace")).to_be_visible()
             page.set_viewport_size({"width": 390, "height": 844})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
             assert not errors

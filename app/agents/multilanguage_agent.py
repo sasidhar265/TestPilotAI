@@ -10,6 +10,10 @@ from pydantic import BaseModel, Field
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
+from app.agents.implementation_approval import (
+    IMPLEMENTATION_APPROVAL_POLICY,
+    require_implementation_approval,
+)
 from app.agents.reqnroll_step_definition_agent import (
     ReqnRollStepDefinitionAgent,
     StepCoverage,
@@ -105,8 +109,7 @@ class MultiLanguageAgent:
         self.settings = settings
 
     def bindings(self, request: LanguageRequest) -> LanguageArtifact:
-        if not request.validation.passed:
-            raise ValueError("Step definitions require a Quality Gate-approved suite.")
+        require_implementation_approval(request.validation)
         standards("automation")  # Read shared policy for each generation; no stale cached policy.
         if request.language == "csharp":
             artifact = ReqnRollStepDefinitionAgent(self.settings).generate_bindings(request)
@@ -191,6 +194,7 @@ class MultiLanguageAgent:
             + standards("feature")
             + LAYOUT_INSTRUCTIONS
             + quotation_instructions()
+            + IMPLEMENTATION_APPROVAL_POLICY
         )
         definition = StructuredAgentDefinition(
             output_model=LanguageArtifact,
@@ -206,6 +210,7 @@ class MultiLanguageAgent:
                     "language": request.language,
                     "framework": baseline.framework,
                     "suite": request.suite.model_dump(mode="json"),
+                    "APPLICATION QUALITY GATE REPORT": request.validation.model_dump(mode="json"),
                     "bindings": baseline.model_dump(mode="json"),
                     "input_files": {
                         path: content

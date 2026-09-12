@@ -109,3 +109,21 @@ method, endpoint and credentials separately; no finance endpoint or success resu
 Across all generated languages, StepDefinitions must delegate to services/strategies, with no
 if/else, switch/match/case, unless or ternary expressions. Static checks enforce this policy;
 ordinary validation guards remain allowed inside services.
+
+## Code-generation approval regressions
+
+`Features/CodeGeneration.feature` checks failed and inconsistent Quality Gate reports and full-pack
+creation with a current passing report despite historical suite notes. The scenarios use
+`Input/CodeGeneration.Json`, the dedicated request builder and `CodeGenerationService` through the
+shared HttpClient service. The input describes the existing workspace health endpoint; it does
+not introduce a finance request contract. These checks do not call AI providers.
+
+Run against a separately started application with:
+
+```bash
+dotnet test automation/QualityLifecycle.Automation.csproj --filter FullyQualifiedName~CodeGeneration
+```
+
+This verifies the code-generation API boundary. Execute the returned pack separately to verify
+its discovered Gherkin scenarios against `API_BASE_URL`; repository API results are not generated
+suite execution evidence.

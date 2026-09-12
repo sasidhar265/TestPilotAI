@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from app.agents.reqnroll_validation import IncompleteImplementationError
 from app.agents.runner import (
     CopilotAgentRunner,
     CopilotGenerationError,
@@ -92,6 +93,18 @@ class ArtifactGenerationRunner:
                     logger.info("artifact_implementation_complete route=%s", name)
                     return result
         if last_validation is not None:
+            if isinstance(last_validation, IncompleteImplementationError):
+                logger.warning(
+                    "artifact_implementation_rejected",
+                    extra={
+                        "event_details": {
+                            "required_steps": last_validation.step_count,
+                            "findings": "\n".join(last_validation.findings),
+                            "provider_notes": "\n".join(last_validation.notes),
+                        }
+                    },
+                )
+                raise ValueError(last_validation.public_message) from last_validation
             raise ValueError(
                 "Configured code-generation providers could not complete the implementation. "
                 "No files were returned. " + str(last_validation)

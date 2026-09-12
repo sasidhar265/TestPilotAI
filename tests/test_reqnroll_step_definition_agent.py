@@ -364,3 +364,85 @@ def test_bindings_only_requires_approved_automation(manual, passed):
     )
     with pytest.raises(ValueError):
         agent.generate_bindings(request)
+
+
+@pytest.mark.asyncio
+async def test_codegen_receives_current_report_and_preserves_historical_notes(
+    monkeypatch, tmp_path
+):
+    import json
+
+    from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
+
+    suite = _suite(gherkin="Scenario: Status\n Then the HTTP status should be 200")
+    suite.coverage_notes = ["Earlier draft: Quality Gate failed."]
+    suite.test_cases[0].acceptance_criteria_covered = ["FR-001", "BR-001"]
+    report = _validation(True)
+
+    async def generate(*args, **kwargs):
+        prompt = kwargs["prompt"]
+        evidence = prompt.split("APPLICATION QUALITY GATE REPORT\n", 1)[1].split("\n\n", 1)[0]
+        assert json.loads(evidence) == report.model_dump(mode="json")
+        assert "Earlier draft: Quality Gate failed." in prompt
+        assert '"FR-001"' in prompt and '"BR-001"' in prompt
+        assert "not rejected test design" in kwargs["instructions"]
+        return StepDefinitionArtifact(
+            files=[
+                {
+                    "path": "StepDefinitions/StatusStepDefinition.cs",
+                    "content": """using Reqnroll;
+namespace Generated.StepDefinitions;
+[Binding] public class StatusSteps {
+    private readonly ApiScenario api;
+    public StatusSteps(ApiScenario api) { this.api = api; }
+    [Then("the HTTP status should be 200")]
+    public void Status() { api.AssertStatus(200); }
+}""",
+                }
+            ],
+            coverage=[
+                {
+                    "gherkin_step": "Then the HTTP status should be 200",
+                    "status": "generated",
+                    "binding": "Status",
+                }
+            ],
+        )
+
+    monkeypatch.setattr(CopilotAgentRunner, "generate_structured", generate)
+    agent = ReqnRollStepDefinitionAgent(
+        Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    )
+    artifact = await agent.generate(StepDefinitionRequest(suite=suite, validation=report))
+    assert artifact.coverage[0].status == "generated"
+    assert suite.coverage_notes == ["Earlier draft: Quality Gate failed."]
+
+
+@pytest.mark.asyncio
+async def test_inconsistent_approval_is_rejected_before_provider_or_cache(monkeypatch, tmp_path):
+    from unittest.mock import AsyncMock
+
+    from app.agents.test_case_validator import ValidationFinding
+
+    generate = AsyncMock()
+    monkeypatch.setattr(CopilotAgentRunner, "generate_structured", generate)
+    report = _validation(True)
+    report.findings = [
+        ValidationFinding(
+            dimension="coverage",
+            severity="error",
+            message="Missing required case",
+            test_case_ids=["TC-001"],
+        )
+    ]
+    agent = ReqnRollStepDefinitionAgent(
+        Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    )
+    with pytest.raises(ValueError, match="inconsistent"):
+        await agent.generate(
+            StepDefinitionRequest(
+                suite=_suite(gherkin="Scenario: Status\n Then the response status is 200"),
+                validation=report,
+            )
+        )
+    generate.assert_not_awaited()

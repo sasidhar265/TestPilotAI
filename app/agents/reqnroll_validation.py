@@ -11,6 +11,28 @@ from app.automation_style import step_style_findings
 if TYPE_CHECKING:
     from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
 
+
+class IncompleteImplementationError(ValueError):
+    """Full diagnostics for provider repair, with a bounded user-facing explanation."""
+
+    def __init__(self, findings: list[str], notes: list[str], step_count: int) -> None:
+        self.findings = findings
+        self.notes = notes
+        self.step_count = step_count
+        context = " Implementation context: " + " ".join(notes) if notes else ""
+        super().__init__(" ".join(findings) + context)
+
+    @property
+    def public_message(self) -> str:
+        return (
+            "The suite passed design validation, but code generation did not produce a complete "
+            f"implementation for its {self.step_count} required steps. "
+            "Review the scenario requirements and approved contracts, then retry full-pack "
+            "generation. No files were returned. "
+            "Technical findings are available in Runtime logs using this request's reference ID."
+        )
+
+
 _PLACEHOLDER = re.compile(
     r"\b(?:NotImplementedException|PendingStepException|TODO|TBD)\b"
     r"|\b(?:ScenarioContext|Assert)\s*\.\s*(?:Pending|Ignore|Inconclusive)\s*\("

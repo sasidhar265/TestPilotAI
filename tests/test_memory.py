@@ -190,7 +190,10 @@ def test_legacy_database_retains_old_suite_until_refreshed(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_duplicate_refreshes_stale_knowledge_once_after_validation(tmp_path) -> None:
+@pytest.mark.parametrize("old_policy", [0, 1])
+async def test_duplicate_refreshes_stale_knowledge_once_after_validation(
+    tmp_path, old_policy
+) -> None:
     import sqlite3
     from unittest.mock import AsyncMock
 
@@ -203,7 +206,9 @@ async def test_duplicate_refreshes_stale_knowledge_once_after_validation(tmp_pat
     request = GenerateRequest(description="As a user, I want secure sign in.")
     memory.put(request, suite())
     with sqlite3.connect(memory.path) as connection:
-        connection.execute("UPDATE test_suite_memory SET generation_policy_version = 0")
+        connection.execute(
+            "UPDATE test_suite_memory SET generation_policy_version = ?", (old_policy,)
+        )
     generated = suite()
     generated.test_cases[0].title = "Valid credentials open the account dashboard"
     generator = AsyncMock()

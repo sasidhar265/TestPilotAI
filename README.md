@@ -624,9 +624,12 @@ Existing downloads also resolve historical reports from `automation-reports/` be
 Reports contain native scenario/step results and redacted text diagnostics; raw attachments are
 excluded. Access uses the workspace's existing authentication settings.
 
-## Plan 1: versioned requirements and execution evidence
+## Lifecycle management API
 
-Open **Quality Lifecycle → Manage the testing lifecycle**. Records persist in `stlc.db`
+The Quality Lifecycle page focuses on coverage, traceability and quality reporting.
+Formal requirement approvals and execution management are available through `/api/stlc`;
+the page does not include management forms. The following describes that API workflow.
+Records persist in `stlc.db`
 beside `ORGANIZATIONAL_MEMORY_PATH`; use persistent storage on the deployment host to
 retain them across redeployments. This is a shared workspace, consistent with the existing
 shared business rules. Project identifiers organize records; they are not tenant access boundaries.
@@ -663,7 +666,7 @@ change-impact warnings identify newer requirements requiring review.
 ### Reviewed C# execution in CI
 
 The application host never executes uploaded generated code. Generate and review a C# pack
-for a saved suite, select its cycle, and download a reviewed CI bundle. Provide the project's
+for a saved suite and use the lifecycle API to export a reviewed CI bundle for its cycle. Provide the project's
 relative `.csproj` path and explicit mappings from exact TRX test names to stable case IDs.
 Outline rows may map to the same case; one failed row fails the aggregated case, and any
 unexecuted row prevents a passing case result. Unmapped or missing cases stop conversion.
@@ -715,3 +718,20 @@ Generation, download and reviewed CI bundle validation reject the previous `Supp
 exporting a new reviewed CI bundle. Existing repository project paths remain compatible.
 The CI runner places TRX and importable JSON under `TestResults/Reports/ci-execution` in the
 extracted framework, and uploads that directory as execution evidence.
+
+### Code-generation validation context
+
+Full-pack generation sends the current structured Quality Gate report alongside the suite.
+A failed report, or a report marked passed while containing error findings, is rejected before
+provider execution or code-cache reuse. Unfinished baseline bindings are implementation work,
+not a failed design gate. Historical suite notes do not replace the current structured report.
+
+Explicit service requirements and supplied rule IDs define scope; the default quotation profile
+only supplies applicable quotation guidance. The approved quotation payload remains unchanged.
+Suites cached under the earlier unconditional-profile policy are retained but regenerated on the
+next matching generation request. The generator must still report missing business semantics and
+must not invent contracts, fixtures or execution results.
+
+If providers cannot complete all bindings, the user receives a short error with a reference ID.
+Runtime logs retain implementation findings and provider notes for investigation. Provider notes
+are diagnostic statements, not a replacement Quality Gate decision.

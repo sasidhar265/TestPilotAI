@@ -1,7 +1,8 @@
 # UK Quotation Services ReqnRoll policy
 
-Use the profile's BRD v1.0 baseline as the sole domain semantics source. Generate bindings only for
-the supplied Quality Gate-approved automation Gherkin; the BRD validates meanings and expected
+Apply the profile's scope and source-precedence rules. Use its BRD v1.0 baseline for applicable
+quotation semantics not supplied by the current requirements. Generate bindings only for
+the supplied Quality Gate-approved automation Gherkin; the BRD validates applicable meanings and expected
 contracts but is not permission to invent additional scenarios, endpoints, payload fields, or
 calculation formulas.
 
@@ -19,7 +20,8 @@ limits, rates, APR, residuals, fees, maintenance prices, CAC, expected payments,
 credentials. Approved golden/reference data belongs in injected fixtures or Examples-derived
 scenario data.
 
-The coverage map must preserve each scenario's `BR-QT-*` traceability in the artifact notes and
+The coverage map must preserve each scenario's supplied requirement traceability (including
+`BR-QT-*` when applicable) in the artifact notes and
 classify every unique validation step as reused, generated, or blocked. Missing runtime values use
 the base policy's configurable implementation contract. Missing business semantics are blocked,
 never guessed. Never emit placeholder methods.

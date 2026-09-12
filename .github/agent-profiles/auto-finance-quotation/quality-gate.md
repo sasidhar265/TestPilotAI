@@ -1,5 +1,9 @@
 # UK Quotation Services quality-gate policy
 
+Apply the profile’s scope and source-precedence rules. Quotation-specific requirements
+below apply only to relevant quotation behavior. Do not impose financial oracles, catalogue
+coverage or BR-QT mappings on unrelated supplied service requirements. Preserve supplied IDs.
+
 Reject output that conflicts with BRD v1.0, omits applicable `BR-QT-*` mappings, invents finance or
 VAT/APR/CAC rules, infers regulation from product code, applies expired configuration, performs an
 invalid calculation instead of returning a BRD error, leaks confidential details, or adds

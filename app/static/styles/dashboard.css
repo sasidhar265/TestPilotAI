@@ -51,9 +51,9 @@
 .bdd-history-heading { padding: 22px 24px; }
 #bdd-history-count { font-size: .68rem; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; margin-left: 6px; vertical-align: middle; }
 .bdd-history-controls { gap: 10px; }
-.bdd-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--muted); }
-.bdd-search input { width: 190px; padding: 11px 0; color: var(--ink); border: 0; background: transparent; font: inherit; font-size: .72rem; min-width: 0; }
-#work-dashboard #bdd-status-filter { width: auto; min-width: 140px; }
+.bdd-search { height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--muted); }
+.bdd-search input { width: 190px; height: 100%; padding: 0; color: var(--ink); border: 0; background: transparent; font: inherit; font-size: .72rem; min-width: 0; }
+#work-dashboard #bdd-status-filter { width: auto; min-width: 140px; height: 44px; border-radius: 8px; }
 .execution-run { border-top: 1px solid var(--line); }
 .execution-run > summary { display: grid; grid-template-columns: 66px minmax(130px, 1fr) minmax(140px, 1fr) 70px 16px; gap: 18px; padding: 18px 24px; cursor: pointer; list-style: none; }
 .execution-run > summary::-webkit-details-marker { display: none; }
@@ -75,3 +75,6 @@
 @media (max-width: 760px) { #dashboard-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .bdd-overview { grid-template-columns: 1fr; } .bdd-chart-layout { flex-wrap: nowrap; } .bdd-history-controls { width: 100%; flex-wrap: wrap; } .bdd-search { flex: 1; } .bdd-search input { width: 100%; } .execution-run > summary { grid-template-columns: 64px minmax(0, 1fr) 16px; padding: 16px; gap: 12px; } .bdd-run-counts { grid-column: 2; grid-row: 2; } .bdd-run-duration { grid-column: 2; grid-row: 3; } .bdd-chevron { grid-column: 3; grid-row: 1; } .bdd-context { flex-wrap: wrap; gap: 12px; } #dashboard-progress { margin-left: 0; } .bdd-metric { padding: 16px; } #work-dashboard { padding: 0; } .bdd-heading-actions { flex-wrap: wrap; } }
 #work-dashboard .secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); }
 #work-dashboard .secondary:hover { background: var(--surface-soft); }
+
+#work-dashboard #dashboard-history { height: 520px; max-height: 65dvh; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; }
+#dashboard-history:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }

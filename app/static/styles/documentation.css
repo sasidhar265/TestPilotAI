@@ -209,3 +209,9 @@ code { font-family: "SFMono-Regular", Consolas, monospace; }
   .endpoint{grid-template-columns:45px 1fr}.endpoint p{grid-column:1/-1;padding-left:57px}
   .api-cta{align-items:flex-start;flex-direction:column}
 }
+
+.guide-steps{margin:0;padding-left:24px;line-height:1.7;color:var(--muted)}
+.guide-steps li{padding:0 0 16px 6px}
+.guide-steps strong{color:var(--ink)}
+.hero-card p{line-height:1.65}
+.content code{overflow-wrap:anywhere}

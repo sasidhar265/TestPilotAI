@@ -13,8 +13,9 @@ from app.models import GenerateRequest, GenerationSource, LlmModel, TestSuite
 class OrganizationalMemory:
     """Repository-local, exact-match memory for validated test suites."""
 
-    # Old suites must be regenerated with explicit scenario/case naming before reuse.
-    GENERATION_POLICY_VERSION = 1
+    # Refresh suites generated under the former unconditional quotation-profile policy.
+    # Existing records remain stored; stale versions are not reused for new generation.
+    GENERATION_POLICY_VERSION = 2
 
     def __init__(self, path: Path, enabled: bool = True) -> None:
         self.path = path

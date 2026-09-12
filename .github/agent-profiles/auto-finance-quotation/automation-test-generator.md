@@ -1,5 +1,9 @@
 # UK Quotation Services automation policy
 
+Apply the profile’s scope and source-precedence rules. Quotation-specific requirements
+below apply only to relevant quotation behavior. Do not impose financial oracles, catalogue
+coverage or BR-QT mappings on unrelated supplied service requirements. Preserve supplied IDs.
+
 Generate API-focused deterministic tests for `POST /api/v1/quotations` and approved downstream
 contracts. Do not invent retrieval, recalculation, cancellation, expiry, idempotency, target-APR
 solver modes, or other lifecycle behavior absent from BRD v1.0.

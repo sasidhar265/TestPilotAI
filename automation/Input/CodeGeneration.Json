@@ -1,0 +1,41 @@
+{
+  "suite": {
+    "feature_name": "Workspace health",
+    "output_format": "bdd",
+    "test_cases": [
+      {
+        "id": "TC-HEALTH-001",
+        "title": "Health endpoint returns runtime",
+        "objective": "Verify the documented workspace health response",
+        "category": "smoke",
+        "priority": "P1",
+        "execution_mode": "automation",
+        "feasibility_reason": "Existing repository health API contract",
+        "steps": [
+          {
+            "action": "GET /api/health",
+            "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+          }
+        ],
+        "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+        "test_data": [
+          {
+            "name": "health",
+            "value": "{}",
+            "purpose": "Empty health request; no business payload"
+          }
+        ]
+      }
+    ],
+    "coverage_notes": [
+      "Earlier draft: Quality Gate failed. Current validation is supplied separately."
+    ]
+  },
+  "validation": {
+    "passed": true,
+    "score": 100,
+    "acceptance_criteria_total": 0,
+    "acceptance_criteria_covered": 0,
+    "findings": []
+  }
+}

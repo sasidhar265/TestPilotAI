@@ -10,9 +10,14 @@ from pydantic import BaseModel, Field
 
 from app.agent_instructions import step_definition_agent_instructions
 from app.agents.artifact_runner import ArtifactGenerationRunner
+from app.agents.implementation_approval import (
+    IMPLEMENTATION_APPROVAL_POLICY,
+    implementation_approval_prompt,
+    require_implementation_approval,
+)
 from app.agents.reqnroll_implementations import common_step, support_files
 from app.agents.reqnroll_memory import ReqnRollMemory
-from app.agents.reqnroll_validation import implementation_findings
+from app.agents.reqnroll_validation import IncompleteImplementationError, implementation_findings
 from app.agents.runner import CopilotGenerationError, StructuredAgentDefinition
 from app.agents.test_case_validator import ValidationReport
 from app.automation_layout import LAYOUT_INSTRUCTIONS, validate_layout
@@ -72,8 +77,7 @@ class ReqnRollStepDefinitionAgent:
 
     def generate_bindings(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
         """Generate only binding declarations; never invoke implementation generation or memory."""
-        if not request.validation.passed:
-            raise ValueError("Step definitions require a Quality Gate-approved suite.")
+        require_implementation_approval(request.validation)
         methods: dict[tuple[str, str, tuple[tuple[str, str], ...]], str] = {}
         sources: list[str] = []
         coverage: list[StepCoverage] = []
@@ -159,8 +163,7 @@ class ReqnRollStepDefinitionAgent:
         return artifact
 
     async def _generate_sources(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:
-        if not request.validation.passed:
-            raise ValueError("Step definitions require a Quality Gate-approved suite.")
+        require_implementation_approval(request.validation)
         automation_cases = [
             case
             for case in request.suite.test_cases
@@ -175,7 +178,9 @@ class ReqnRollStepDefinitionAgent:
         suite = request.suite.model_copy(update={"test_cases": automation_cases})
         source = suite.model_dump_json()
         instructions = (
-            step_definition_agent_instructions(self.settings.agent_profile) + LAYOUT_INSTRUCTIONS
+            step_definition_agent_instructions(self.settings.agent_profile)
+            + LAYOUT_INSTRUCTIONS
+            + IMPLEMENTATION_APPROVAL_POLICY
         )
         scope, scenarios = self.memory.identity(suite, self.settings.agent_profile, instructions)
         baseline = self._fallback_artifact(request.suite.feature_name, automation_cases)
@@ -218,7 +223,8 @@ class ReqnRollStepDefinitionAgent:
             if not file.path.startswith("StepDefinitions/")
         }
         prompt = (
-            f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}\n\n"
+            implementation_approval_prompt(request.validation)
+            + f"APPROVED AUTOMATION SUITE\n{source}\n\nARTIFACT SCHEMA\n{schema}\n\n"
             "IMPLEMENTATION BASELINE\n"
             f"{baseline.model_dump_json()}\n\n"
             "Implement executable C# method bodies and include every referenced helper file. "
@@ -270,11 +276,7 @@ class ReqnRollStepDefinitionAgent:
             validate_layout(artifact.files)
             findings = implementation_findings(artifact, expected_steps)
             if findings:
-                missing_inputs = " ".join(artifact.notes)
-                raise ValueError(
-                    " ".join(findings)
-                    + (" Implementation context: " + missing_inputs if missing_inputs else "")
-                )
+                raise IncompleteImplementationError(findings, artifact.notes, len(expected_steps))
             return artifact
 
         try:

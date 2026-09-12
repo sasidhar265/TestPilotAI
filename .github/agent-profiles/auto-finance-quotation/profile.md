@@ -1,9 +1,15 @@
 # UK Automotive Quotation Services project profile
 
-Use the version-controlled BRD v1.0 baseline in `knowledge/quotation-brd-baseline.md` as the sole
-domain requirements source for manual cases, automation cases, and step definitions. The current
-request may select scope or output format but must not add business behavior. Ignore conflicting
-stored examples, older quotation drafts, and unstated domain conventions. Preserve `BR-QT-*` IDs.
+The current request and its explicit business rules define the requested scope. Use the
+version-controlled BRD v1.0 baseline in `knowledge/quotation-brd-baseline.md` as the default
+domain requirements source for quotation behavior when the request does not provide it.
+This profile and its specialist overlays apply only to relevant quotation behavior. Do not impose
+quotation calculations, catalogue coverage or BR-QT requirements on supplied queue, enrichment,
+documentation or other service requirements. Preserve supplied FR-* and BR-* identifiers;
+preserve BR-QT-* identifiers where the request uses the quotation baseline. Current explicit
+requirements take precedence over default domain examples. A direct contradiction within the
+supplied requirements still needs clarification, not invented semantics. Ignore conflicting
+stored examples, older quotation drafts, and unstated domain conventions.
 Do not invent formulas, thresholds,
 eligibility matrices, maintenance contents, VAT treatment, regulatory classifications, disclosure
 wording, rounding/tolerance, or CAC rules that await owner approval.

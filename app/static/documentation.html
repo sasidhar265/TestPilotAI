@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f6f7fb">
   <title>AI Quality Lifecycle — Product guide</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911">
-  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260904-current-ui">
+  <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide">
   <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment">
   <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout">
   <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment">
@@ -30,16 +30,17 @@
       </nav>
       <nav class="docs-nav" aria-label="On this page">
         <span class="nav-label">On this page</span>
-        <a class="active" href="#overview">Overview</a>
-        <a href="#workflow">Product workflow</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#agents">Agents</a>
-        <a href="#test-standard">Generation standard</a>
-        <a href="#use-cases">Use cases</a>
-        <a href="#inputs">Inputs</a>
-        <a href="#outputs">Outputs</a>
-        <a href="#company-documents">Company requirements</a>
-        <a href="#integrations">Integrations and API</a>
+        <a href="#overview">Overview</a>
+        <a href="#workflow">Get started</a>
+        <a href="#use-cases">Application pages</a>
+        <a href="#agents">Agent roles</a>
+        <a href="#inputs">Requirements and files</a>
+        <a href="#test-standard">Review tests</a>
+        <a href="#outputs">Downloads and sharing</a>
+        <a href="#execution">Execution results</a>
+        <a href="#architecture">How it works</a>
+        <a href="#company-documents">Deployment planning</a>
+        <a href="#integrations">API reference</a>
       </nav>
       <div class="side-status">
         <div class="status-line" id="status"><span class="pulse"></span><span class="status-copy">Checking agent registry…</span></div>
@@ -63,126 +64,27 @@
             </section>
           </div></div></header>
 
-      <article class="content">
-        <header class="hero" id="overview">
-          <div class="hero-copy">
-            <span class="eyebrow">Governed quality engineering</span>
-            <h1>From business requirements to review-ready test evidence.</h1>
-            <p>Quality Lifecycle Studio turns requirements and business documents into traceable manual tests, executable BDD scenarios, ReqnRoll C# bindings, and governed acceptance outputs.</p>
-            <div class="actions"><a class="button primary" href="/">Open Quality workspace →</a><a class="button secondary" href="#workflow">Explore the workflow</a></div>
-          </div>
-          <aside class="hero-card">
-            <span class="card-label">Active profile</span>
-            <h2>AI Quality Lifecycle Agent</h2>
-            <p>Reusable, requirement-grounded quality engineering workflow</p>
-            <dl><div><dt>Requirements</dt><dd>BR-QT-001–028</dd></div><div><dt>Products</dt><dd>7 supported</dd></div><div><dt>Brands</dt><dd>11 supported</dd></div><div><dt>Validation errors</dt><dd>19 governed</dd></div></dl>
-          </aside>
-        </header>
-
-        <div class="at-a-glance" aria-label="Product principles">
-          <div><span>01</span><p><strong>BRD grounded</strong>Project profiles provide version-controlled domain truth.</p></div>
-          <div><span>02</span><p><strong>Schema controlled</strong>Python enforces types, security and deterministic gates.</p></div>
-          <div><span>03</span><p><strong>Human reviewed</strong>No suite or external action bypasses explicit review.</p></div>
-        </div>
-
-        <section class="section" id="workflow">
-          <div class="section-heading"><span class="section-number">01</span><div><span class="eyebrow">Product workflow</span><h2>Four stages from intent to delivery</h2><p>The application keeps creation, review, validation, and publishing distinct so users always know what happens next.</p></div></div>
-          <div class="workflow-grid">
-            <article class="workflow-card"><span>1</span><div><h3>Define</h3><p>Paste requirements, upload a supported document, or connect a Jira story. Choose manual, automation, or both and select the provider.</p><small>Input Agent · Business Rules Agent</small></div></article>
-            <article class="workflow-card"><span>2</span><div><h3>Review</h3><p>Expand manual cases to inspect steps and expected results, or inspect BDD scenarios. Click Review on a test to add comments and regenerate only that test; feedback is saved for future runs.</p><small>DecisionAgent · Manual and Automation specialists</small></div></article>
-            <article class="workflow-card"><span>3</span><div><h3>Validate</h3><p>Review rule coverage, generate synthetic data, create C# bindings, and capture execution evidence.</p><small>Quality Gate · Test Data · ReqnRoll</small></div></article>
-            <article class="workflow-card"><span>4</span><div><h3>Deliver</h3><p>Select cases in Generated Suite, enter the reviewer, approve, download, or explicitly attach them to Jira from the same toolbar.</p><small>Context Converter · Output Agent</small></div></article>
-          </div>
-        </section>
-
-        <section class="section" id="architecture">
-          <div class="section-heading"><span class="section-number">02</span><div><span class="eyebrow">Architecture</span><h2>Markdown-directed, Python-governed</h2><p>The system deliberately separates readable agent behavior from executable controls.</p></div></div>
-          <div class="architecture-grid">
-            <article class="architecture-card policy"><span class="architecture-icon">MD</span><h3>Markdown owns intent</h3><p>Base agents define roles, reasoning policies, input/output expectations, and quality standards.</p><ul><li><code>.github/agents/*.agent.md</code></li><li>Project-specific profile overlays</li><li>Version-controlled BRD knowledge</li></ul></article>
-            <div class="architecture-arrow">→</div>
-            <article class="architecture-card runtime"><span class="architecture-icon">AI</span><h3>Shared Copilot runtime</h3><p>One runtime owns authentication, restricted sessions, timeouts, events, JSON extraction, and typed output validation.</p><ul><li><code>app/agents/runner.py</code></li><li>Declarative output contracts</li><li>Tools and memory disabled by default</li></ul></article>
-            <div class="architecture-arrow">→</div>
-            <article class="architecture-card control"><span class="architecture-icon">PY</span><h3>Python owns control</h3><p>FastAPI and deterministic services enforce schemas, quality gates, storage, exports, security, and external actions.</p><ul><li>Pydantic contracts</li><li>SQLite exact-match memory</li><li>Explicit Jira authorization</li></ul></article>
-          </div>
-          <div class="callout"><span>Why separate profiles?</span><p>The same reusable agents can support multiple products without leaking automotive rules into unrelated projects. The selected profile is composed into the agent prompt at runtime.</p></div>
-        </section>
-
-        <section class="section" id="agents">
-          <div class="section-heading"><span class="section-number">03</span><div><span class="eyebrow">Live registry</span><h2>Agents and responsibilities</h2><p>This list comes from <code>GET /api/agents</code>, so it reflects the running application rather than static documentation.</p></div></div>
-          <div class="agents" id="agent-list"><article class="card loading-card">Loading registered agents…</article></div>
-        </section>
-
-        <section class="section" id="test-standard">
-          <div class="section-heading"><span class="section-number">04</span><div><span class="eyebrow">Quality standard</span><h2>Consistent, traceable generation</h2><p>Every output follows typed structures and the selected project policy.</p></div></div>
-          <div class="grid two">
-            <article class="card"><span class="card-label">All test cases</span><h3>Canonical case structure</h3><ul><li>Stable ID, concise title, objective, category, and priority</li><li>Explicit manual or automation execution mode</li><li>Case-specific feasibility reason and preconditions</li><li>Actions paired with observable expected results</li><li>Synthetic test data, tags, and BR-QT traceability</li></ul></article>
-            <article class="card"><span class="card-label">Automation</span><h3>Executable BDD contract</h3><ul><li>Scenario or Scenario Outline with complete Examples</li><li>Concise Given, When, Then and optional And/But</li><li>Maximum four executable lines per scenario</li><li>Typed data suitable for ReqnRoll bindings</li><li>Approved financial oracle required for exact calculations</li></ul></article>
-            <article class="card"><span class="card-label">Manual</span><h3>Acceptance evidence</h3><ul><li>Compact scenario and title rows with expandable details</li><li>Numbered Steps to reproduce and corresponding expected results</li><li>Preconditions, synthetic data, tags, rationale, and traceability</li><li>API, UI, performance, or database testing intent</li><li><code>gherkin: null</code> for structured manual cases</li></ul></article>
-            <article class="card"><span class="card-label">Quality Gate</span><h3>BRD completeness</h3><ul><li>BR-QT-001 through BR-QT-028 remain traceable</li><li>All applicable validation categories are represented</li><li>All 19 business error codes use the BRD schema</li><li>Unsupported formulas and regulatory wording are rejected</li><li>Exact calculations require approved golden references</li></ul></article>
-          </div>
-        </section>
-
-        <section class="section" id="use-cases">
-          <div class="section-heading"><span class="section-number">05</span><div><span class="eyebrow">Application use cases</span><h2>One workspace across the test lifecycle</h2></div></div>
-          <div class="grid three">
-            <article class="card"><span class="card-icon">BR</span><h3>Business-rule grounding</h3><p>Use the selected BRD profile as the sole domain source and preserve explicit requirement mappings.</p></article>
-            <article class="card"><span class="card-icon">DOC</span><h3>Document-to-tests</h3><p>Extract a PDF, document, spreadsheet, or UI image and turn it into a governed suite.</p></article>
-            <article class="card"><span class="card-icon">↻</span><h3>Knowledge reuse</h3><p>Return a revalidated exact-match suite without consuming another Copilot request.</p></article>
-            <article class="card"><span class="card-icon">&lt;/&gt;</span><h3>ReqnRoll bindings</h3><p>Generate typed C# step definitions from approved automation Gherkin and inspect step coverage.</p></article>
-            <article class="card"><span class="card-icon">BUG</span><h3>Execution and defects</h3><p>Capture reviewed outcomes and create human-review-required defect drafts for failed cases.</p></article>
-            <article class="card"><span class="card-icon">%</span><h3>Quality metrics</h3><p>Calculate automation/manual proportions, pass rate, defects, and density from reviewed evidence.</p></article>
-          </div>
-        </section>
-
-        <section class="section" id="inputs">
-          <div class="section-heading"><span class="section-number">06</span><div><span class="eyebrow">Inputs</span><h2>Supported requirement sources</h2></div></div>
-          <div class="grid three">
-            <article class="card"><span class="card-label">Paste</span><h3>Direct text</h3><p>User stories, feature descriptions, business rules, and acceptance criteria up to 30,000 characters.</p></article>
-            <article class="card"><span class="card-label">Upload</span><h3>Business documents</h3><p>DOCX, text PDF, XLSX, Pages, and Numbers. Binary-only iWork files should be exported as PDF or XLSX.</p></article>
-            <article class="card"><span class="card-label">OCR</span><h3>Images</h3><p>PNG and JPEG through local Tesseract OCR. All uploaded files are restricted to 15 MB.</p></article>
-          </div>
-        </section>
-
-        <section class="section" id="outputs">
-          <div class="section-heading"><span class="section-number">07</span><div><span class="eyebrow">Outputs and delivery</span><h2>Reviewable artifacts, never silent publication</h2></div></div>
-          <div class="output-list">
-            <article><span>01</span><div><h3>Manual cases</h3><p>Expandable material-style cards with numbered actions, expected results, synthetic data, and requirement mappings.</p></div></article>
-            <article><span>02</span><div><h3>BDD scenarios</h3><p>Reusable feature content with Background setup, Scenario Outline parameters, and complete Examples.</p></div></article>
-            <article><span>03</span><div><h3>ReqnRoll C#</h3><p>Reusable typed bindings generated from approved Gherkin, with coverage classification and explicit TODOs.</p></div></article>
-            <article><span>04</span><div><h3>Generated Suite actions</h3><p>Approve selected cases beside CSV, Excel, JSON, feature, ReqnRoll, and Jira actions; missing reviewer or Jira IDs are flagged inline.</p></div></article>
-            <article><span>05</span><div><h3>Validated memory</h3><p>Approved exact-match suites in repository-local SQLite, revalidated before reuse.</p></div></article>
-            <article><span>06</span><div><h3>Activity and reuse notices</h3><p>The top-right bell reports runs and system updates; a popup identifies suites recalled from approved knowledge.</p></div></article>
-          </div>
-        </section>
-
-        <section class="section" id="company-documents">
-          <div class="section-heading"><span class="section-number">08</span><div><span class="eyebrow">Organizational readiness</span><h2>Company requirements and implementation guidance</h2><p>Read the maintained adoption documents without leaving Quality Lifecycle Studio.</p></div></div>
+<article class="content">
+<header class="hero" id="overview"><div class="hero-copy"><span class="eyebrow">Application guide</span><h1>Turn requirements into tests you can review and use.</h1><p>AI Quality Lifecycle helps you create manual test cases and automation scenarios, check requirement coverage, and export test files. Start with a requirement, document or Jira story.</p><div class="actions"><a class="button primary" href="/">Open Quality workspace →</a><a class="button secondary" href="#workflow">Get started</a></div></div><aside class="hero-card"><span class="card-label">Key terms</span><h2>What the words mean</h2><p><strong>Test suite:</strong> a collection of test cases.</p><p><strong>Agent:</strong> a component with one job, such as preparing input or checking tests.</p><p><strong>BDD / Gherkin:</strong> scenarios written as Given (setup), When (action) and Then (expected result).</p><p><strong>Quality Gate:</strong> automated checks on the test design.</p></aside></header>
+<div class="callout"><span>Design quality and test results are different</span><p>A Quality Gate pass means the generated test design passed the application’s checks. A test passes execution only after it runs against an application and its expected result is confirmed.</p></div>
+<section class="section" id="workflow"><div class="section-heading"><span class="section-number">01</span><div><h2>Create your first test suite</h2><p>Follow these steps in Quality workspace.</p></div></div><ol class="guide-steps">
+<li><strong>Add the requirement.</strong> Paste text, or use the + control to upload a document or link a Jira issue. Include the expected behaviour and acceptance criteria.</li>
+<li><strong>Check shared rules.</strong> Open Business requirements &amp; rules. Add one rule per line as <code>BR-ID: description</code>. These rules are shared across the workspace; generation saves the editor first.</li>
+<li><strong>Choose the output.</strong> Select Manual, Automation (BDD / Gherkin), or Both. For manual tests, choose API, UI, performance or database testing. Select an available LLM (the AI model used for generation).</li>
+<li><strong>Generate and review.</strong> Inspect each test’s purpose, steps, expected results and requirement links. Use Review to request a change to an individual case. Check any Quality Gate findings.</li>
+<li><strong>Approve and export.</strong> Select the reviewed cases, enter your reviewer name and choose Approve selected to record acceptance. Use View or Download for the available file formats. Jira attachment is a separate action.</li>
+</ol></section><section class="section" id="use-cases"><div class="section-heading"><span class="section-number">02</span><div><h2>Where to find each feature</h2><p>Use the navigation to move between the application’s main pages.</p></div></div><div class="grid two"><article class="card"><h3>Quality workspace</h3><p>Create and review suites. View generated files, download artifacts, approve selected cases or attach them to Jira.</p></article><article class="card"><h3>Progress &amp; execution</h3><p>Run the repository BDD suite and inspect its recorded outcomes. Click a run in Run history to select its results. Search by run or project, filter by status, and scroll within the history. Expand a run for details and available report downloads.</p></article><article class="card"><h3>Quality Lifecycle</h3><p>Review the current suite’s requirement links, coverage gaps, priorities, test categories and validation findings. Inspect whether saved knowledge was reused. Generate a suite first to enable these actions.</p></article><article class="card"><h3>Runtime logs</h3><p>Search using a request reference ID and choose a Status filter. The filter applies to the loaded entries, up to 100 per request. Scroll through the logs and expand available event or technical details. Clear the search field and search again to return to recent logs.</p></article><article class="card"><h3>Documentation</h3><p>Use this guide for daily tasks. Deployment planning documents and the API reference are available further down this page.</p></article><article class="card"><h3>Profile and appearance</h3><p>Use the profile menu to sign out. Administrators can open Manage users. The appearance control offers light, dark and system themes.</p></article></div></section><section class="section" id="agents"><div class="section-heading"><span class="section-number">03</span><div><h2>Agents and responsibilities</h2><p>Each agent has a specific job. Some use AI; others use application rules, stored data or a test runner. They run when their task is needed, so the list does not mean every agent runs for every request.</p></div></div><div class="callout"><span>The usual generation flow</span><p>Prepare the input → apply business rules → look for a saved match → plan and write tests → check the design → store validated results. Export and execution are separate actions.</p></div><div class="agents" id="agent-list"><article class="card loading-card">Loading registered agents…</article></div></section><section class="section" id="inputs"><div class="section-heading"><span class="section-number">04</span><div><h2>What you can provide</h2><p>Clear requirements give the agents a better basis for useful tests.</p></div></div><div class="grid two"><article class="card"><h3>Requirement text</h3><p>Enter 10–30,000 characters. Describe the feature, valid and invalid behaviour, and expected outcomes. Supply approved request examples and expected values when exact API or calculation checks are needed.</p></article><article class="card"><h3>Documents and images</h3><p>Upload DOCX, text-based PDF, XLSX, Pages, Numbers, PNG or JPEG, up to 15 MB. Image text extraction requires Tesseract on the application host. Scanned PDFs need text recognition first; export unreadable Pages or Numbers files to PDF or XLSX.</p></article><article class="card"><h3>Jira stories</h3><p>Use + → Link Jira ticket, enter an issue key or browse URL, then choose Connect. The application imports the summary, description and available acceptance criteria for you to review.</p></article><article class="card"><h3>Business rules</h3><p>Shared rules apply to generation across this workspace. Project profiles add domain-specific guidance. Rule IDs and business constraints depend on your project; quotation-specific rules are not universal requirements.</p></article></div></section><section class="section" id="test-standard"><div class="section-heading"><span class="section-number">05</span><div><h2>How to review generated tests</h2><p>Check the business meaning as well as the automated validation result.</p></div></div><div class="grid two"><article class="card"><h3>Manual tests</h3><p>Review the objective, preconditions, actions and expected result for each step. Confirm that a person could perform the test and judge its outcome. Check any supplied test data.</p></article><article class="card"><h3>Automation scenarios</h3><p>Check the Given / When / Then scenario and any example rows. Confirm that the scenario describes observable behaviour and uses the correct inputs. Generated code still needs review and target configuration before execution.</p></article><article class="card"><h3>Coverage and validation</h3><p>Traceability links show which requirements a test is intended to cover. The Quality Gate checks structure and applicable design rules. Inspect errors, warnings and missing coverage before accepting the suite.</p></article><article class="card"><h3>Review and acceptance</h3><p>Review lets you submit comments and regenerate an individual case. Approve selected records acceptance under the reviewer name you enter. Downloads become available according to suite validation and output type; human acceptance is a separate record.</p></article></div></section><section class="section" id="outputs"><div class="section-heading"><span class="section-number">06</span><div><h2>View, download and share</h2><p>Available actions depend on the generated suite.</p></div></div><div class="grid two"><article class="card"><h3>Manual suite downloads</h3><p>Validated manual-only suites can be downloaded as Excel, CSV, PDF or JSON. Spreadsheet and document downloads are disabled when the suite contains automation cases.</p></article><article class="card"><h3>Automation files</h3><p>View or download the Gherkin feature, step definitions or full automation pack. Choose C#, Java, Python, JavaScript, TypeScript or Ruby. C# packs use ReqnRoll, which connects Gherkin steps to C# code.</p></article><article class="card"><h3>Full automation packs</h3><p>Packs include scenarios, bindings, supporting implementations, input data and framework configuration. Review the files, supply the target settings and run the pack in its configured environment.</p></article><article class="card"><h3>Jira and accepted outputs</h3><p>Use the Jira action to attach selected tests to the chosen issue. Approve selected stores acceptance artifacts and shows a receipt. These actions require the relevant fields and, for Jira, a configured connection.</p></article></div></section><section class="section" id="execution"><div class="section-heading"><span class="section-number">07</span><div><h2>Understand execution results</h2><p>The Run BDD tests button runs the repository’s configured C# suite. It does not execute the automation pack you just generated.</p></div></div><div class="grid two"><article class="card"><h3>Read the dashboard</h3><p>Recorded runs, latest pass rate, failures and duration come from repository BDD history. The selected-run chart shows passed, failed and not-run counts when results are available. A missing result is shown as unavailable.</p></article><article class="card"><h3>Run generated tests</h3><p>Download and review the generated pack, configure its target URL and required credentials, and run it using its framework. For a C# pack, run <code>dotnet test Automation.csproj</code> from the extracted pack directory. Inspect the discovered scenarios and execution results.</p></article></div><div class="callout"><span>Use the right evidence</span><p>A repository BDD pass describes that repository run. It does not demonstrate that a generated suite passed against your target application.</p></div></section><section class="section" id="architecture"><div class="section-heading"><span class="section-number">08</span><div><h2>How the application works</h2><p>This is useful background when setting up the application or investigating a problem.</p></div></div><div class="grid two"><article class="card"><h3>AI generation</h3><p>The LLM selector shows models available through connected accounts. Automatic fallback, when selected, tries Copilot, OpenAI, Gemini and Codex in that order. Model availability depends on the deployment and account permissions.</p></article><article class="card"><h3>Rules and stored knowledge</h3><p>Agent instructions and project profiles guide generation. Application code checks outputs and manages exports. Validated exact-match suites can be stored and rechecked for reuse; accepted output artifacts have a separate approval record.</p></article><article class="card"><h3>Data handling</h3><p>Document text extraction happens on the application host. Requirements and relevant context are passed to the selected AI provider for generation. Shared rules and saved records belong to the deployed workspace.</p></article><article class="card"><h3>When something fails</h3><p>Read the message, copy its reference ID and search Runtime logs. If no models are available, use Refresh models and check the connected account. If document extraction fails, try a supported text-based export. Log entries are held in memory and clear when the application restarts.</p></article></div></section>        <section class="section" id="company-documents">
+          <div class="section-heading"><span class="section-number">09</span><div><span class="eyebrow">Organizational readiness</span><h2>Deployment planning documents</h2><p>These documents cover prerequisites, solution requirements and rollout tasks. They describe deployment planning; use this guide for the current application screens.</p></div></div>
           <div class="doc-tabs" role="tablist" aria-label="Company implementation documents"><button class="doc-tab active" type="button" data-document="prerequisites" role="tab">Project prerequisites</button><button class="doc-tab" type="button" data-document="requirements" role="tab">Solution requirements</button><button class="doc-tab" type="button" data-document="checklist" role="tab">Implementation checklist</button></div>
           <article class="document-reader" id="document-reader" aria-live="polite"><p class="doc-loading">Loading company prerequisites…</p></article>
         </section>
 
-        <section class="section" id="integrations">
-          <div class="section-heading"><span class="section-number">09</span><div><span class="eyebrow">Developer reference</span><h2>Integrations and API</h2><p>All mutation endpoints remain local and controlled; Jira publication requires an explicit user action.</p></div></div>
-          <div class="endpoint-list">
-            <div class="endpoint"><span class="method post">POST</span><code>/api/agent/run</code><p>Ground, recall, generate, validate, and store a suite.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/generate/document</code><p>Extract a supported document and run the governed pipeline.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/step-definitions/reqnroll</code><p>Generate typed C# bindings from a Quality Gate-approved automation suite.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/test-data</code><p>Fill missing values with case-aligned synthetic data.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/execution</code><p>Validate and summarize supplied execution results.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/defects</code><p>Create review-required defect drafts from failures.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/metrics</code><p>Calculate coverage, execution, and defect metrics.</p></div>
-            <div class="endpoint"><span class="method get">GET</span><code>/api/agents</code><p>List functional agents, responsibilities, runtimes, and capabilities.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/context-converter/{format}</code><p>Convert an approved suite to feature, CSV, XLSX, or JSON.</p></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/api/jira/publish</code><p>Attach explicitly selected tests to Jira Cloud.</p></div>
-          </div>
-          <div class="api-cta"><div><h3>Need the complete schema?</h3><p>Explore request bodies, response models, and validation errors in the interactive OpenAPI reference.</p></div><a class="button primary" href="/docs">Open API Docs ↗</a></div>
-        </section>
-      </article>
+<section class="section" id="integrations"><div class="section-heading"><span class="section-number">10</span><div><h2>Integrations and API</h2><p>For developers and administrators. The API reference lists the complete request fields and responses.</p></div></div><div class="grid two"><article class="card"><h3>Generation and agent registry</h3><p><code>POST /api/agent/run</code> generates from text; <code>POST /api/generate/document</code> accepts a document. <code>GET /api/agents</code> lists registered roles. Registration does not verify model credentials or execution readiness.</p></article><article class="card"><h3>Code and acceptance</h3><p><code>POST /api/step-definitions/bindings</code> generates bindings in a selected language. <code>POST /api/step-definitions/reqnroll</code> provides C# generation. <code>POST /api/output/accept</code> records selected-case acceptance.</p></article><article class="card"><h3>Execution and logs</h3><p><code>POST /api/automation/run</code> runs repository BDD tests. <code>GET /api/automation/history</code> returns their history. <code>GET /api/logs</code> returns recent entries or entries for a reference ID.</p></article><article class="card"><h3>Additional API workflows</h3><p>The APIs also support test-data helpers, supplied-result summaries, defect drafts and metrics. Formal requirement versions, baselines, cycles and audit records are available under <code>/api/stlc</code>; these management forms are not part of the Quality Lifecycle page.</p></article></div><div class="api-cta"><div><h3>Need setup details or request fields?</h3><p>Open the API reference. Jira actions require configured Jira credentials and issue permissions; automation requires its runner and target configuration.</p></div><a class="button primary" href="/docs">Open API Docs ↗</a></div></section></article>
     </main>
   </div>
 
   <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script><script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
   <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script><script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-  <script src="/static/scripts/documentation.js?v=20260909-page-alignment" defer></script>
+  <script src="/static/scripts/documentation.js?v=20260912-clear-guide" defer></script>
 </body>
 </html>

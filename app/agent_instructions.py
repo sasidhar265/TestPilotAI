@@ -107,6 +107,13 @@ def generation_agent_instructions(target: str, profile: str = "auto-finance-quot
     quality_override = PROFILE_DIRECTORY / profile / "quality-gate.md"
     if quality_override.is_file():
         sections.append(_instruction_body(quality_override))
+    sections.append(
+        "The application produces the structured Quality Gate report after generation. "
+        "Do not insert a competing passed/failed Quality Gate verdict or conversion permission "
+        "into TestSuite assumptions or coverage_notes. Use those fields to identify specific "
+        "missing requirements, unresolved contradictions and required runtime data instead. "
+        "Do not hide missing business semantics or describe unexecuted tests as passed."
+    )
     return "\n\n".join(sections)
 
 

@@ -184,3 +184,29 @@ async def test_all_incomplete_providers_preserve_actionable_failure(monkeypatch)
     assert runner.copilot.generate_structured.await_count == 2
     assert runner._openai.await_count == 2
     assert runner._codex.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_incomplete_bindings_keep_diagnostics_out_of_user_error(monkeypatch, caplog):
+    from app.agents.reqnroll_validation import IncompleteImplementationError
+
+    runner = ArtifactGenerationRunner(settings())
+    runner.copilot.generate_structured = AsyncMock(return_value=artifact())
+    monkeypatch.setattr("app.agents.artifact_runner.shutil.which", lambda _: None)
+    findings = [f"No Given binding implementation for: Given fixture {i}" for i in range(31)]
+
+    def reject(value):
+        raise IncompleteImplementationError(findings, ["Provider rejected an earlier draft."], 31)
+
+    with pytest.raises(ValueError, match="31 required steps") as error:
+        await runner.generate_structured(
+            STEP_DEFINITION_AGENT, instructions="C#", prompt="suite", validate=reject
+        )
+    assert len(str(error.value)) < 600
+    assert "No Given binding" not in str(error.value)
+    assert "Provider rejected" not in str(error.value)
+    repair = runner.copilot.generate_structured.call_args.kwargs["prompt"]
+    assert findings[-1] in repair
+    assert "Provider rejected an earlier draft." in repair
+    record = next(r for r in caplog.records if r.message == "artifact_implementation_rejected")
+    assert findings[-1] in record.event_details["findings"]
