@@ -1,6 +1,16 @@
 /* Page behavior only. The matching HTML defines structure and CSS defines appearance. */
 
 const agentGuide = {
+  "story-generator-agent": [
+    "Creates user stories",
+    "Turns source requirements into reviewable stories, acceptance criteria and exact source excerpts in stage 2.",
+    "Story design",
+  ],
+  "scenario-generator-agent": [
+    "Designs story coverage",
+    "Creates format-neutral scenarios linked to each reviewed story and its acceptance criteria in stage 3.",
+    "Scenario design",
+  ],
   "input-agent": [
     "Prepares requirements",
     "Reads pasted text or extracts text from a supported document so the next agents can use it.",
@@ -72,7 +82,7 @@ const agentGuide = {
     "API helper",
   ],
   "automation-execution-agent": [
-    "Runs repository BDD tests",
+    "Runs configured BDD features",
     "Starts the configured C# repository suite and collects execution evidence. This is the runner behind Run BDD tests.",
     "Test execution",
   ],

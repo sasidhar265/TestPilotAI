@@ -278,11 +278,11 @@ def test_model_picker_only_lists_available_routes() -> None:
         page.locator("#refresh-llm-models").click()
         playwright.expect(page.locator("#llm-model")).to_be_disabled()
         playwright.expect(page.locator("#llm-model")).to_have_text("No models available")
-        playwright.expect(page.locator("#generate")).to_be_disabled()
+        playwright.expect(page.locator("#generate")).to_be_enabled()
         state["fail"] = True
         page.locator("#refresh-llm-models").click()
         playwright.expect(page.locator("#llm-model")).to_have_text("Models unavailable")
-        playwright.expect(page.locator("#generate")).to_be_disabled()
+        playwright.expect(page.locator("#generate")).to_be_enabled()
         state.update(
             fail=False, models=[{"model": "codex", "display_name": "Codex CLI", "can_use": True}]
         )

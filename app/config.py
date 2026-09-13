@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     max_concurrent_requests: int = Field(default=20, ge=1, le=1000)
     max_concurrent_generations: int = Field(default=2, ge=1, le=100)
     automation_project_path: Path = Path("automation/QualityLifecycle.Automation.csproj")
+    api_base_url: str = ""
+    api_bearer_token: SecretStr = SecretStr("")
+    api_fixture_file: str = ""
+    api_request_method: str = ""
+    api_request_path: str = ""
     automation_timeout_seconds: float = Field(default=900, gt=0, le=3600)
     allure_executable: str = "allure"
     allure_timeout_seconds: float = Field(default=120, gt=0, le=600)

@@ -1,0 +1,110 @@
+{
+  "approved-stories": {
+    "endpoint": "validate-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      }
+    }
+  },
+  "ungrounded-stories": {
+    "endpoint": "validate-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "An unsupported invented source statement.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      }
+    }
+  },
+  "approved-scenarios": {
+    "endpoint": "validate-scenarios",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "scenarios": {
+        "scenarios": [
+          {
+            "id": "SC-001",
+            "story_id": "ST-001",
+            "title": "Read the supplied source",
+            "preconditions": ["A requirement source is supplied"],
+            "action": "Read the supplied requirements",
+            "expected_result": "The source requirements are available for story conversion",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      }
+    }
+  },
+  "orphan-scenarios": {
+    "endpoint": "validate-scenarios",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "scenarios": {
+        "scenarios": [
+          {
+            "id": "SC-001",
+            "story_id": "ST-999",
+            "title": "Read the supplied source",
+            "preconditions": ["A requirement source is supplied"],
+            "action": "Read the supplied requirements",
+            "expected_result": "The source requirements are available for story conversion",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      }
+    }
+  }
+}

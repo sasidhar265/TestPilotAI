@@ -56,6 +56,8 @@ class RequirementToTestCaseAgent(Protocol):
 
 class AgentKind(StrEnum):
     INPUT = "input"
+    STORY_GENERATOR = "story-generator"
+    SCENARIO_GENERATOR = "scenario-generator"
     BUSINESS_RULES = "business-rules"
     KNOWLEDGE = "knowledge"
     ORCHESTRATOR = "orchestrator"

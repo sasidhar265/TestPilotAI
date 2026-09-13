@@ -388,6 +388,8 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     assert [agent["kind"] for agent in agents] == [
         "input",
         "business-rules",
+        "story-generator",
+        "scenario-generator",
         "knowledge",
         "orchestrator",
         "decision",
@@ -405,14 +407,14 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "bug-reporter",
         "metrics",
     ]
-    assert agents[13]["id"] == "execution-agent"
-    assert agents[14]["id"] == "automation-execution-agent"
-    assert agents[3]["runtime"] == "local-orchestrator"
-    assert agents[4]["runtime"] == "local-router"
-    assert agents[3]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
-    assert agents[4]["instruction_file"] == ".github/agents/reqforge.agent.md"
-    assert agents[9]["instruction_file"] == ".github/agents/context-converter.agent.md"
-    assert agents[10]["runtime"] == "local-sqlite"
+    assert agents[15]["id"] == "execution-agent"
+    assert agents[16]["id"] == "automation-execution-agent"
+    assert agents[5]["runtime"] == "local-orchestrator"
+    assert agents[6]["runtime"] == "local-router"
+    assert agents[5]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
+    assert agents[6]["instruction_file"] == ".github/agents/reqforge.agent.md"
+    assert agents[11]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[12]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:

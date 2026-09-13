@@ -73,7 +73,17 @@ function showKnowledgeNotice(data) {
 async function responseError(response) {
   let message = `Request failed (${response.status})`;
   try {
-    message = (await response.json()).detail || message;
+    const detail = (await response.json()).detail;
+    message = Array.isArray(detail)
+      ? detail
+          .map(
+            (item) =>
+              `${(item.loc || []).filter((part) => part !== "body").join(".")}: ${item.msg}`,
+          )
+          .join("; ")
+      : typeof detail === "string"
+        ? detail
+        : message;
   } catch {}
   const reference = response.headers.get("x-request-id");
   const error = new Error(reference ? `${message} Reference ID: ${reference}` : message);
@@ -223,6 +233,7 @@ function render(data) {
   $("metrics-dashboard").innerHTML = "<p>Generate metrics for the current designed suite.</p>";
   syncGeneratedSuiteActions();
   setWorkflowStage(2);
+  window.dispatchEvent(new CustomEvent("workspace-suite-rendered"));
   $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   if (fromKnowledge) showKnowledgeNotice(data);
 }
@@ -439,10 +450,14 @@ function syncGenerateAvailability() {
   if (typeof syncReviewControls === "function") syncReviewControls();
   const hasInput = Boolean(attachedFile || $("description").value.trim()),
     modelUnavailable = ["checking", "blocked"].includes($("llm-model").dataset.access);
-  $("generate").disabled = Boolean(activeGeneration) || !hasInput || modelUnavailable;
+  $("generate").disabled =
+    Boolean(activeGeneration) ||
+    !hasInput ||
+    (!document.querySelector(".stage-workspace") && modelUnavailable);
 }
 function setDescription(value) {
   $("description").value = value;
+  window.dispatchEvent(new CustomEvent("workspace-source-replaced"));
   $("character-count").textContent = `${value.length} characters`;
   syncGenerateAvailability();
 }
@@ -559,9 +574,9 @@ function showFile(file) {
     file.size < 1048576
       ? `${Math.max(1, Math.round(file.size / 1024))} KB`
       : `${(file.size / 1048576).toFixed(1)} MB`;
-  $("source-state").textContent = "Document attached · processed when you generate";
+  $("source-state").textContent = "Document attached · ready to read";
   $("description").closest(".textarea-wrap").classList.add("has-attachment");
-  $("status").textContent = `${file.name} attached. Select Generate test suite when ready.`;
+  $("status").textContent = `${file.name} attached. Select Read requirements when ready.`;
   syncGenerateAvailability();
   setSourceMenu(false);
 }

@@ -309,6 +309,7 @@ class AutomationRunReport(BaseModel):
     project: str
     suite_case_count: int
     execution_scope: str = "repository-checks"
+    test_results: list[dict[str, str]] = Field(default_factory=list)
     error: str | None = None
     passed: int = Field(ge=0)
     failed: int = Field(ge=0)

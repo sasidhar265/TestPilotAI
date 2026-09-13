@@ -7,6 +7,9 @@ AGENT_DIRECTORY = Path(__file__).parent.parent / ".github" / "agents"
 PROFILE_DIRECTORY = Path(__file__).parent.parent / ".github" / "agent-profiles"
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
+    "story-generator": "story-generator.agent.md",
+    "scenario-generator": "scenario-generator.agent.md",
+    "workflow-test-cases": "workflow-test-cases.agent.md",
     "multi-language": "multi-language.agent.md",
     "business-rules": "business-rules.agent.md",
     "reqforge": "reqforge.agent.md",

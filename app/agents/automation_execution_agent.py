@@ -23,6 +23,9 @@ _SAFE_ENVIRONMENT = (
     "NUGET_PACKAGES",
     "PLAYWRIGHT_BROWSERS_PATH",
     "QUALITY_LIFECYCLE_BASE_URL",
+    "API_BASE_URL",
+    "API_REQUEST_METHOD",
+    "API_REQUEST_PATH",
     "API_AUTH_TOKEN",
     "API_BEARER_TOKEN",
     "API_FIXTURE_FILE",
@@ -60,6 +63,14 @@ class AutomationExecutionAgent:
             APP_USERNAME=self.settings.app_username,
             APP_PASSWORD=self.settings.app_password_value,
         )
+        target_configuration = {
+            "API_BASE_URL": self.settings.api_base_url,
+            "API_BEARER_TOKEN": self.settings.api_bearer_token.get_secret_value(),
+            "API_FIXTURE_FILE": self.settings.api_fixture_file,
+            "API_REQUEST_METHOD": self.settings.api_request_method,
+            "API_REQUEST_PATH": self.settings.api_request_path,
+        }
+        environment.update({key: value for key, value in target_configuration.items() if value})
         secrets = [
             environment.get(key, "")
             for key in ("API_AUTH_TOKEN", "API_BEARER_TOKEN", "APP_PASSWORD")
@@ -130,6 +141,7 @@ class AutomationExecutionAgent:
                 report_error=report_error,
                 duration_ms=round((time.perf_counter() - started) * 1000),
                 output=output,
+                test_results=_test_results(Path(results) / "results.trx", secrets),
                 error=result_error
                 or (
                     "The automation runner exited unsuccessfully."
@@ -194,3 +206,27 @@ def _read_results(path: Path) -> tuple[int, int, int, str | None]:
         )
     except (OSError, ET.ParseError, ValueError):
         return 0, 0, 0, "No usable structured test results were produced; inspect runner output."
+
+
+def _test_results(path: Path, secrets: list[str] | None = None) -> list[dict[str, str]]:
+    """Expose runner-reported case names, including each Scenario Outline example."""
+    try:
+        if path.stat().st_size > 10 * 1024 * 1024:
+            return []
+        root = ET.parse(path).getroot()
+
+        def safe_name(value: str) -> str:
+            for secret in sorted(filter(None, secrets or []), key=len, reverse=True):
+                value = value.replace(secret, "[redacted]")
+            return value[:1000]
+
+        return [
+            {
+                "name": safe_name(item.attrib.get("testName", "Unnamed case")),
+                "status": item.attrib.get("outcome", "Unknown"),
+                "duration": item.attrib.get("duration", ""),
+            }
+            for item in root.findall(".//{*}UnitTestResult")
+        ]
+    except (OSError, ET.ParseError):
+        return []

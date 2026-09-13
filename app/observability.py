@@ -398,6 +398,9 @@ class OrganizationHttpMiddleware:
             return
 
         generation_paths = {
+            "/api/workflow/stories",
+            "/api/workflow/scenarios",
+            "/api/workflow/test-cases",
             "/api/generate",
             "/api/agent/run",
             "/api/generate/document",

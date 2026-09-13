@@ -90,9 +90,11 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         }""",
             {"source": source, "suite": suite, "validation": validation},
         )
+        page.locator("#stage-tab-1").click()
         page.locator("#description").fill(
             "Changed input must not replace the reviewed requirements"
         )
+        page.locator("#stage-tab-4").click()
         playwright.expect(page.locator("#case-review-panel-0")).to_be_hidden()
         page.get_by_role("button", name="Review TC-001", exact=True).click()
         playwright.expect(page.locator("#case-review-panel-0")).to_be_visible()

@@ -15,12 +15,42 @@ from the Mac as PDF or XLSX. A document-ingestion component extracts normalized 
 agent generates the suite, and an independent validator reports coverage, traceability,
 duplicates, clarity, and expected-result quality. Image extraction uses local Tesseract OCR.
 
-The application uses eighteen discoverable agents across the test lifecycle. In addition to
+The application uses twenty discoverable agents across the test lifecycle. In addition to
 requirement ingestion, manual/automation generation, validation, conversion, and storage, it can
 normalize business rules, recall approved knowledge, fill privacy-safe test data, summarize test
 execution, draft defects, and calculate quality metrics. `GET /api/agents` lists every agent's
 responsibility, runtime, and capabilities. Only suites that pass independent validation are newly
 stored for future exact-match reuse.
+
+The homepage now provides five connected tabs:
+
+1. **Requirements:** read a BRD upload, pasted command prompt, or linked Jira ticket. Review the
+   extracted text and shared rules before continuing.
+2. **Stories:** create source-grounded stories with acceptance criteria. Review or edit them and
+   select **Use these stories**.
+3. **Scenarios:** create format-neutral coverage linked to those story IDs. Review or edit the
+   preconditions, actions and expected results, then select **Use these scenarios**.
+4. **Test cases:** choose manual, automation or both; generate and validate cases with ST/SC
+   traceability. Existing review, acceptance, feature-file and automation-pack exports remain available.
+5. **Execution:** record actual manual outcomes, or inspect and run configured ReqnRoll features.
+   Automation is enabled only when the approved suite's exported feature exactly matches a file in
+   the configured `AUTOMATION_PROJECT_PATH` project's `Features/` directory. Install the reviewed
+   complete pack, dependencies, bindings and approved input data and configure the target environment
+   first. Set `API_BASE_URL` and optional `API_BEARER_TOKEN`/`API_FIXTURE_FILE` in `.env`
+   or the server environment for generated API packs. All features in that configured project run together; Scenario Outlines expand into examples.
+   Submitted scenarios appear while the runner works; individual outcomes and example names come
+   from TRX results when the run finishes. Repository checks do not validate an unrelated generated suite.
+
+Draft handoffs remain available while navigating within the workspace; reloading the page clears
+these drafts. Changing requirements clears downstream drafts and execution results. Story and
+scenario policies live in `story-generator.agent.md` and `scenario-generator.agent.md`; stage 4's
+conversion instructions live in `workflow-test-cases.agent.md`. Story/scenario generation uses the
+configured artifact-provider fallback (Copilot, configured OpenAI, then available Codex); test-case
+generation retains the existing selected provider routing. No Jira stories are published automatically.
+
+The `/api/workflow` endpoints expose document reading, stories, scenarios, validation of edited
+handoffs, test-case conversion, execution planning and controlled execution. Open API documentation
+for their schemas. Validation rejects duplicate IDs, unsupported source excerpts and broken story links.
 
 Agent behavior is defined in readable `.github/agents/*.agent.md` files. The FastAPI/Python layer
 loads the relevant DecisionAgent, specialist, and quality-gate policies into each Copilot session and

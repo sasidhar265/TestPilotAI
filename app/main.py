@@ -41,6 +41,7 @@ from app.agents.test_case_generator_agent import (
     TestCaseGeneratorAgent,
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
+from app.agents.workflow_agent import SCENARIO_AGENT, STORY_AGENT
 from app.auth import SESSION_COOKIE, issue_browser_session, valid_session
 from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
@@ -106,10 +107,12 @@ from app.services.stlc import LifecycleError
 from app.stlc_routes import router as stlc_router
 from app.user_routes import router as user_router
 from app.users import authenticate
+from app.workflow_routes import router as workflow_router
 from app.workspace_routes import router as workspace_router
 
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
+
 app = FastAPI(
     title="Quality Lifecycle Studio API",
     version="0.1.0",
@@ -129,6 +132,7 @@ app.add_middleware(
 app.include_router(user_router)
 app.include_router(workspace_router)
 app.include_router(stlc_router)
+app.include_router(workflow_router)
 
 
 @app.exception_handler(LifecycleError)
@@ -442,6 +446,8 @@ async def list_agents() -> list[dict[str, object]]:
         for agent in (
             InputAgent.descriptor,
             BusinessRulesAgent.descriptor,
+            STORY_AGENT,
+            SCENARIO_AGENT,
             KnowledgeAgent.descriptor,
             TestCaseGeneratorAgent.descriptor,
             ReqForgeTransformerAgent.descriptor,
@@ -545,12 +551,15 @@ async def run_automation(
         return await _run_automation(request, settings)
 
 
-async def _run_automation(request: AutomationRunRequest, settings: Settings) -> AutomationRunReport:
+async def _run_automation(
+    request: AutomationRunRequest, settings: Settings, scope: str = "repository-checks"
+) -> AutomationRunReport:
     """Run only the repository-approved C# BDD automation project."""
     dashboard = DashboardStore(settings.organizational_memory_path)
-    run_id = dashboard.start("repository_checks")
+    run_id = dashboard.start(scope.replace("-", "_"))
     try:
         report = await AutomationExecutionAgent(settings).run(request)
+        report = report.model_copy(update={"execution_scope": scope})
         dashboard.finish(run_id, report.status, report.model_dump())
         complete_lifecycle_action(
             "Automation Execution Agent",

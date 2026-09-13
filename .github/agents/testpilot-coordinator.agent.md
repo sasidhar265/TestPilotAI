@@ -44,3 +44,12 @@ most the governed findings-driven revision behavior exposed by the application.
 Complete through the terminal tool only after DecisionAgent has produced a passing validated suite. The application
 returns that suite, its exact validation report, and an ordered tool trace; do not fabricate a
 parallel prose result.
+
+## Five-stage homepage handoffs
+
+The homepage exposes input reading, story creation, scenario design, test-case conversion and
+execution as separate stages. Story Agent and Scenario Agent return source-grounded drafts for
+review before this coordinator receives stage 4. When reviewed ST-ID/SC-ID handoffs are supplied,
+preserve their ownership and acceptance criteria in every applicable case. Do not regenerate or
+silently discard those handoffs. Use the existing specialist routing and Quality Gate to convert
+them into the requested manual/automation formats. Execution remains an explicit user action.

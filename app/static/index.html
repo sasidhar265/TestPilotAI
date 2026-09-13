@@ -14,6 +14,7 @@
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260913" />
   </head>
   <body>
     <div class="app-shell">
@@ -174,30 +175,212 @@
         </header>
 
         <div data-workspace-page="/">
-          <div class="workflow-rail" role="list" aria-label="Test design workflow">
-            <div class="workflow-step active" role="listitem" aria-current="step">
-              <span>1</span><strong>Define</strong><small>Add requirements</small>
+          <section class="stage-workspace" aria-label="Requirements to execution">
+            <div class="stage-workspace-head">
+              <div>
+                <span class="section-kicker">Your quality journey</span>
+                <h2>From requirements to results</h2>
+                <p>Review each handoff and carry the same requirements through all five stages.</p>
+              </div>
+              <span id="stage-position" class="chip">Stage 1 of 5</span>
             </div>
-            <div class="workflow-step" role="listitem">
-              <span>2</span><strong>Review</strong><small>Inspect generated tests</small>
+            <div class="stage-tabs" role="tablist" aria-label="Quality workflow stages">
+              <button
+                type="button"
+                role="tab"
+                id="stage-tab-1"
+                aria-controls="stage-panel-1"
+                aria-selected="true"
+                tabindex="0"
+                data-stage="1"
+              >
+                <span class="stage-number">01</span
+                ><span><small>Stage 1</small><strong>Requirements</strong></span
+                ><span class="stage-indicator" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="stage-tab-2"
+                aria-controls="stage-panel-2"
+                aria-selected="false"
+                tabindex="-1"
+                data-stage="2"
+              >
+                <span class="stage-number">02</span
+                ><span><small>Stage 2</small><strong>Stories</strong></span
+                ><span class="stage-indicator" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="stage-tab-3"
+                aria-controls="stage-panel-3"
+                aria-selected="false"
+                tabindex="-1"
+                data-stage="3"
+              >
+                <span class="stage-number">03</span
+                ><span><small>Stage 3</small><strong>Scenarios</strong></span
+                ><span class="stage-indicator" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="stage-tab-4"
+                aria-controls="stage-panel-4"
+                aria-selected="false"
+                tabindex="-1"
+                data-stage="4"
+              >
+                <span class="stage-number">04</span
+                ><span><small>Stage 4</small><strong>Test cases</strong></span
+                ><span class="stage-indicator" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="stage-tab-5"
+                aria-controls="stage-panel-5"
+                aria-selected="false"
+                tabindex="-1"
+                data-stage="5"
+              >
+                <span class="stage-number">05</span
+                ><span><small>Stage 5</small><strong>Execution</strong></span
+                ><span class="stage-indicator" aria-hidden="true"></span>
+              </button>
             </div>
-            <div class="workflow-step" role="listitem">
-              <span>3</span><strong>Validate</strong><small>Run quality actions</small>
+            <p id="stage-status" role="status">
+              Add a BRD, paste requirements, or connect a Jira ticket to begin.
+            </p>
+            <div
+              id="stage-panel-1"
+              class="stage-panel"
+              role="tabpanel"
+              aria-labelledby="stage-tab-1"
+            ></div>
+            <div
+              id="stage-panel-2"
+              class="stage-panel"
+              role="tabpanel"
+              aria-labelledby="stage-tab-2"
+              hidden
+            >
+              <div class="stage-heading">
+                <div>
+                  <h2>Shape requirements into stories</h2>
+                  <p>Review the actor, business need, source evidence and acceptance criteria.</p>
+                </div>
+                <button class="primary" id="stage-stories" type="button" disabled>
+                  Create stories →
+                </button>
+              </div>
+              <div id="story-cards" class="stage-cards">
+                <p class="stage-empty">Read your requirements in stage 1 to begin.</p>
+              </div>
+              <details id="story-edit" hidden>
+                <summary>Edit stories</summary>
+                <div id="story-editor"></div>
+                <button class="secondary" id="save-stories" type="button">Apply story edits</button>
+              </details>
+              <button class="secondary stage-next" id="review-stories" type="button" disabled>
+                Use these stories →
+              </button>
             </div>
-            <div class="workflow-step" role="listitem">
-              <span>4</span><strong>Deliver</strong><small>Export or publish</small>
+            <div
+              id="stage-panel-3"
+              class="stage-panel"
+              role="tabpanel"
+              aria-labelledby="stage-tab-3"
+              hidden
+            >
+              <div class="stage-heading">
+                <div>
+                  <h2>Design scenario coverage</h2>
+                  <p>Trace every action and expected outcome to its owning story.</p>
+                </div>
+                <button class="primary" id="stage-scenarios" type="button" disabled>
+                  Create scenarios →
+                </button>
+              </div>
+              <div id="scenario-cards" class="stage-cards">
+                <p class="stage-empty">Review stories in stage 2 first.</p>
+              </div>
+              <details id="scenario-edit" hidden>
+                <summary>Edit scenarios</summary>
+                <div id="scenario-editor"></div>
+                <button class="secondary" id="save-scenarios" type="button">
+                  Apply scenario edits
+                </button>
+              </details>
+              <button class="secondary stage-next" id="review-scenarios" type="button" disabled>
+                Use these scenarios →
+              </button>
             </div>
-          </div>
+            <div
+              id="stage-panel-4"
+              class="stage-panel"
+              role="tabpanel"
+              aria-labelledby="stage-tab-4"
+              hidden
+            >
+              <div class="stage-heading">
+                <div>
+                  <h2>Create test cases</h2>
+                  <p>
+                    Choose manual, automation, or both. Review and export the resulting cases and
+                    feature files.
+                  </p>
+                </div>
+                <button class="primary" id="stage-cases" type="button" disabled>
+                  Create test cases →
+                </button>
+              </div>
+              <div id="stage-generation-options"></div>
+              <p id="stage-case-empty" class="stage-empty">Review scenarios in stage 3 first.</p>
+              <button class="secondary stage-next" id="review-cases" type="button" disabled>
+                Continue to execution →
+              </button>
+            </div>
+            <div
+              id="stage-panel-5"
+              class="stage-panel"
+              role="tabpanel"
+              aria-labelledby="stage-tab-5"
+              hidden
+            >
+              <div class="stage-heading">
+                <div>
+                  <h2>Execute and follow results</h2>
+                  <p>Record manual outcomes or run the configured ReqnRoll feature files.</p>
+                </div>
+                <button class="secondary" id="stage-refresh-execution" type="button" disabled>
+                  Refresh execution plan
+                </button>
+              </div>
+              <div id="stage-manual"></div>
+              <div class="stage-execution-head">
+                <h3>Automation feature files</h3>
+                <button class="primary" id="stage-run" type="button" disabled>
+                  Run feature files
+                </button>
+              </div>
+              <p id="stage-execution-reason">Create test cases in stage 4 first.</p>
+              <div id="stage-execution-list" class="stage-cards"></div>
+              <div id="stage-execution-results" aria-live="polite"></div>
+            </div>
+          </section>
 
           <section class="studio-layout">
             <section class="panel composer" id="test-studio">
               <div class="panel-head">
                 <div>
                   <span class="section-kicker">New test suite</span>
-                  <h2>What should we test?</h2>
+                  <h2>Start with your requirements</h2>
                   <p>
                     Paste a requirement or attach a project document. The AI Quality Lifecycle Agent
-                    will generate traceable manual and automation coverage.
+                    will read the source before you create stories and scenario coverage.
                   </p>
                 </div>
                 <span class="secure">PRIVATE BY DESIGN</span>
@@ -430,7 +613,7 @@
                       <span class="stop-icon"></span><span>Stop</span>
                     </button>
                     <button class="primary" id="generate" type="submit" disabled>
-                      <span>Generate test suite</span><span class="arrow">→</span>
+                      <span>Read requirements</span><span class="arrow">→</span>
                     </button>
                   </div>
                 </div>
@@ -1016,5 +1199,6 @@
     <script src="/static/scripts/dashboard.js?v=20260912-scroll-history" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260913" defer></script>
   </body>
 </html>

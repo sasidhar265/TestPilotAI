@@ -197,31 +197,37 @@
             </div>
             <ol class="guide-steps">
               <li>
-                <strong>Add the requirement.</strong> Paste text, or use the + control to upload a
-                document or link a Jira issue. Include the expected behaviour and acceptance
-                criteria.
+                <strong>Stage 1 · Read requirements.</strong> Paste a command prompt, upload a BRD
+                with the + control, or connect a Jira ticket. Check shared business rules and select
+                Read requirements.
               </li>
               <li>
-                <strong>Check shared rules.</strong> Open Business requirements &amp; rules. Add one
-                rule per line as <code>BR-ID: description</code>. These rules are shared across the
-                workspace; generation saves the editor first.
+                <strong>Stage 2 · Create stories.</strong> Review each story’s business need, source
+                excerpt and acceptance criteria. Edit where needed, then select Use these stories.
               </li>
               <li>
-                <strong>Choose the output.</strong> Select Manual, Automation (BDD / Gherkin), or
-                Both. For manual tests, choose API, UI, performance or database testing. Select an
-                available LLM (the AI model used for generation).
+                <strong>Stage 3 · Create scenarios.</strong> Review story-linked preconditions,
+                actions and expected outcomes. Select Use these scenarios when the coverage is
+                ready.
               </li>
               <li>
-                <strong>Generate and review.</strong> Inspect each test’s purpose, steps, expected
-                results and requirement links. Use Review to request a change to an individual case.
-                Check any Quality Gate findings.
+                <strong>Stage 4 · Create test cases.</strong> Choose Manual, Automation (BDD /
+                Gherkin), or Both. For manual tests choose the testing discipline. Generate cases,
+                review Quality Gate findings, and use the existing approval, View and Download
+                options.
               </li>
               <li>
-                <strong>Approve and export.</strong> Select the reviewed cases, enter your reviewer
-                name and choose Approve selected to record acceptance. Use View or Download for the
-                available file formats. Jira attachment is a separate action.
+                <strong>Stage 5 · Execute.</strong> Record manual outcomes and actual results. For
+                automation, install the reviewed pack in the configured ReqnRoll project and
+                configure its target environment. Refresh the execution plan, review the feature
+                list and run. Individual results appear when the runner finishes.
               </li>
             </ol>
+            <p>
+              Changing source requirements clears downstream drafts. Drafts stay available while
+              navigating workspace pages, but reloading starts a new workflow. Stories are not
+              published to Jira automatically.
+            </p>
           </section>
           <section class="section" id="use-cases">
             <div class="section-heading">
