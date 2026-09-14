@@ -1,0 +1,85 @@
+.script-pack-dialog {
+  width: min(920px, calc(100vw - 32px));
+  max-height: 88dvh;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.script-pack-dialog::backdrop {
+  background: rgb(12 22 40 / 55%);
+}
+.script-pack-dialog h2 {
+  margin: 6px 0;
+}
+.script-pack-dialog p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.script-pack-dialog label {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 0.82rem;
+}
+.script-pack-dialog input,
+.script-pack-dialog select,
+.script-pack-dialog textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.script-pack-dialog textarea {
+  resize: vertical;
+  font-family: monospace;
+}
+.script-load-settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.script-load-settings[hidden] {
+  display: none;
+}
+.script-pack-dialog fieldset {
+  min-width: 0;
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  padding: 18px;
+  border-radius: 12px;
+}
+.script-pack-dialog legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 8px;
+  overflow-wrap: anywhere;
+}
+#script-pack-preview pre {
+  max-height: 360px;
+  overflow: auto;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 0.75rem;
+}
+#script-pack-status {
+  min-height: 1.5em;
+}
+@media (max-width: 600px) {
+  .script-pack-dialog {
+    padding: 16px;
+  }
+  .script-load-settings {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .script-pack-dialog .panel-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}

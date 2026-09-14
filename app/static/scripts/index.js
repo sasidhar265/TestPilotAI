@@ -234,35 +234,97 @@ function render(data) {
   syncGeneratedSuiteActions();
   setWorkflowStage(2);
   window.dispatchEvent(new CustomEvent("workspace-suite-rendered"));
-  $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!activeGeneration?.background)
+    $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   if (fromKnowledge) showKnowledgeNotice(data);
 }
 function elapsed(ms) {
   const s = Math.floor(ms / 1000);
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
+const generationStages = {
+  stories: {
+    label: "Story generation",
+    agent: "Story Agent",
+    title: "Generating stories from your requirements",
+    message: "Reading your BRD and creating stories with acceptance criteria.",
+  },
+  scenarios: {
+    label: "Scenario generation",
+    agent: "Scenario Agent",
+    title: "Generating test scenarios",
+    message: "Building scenario coverage from your accepted stories.",
+  },
+  "test-cases": {
+    label: "Test case generation",
+    agent: "Test Case Agent",
+    title: "Generating test cases",
+    message: "Creating and validating test cases from your reviewed scenarios.",
+  },
+  "execution-plan": {
+    label: "Execution planning",
+    agent: "Execution Agent",
+    title: "Preparing the execution plan",
+    message: "Checking the configured project and preparing its feature list.",
+    runtime: true,
+  },
+  execution: {
+    label: "Test execution",
+    agent: "Execution Agent",
+    title: "Running test execution",
+    message: "Running the configured feature files and waiting for actual test results.",
+    runtime: true,
+  },
+};
 function showGenerationOverlay(target) {
   window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: true } }));
-  const automatic = target === "auto",
+  const stories = target === "stories",
+    automatic = target === "auto",
     manual = target === "manual",
     both = target === "both";
-  $("generation-overlay-title").textContent = automatic
-    ? "Selecting the best AI specialist"
-    : both
-      ? "Generating combined test coverage"
-      : manual
-        ? "Generating manual test cases"
-        : "Generating automation test cases";
-  $("generation-overlay-message").textContent = automatic
-    ? "OrchestratorAgent is analyzing your requirements and routing intent."
-    : both
-      ? "DecisionAgent is coordinating the Manual and Automation Specialists."
-      : manual
-        ? "DecisionAgent and the Manual Testing Specialist are creating review-ready steps and expected results."
-        : "DecisionAgent and the Automation Specialist are creating validated BDD and automation coverage.";
+  $("generation-agent-label").textContent = stories
+    ? "Story Agent is working"
+    : "DecisionAgent is working";
+  $("generation-overlay-title").textContent = stories
+    ? "Generating stories from your requirements"
+    : automatic
+      ? "Selecting the best AI specialist"
+      : both
+        ? "Generating combined test coverage"
+        : manual
+          ? "Generating manual test cases"
+          : "Generating automation test cases";
+  $("generation-overlay-message").textContent = stories
+    ? "Reading your BRD and creating source-grounded stories with acceptance criteria. You can run this in the background while keeping this page open."
+    : automatic
+      ? "OrchestratorAgent is analyzing your requirements and routing intent."
+      : both
+        ? "DecisionAgent is coordinating the Manual and Automation Specialists."
+        : manual
+          ? "DecisionAgent and the Manual Testing Specialist are creating review-ready steps and expected results."
+          : "DecisionAgent and the Automation Specialist are creating validated BDD and automation coverage.";
+  const stage = generationStages[target];
+  $("cancel-generation-overlay").textContent = stage?.runtime
+    ? "Cancel operation"
+    : "Cancel generation";
+  if (stage) {
+    $("generation-agent-label").textContent = `${stage.agent} is working`;
+    $("generation-overlay-title").textContent = stage.title;
+    $("generation-overlay-message").textContent =
+      `${stage.message} You can run this in the background while keeping this page open.`;
+  }
+  document
+    .querySelector(".generation-llm-details")
+    .classList.toggle("hidden", Boolean(stage?.runtime));
+  document.querySelector(".generation-agent-pulse").innerHTML = (
+    stage?.runtime ? ["Prepare", "Run", "Results"] : ["Analyze", "Design", "Validate"]
+  )
+    .map((label) => `<span>${label}</span>`)
+    .join("");
   if (!runtimeDetails) loadRuntimeStatus();
   $("generation-llm-model").textContent = $("llm-model").selectedOptions[0].textContent;
   $("generation-overlay").classList.remove("hidden");
+  $("cancel-generation-overlay").focus();
   document.body.classList.add("dialog-open");
   const started = performance.now();
   $("generation-overlay-time").textContent = "00:00 elapsed";
@@ -273,15 +335,23 @@ function showGenerationOverlay(target) {
     250,
   );
 }
-function hideGenerationOverlay() {
+function hideGenerationOverlay(releaseBusy = true) {
   if (generationOverlayTimer) clearInterval(generationOverlayTimer);
   generationOverlayTimer = null;
   $("generation-overlay").classList.add("hidden");
   if ($("knowledge-notice-overlay").classList.contains("hidden"))
     document.body.classList.remove("dialog-open");
-  window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: false } }));
+  if (releaseBusy)
+    window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: false } }));
 }
 $("cancel-generation-overlay").onclick = () => $("stop-generation").click();
+$("background-generation-overlay").onclick = () => {
+  if (activeGeneration) activeGeneration.background = true;
+  hideGenerationOverlay(false);
+  $("status").textContent =
+    `${generationStages[activeGeneration?.kind]?.label || "Generation"} continues in the background. Keep this page open; use Stop to cancel.`;
+  $("stop-generation").focus();
+};
 $("notification-bell").onclick = (event) => {
   event.stopPropagation();
   setProfilePanel(false);
@@ -534,11 +604,12 @@ async function pollLifecycle(requestId) {
       $("live-agent-feed-state").textContent = "COMPLETE";
       $("generation-background-state").textContent = "COMPLETE";
       if (!runCompletionNotified) {
+        const stage = generationStages[activeGeneration?.kind];
         addNotification(
-          runFailed ? "Generation failed" : "Generation completed",
+          runFailed ? "Operation failed" : `${stage?.label || "Generation"} completed`,
           runFailed
-            ? "The test-generation run stopped with an error. Open runtime logs for details."
-            : "The test-generation run finished and the suite is ready for review.",
+            ? "The operation stopped with an error. Review its status for details."
+            : "The operation finished. Review its output in the workspace.",
           runFailed ? "error" : "success",
         );
         runCompletionNotified = true;
@@ -549,7 +620,12 @@ async function pollLifecycle(requestId) {
 function startLifecycleFeed(requestId) {
   if (activeLifecycleTimer) clearInterval(activeLifecycleTimer);
   resetLifecycleFeed();
-  addNotification("Generation started", "A new test-generation run is now processing.");
+  addNotification(
+    "Generation started",
+    activeGeneration?.kind === "stories"
+      ? "Your requirements are being converted into stories."
+      : "A new test-generation run is now processing.",
+  );
   pollLifecycle(requestId);
   activeLifecycleTimer = setInterval(() => pollLifecycle(requestId), 500);
 }
@@ -576,7 +652,7 @@ function showFile(file) {
       : `${(file.size / 1048576).toFixed(1)} MB`;
   $("source-state").textContent = "Document attached · ready to read";
   $("description").closest(".textarea-wrap").classList.add("has-attachment");
-  $("status").textContent = `${file.name} attached. Select Read requirements when ready.`;
+  $("status").textContent = `${file.name} attached. Select Generate stories when ready.`;
   syncGenerateAvailability();
   setSourceMenu(false);
 }
@@ -630,17 +706,18 @@ function clearBusinessRulesFile() {
   $("business-rules").closest(".rule-textarea-wrap").classList.remove("has-attachment");
   syncBusinessRuleCount();
 }
-async function saveSharedRules() {
+async function saveSharedRules(options = {}) {
   await sharedRulesReady;
   let rules = parseBusinessRules();
   if (attachedBusinessRulesFile) {
     const form = new FormData();
     form.append("file", attachedBusinessRulesFile);
-    const response = await upload("/api/business-rules/document", form);
+    const response = await upload("/api/business-rules/document", form, options);
     rules = (await response.json()).business_rules;
   }
   const response = await fetch("/api/workspace/rules", {
     method: "PUT",
+    signal: options.signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ business_rules: rules }),
   });
@@ -652,8 +729,8 @@ async function saveSharedRules() {
   }
   return rules;
 }
-async function resolveBusinessRules() {
-  await saveSharedRules();
+async function resolveBusinessRules(options = {}) {
+  await saveSharedRules(options);
   return [];
 }
 
@@ -863,6 +940,7 @@ $("generate-form").addEventListener("submit", async (e) => {
 });
 $("stop-generation").onclick = async () => {
   if (!activeGeneration) return;
+  if (activeGeneration.cancel) return activeGeneration.cancel();
   activeGeneration.cancelled = true;
   $("stop-generation").disabled = true;
   $("status").textContent = "Stopping generation and closing the Copilot session…";

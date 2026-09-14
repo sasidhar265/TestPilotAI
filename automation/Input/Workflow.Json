@@ -106,5 +106,133 @@
         "open_questions": []
       }
     }
+  },
+  "jira-approved": {
+    "endpoint": "jira-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "project_key": "TEST",
+      "issue_type": "Story",
+      "selected_story_ids": ["ST-001"],
+      "approved_by": {
+        "ST-001": "BDD Reviewer"
+      }
+    }
+  },
+  "jira-unapproved": {
+    "endpoint": "jira-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "project_key": "TEST",
+      "issue_type": "Story",
+      "selected_story_ids": ["ST-001"],
+      "approved_by": {}
+    }
+  },
+  "jira-unknown": {
+    "endpoint": "jira-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "project_key": "TEST",
+      "issue_type": "Story",
+      "selected_story_ids": ["ST-999"],
+      "approved_by": {
+        "ST-001": "BDD Reviewer"
+      }
+    }
+  },
+  "jira-duplicate": {
+    "endpoint": "jira-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "project_key": "TEST",
+      "issue_type": "Story",
+      "selected_story_ids": ["ST-001", "ST-001"],
+      "approved_by": {
+        "ST-001": "BDD Reviewer"
+      }
+    }
+  },
+  "jira-reviewer": {
+    "endpoint": "jira-stories",
+    "body": {
+      "request": {
+        "description": "Read the BRD or command prompt or jira ticket. then convert the requirements into the stories"
+      },
+      "stories": {
+        "stories": [
+          {
+            "id": "ST-001",
+            "title": "Read source requirements",
+            "narrative": "As a quality engineer I need to read requirements before creating stories.",
+            "source_excerpt": "Read the BRD or command prompt or jira ticket.",
+            "acceptance_criteria": ["Read requirements from BRD, command prompt or Jira."]
+          }
+        ],
+        "open_questions": []
+      },
+      "project_key": "TEST",
+      "issue_type": "Story",
+      "selected_story_ids": ["ST-001"],
+      "approved_by": {
+        "ST-001": " "
+      }
+    }
   }
 }

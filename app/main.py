@@ -90,6 +90,7 @@ from app.observability import (
     request_id_context,
     ui_log_handler,
 )
+from app.script_packs import router as script_pack_router
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
 from app.services.dashboard import DashboardStore, suite_details
@@ -133,6 +134,7 @@ app.include_router(user_router)
 app.include_router(workspace_router)
 app.include_router(stlc_router)
 app.include_router(workflow_router)
+app.include_router(script_pack_router)
 
 
 @app.exception_handler(LifecycleError)
@@ -557,6 +559,9 @@ async def _run_automation(
     """Run only the repository-approved C# BDD automation project."""
     dashboard = DashboardStore(settings.organizational_memory_path)
     run_id = dashboard.start(scope.replace("-", "_"))
+    request_id = request_id_context.get()
+    lifecycle_events.start(request_id)
+    generation_cancellations.register(request_id, "repository_bdd_execution")
     try:
         report = await AutomationExecutionAgent(settings).run(request)
         report = report.model_copy(update={"execution_scope": scope})
@@ -569,15 +574,33 @@ async def _run_automation(
         )
         return report
     except AutomationExecutionError as error:
-        dashboard.finish(run_id, "error", {"error": str(error), "results_available": False})
+        dashboard.finish(
+            run_id,
+            "error",
+            {"error": str(error), "output": error.output, "results_available": False},
+        )
         publish_lifecycle_event(
             "Automation Execution Agent", "run_csharp_bdd_suite", "failed", str(error)
         )
         lifecycle_events.complete(request_id_context.get())
         raise HTTPException(status_code=422, detail=str(error)) from error
-
+    except asyncio.CancelledError as error:
+        dashboard.finish(
+            run_id,
+            "cancelled",
+            {"error": "BDD execution cancelled by the user.", "results_available": False},
+        )
+        publish_lifecycle_event(
+            "Automation Execution Agent",
+            "run_csharp_bdd_suite",
+            "failed",
+            "BDD execution cancelled; runner processes stopped.",
+        )
+        raise HTTPException(499, "BDD execution cancelled.") from error
     finally:
         dashboard.finish(run_id, "error", {"results_available": False})
+        generation_cancellations.unregister(request_id)
+        lifecycle_events.complete(request_id)
 
 
 @app.post("/api/defects", response_model=list[DefectDraft])

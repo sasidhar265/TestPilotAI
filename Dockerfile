@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     DOTNET_ROOT=/usr/share/dotnet \
     DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    AUTOMATION_SKIP_BUILD=true \
     NUGET_PACKAGES=/srv/nuget \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     PATH="/usr/share/dotnet:/opt/allure/bin:${PATH}"
@@ -27,7 +28,7 @@ COPY .github/agent-profiles ./.github/agent-profiles
 RUN python -m pip install .
 
 COPY automation ./automation
-# Restore and build during deployment; runtime tests use --no-restore.
+# Restore and build during deployment; runtime tests use --no-build --no-restore.
 RUN dotnet build automation/QualityLifecycle.Automation.csproj \
     && dotnet tool install --tool-path /opt/powershell PowerShell --version 7.4.6 \
     && /opt/powershell/pwsh automation/bin/Debug/net8.0/playwright.ps1 install --with-deps chromium \

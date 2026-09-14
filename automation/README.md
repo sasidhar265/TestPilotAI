@@ -1,5 +1,17 @@
 # Quality Lifecycle Studio C# BDD automation
 
+`Features/JiraStories.feature` verifies story publication rejects missing approval,
+unknown or duplicate selections, and blank reviewers before contacting Jira. It uses
+the shared Workflow HttpClient service, request builder, bindings and Input/Workflow.Json.
+Run it with `--filter FullyQualifiedName~JiraStoryApprovalBoundary` against a local test app.
+These rejection scenarios never create Jira issues. Jira creation payloads and partial
+failures are covered with mocked HTTP responses in `tests/test_jira_stories.py`; actual
+Jira creation requires a configured test project and has not been verified by these tests.
+
+Native JMeter/SQL/Oracle script-pack API coverage is in `Features/ScriptPacks.feature`, with
+its bindings, HttpClient service, request builder and `Input/ScriptPacks.Json` fixtures.
+See [test script packs](../docs/test-script-packs.md) for generation and execution instructions.
+
 This project contains live ReqnRoll scenarios for the UI, API, and security boundaries.
 The scenarios intentionally run against a separately started application so CI can choose
 the environment and credentials without embedding secrets in source control.

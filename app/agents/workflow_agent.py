@@ -4,6 +4,7 @@ from app.agent_instructions import load_agent_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.runner import StructuredAgentDefinition
+from app.agents.workflow_knowledge_agent import WorkflowKnowledgeAgent
 from app.config import Settings
 from app.models import GenerateRequest
 from app.workflow_models import ScenarioHandoff, Scenarios, Stories, StoryHandoff
@@ -12,13 +13,18 @@ from app.workflow_models import ScenarioHandoff, Scenarios, Stories, StoryHandof
 class WorkflowAgent:
     def __init__(self, settings: Settings):
         self.runner = ArtifactGenerationRunner(settings)
+        self.knowledge = WorkflowKnowledgeAgent(settings)
 
     async def stories(self, request: GenerateRequest) -> Stories:
         def validate(result: Stories) -> Stories:
             StoryHandoff(request=request, stories=result)
             return result
 
-        return await self.runner.generate_structured(
+        key = self.knowledge.key("stories", request)
+        known = self.knowledge.recall(key, Stories, validate)
+        if known is not None:
+            return known
+        result = await self.runner.generate_structured(
             StructuredAgentDefinition(
                 Stories,
                 "Story generation timed out.",
@@ -31,13 +37,20 @@ class WorkflowAgent:
             + str(Stories.model_json_schema()),
             validate=validate,
         )
+        self.knowledge.remember(key, validate(result))
+        return result
 
     async def scenarios(self, handoff: StoryHandoff) -> Scenarios:
         def validate(result: Scenarios) -> Scenarios:
-            ScenarioHandoff(**handoff.model_dump(), scenarios=result)
+            ScenarioHandoff(request=handoff.request, stories=handoff.stories, scenarios=result)
             return result
 
-        return await self.runner.generate_structured(
+        source = StoryHandoff(request=handoff.request, stories=handoff.stories)
+        key = self.knowledge.key("scenarios", source)
+        known = self.knowledge.recall(key, Scenarios, validate)
+        if known is not None:
+            return known
+        result = await self.runner.generate_structured(
             StructuredAgentDefinition(
                 Scenarios,
                 "Scenario generation timed out.",
@@ -50,6 +63,8 @@ class WorkflowAgent:
             + str(Scenarios.model_json_schema()),
             validate=validate,
         )
+        self.knowledge.remember(key, validate(result))
+        return result
 
 
 def test_case_request(handoff: ScenarioHandoff) -> GenerateRequest:
@@ -61,6 +76,11 @@ def test_case_request(handoff: ScenarioHandoff) -> GenerateRequest:
             handoff.scenarios.model_dump_json(),
         ]
     )
+    if len(context) > 100_000:
+        raise ValueError(
+            "Reviewed stories and scenarios exceed the 100,000-character generation context "
+            "limit. Reduce the handoff size or split the requirements into smaller batches."
+        )
     return GenerateRequest(**{**handoff.request.model_dump(), "additional_context": context})
 
 

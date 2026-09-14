@@ -1,4 +1,82 @@
 /* Execution dashboard: scoped to preserve the surrounding workspace. */
+.bdd-insight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 24px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--primary);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.bdd-insight strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1rem;
+}
+#work-dashboard .bdd-insight p {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.bdd-insight[data-state="failed"],
+.bdd-insight[data-state="error"] {
+  border-left-color: var(--danger);
+}
+.bdd-insight[data-state="passed"] {
+  border-left-color: var(--success);
+}
+.bdd-test-card {
+  margin-bottom: 24px !important;
+}
+.bdd-table-scroll {
+  max-height: 400px;
+  overflow: auto;
+}
+.bdd-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.bdd-results-table th,
+.bdd-results-table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+.bdd-results-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.bdd-results-table tbody th {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  min-width: 160px;
+}
+.bdd-results-table td {
+  font-variant-numeric: tabular-nums;
+}
+.bdd-results-table pre {
+  white-space: pre-wrap;
+  max-width: 360px;
+  overflow-wrap: anywhere;
+}
+.bdd-results-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+@media (max-width: 760px) {
+  .bdd-insight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
 #work-dashboard {
   background: transparent;
   border: 0;

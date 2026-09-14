@@ -2,6 +2,9 @@
 
 Governed agentic test design from requirements to accepted quality artifacts.
 
+Validated cases can also produce [JMeter and SQL/Oracle test script packs](docs/test-script-packs.md).
+The execution dashboard provides run summaries, test-level evidence and filtered CSV exports.
+
 A local web application that turns a user story, feature description, or acceptance criteria
 into structured test cases. It classifies cases as critical, smoke, sanity, or regression,
 generates safe synthetic test data, exports Xray-ready CSV/Excel/JSON through the Context
@@ -768,3 +771,16 @@ must not invent contracts, fixtures or execution results.
 If providers cannot complete all bindings, the user receives a short error with a reference ID.
 Runtime logs retain implementation findings and provider notes for investigation. Provider notes
 are diagnostic statements, not a replacement Quality Gate decision.
+# Reusing repeated requirements
+
+With organizational memory enabled, the workflow stores validated stories and scenarios
+after their first generation. Submitting the same requirements and generation settings
+recalls those stages through the Knowledge Agent, including across application restarts.
+The unchanged reviewed handoff then uses the existing validated test-suite memory to
+recreate test cases. Recall is shown in the workflow's lifecycle events.
+
+Matching includes the source, additional context, business rules, generation settings,
+reviewed stories, agent policies, and feature standards. Changes generate fresh artifacts;
+similar wording is not treated as an exact duplicate. Recalled stages are validated again
+before use. `ORGANIZATIONAL_MEMORY_ENABLED=false` disables this reuse. Earlier stories
+and scenarios that were never stored need one initial generation to populate memory.

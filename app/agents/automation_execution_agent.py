@@ -7,11 +7,13 @@ import signal
 import tempfile
 import time
 import xml.etree.ElementTree as ET
+from contextlib import suppress
 from pathlib import Path
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.config import Settings
 from app.models import AutomationRunReport, AutomationRunRequest
+from app.observability import publish_lifecycle_event
 from app.services.automation_reports import generate_report
 
 _OUTPUT_LIMIT = 12_000
@@ -36,6 +38,58 @@ _SAFE_ENVIRONMENT = (
 
 class AutomationExecutionError(RuntimeError):
     """The controlled automation process could not be started or completed."""
+
+    def __init__(self, message: str, output: str = "") -> None:
+        super().__init__(message)
+        self.output = output
+
+
+class RunnerProgress:
+    """Retain a redacted tail while publishing only fixed, payload-free progress labels."""
+
+    def __init__(self, secrets: list[str], timeout: float, skip_build: bool) -> None:
+        self.secrets = secrets
+        self.timeout = timeout
+        self.started = time.monotonic()
+        self.last_output = self.started
+        self.phase = "Starting prebuilt BDD tests" if skip_build else "Building the BDD project"
+        self.tail = bytearray()
+        self.limit = _OUTPUT_LIMIT * 4 + max((len(s.encode()) for s in secrets), default=0)
+
+    def feed(self, chunk: bytes) -> None:
+        self.tail.extend(chunk)
+        del self.tail[: -self.limit]
+        self.last_output = time.monotonic()
+        previous = self.phase
+        if b"Starting test execution" in self.tail:
+            self.phase = "Executing BDD scenarios"
+        elif b"Test run for " in self.tail:
+            self.phase = "Discovering BDD scenarios"
+        if previous != self.phase:
+            self.publish()
+
+    def text(self) -> str:
+        value = self.tail.decode("utf-8", errors="replace")
+        for secret in sorted(filter(None, self.secrets), key=len, reverse=True):
+            value = value.replace(secret, "[redacted]")
+        return value[-_OUTPUT_LIMIT:]
+
+    def publish(self) -> None:
+        elapsed = round(time.monotonic() - self.started)
+        silent = round(time.monotonic() - self.last_output)
+        publish_lifecycle_event(
+            "Automation Execution Agent",
+            "bdd_progress",
+            "running",
+            f"{self.phase} · {elapsed}s elapsed · {self.timeout:g}s total limit · "
+            f"last runner output {silent}s ago.",
+        )
+
+    async def heartbeat(self) -> None:
+        self.publish()
+        while True:
+            await asyncio.sleep(5)
+            self.publish()
 
 
 class AutomationExecutionAgent:
@@ -62,6 +116,11 @@ class AutomationExecutionAgent:
             API_AUTH_TOKEN=self.settings.api_auth_token_value,
             APP_USERNAME=self.settings.app_username,
             APP_PASSWORD=self.settings.app_password_value,
+        )
+        # Existing Render services may not have reapplied the Blueprint environment.
+        # Derive the local app port rather than silently testing localhost:8000 there.
+        environment.setdefault(
+            "QUALITY_LIFECYCLE_BASE_URL", f"http://127.0.0.1:{os.environ.get('PORT', '8000')}"
         )
         target_configuration = {
             "API_BASE_URL": self.settings.api_base_url,
@@ -93,6 +152,11 @@ class AutomationExecutionAgent:
                 "test",
                 str(project),
                 "--no-restore",
+                *(("--no-build",) if self.settings.automation_skip_build else ()),
+                "--blame-hang-timeout",
+                f"{min(self.settings.automation_test_timeout_seconds, timeout):g}s",
+                "--blame-hang-dump-type",
+                "none",
                 "--logger",
                 "trx;LogFileName=results.trx",
                 "--results-directory",
@@ -111,17 +175,47 @@ class AutomationExecutionAgent:
                 raise AutomationExecutionError(
                     "Unable to start the approved C# automation project."
                 ) from error
+            progress = RunnerProgress(secrets, timeout, self.settings.automation_skip_build)
+            heartbeat = asyncio.create_task(progress.heartbeat())
             try:
-                output = await asyncio.wait_for(_read_output(process, secrets), timeout=timeout)
+                output = await asyncio.wait_for(
+                    _read_output(process, secrets, progress), timeout=timeout
+                )
             except (TimeoutError, asyncio.CancelledError) as error:
                 await asyncio.shield(_stop_process_tree(process))
                 if isinstance(error, asyncio.CancelledError):
                     raise
                 raise AutomationExecutionError(
-                    "C# automation execution exceeded its time limit."
+                    f"C# automation execution exceeded its {timeout:g}s time limit during "
+                    f"{progress.phase.lower()}. The runner was stopped. Inspect the saved output.",
+                    output=progress.text(),
                 ) from error
+            finally:
+                heartbeat.cancel()
+                with suppress(asyncio.CancelledError):
+                    await heartbeat
             passed, failed, skipped, result_error = _read_results(Path(results) / "results.trx")
-            report_id, report_error = await generate_report(self.settings, allure_results, secrets)
+            remaining = timeout - (time.perf_counter() - started)
+            report_id: str | None = None
+            report_error: str | None = "Run time limit reached; Allure report was not generated."
+            if remaining > 0:
+                publish_lifecycle_event(
+                    "Automation Execution Agent",
+                    "bdd_report",
+                    "running",
+                    f"BDD execution finished. Preparing Allure HTML "
+                    f"(up to {min(remaining, self.settings.allure_timeout_seconds):.0f}s).",
+                )
+                report_settings = self.settings.model_copy(
+                    update={
+                        "allure_timeout_seconds": min(
+                            remaining, self.settings.allure_timeout_seconds
+                        )
+                    }
+                )
+                report_id, report_error = await generate_report(
+                    report_settings, allure_results, secrets
+                )
             return AutomationRunReport(
                 status=(
                     "error"
@@ -151,12 +245,16 @@ class AutomationExecutionAgent:
             )
 
 
-async def _read_output(process: asyncio.subprocess.Process, secrets: list[str]) -> str:
+async def _read_output(
+    process: asyncio.subprocess.Process, secrets: list[str], progress: RunnerProgress | None = None
+) -> str:
     assert process.stdout is not None
     # Retain extra bytes so truncation cannot expose part of a secret at the boundary.
     limit = _OUTPUT_LIMIT * 4 + max((len(s.encode()) for s in secrets), default=0)
     tail = bytearray()
     while chunk := await process.stdout.read(4096):
+        if progress is not None:
+            progress.feed(chunk)
         tail.extend(chunk)
         if len(tail) > limit:
             del tail[:-limit]

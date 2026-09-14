@@ -56,9 +56,11 @@ def test_conversion_preserves_source_target_and_traceability_instructions():
 
 
 @pytest.mark.asyncio
-async def test_agents_load_markdown_and_validate_provider_output():
+async def test_agents_load_markdown_and_validate_provider_output(tmp_path):
     source = handoff()
-    agent = WorkflowAgent(Settings(_env_file=None))
+    agent = WorkflowAgent(
+        Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    )
     agent.runner.generate_structured = AsyncMock(return_value=source.stories)
     assert await agent.stories(source.request) == source.stories
     call = agent.runner.generate_structured.call_args

@@ -5,6 +5,7 @@ import httpx
 from app.config import Settings
 from app.exporter import suite_to_csv
 from app.models import JiraPublishResult, JiraRequirement, TestSuite
+from app.workflow_models import JiraStoriesRequest
 
 
 def jira_document_to_text(value: object) -> str:
@@ -48,6 +49,73 @@ class JiraClient:
         ]
         if missing:
             raise RuntimeError(f"Missing Jira configuration: {', '.join(missing)}")
+
+    async def create_stories(self, request: JiraStoriesRequest) -> list[dict[str, str]]:
+        """Return each successful issue and stop on failure; never automatically retry writes."""
+        self._validate_config()
+        base_url = self.settings.jira_base_url.rstrip("/")
+        client = self.client or httpx.AsyncClient(
+            auth=(self.settings.jira_email, self.settings.jira_api_token), timeout=30
+        )
+        results = []
+        try:
+            for story in request.stories.stories:
+                if story.id not in request.selected_story_ids:
+                    continue
+                paragraphs = [
+                    story.narrative,
+                    f"Source story: {story.id}",
+                    f"Source excerpt: {story.source_excerpt}",
+                    "Acceptance criteria:",
+                    *story.acceptance_criteria,
+                    f"Approved by: {request.approved_by[story.id]}",
+                ]
+                try:
+                    response = await client.post(
+                        f"{base_url}/rest/api/3/issue",
+                        json={
+                            "fields": {
+                                "project": {"key": request.project_key},
+                                "issuetype": {"name": request.issue_type},
+                                "summary": story.title,
+                                "description": {
+                                    "type": "doc",
+                                    "version": 1,
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": text}],
+                                        }
+                                        for text in paragraphs
+                                    ],
+                                },
+                            }
+                        },
+                    )
+                    response.raise_for_status()
+                    key = str(response.json()["key"])
+                    results.append(
+                        {
+                            "story_id": story.id,
+                            "issue_key": key,
+                            "url": f"{base_url}/browse/{key}",
+                            "status": "created",
+                        }
+                    )
+                except (httpx.HTTPError, ValueError, KeyError):
+                    results.append(
+                        {
+                            "story_id": story.id,
+                            "status": "unconfirmed",
+                            "message": "Creation could not be confirmed. Check Jira before "
+                            "retrying; the project may require additional fields or permissions.",
+                        }
+                    )
+                    break
+        finally:
+            if self.client is None:
+                await client.aclose()
+        return results
 
     async def publish(
         self, issue_key: str, suite: TestSuite, add_comment: bool = True

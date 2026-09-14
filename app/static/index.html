@@ -10,11 +10,12 @@
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
-    <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260912-scroll-history" />
+    <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
+    <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260913" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260913" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260914-story-jira" />
   </head>
   <body>
     <div class="app-shell">
@@ -175,15 +176,7 @@
         </header>
 
         <div data-workspace-page="/">
-          <section class="stage-workspace" aria-label="Requirements to execution">
-            <div class="stage-workspace-head">
-              <div>
-                <span class="section-kicker">Your quality journey</span>
-                <h2>From requirements to results</h2>
-                <p>Review each handoff and carry the same requirements through all five stages.</p>
-              </div>
-              <span id="stage-position" class="chip">Stage 1 of 5</span>
-            </div>
+          <section class="stage-workspace" aria-label="Requirements to execution" hidden>
             <div class="stage-tabs" role="tablist" aria-label="Quality workflow stages">
               <button
                 type="button"
@@ -259,7 +252,12 @@
               class="stage-panel"
               role="tabpanel"
               aria-labelledby="stage-tab-1"
-            ></div>
+            >
+              <p>
+                Review or update your requirements and generation options in the form above.
+                Generate stories again after changing the source.
+              </p>
+            </div>
             <div
               id="stage-panel-2"
               class="stage-panel"
@@ -270,23 +268,60 @@
               <div class="stage-heading">
                 <div>
                   <h2>Shape requirements into stories</h2>
-                  <p>Review the actor, business need, source evidence and acceptance criteria.</p>
+                  <p>Review the stories, select those to accept, and enter the reviewer name.</p>
                 </div>
                 <button class="primary" id="stage-stories" type="button" disabled>
                   Create stories →
                 </button>
               </div>
+              <div
+                class="result-actions story-approval-toolbar"
+                aria-label="Accept selected generated stories"
+              >
+                <div class="selection-actions">
+                  <label
+                    ><input id="select-all-stories" type="checkbox" /> Select all stories</label
+                  >
+                  <span id="story-selection-count" aria-live="polite">0 selected</span>
+                </div>
+                <div class="suite-output-actions">
+                  <div class="suite-approval" aria-label="Approve selected generated stories">
+                    <div class="reviewer-field">
+                      <input
+                        id="stories-accepted-by"
+                        type="text"
+                        maxlength="100"
+                        placeholder="Reviewer name or ID"
+                        aria-label="Stories approved by"
+                        aria-describedby="story-reviewer-error"
+                      />
+                      <span id="story-reviewer-error" class="reviewer-error hidden" role="alert"
+                        >Enter the reviewer name or ID.</span
+                      >
+                    </div>
+                    <button
+                      id="accept-selected-stories"
+                      class="primary compact"
+                      type="button"
+                      disabled
+                    >
+                      ✓ Approve selected
+                    </button>
+                    <button class="secondary compact" id="review-stories" type="button" disabled>
+                      Continue to scenarios →
+                    </button>
+                    <button class="primary compact" id="story-jira-open" type="button" disabled>
+                      Upload to Jira
+                    </button>
+                  </div>
+                </div>
+              </div>
               <div id="story-cards" class="stage-cards">
                 <p class="stage-empty">Read your requirements in stage 1 to begin.</p>
               </div>
-              <details id="story-edit" hidden>
-                <summary>Edit stories</summary>
-                <div id="story-editor"></div>
-                <button class="secondary" id="save-stories" type="button">Apply story edits</button>
-              </details>
-              <button class="secondary stage-next" id="review-stories" type="button" disabled>
-                Use these stories →
-              </button>
+              <p id="story-review-progress" role="status">
+                Review and accept each story to continue.
+              </p>
             </div>
             <div
               id="stage-panel-3"
@@ -304,19 +339,35 @@
                   Create scenarios →
                 </button>
               </div>
+              <div
+                class="result-actions scenario-approval-toolbar"
+                aria-label="Approve scenarios and continue"
+              >
+                <div class="suite-approval" aria-label="Approve all generated scenarios">
+                  <div class="reviewer-field">
+                    <input
+                      id="scenarios-accepted-by"
+                      type="text"
+                      maxlength="100"
+                      placeholder="Reviewer name or ID"
+                      aria-label="Scenarios approved by"
+                      aria-describedby="scenario-reviewer-error"
+                    />
+                    <span id="scenario-reviewer-error" class="reviewer-error hidden" role="alert">
+                      Enter the reviewer name or ID.
+                    </span>
+                  </div>
+                  <button class="primary compact" id="accept-scenarios" type="button" disabled>
+                    ✓ Approve scenarios
+                  </button>
+                  <button class="secondary compact" id="review-scenarios" type="button" disabled>
+                    Continue to test cases →
+                  </button>
+                </div>
+              </div>
               <div id="scenario-cards" class="stage-cards">
                 <p class="stage-empty">Review stories in stage 2 first.</p>
               </div>
-              <details id="scenario-edit" hidden>
-                <summary>Edit scenarios</summary>
-                <div id="scenario-editor"></div>
-                <button class="secondary" id="save-scenarios" type="button">
-                  Apply scenario edits
-                </button>
-              </details>
-              <button class="secondary stage-next" id="review-scenarios" type="button" disabled>
-                Use these scenarios →
-              </button>
             </div>
             <div
               id="stage-panel-4"
@@ -329,15 +380,17 @@
                 <div>
                   <h2>Create test cases</h2>
                   <p>
-                    Choose manual, automation, or both. Review and export the resulting cases and
-                    feature files.
+                    Review and export test cases and feature files created using your input choices.
                   </p>
                 </div>
                 <button class="primary" id="stage-cases" type="button" disabled>
                   Create test cases →
                 </button>
               </div>
-              <div id="stage-generation-options"></div>
+              <p class="field-help">
+                Your test-case type, testing type and LLM choices come from Requirements. Return to
+                stage 1 to change them.
+              </p>
               <p id="stage-case-empty" class="stage-empty">Review scenarios in stage 3 first.</p>
               <button class="secondary stage-next" id="review-cases" type="button" disabled>
                 Continue to execution →
@@ -377,10 +430,10 @@
               <div class="panel-head">
                 <div>
                   <span class="section-kicker">New test suite</span>
-                  <h2>Start with your requirements</h2>
+                  <h2>What should we test?</h2>
                   <p>
                     Paste a requirement or attach a project document. The AI Quality Lifecycle Agent
-                    will read the source before you create stories and scenario coverage.
+                    will guide you through stories, scenarios, test cases and execution.
                   </p>
                 </div>
                 <span class="secure">PRIVATE BY DESIGN</span>
@@ -564,15 +617,14 @@
                 <div class="controls">
                   <div class="generation-options">
                     <fieldset class="generation-select-control">
-                      <legend>Output format</legend>
+                      <legend>Type of test cases</legend>
                       <select id="output-target" name="output_target" aria-label="Output format">
                         <option value="manual">Manual</option>
                         <option value="automation" selected>Automation (BDD / Gherkin)</option>
                         <option value="both">Both manual and automation</option>
                       </select>
                       <small class="option-help"
-                        >OrchestratorAgent passes this output intent to DecisionAgent for specialist
-                        routing.</small
+                        >Choose manual test cases, executable automation, or both.</small
                       >
                     </fieldset>
                     <fieldset class="manual-type-control" id="manual-type-control">
@@ -613,7 +665,7 @@
                       <span class="stop-icon"></span><span>Stop</span>
                     </button>
                     <button class="primary" id="generate" type="submit" disabled>
-                      <span>Read requirements</span><span class="arrow">→</span>
+                      <span>Generate stories</span><span class="arrow">→</span>
                     </button>
                   </div>
                 </div>
@@ -832,6 +884,9 @@
                       </div>
                     </div>
                   </details>
+                  <button id="open-script-pack" class="secondary" type="button" disabled>
+                    Test scripts
+                  </button>
                 </div>
                 <div class="suite-approval" aria-label="Approve selected generated test cases">
                   <div class="reviewer-field">
@@ -926,13 +981,19 @@
             <div class="bdd-heading">
               <div>
                 <span class="section-kicker">QUALITY / EXECUTION</span>
-                <h2 id="work-dashboard-title">BDD run dashboard</h2>
-                <p>Your test runs, results, and reports. One clear view.</p>
+                <h2 id="work-dashboard-title">Execution intelligence</h2>
+                <p>Track quality trends, investigate failures, and share execution evidence.</p>
               </div>
               <div class="bdd-heading-actions">
+                <button id="export-run-history" class="secondary" type="button" disabled>
+                  Export history · CSV
+                </button>
                 <button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button
                 ><button id="run-repository-bdd" class="primary" type="button">
                   <span aria-hidden="true">▶</span> Run BDD tests
+                </button>
+                <button id="cancel-repository-bdd" class="secondary" type="button" hidden>
+                  Stop run
                 </button>
               </div>
             </div>
@@ -941,6 +1002,7 @@
               <div id="dashboard-progress" aria-live="polite"></div>
             </div>
             <p id="bdd-run-status" role="status"></p>
+            <div id="bdd-insight" class="bdd-insight" role="status"></div>
             <div
               id="dashboard-totals"
               class="dashboard-numbers"
@@ -960,6 +1022,16 @@
                 <p class="bdd-trend-caption">Select a run to explore its results.</p>
               </section>
             </div>
+            <section class="bdd-history-card bdd-test-card" aria-labelledby="bdd-test-title">
+              <div class="bdd-history-heading">
+                <div>
+                  <span class="section-kicker">SELECTED RUN / EVIDENCE</span>
+                  <h3 id="bdd-test-title">Test-level results</h3>
+                </div>
+                <span id="bdd-test-count" class="bdd-subtle"></span>
+              </div>
+              <div id="bdd-test-results" class="bdd-table-scroll"></div>
+            </section>
             <section class="bdd-history-card" aria-labelledby="bdd-history-title">
               <div class="bdd-history-heading">
                 <div>
@@ -979,6 +1051,7 @@
                     <option value="passed">Passed</option>
                     <option value="failed">Failed</option>
                     <option value="error">Error</option>
+                    <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
               </div>
@@ -1102,7 +1175,7 @@
         <div class="generation-orbit" aria-hidden="true">
           <span></span><span></span><span></span><b>✦</b>
         </div>
-        <span class="section-kicker">DecisionAgent is working</span>
+        <span class="section-kicker" id="generation-agent-label">DecisionAgent is working</span>
         <h2 id="generation-overlay-title">Generating test cases</h2>
         <p id="generation-overlay-message">
           The specialist agents are designing and validating your coverage.
@@ -1139,6 +1212,8 @@
         <div class="generation-progress"><span class="generation-progress-bar"></span></div>
         <div class="generation-dialog-footer">
           <span id="generation-overlay-time">00:00 elapsed</span
+          ><button class="secondary" id="background-generation-overlay" type="button">
+            Run in background</button
           ><button class="secondary" id="cancel-generation-overlay" type="button">
             Cancel generation
           </button>
@@ -1190,15 +1265,95 @@
       </section>
     </div>
 
+    <dialog id="story-jira-dialog" class="cs-download-dialog" aria-labelledby="story-jira-title">
+      <h2 id="story-jira-title">Create Jira stories</h2>
+      <p id="story-jira-selection"></p>
+      <p>
+        Creates a new Jira issue for each selected approved story using the configured Jira account.
+      </p>
+      <label class="stage-edit-field"
+        >Project key<input id="story-jira-project" placeholder="PROJ" maxlength="100"
+      /></label>
+      <label class="stage-edit-field"
+        >Issue type<input id="story-jira-type" value="Story" maxlength="100"
+      /></label>
+      <div class="story-review-actions">
+        <button id="story-jira-create" class="primary" type="button">Create Jira stories</button>
+        <button id="story-jira-close" class="secondary" type="button">Close</button>
+      </div>
+      <p id="story-jira-status" role="status"></p>
+      <div id="story-jira-results"></div>
+    </dialog>
+    <dialog id="script-pack-dialog" aria-labelledby="script-pack-title" class="script-pack-dialog">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">FROM TEST CASES TO SCRIPTS</span>
+          <h2 id="script-pack-title">Build a test script pack</h2>
+        </div>
+        <button id="close-script-pack" type="button" class="secondary">Close</button>
+      </div>
+      <p id="script-pack-scope"></p>
+      <form id="script-pack-form">
+        <label for="script-pack-target">Script type</label>
+        <select id="script-pack-target">
+          <option value="jmeter">Performance · Apache JMeter</option>
+          <option value="sql">Database · SQL</option>
+          <option value="oracle">Database · Oracle SQL / PL/SQL</option>
+        </select>
+        <div id="script-load-settings" class="script-load-settings">
+          <label
+            >Concurrent users<input
+              id="script-threads"
+              type="number"
+              value="1"
+              min="1"
+              max="10000"
+              required
+          /></label>
+          <label
+            >Ramp-up seconds<input
+              id="script-ramp"
+              type="number"
+              value="1"
+              min="1"
+              max="86400"
+              required
+          /></label>
+          <label
+            >Iterations per user<input
+              id="script-iterations"
+              type="number"
+              value="1"
+              min="1"
+              max="1000000"
+              required
+          /></label>
+        </div>
+        <p id="script-pack-help"></p>
+        <div id="script-case-mappings"></div>
+        <button id="generate-script-pack" type="submit" class="primary">Generate scripts</button>
+      </form>
+      <p id="script-pack-status" role="status"></p>
+      <section id="script-pack-preview" hidden>
+        <div class="panel-head">
+          <label>Preview file<select id="script-pack-file"></select></label
+          ><button id="download-script-pack" type="button" class="secondary">
+            Download pack · ZIP
+          </button>
+        </div>
+        <pre id="script-pack-content" tabindex="0" aria-label="Generated script preview"></pre>
+      </section>
+    </dialog>
     <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260911-stlc" defer></script>
+    <script src="/static/scripts/index.js?v=20260913-stage-progress" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-    <script src="/static/scripts/dashboard.js?v=20260912-scroll-history" defer></script>
+    <script src="/static/scripts/dashboard.js?v=20260913-reporting" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-    <script src="/static/scripts/suite-files.js?v=20260910-workspace" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260913" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20260913-script-packs" defer></script>
+    <script src="/static/scripts/script-packs.js?v=20260913" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260914-story-jira" defer></script>
   </body>
 </html>

@@ -2,6 +2,8 @@
 
 import asyncio
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -14,10 +16,23 @@ from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.agents.workflow_agent import WorkflowAgent, test_case_request
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline
+from app.jira import JiraClient
 from app.models import AutomationRunRequest, GenerateRequest, SuiteRequest
+from app.observability import (
+    generation_cancellations,
+    lifecycle_events,
+    publish_lifecycle_event,
+    request_id_context,
+)
 from app.services import MultiAgentTestPipeline
 from app.services.document_ingestion import DocumentIngestionError, DocumentIngestionService
-from app.workflow_models import ScenarioHandoff, Scenarios, Stories, StoryHandoff
+from app.workflow_models import (
+    JiraStoriesRequest,
+    ScenarioHandoff,
+    Scenarios,
+    Stories,
+    StoryHandoff,
+)
 
 router = APIRouter(prefix="/api/workflow", tags=["Five-stage workflow"])
 
@@ -30,63 +45,127 @@ Config = Annotated[Settings, Depends(get_settings)]
 Pipeline = Annotated[MultiAgentTestPipeline, Depends(get_multi_agent_pipeline)]
 
 
+@contextmanager
+def stage_operation(label: str, *, complete: bool = True) -> Iterator[None]:
+    """Expose live progress and cancellation for a workflow operation."""
+    request_id = request_id_context.get()
+    lifecycle_events.start(request_id)
+    generation_cancellations.register(request_id, label)
+    publish_lifecycle_event(label, "workflow_stage", "running", f"{label} started.")
+    succeeded = False
+    try:
+        yield
+        succeeded = True
+        publish_lifecycle_event(label, "workflow_stage", "success", f"{label} finished.")
+    except asyncio.CancelledError as error:
+        publish_lifecycle_event(label, "workflow_stage", "failed", f"{label} cancelled.")
+        raise HTTPException(499, f"{label} cancelled.") from error
+    except Exception:
+        publish_lifecycle_event(
+            label, "workflow_stage", "failed", f"{label} failed. Review the operation status."
+        )
+        raise
+    finally:
+        generation_cancellations.unregister(request_id)
+        if complete or not succeeded:
+            lifecycle_events.complete(request_id)
+
+
 @router.post("/requirements/document")
 async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
-    content = await file.read(settings.max_upload_bytes + 1)
-    try:
-        document = await asyncio.to_thread(
-            DocumentIngestionService(max_file_bytes=settings.max_upload_bytes).extract,
-            file.filename or "document",
-            content,
-        )
-    except DocumentIngestionError as error:
-        raise HTTPException(422, str(error)) from error
-    return {"description": document.text, "filename": document.filename}
+    with stage_operation("Requirements processing", complete=False):
+        content = await file.read(settings.max_upload_bytes + 1)
+        try:
+            document = await asyncio.to_thread(
+                DocumentIngestionService(max_file_bytes=settings.max_upload_bytes).extract,
+                file.filename or "document",
+                content,
+            )
+        except DocumentIngestionError as error:
+            raise HTTPException(422, str(error)) from error
+        return {"description": document.text, "filename": document.filename}
 
 
 @router.post("/stories", response_model=Stories)
 async def create_stories(request: GenerateRequest, settings: Config) -> Stories:
+    request_id = request_id_context.get()
+    lifecycle_events.start(request_id)
+    generation_cancellations.register(request_id, "story_generation")
+    publish_lifecycle_event(
+        "Story Agent", "create_stories", "running", "Creating stories from source requirements."
+    )
     try:
-        return await WorkflowAgent(settings).stories(request)
+        stories = await WorkflowAgent(settings).stories(request)
+        publish_lifecycle_event(
+            "Story Agent",
+            "create_stories",
+            "success",
+            "Stories validated against source requirements and ready for review.",
+        )
+        return stories
+    except asyncio.CancelledError as error:
+        publish_lifecycle_event(
+            "Story Agent", "create_stories", "failed", "Story generation cancelled by the user."
+        )
+        raise HTTPException(499, "Story generation cancelled.") from error
     except CopilotGenerationError as error:
+        publish_lifecycle_event(
+            "Story Agent",
+            "create_stories",
+            "failed",
+            "Story generation failed. Retry from the requirements form.",
+        )
         raise HTTPException(503, str(error)) from error
     except ValueError as error:
+        publish_lifecycle_event(
+            "Story Agent",
+            "create_stories",
+            "failed",
+            "Story validation failed. Review the requirements and retry.",
+        )
         raise HTTPException(422, str(error)) from error
+    finally:
+        generation_cancellations.unregister(request_id)
+        lifecycle_events.complete(request_id)
 
 
 @router.post("/scenarios", response_model=Scenarios)
 async def create_scenarios(request: StoryHandoff, settings: Config) -> Scenarios:
-    try:
-        return await WorkflowAgent(settings).scenarios(request)
-    except CopilotGenerationError as error:
-        raise HTTPException(503, str(error)) from error
-    except ValueError as error:
-        raise HTTPException(422, str(error)) from error
+    with stage_operation("Scenario generation"):
+        try:
+            return await WorkflowAgent(settings).scenarios(request)
+        except CopilotGenerationError as error:
+            raise HTTPException(503, str(error)) from error
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
 
 
 @router.post("/test-cases")
 async def create_cases(request: ScenarioHandoff, pipeline: Pipeline) -> dict[str, Any]:
-    try:
-        source = test_case_request(request)
-        result = await pipeline.run(source)
-        covered = {
-            ref for case in result.suite.test_cases for ref in case.acceptance_criteria_covered
-        }
-        required = {scenario.id for scenario in request.scenarios.scenarios}
-        required.update(story.id for story in request.stories.stories)
-        if not required <= covered:
-            raise ValueError(
-                "Generated cases did not cover all story/scenario IDs. Retry generation."
-            )
-    except ValidationError as error:
-        raise HTTPException(
-            422, "Stage handoff is too large. Split requirements into smaller batches."
-        ) from error
-    except ValueError as error:
-        raise HTTPException(422, str(error)) from error
-    except CopilotGenerationError as error:
-        raise HTTPException(503, str(error)) from error
-    return {"suite": result.suite, "validation": result.validation, "source_request": source}
+    with stage_operation("Test case generation"):
+        try:
+            source = test_case_request(request)
+            result = await pipeline.run(source)
+            covered = {
+                ref for case in result.suite.test_cases for ref in case.acceptance_criteria_covered
+            }
+            required = {scenario.id for scenario in request.scenarios.scenarios}
+            required.update(story.id for story in request.stories.stories)
+            if not required <= covered:
+                raise ValueError(
+                    "Generated cases did not cover all story/scenario IDs. Retry generation."
+                )
+        except ValidationError as error:
+            raise HTTPException(
+                422,
+                "The reviewed stage handoff contains invalid fields. Review stories and "
+                "scenarios, then try again.",
+            ) from error
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
+        except CopilotGenerationError as error:
+            raise HTTPException(503, str(error)) from error
+        return {"suite": result.suite, "validation": result.validation, "source_request": source}
 
 
 def execution_plan(request: ExecutionPlanRequest, settings: Settings) -> dict[str, Any]:
@@ -144,27 +223,37 @@ def execution_plan(request: ExecutionPlanRequest, settings: Settings) -> dict[st
 
 @router.post("/execution-plan")
 async def get_execution_plan(request: ExecutionPlanRequest, settings: Config) -> dict[str, Any]:
-    return execution_plan(request, settings)
+    with stage_operation("Execution planning"):
+        return execution_plan(request, settings)
 
 
 @router.post("/execute")
 async def execute(request: ExecutionPlanRequest, settings: Config) -> Any:
-    plan = execution_plan(request, settings)
-    if not plan["ready"]:
-        raise HTTPException(422, plan["reason"])
-    from app.main import _automation_run_lock, _run_automation
+    with stage_operation("Test execution"):
+        plan = execution_plan(request, settings)
+        if not plan["ready"]:
+            raise HTTPException(422, plan["reason"])
+        from app.main import _automation_run_lock, _run_automation
 
-    if _automation_run_lock.locked():
-        raise HTTPException(409, "A BDD run is already in progress")
-    async with _automation_run_lock:
-        return await _run_automation(
-            AutomationRunRequest(), settings, scope="configured-feature-project"
-        )
+        if _automation_run_lock.locked():
+            raise HTTPException(409, "A BDD run is already in progress")
+        async with _automation_run_lock:
+            return await _run_automation(
+                AutomationRunRequest(), settings, scope="configured-feature-project"
+            )
 
 
 @router.post("/validate-stories")
 async def validate_stories(request: StoryHandoff) -> StoryHandoff:
     return request
+
+
+@router.post("/jira-stories")
+async def publish_stories(request: JiraStoriesRequest, settings: Config) -> dict[str, Any]:
+    try:
+        return {"results": await JiraClient(settings).create_stories(request)}
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from error
 
 
 @router.post("/validate-scenarios")

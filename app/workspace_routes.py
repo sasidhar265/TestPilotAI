@@ -72,6 +72,7 @@ async def automation_history(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict[str, object]:
     snapshot = DashboardStore(settings.organizational_memory_path).snapshot("repository_checks")
+    snapshot["timeout_seconds"] = settings.automation_timeout_seconds
     for item in snapshot["history"]:
         details = item.get("details", {})
         identifier = details.get("report_id")

@@ -149,7 +149,7 @@ class TestSuite(BaseModel):
 
 class GenerateRequest(BaseModel):
     description: str = Field(min_length=10, max_length=30_000)
-    additional_context: str = Field(default="", max_length=10_000)
+    additional_context: str = Field(default="", max_length=100_000)
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
     manual_testing_type: ManualTestingType = ManualTestingType.API

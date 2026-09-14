@@ -230,12 +230,38 @@ class OrganizationalMemory:
         with closing(self._connect()) as connection:
             return int(connection.execute("SELECT COUNT(*) FROM test_suite_memory").fetchone()[0])
 
+    def recall_workflow(self, key: str) -> str | None:
+        if not self.enabled or not self.path.exists():
+            return None
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT artifact_json FROM workflow_memory WHERE memory_key = ?", (key,)
+            ).fetchone()
+        return str(row[0]) if row else None
+
+    def remember_workflow(self, key: str, artifact: str) -> None:
+        if not self.enabled:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._restrict_permissions(self.path.parent, 0o700)
+        with closing(self._connect()) as connection:
+            connection.execute(
+                "INSERT INTO workflow_memory (memory_key, artifact_json) VALUES (?, ?) "
+                "ON CONFLICT(memory_key) DO UPDATE SET artifact_json = excluded.artifact_json",
+                (key, artifact),
+            )
+            connection.commit()
+
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=5)
         self._restrict_permissions(self.path, 0o600)
         connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA synchronous=NORMAL")
         connection.execute("PRAGMA busy_timeout=5000")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS workflow_memory "
+            "(memory_key TEXT PRIMARY KEY, artifact_json TEXT NOT NULL)"
+        )
         connection.execute(
             """CREATE TABLE IF NOT EXISTS test_suite_memory (
                  memory_key TEXT PRIMARY KEY,

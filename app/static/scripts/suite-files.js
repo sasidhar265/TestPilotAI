@@ -54,6 +54,7 @@ function closeSuiteMenus() {
 }
 
 function resetSuiteFiles() {
+  window.resetScriptPack?.();
   closeStepDefinitionProgress();
   featureFile = null;
   stepDefinitionArtifact = null;
@@ -69,6 +70,7 @@ function resetSuiteFiles() {
 
 function syncSuiteFileActions() {
   const approved = Boolean(suite?.test_cases.length && validationReport?.passed);
+  $("open-script-pack").disabled = !approved;
   const containsAutomation = Boolean(
     suite?.test_cases.some((c) => c.execution_mode === "automation"),
   );

@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from app.models import GenerateRequest
 
@@ -35,6 +35,28 @@ class StoryHandoff(BaseModel):
         for story in self.stories.stories:
             if " ".join(story.source_excerpt.split()) not in source:
                 raise ValueError(f"{story.id} must quote an excerpt from the source requirements")
+        return self
+
+
+class JiraStoriesRequest(StoryHandoff):
+    project_key: str = Field(pattern=r"^[A-Z][A-Z0-9_]*$", max_length=100)
+    issue_type: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+    ]
+    selected_story_ids: list[str] = Field(min_length=1, max_length=100)
+    approved_by: dict[
+        str, Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=100)]
+    ]
+
+    @model_validator(mode="after")
+    def approved_selection(self) -> "JiraStoriesRequest":
+        selected = set(self.selected_story_ids)
+        if len(selected) != len(self.selected_story_ids):
+            raise ValueError("Selected story IDs must be unique")
+        if not selected <= {story.id for story in self.stories.stories}:
+            raise ValueError("Unknown selected story IDs")
+        if not selected <= self.approved_by.keys():
+            raise ValueError("Every selected story must be approved with a reviewer name")
         return self
 
 

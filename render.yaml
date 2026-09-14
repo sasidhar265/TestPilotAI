@@ -16,6 +16,14 @@ services:
         value: quality-lifecycle-studio.onrender.com,localhost,127.0.0.1
       - key: QUALITY_LIFECYCLE_BASE_URL
         value: http://127.0.0.1:10000
+      - key: AUTOMATION_SKIP_BUILD
+        value: "true"
+      - key: AUTOMATION_TIMEOUT_SECONDS
+        value: "180"
+      - key: AUTOMATION_TEST_TIMEOUT_SECONDS
+        value: "60"
+      - key: ALLURE_TIMEOUT_SECONDS
+        value: "45"
       - key: API_AUTH_TOKEN
         generateValue: true
       - key: SESSION_SECRET

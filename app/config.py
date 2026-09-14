@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     api_request_method: str = ""
     api_request_path: str = ""
     automation_timeout_seconds: float = Field(default=900, gt=0, le=3600)
+    automation_skip_build: bool = False
+    automation_test_timeout_seconds: int = Field(default=60, ge=1, le=3600)
     allure_executable: str = "allure"
     allure_timeout_seconds: float = Field(default=120, gt=0, le=600)
     request_queue_timeout_seconds: float = Field(default=2.0, gt=0, le=60)
