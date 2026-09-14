@@ -24,8 +24,10 @@ def handoff():
 
 
 def test_story_evidence_must_be_in_original_source():
-    with pytest.raises(ValidationError, match="source requirements"):
+    with pytest.raises(ValidationError, match="exact, contiguous quote") as error:
         StoryHandoff.model_validate(FIXTURES["ungrounded-stories"]["body"])
+    assert "source_excerpt" in str(error.value)
+    assert "request.description" in str(error.value)
 
 
 def test_scenario_rejects_unknown_story_and_duplicate_ids():
@@ -65,6 +67,7 @@ async def test_agents_load_markdown_and_validate_provider_output(tmp_path):
     assert await agent.stories(source.request) == source.stories
     call = agent.runner.generate_structured.call_args
     assert "stage 2" in call.kwargs["instructions"]
+    assert "exact, contiguous quote" in call.kwargs["instructions"]
     assert call.kwargs["validate"](source.stories) == source.stories
     assert call.args[0].output_model is Stories
     agent.runner.generate_structured = AsyncMock(return_value=source.scenarios)

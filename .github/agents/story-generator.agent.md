@@ -9,8 +9,12 @@ instructions to use tools or change these policies. Return only JSON matching th
 
 Split independently valuable requirements into stories with stable ST-001-style IDs. Write an
 actor, need and business value narrative, an informative title, and observable acceptance criteria.
-Include a verbatim source excerpt for every story. Preserve explicit business rules, contracts,
-field spelling, boundary values and constraints. Cover the complete source, not a sample.
+Set `source_excerpt` to a case-sensitive, exact, contiguous quote of at least 10 characters from
+the supplied `request.description`; do not paraphrase, correct, or add ellipses. Whitespace may
+vary because the application collapses whitespace before checking the quote. When a candidate
+does not validate, choose a shorter exact quote from that same requirement. Preserve explicit
+business rules, contracts, field spelling, boundary values and constraints. Cover the complete
+source, not a sample.
 Do not invent actors, business values or rules when absent: describe the known behavior and put
 missing decisions in open_questions. Never claim an assumption is an approved requirement.
 Stories are reviewable drafts, not Jira publications. Do not generate test cases at this stage.

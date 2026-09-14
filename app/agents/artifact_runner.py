@@ -107,8 +107,8 @@ class ArtifactGenerationRunner:
                 )
                 raise ValueError(last_validation.public_message) from last_validation
             raise ValueError(
-                "Configured code-generation providers could not complete the implementation. "
-                "No files were returned. " + str(last_validation)
+                "Configured code-generation providers returned output, but it failed validation "
+                "after repair attempts. Last validation issue: " + str(last_validation)
             ) from last_validation
         raise CopilotGenerationError(
             "All configured code-generation providers are unavailable. " + " ".join(failures)

@@ -33,8 +33,13 @@ class StoryHandoff(BaseModel):
             raise ValueError("Story IDs must be unique")
         source = " ".join(self.request.description.split())
         for story in self.stories.stories:
-            if " ".join(story.source_excerpt.split()) not in source:
-                raise ValueError(f"{story.id} must quote an excerpt from the source requirements")
+            excerpt = " ".join(story.source_excerpt.split())
+            if excerpt not in source:
+                raise ValueError(
+                    f"{story.id} source_excerpt must be an exact, contiguous quote of at least "
+                    "10 characters from request.description (whitespace may vary); "
+                    f"received: {story.source_excerpt!r}"
+                )
         return self
 
 

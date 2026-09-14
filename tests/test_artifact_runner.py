@@ -174,7 +174,9 @@ async def test_all_incomplete_providers_preserve_actionable_failure(monkeypatch)
     runner._openai = AsyncMock(return_value=incomplete)
     runner._codex = AsyncMock(return_value=incomplete)
     monkeypatch.setattr("app.agents.artifact_runner.shutil.which", lambda _: "/test/codex")
-    with pytest.raises(ValueError, match="No files were returned.*approved oracle data"):
+    with pytest.raises(
+        ValueError, match="failed validation after repair attempts.*approved oracle data"
+    ):
         await runner.generate_structured(
             STEP_DEFINITION_AGENT,
             instructions="C#",
