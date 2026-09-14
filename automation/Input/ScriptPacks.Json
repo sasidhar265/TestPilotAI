@@ -1,0 +1,384 @@
+{
+  "jmeter": {
+    "suite": {
+      "feature_name": "Workspace health",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-HEALTH-001",
+          "title": "Health endpoint returns runtime",
+          "objective": "Verify the documented workspace health response",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "automation",
+          "feasibility_reason": "Existing repository health API contract",
+          "steps": [
+            {
+              "action": "GET /api/health",
+              "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+            }
+          ],
+          "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+          "test_data": [
+            {
+              "name": "health",
+              "value": "{}",
+              "purpose": "Empty health request; no business payload"
+            }
+          ]
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "jmeter",
+    "http_checks": [
+      {
+        "case_id": "TC-HEALTH-001",
+        "method": "GET",
+        "path": "/api/health",
+        "expected_status": 200,
+        "max_response_ms": 5000
+      }
+    ],
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 1
+  },
+  "sql": {
+    "suite": {
+      "feature_name": "Database scalar query probe",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-SQL-001",
+          "title": "SELECT returns one row",
+          "objective": "Verify a constant query returns one row",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "manual",
+          "feasibility_reason": "Database client query probe",
+          "steps": [
+            {
+              "action": "Execute SELECT 1 AS probe_value",
+              "expected_result": "One row"
+            }
+          ],
+          "gherkin": null,
+          "test_data": []
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "sql",
+    "database_checks": [
+      {
+        "case_id": "TC-SQL-001",
+        "query": "SELECT 1 AS probe_value",
+        "expected_rows": 1
+      }
+    ]
+  },
+  "oracle": {
+    "suite": {
+      "feature_name": "Database scalar query probe",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-SQL-001",
+          "title": "SELECT returns one row",
+          "objective": "Verify a constant query returns one row",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "manual",
+          "feasibility_reason": "Database client query probe",
+          "steps": [
+            {
+              "action": "Execute SELECT 1 AS probe_value FROM dual",
+              "expected_result": "One row"
+            }
+          ],
+          "gherkin": null,
+          "test_data": []
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "oracle",
+    "database_checks": [
+      {
+        "case_id": "TC-SQL-001",
+        "query": "SELECT 1 AS probe_value FROM dual",
+        "expected_rows": 1
+      }
+    ]
+  },
+  "missing": {
+    "suite": {
+      "feature_name": "Workspace health",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-HEALTH-001",
+          "title": "Health endpoint returns runtime",
+          "objective": "Verify the documented workspace health response",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "automation",
+          "feasibility_reason": "Existing repository health API contract",
+          "steps": [
+            {
+              "action": "GET /api/health",
+              "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+            }
+          ],
+          "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+          "test_data": [
+            {
+              "name": "health",
+              "value": "{}",
+              "purpose": "Empty health request; no business payload"
+            }
+          ]
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "jmeter",
+    "http_checks": [],
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 1
+  },
+  "unknown-case": {
+    "suite": {
+      "feature_name": "Workspace health",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-HEALTH-001",
+          "title": "Health endpoint returns runtime",
+          "objective": "Verify the documented workspace health response",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "automation",
+          "feasibility_reason": "Existing repository health API contract",
+          "steps": [
+            {
+              "action": "GET /api/health",
+              "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+            }
+          ],
+          "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+          "test_data": [
+            {
+              "name": "health",
+              "value": "{}",
+              "purpose": "Empty health request; no business payload"
+            }
+          ]
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "jmeter",
+    "http_checks": [
+      {
+        "case_id": "TC-UNKNOWN",
+        "method": "GET",
+        "path": "/api/health",
+        "expected_status": 200,
+        "max_response_ms": 5000
+      }
+    ],
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 1
+  },
+  "duplicate-case": {
+    "suite": {
+      "feature_name": "Workspace health",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-HEALTH-001",
+          "title": "Health endpoint returns runtime",
+          "objective": "Verify the documented workspace health response",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "automation",
+          "feasibility_reason": "Existing repository health API contract",
+          "steps": [
+            {
+              "action": "GET /api/health",
+              "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+            }
+          ],
+          "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+          "test_data": [
+            {
+              "name": "health",
+              "value": "{}",
+              "purpose": "Empty health request; no business payload"
+            }
+          ]
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "jmeter",
+    "http_checks": [
+      {
+        "case_id": "TC-HEALTH-001",
+        "method": "GET",
+        "path": "/api/health",
+        "expected_status": 200,
+        "max_response_ms": 5000
+      },
+      {
+        "case_id": "TC-HEALTH-001",
+        "method": "GET",
+        "path": "/api/health",
+        "expected_status": 200,
+        "max_response_ms": 5000
+      }
+    ],
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 1
+  },
+  "failed-gate": {
+    "suite": {
+      "feature_name": "Workspace health",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-HEALTH-001",
+          "title": "Health endpoint returns runtime",
+          "objective": "Verify the documented workspace health response",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "automation",
+          "feasibility_reason": "Existing repository health API contract",
+          "steps": [
+            {
+              "action": "GET /api/health",
+              "expected_result": "HTTP 200 with execution_host local-fastapi-uvicorn"
+            }
+          ],
+          "gherkin": "Scenario: Workspace health\n Given a request built from \"health\"\n When I send a \"GET\" request to \"/api/health\"\n Then the response status is 200\n And the response JSON field \"execution_host\" equals \"local-fastapi-uvicorn\"",
+          "test_data": [
+            {
+              "name": "health",
+              "value": "{}",
+              "purpose": "Empty health request; no business payload"
+            }
+          ]
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": false,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "jmeter",
+    "http_checks": [
+      {
+        "case_id": "TC-HEALTH-001",
+        "method": "GET",
+        "path": "/api/health",
+        "expected_status": 200,
+        "max_response_ms": 5000
+      }
+    ],
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 1
+  },
+  "invalid-query": {
+    "suite": {
+      "feature_name": "Database scalar query probe",
+      "output_format": "bdd",
+      "test_cases": [
+        {
+          "id": "TC-SQL-001",
+          "title": "SELECT returns one row",
+          "objective": "Verify a constant query returns one row",
+          "category": "smoke",
+          "priority": "P1",
+          "execution_mode": "manual",
+          "feasibility_reason": "Database client query probe",
+          "steps": [
+            {
+              "action": "Execute SELECT 1 AS probe_value",
+              "expected_result": "One row"
+            }
+          ],
+          "gherkin": null,
+          "test_data": []
+        }
+      ],
+      "coverage_notes": []
+    },
+    "validation": {
+      "passed": true,
+      "score": 100,
+      "acceptance_criteria_total": 0,
+      "acceptance_criteria_covered": 0,
+      "findings": []
+    },
+    "target": "sql",
+    "database_checks": [
+      {
+        "case_id": "TC-SQL-001",
+        "query": "DELETE FROM test_records",
+        "expected_rows": 1
+      }
+    ]
+  }
+}
