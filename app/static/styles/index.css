@@ -1233,27 +1233,96 @@ textarea:focus {
   animation: generation-progress 1.4s ease-in-out infinite;
 }
 .generation-dialog-footer {
-  margin-top: 18px;
+  margin-top: 20px;
+  padding-top: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  border-top: 1px solid var(--line);
 }
 .generation-dialog-footer > span {
+  min-height: 34px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
   color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
   font:
     700 0.65rem "SFMono-Regular",
     Consolas,
     monospace;
 }
 .generation-dialog-footer .secondary {
-  min-height: 36px;
+  min-height: 40px;
 }
 .cs-generation-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 9px;
+}
+.generation-action-button {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 11px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+.generation-action-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+.generation-action-button--background {
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+  background: var(--surface-soft);
+}
+.generation-action-button--background:hover:not(:disabled) {
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.generation-action-button--cancel {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 34%, var(--line));
+  background: var(--danger-soft);
+}
+.generation-action-button--cancel:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.generation-action-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  outline-offset: 2px;
+}
+.generation-action-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
 }
 #cs-generation-dialog .generation-dialog-footer {
   flex-wrap: wrap;
@@ -3364,6 +3433,21 @@ fieldset {
   }
   .topbar h1 {
     font-size: 1.35rem;
+  }
+  .generation-dialog-footer {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .generation-dialog-footer > span {
+    width: fit-content;
+  }
+  .cs-generation-actions {
+    width: 100%;
+  }
+  .generation-dialog-footer .generation-action-button {
+    flex: 1 1 0;
+    padding: 0 10px;
+    font-size: 0.65rem;
   }
   .workflow-rail {
     grid-template-columns: repeat(4, minmax(62px, 1fr));

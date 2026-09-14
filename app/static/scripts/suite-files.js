@@ -32,10 +32,12 @@ function startStepDefinitionProgress() {
   $("cs-generation-message").textContent =
     "Creating bindings, implementations and supporting files. Your pack will open when ready.";
   $("cs-generation-dialog").querySelector('[role="progressbar"]').classList.remove("hidden");
-  $("hide-cs-generation").textContent = "Run in background";
+  $("hide-cs-generation").querySelector(".generation-action-label").textContent =
+    "Run in background";
   $("cancel-cs-generation").classList.remove("hidden");
   $("cancel-cs-generation").disabled = false;
-  $("cancel-cs-generation").textContent = "Cancel generation";
+  $("cancel-cs-generation").querySelector(".generation-action-label").textContent =
+    "Cancel generation";
   const started = Date.now();
   const update = () => {
     const seconds = Math.floor((Date.now() - started) / 1000);
@@ -195,7 +197,7 @@ async function ensureStepDefinitions() {
       $("cs-generation-title").textContent = "Automation generation could not complete";
       $("cs-generation-message").textContent = error.message;
       $("cs-generation-dialog").querySelector('[role="progressbar"]').classList.add("hidden");
-      $("hide-cs-generation").textContent = "Close";
+      $("hide-cs-generation").querySelector(".generation-action-label").textContent = "Close";
       $("cancel-cs-generation").classList.add("hidden");
       showStepDefinitionProgress();
     }
@@ -217,7 +219,8 @@ async function cancelFullPackGeneration() {
   if (!generation || generation.cancelled) return;
   generation.cancelled = true;
   $("cancel-cs-generation").disabled = true;
-  $("cancel-cs-generation").textContent = "Cancelling…";
+  $("cancel-cs-generation").querySelector(".generation-action-label").textContent =
+    "Cancelling…";
   try {
     const response = await fetch(
       `/api/generation/${encodeURIComponent(generation.requestId)}/cancel`,
@@ -236,7 +239,8 @@ async function cancelFullPackGeneration() {
     if (stepDefinitionRequest !== generation) return;
     generation.cancelled = false;
     $("cancel-cs-generation").disabled = false;
-    $("cancel-cs-generation").textContent = "Cancel generation";
+    $("cancel-cs-generation").querySelector(".generation-action-label").textContent =
+      "Cancel generation";
     $("cs-generation-message").textContent = error.message;
   }
 }

@@ -304,7 +304,7 @@ function showGenerationOverlay(target) {
           ? "DecisionAgent and the Manual Testing Specialist are creating review-ready steps and expected results."
           : "DecisionAgent and the Automation Specialist are creating validated BDD and automation coverage.";
   const stage = generationStages[target];
-  $("cancel-generation-overlay").textContent = stage?.runtime
+  $("cancel-generation-overlay-label").textContent = stage?.runtime
     ? "Cancel operation"
     : "Cancel generation";
   if (stage) {
