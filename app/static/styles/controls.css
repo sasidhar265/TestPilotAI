@@ -44,6 +44,15 @@ a.button.primary:hover {
   background: var(--primary-dark);
 }
 
+button.primary:disabled,
+button.button.primary:disabled {
+  color: #fff;
+  background: var(--primary);
+  opacity: 0.78;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72),
+    0 7px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
 button.secondary,
 button.button.secondary,
 a.button.secondary {
