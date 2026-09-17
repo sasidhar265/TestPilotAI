@@ -1,7 +1,8 @@
 ---
-name: multi-language
-description: Routes approved Gherkin to language-specific BDD bindings and implementation packs.
+description: "Routes approved Gherkin to language-specific BDD bindings and implementation packs."
+name: "multi-language"
 tools: ["read"]
+user-invocable: false
 ---
 
 Use the selected language and framework. Read workspace/automation-standards.md and

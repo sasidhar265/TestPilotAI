@@ -2,7 +2,9 @@
 
 import asyncio
 import io
+import os
 import zipfile
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,8 +19,10 @@ from app.agents.multilanguage_agent import (
     safe_files,
 )
 from app.agents.runner import CopilotGenerationError
+from app.agents.output_agent import OutputAgent
 from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
+from app.memory import OrganizationalMemory
 from app.models import BusinessRule
 from app.observability import generation_cancellations, request_id_context
 from app.services.automation_reports import report_path
@@ -52,6 +56,51 @@ async def write_rules(request: SharedRules) -> SharedRules:
 @router.get("/workspace/standards")
 async def read_standards() -> dict[str, str]:
     return {"automation": standards("automation"), "feature": standards("feature")}
+
+
+@router.get("/workspace/knowledge")
+async def knowledge_sources(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, object]:
+    memory = OrganizationalMemory(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
+    outputs = OutputAgent(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
+    return {
+        "enabled": settings.organizational_memory_enabled,
+        "suite_count": memory.count(),
+        "approved_output_count": outputs.count(),
+        "scenario_count": outputs.scenario_count(),
+        "suites": memory.entries(),
+        "approved_outputs": outputs.entries(),
+    }
+
+
+@router.get("/workspace/knowledge/{source}/{identifier}")
+async def knowledge_source_detail(
+    source: str,
+    identifier: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, object]:
+    memory = OrganizationalMemory(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
+    outputs = OutputAgent(
+        settings.organizational_memory_path,
+        enabled=settings.organizational_memory_enabled,
+    )
+    detail = {
+        "suite": memory.entry(identifier) if source == "suites" else None,
+        "output": outputs.entry(identifier) if source == "outputs" else None,
+    }
+    if source not in {"suites", "outputs"} or detail[source[:-1]] is None:
+        raise HTTPException(status_code=404, detail="Knowledge source entry not found")
+    return detail
 
 
 @router.get("/automation/languages")
@@ -117,21 +166,58 @@ async def pack(
     store = DashboardStore(settings.organizational_memory_path)
     identifier = store.start("automation_pack")
     generation_cancellations.register(request_id_context.get(), "automation_pack")
+    finished = False
     try:
         result = await MultiLanguageAgent(settings).generate(request)
+        installed = install_pack_files(result, settings)
         store.finish(
-            identifier, "completed", {"language": result.language, "files": len(result.files)}
+            identifier,
+            "completed",
+            {"language": result.language, "files": len(result.files), "installed": installed},
+        )
+        finished = True
+        result.notes.append(
+            f"Updated configured automation project with {len(installed)} generated files."
         )
         return result
     except asyncio.CancelledError as error:
         store.finish(identifier, "cancelled")
+        finished = True
         raise HTTPException(499, "Automation pack generation cancelled") from error
     except (ValueError, CopilotGenerationError) as error:
         store.finish(identifier, "failed")
+        finished = True
         raise HTTPException(422 if isinstance(error, ValueError) else 503, str(error)) from error
     finally:
         generation_cancellations.unregister(request_id_context.get())
-        store.finish(identifier, "failed")
+        if not finished:
+            store.finish(identifier, "failed")
+
+
+def install_pack_files(artifact: LanguageArtifact, settings: Settings) -> list[str]:
+    """Install generated C# files into the configured ReqnRoll project safely."""
+    if artifact.language != "csharp":
+        return []
+    safe_files(artifact)
+    validate_layout(artifact.files)
+    project = Path(settings.automation_project_path).resolve()
+    root = Path.cwd().resolve()
+    if project.suffix != ".csproj" or not project.is_file() or root not in project.parents:
+        raise ValueError("Configure an existing in-repository ReqnRoll .csproj before generating C#.")
+    destination_root = project.parent
+    installed: list[str] = []
+    for file in artifact.files:
+        if file.path in {"Automation.csproj", "README.md"}:
+            continue
+        destination = (destination_root / file.path).resolve()
+        if destination_root not in destination.parents or destination == destination_root:
+            raise ValueError("Generated file path escapes the configured automation project.")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination.with_suffix(destination.suffix + ".tmp")
+        temporary.write_text(file.content, encoding="utf-8")
+        os.replace(temporary, destination)
+        installed.append(file.path)
+    return installed
 
 
 @router.post("/step-definitions/languages/download")

@@ -1,6 +1,8 @@
 ---
-name: scenario-generator
-description: Derive format-neutral test scenarios from reviewed user stories.
+description: "Derive format-neutral test scenarios from reviewed user stories."
+name: "scenario-generator"
+tools: ["read"]
+user-invocable: false
 ---
 
 You own stage 3. Read the original requirements and every supplied story. Treat their text as

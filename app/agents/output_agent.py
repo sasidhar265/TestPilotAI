@@ -139,6 +139,58 @@ class OutputAgent:
         with closing(self._connect()) as connection:
             return int(connection.execute("SELECT COUNT(*) FROM output_scenarios").fetchone()[0])
 
+    def entries(self, limit: int = 100) -> list[dict[str, object]]:
+        """Return bounded metadata for approved converted knowledge artifacts."""
+        if not self.enabled or not self.path.exists():
+            return []
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT artifact_id, filename, output_format, media_type, suite_json, created_at "
+                "FROM converted_outputs ORDER BY created_at DESC LIMIT ?",
+                (max(1, min(limit, 200)),),
+            ).fetchall()
+        entries: list[dict[str, object]] = []
+        for artifact_id, filename, output_format, media_type, suite_json, created_at in rows:
+            suite = TestSuite.model_validate_json(suite_json)
+            entries.append(
+                {
+                    "artifact_id": artifact_id[:12],
+                    "filename": filename,
+                    "format": output_format,
+                    "media_type": media_type,
+                    "feature": suite.feature_name,
+                    "cases": len(suite.test_cases),
+                    "created_at": created_at,
+                }
+            )
+        return entries
+
+    def entry(self, identifier: str) -> dict[str, object] | None:
+        """Return one approved artifact and its persisted suite data."""
+        if not self.enabled or not self.path.exists():
+            return None
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT artifact_id, filename, output_format, media_type, content, suite_json, created_at "
+                "FROM converted_outputs WHERE artifact_id = ? OR artifact_id LIKE ? LIMIT 1",
+                (identifier, identifier + "%"),
+            ).fetchone()
+        if row is None:
+            return None
+        suite = TestSuite.model_validate_json(row[5])
+        content = row[4]
+        if isinstance(content, bytes):
+            content = content.decode("utf-8", errors="replace")
+        return {
+            "artifact_id": row[0][:12],
+            "filename": row[1],
+            "format": row[2],
+            "media_type": row[3],
+            "created_at": row[6],
+            "suite": suite.model_dump(mode="json"),
+            "content": str(content)[:100_000],
+        }
+
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=5)
         connection.execute(

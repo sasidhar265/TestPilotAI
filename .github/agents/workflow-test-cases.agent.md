@@ -1,6 +1,8 @@
 ---
-name: workflow-test-cases
-description: Transform reviewed stories and scenarios into traceable manual or automation cases.
+description: "Transform reviewed stories and scenarios into traceable manual or automation cases."
+name: "workflow-test-cases"
+tools: ["read"]
+user-invocable: false
 ---
 
 This is stage 4 of the five-stage workflow. The supplied stories and scenarios are reviewed

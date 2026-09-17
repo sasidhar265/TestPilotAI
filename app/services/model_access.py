@@ -11,6 +11,34 @@ from app.config import Settings
 from app.models import LlmModel
 
 
+# Providers that recently reported a hard quota/usage limit. Access probes can validate
+# credentials and model policy, but they cannot reliably predict provider generation quota.
+_exhausted_providers: dict[str, str] = {}
+
+
+def mark_provider_exhausted(provider: str, reason: str) -> None:
+    _exhausted_providers[provider] = reason[:500]
+
+
+def clear_provider_exhausted(provider: str) -> None:
+    _exhausted_providers.pop(provider, None)
+
+
+def _apply_runtime_exhaustion(result: dict[str, Any]) -> dict[str, Any]:
+    aliases = {"openai": "openai-api", "gemini": "gemini-api", "codex": "codex-cli"}
+    model = result.get("model", "")
+    reason = _exhausted_providers.get(model) or _exhausted_providers.get(
+        aliases.get(model, model)
+    )
+    if reason is None:
+        return result
+    result = dict(result)
+    result["available"] = False
+    result["can_use"] = False
+    result["reason"] = reason
+    return result
+
+
 async def inspect_model_access(settings: Settings, requested_model: str) -> dict[str, Any]:
     """Return access details without consuming a generation request."""
     if requested_model == "auto-fallback":
@@ -44,7 +72,7 @@ async def inspect_model_access(settings: Settings, requested_model: str) -> dict
             check = _inspect_codex(settings)
         else:
             check = _inspect_copilot(settings, requested_model)
-        return await asyncio.wait_for(check, timeout=30)
+        return _apply_runtime_exhaustion(await asyncio.wait_for(check, timeout=30))
     except Exception as error:
         return _access_result(
             requested_model,

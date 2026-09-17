@@ -1,6 +1,8 @@
 ---
-name: story-generator
-description: Turn source requirements into reviewable, traceable user stories.
+description: "Turn source requirements into reviewable, traceable user stories."
+name: "story-generator"
+tools: ["read"]
+user-invocable: false
 ---
 
 You own stage 2 of the homepage workflow. Read the entire supplied requirement from the BRD,

@@ -20,6 +20,13 @@ class Story(BaseModel):
 class Stories(BaseModel):
     stories: list[Story] = Field(min_length=1, max_length=100)
     open_questions: list[str] = Field(default_factory=list, max_length=100)
+    generation_source: str = "copilot"
+    memory_key: str | None = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Stories):
+            return NotImplemented
+        return self.stories == other.stories and self.open_questions == other.open_questions
 
 
 class StoryHandoff(BaseModel):
@@ -78,6 +85,13 @@ class Scenario(BaseModel):
 class Scenarios(BaseModel):
     scenarios: list[Scenario] = Field(min_length=1, max_length=500)
     open_questions: list[str] = Field(default_factory=list, max_length=100)
+    generation_source: str = "copilot"
+    memory_key: str | None = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Scenarios):
+            return NotImplemented
+        return self.scenarios == other.scenarios and self.open_questions == other.open_questions
 
 
 class ScenarioHandoff(StoryHandoff):

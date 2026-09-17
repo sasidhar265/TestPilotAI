@@ -51,9 +51,10 @@
     workspace.hidden = !state.stories && !suite;
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
-    $("stage-stories").disabled = state.busy || !state.request || allStoriesAccepted();
-    $("stage-stories").title = allStoriesAccepted()
-      ? "Stories are approved. Continue to scenarios, or change the requirements to create new stories."
+    $("stage-stories").disabled = state.busy || !state.request || Boolean(state.stories);
+    $("stage-stories").textContent = state.stories ? "Stories created ✓" : "Create stories →";
+    $("stage-stories").title = state.stories
+      ? "Stories are already created. Change the requirements to create new stories."
       : "Create stories from the current requirements";
     $("review-stories").disabled = state.busy || !allStoriesAccepted();
     $("story-review-progress").textContent = state.stories
@@ -94,7 +95,10 @@
       );
     $("story-jira-open").disabled = state.busy || !selectedApprovedStories().length;
     $("stories-accepted-by").disabled = state.busy;
-    $("stage-scenarios").disabled = state.busy || !state.storiesReviewed;
+    $("stage-scenarios").disabled = state.busy || !state.storiesReviewed || Boolean(state.scenarios);
+    $("stage-scenarios").textContent = state.scenarios
+      ? "Scenarios created ✓"
+      : "Create scenarios →";
     $("review-scenarios").disabled = state.busy || !allScenariosAccepted();
     $("accept-scenarios").disabled = state.busy || !state.scenarios || allScenariosAccepted();
     $("scenarios-accepted-by").disabled = state.busy;
@@ -111,7 +115,8 @@
             : "Review required";
         card.querySelector(".scenario-open-edit").disabled = state.busy;
       });
-    $("stage-cases").disabled = state.busy || !state.scenariosReviewed;
+    $("stage-cases").disabled = state.busy || !state.scenariosReviewed || Boolean(suite);
+    $("stage-cases").textContent = suite ? "Test cases created ✓" : "Create test cases →";
     $("review-cases").disabled = state.busy || !suite;
     $("stage-refresh-execution").disabled = state.busy || !suite;
     $("stage-run").disabled = state.busy || !state.plan?.ready;
@@ -307,6 +312,9 @@
           const result = await post("stories", requestOptions());
           current();
           state.stories = result;
+          if (result.generation_source === "organizational-memory") {
+            showKnowledgeNotice({ ...result, knowledge_stage: "stories" });
+          }
           renderStories();
           status("Stories ready. Review, edit and accept each story to continue.");
           show(2, !activeGeneration?.background);
@@ -696,6 +704,9 @@
         current();
         invalidate(2);
         state.stories = result;
+        if (result.generation_source === "organizational-memory") {
+          showKnowledgeNotice({ ...result, knowledge_stage: "stories" });
+        }
         renderStories();
         status("Stories ready. Review, edit and accept each story to continue.");
       },
@@ -720,6 +731,9 @@
         current();
         invalidate(3);
         state.scenarios = result;
+        if (result.generation_source === "organizational-memory") {
+          showKnowledgeNotice({ ...result, knowledge_stage: "scenarios" });
+        }
         renderScenarios();
         status("Scenarios ready. Review or edit them before creating test cases.");
       },

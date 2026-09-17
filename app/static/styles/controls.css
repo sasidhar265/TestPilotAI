@@ -1,0 +1,93 @@
+/* Shared control language, based on the Test Cases stage. */
+button,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button) {
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--ink-soft, var(--ink));
+  background: var(--surface, #fff);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.2;
+  transition: transform 0.16s, box-shadow 0.16s, background 0.16s, border-color 0.16s;
+}
+
+button:not(:disabled):not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button):hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
+button.primary,
+button.button.primary,
+a.button.primary {
+  min-height: 44px;
+  color: #fff;
+  background: var(--primary);
+  box-shadow: 0 7px 17px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+button.primary:hover:not(:disabled),
+button.button.primary:hover:not(:disabled),
+a.button.primary:hover {
+  color: #fff;
+  background: var(--primary-dark);
+}
+
+button.secondary,
+button.button.secondary,
+a.button.secondary {
+  color: var(--ink-soft, var(--ink));
+  border-color: var(--line-strong, var(--line));
+  background: var(--surface, #fff);
+  box-shadow: none;
+}
+
+button.secondary:hover:not(:disabled),
+button.button.secondary:hover:not(:disabled),
+a.button.secondary:hover {
+  background: var(--surface-soft, #f8f9fc);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+select {
+  min-height: 44px;
+  padding: 0 38px 0 12px;
+  border: 1px solid var(--line, #e5e7ef);
+  border-radius: 10px;
+  color: var(--ink, #171a2b);
+  background-color: var(--surface, #fff);
+  font-size: 0.75rem;
+  font-weight: 700;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 19px, calc(100% - 12px) 19px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 620px) {
+  button:not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button) {
+    min-height: 42px;
+  }
+}

@@ -20,6 +20,33 @@
   color: var(--muted);
   line-height: 1.6;
 }
+.script-pack-options {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 8px;
+}
+.script-pack-dialog .script-pack-options fieldset {
+  flex: 1 1 360px;
+  margin: 0;
+}
+.script-pack-options .generation-actions {
+  flex: 0 0 auto;
+  padding-bottom: 1px;
+}
+.script-pack-options select,
+.script-pack-preview-actions select {
+  min-height: 44px;
+}
+.script-pack-preview-actions {
+  align-items: end;
+  gap: 16px;
+}
+.script-pack-preview-actions label {
+  flex: 1 1 360px;
+  margin: 0;
+}
 .script-pack-dialog label {
   display: grid;
   gap: 8px;
@@ -81,5 +108,19 @@
   .script-pack-dialog .panel-head {
     flex-wrap: wrap;
     gap: 12px;
+  }
+  .script-pack-options {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .script-pack-options fieldset,
+  .script-pack-options .generation-actions,
+  .script-pack-options .primary,
+  .script-pack-preview-actions label {
+    width: 100%;
+  }
+  .script-pack-options .generation-actions {
+    padding: 0;
   }
 }

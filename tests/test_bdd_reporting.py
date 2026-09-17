@@ -86,8 +86,8 @@ async def test_allure_single_html_and_redacted_native_results(tmp_path, monkeypa
         data = (sanitized / "test-result.json").read_text()
         assert "secret-value" not in data
         assert "[redacted]" in data
-        assert "attachments" not in data
-        assert not (sanitized / "raw.txt").exists()
+        assert '"attachments"' in data
+        assert (sanitized / "raw.txt").read_text() == "[redacted]"
         output = Path(command[command.index("--output") + 1])
         output.mkdir()
         (output / "index.html").write_text("<html>Standalone Allure</html>")

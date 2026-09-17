@@ -63,6 +63,30 @@ async def test_code_generation_fails_over_to_codex_after_openai_quota(monkeypatc
 
 
 @pytest.mark.asyncio
+@respx.mock
+async def test_code_generation_fails_over_to_configured_gemini() -> None:
+    runner = ArtifactGenerationRunner(settings(gemini_api_key="test-key"))
+    runner.copilot.generate_structured = AsyncMock(side_effect=CopilotGenerationError("quota"))
+    route = respx.post(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{runner.settings.gemini_model}:generateContent"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "finishReason": "STOP",
+                        "content": {"parts": [{"text": artifact().model_dump_json()}]},
+                    }
+                ]
+            },
+        )
+    )
+    assert await runner.generate_structured(STEP_DEFINITION_AGENT, instructions="C#", prompt="suite") == artifact()
+    assert route.called
+
+
+@pytest.mark.asyncio
 async def test_no_configured_provider_returns_an_error_without_source(monkeypatch) -> None:
     runner = ArtifactGenerationRunner(settings())
     runner.copilot.generate_structured = AsyncMock(side_effect=CopilotGenerationError("quota"))

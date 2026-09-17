@@ -77,7 +77,8 @@ function syncSuiteFileActions() {
     suite?.test_cases.some((c) => c.execution_mode === "automation"),
   );
   const automation =
-    approved && suite.test_cases.some((c) => c.execution_mode === "automation" && c.gherkin);
+    approved && suite.test_cases.some((c) => c.execution_mode === "automation" && c.gherkin) &&
+    !automationControlsRestricted();
   [
     "view-feature",
     "download-feature",
@@ -88,6 +89,21 @@ function syncSuiteFileActions() {
   ].forEach((id) => {
     $(id).disabled = !automation;
     $(id).title = automation ? "" : "Requires a validated suite with BDD automation scenarios.";
+  });
+  const restricted = automationControlsRestricted();
+  document.querySelectorAll("[data-automation-control]").forEach((control) => {
+    if (control.matches("summary")) {
+      control.setAttribute("aria-disabled", String(restricted));
+      control.tabIndex = restricted ? -1 : 0;
+      control.classList.toggle("is-disabled", restricted);
+      if (restricted) control.parentElement.open = false;
+    } else {
+      if (restricted) control.disabled = true;
+      if (!restricted && control.id === "automation-language") control.disabled = false;
+      control.title = restricted
+        ? "Unavailable for Performance or Database test cases."
+        : control.title;
+    }
   });
   ["xlsx", "csv", "pdf", "json"].forEach((id) => {
     $(id).disabled = !approved || containsAutomation;

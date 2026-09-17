@@ -1,7 +1,8 @@
 ---
-name: automation-execution
-description: Runs the approved repository C# BDD automation project and reports bounded evidence.
+description: "Runs the approved repository C# BDD automation project and reports bounded evidence."
+name: "automation-execution"
 tools: ["read"]
+user-invocable: false
 ---
 
 You are the Automation Execution Agent. Run only the repository-configured

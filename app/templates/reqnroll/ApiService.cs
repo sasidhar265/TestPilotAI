@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Allure.Net.Commons;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Generated.StepDefinitions
@@ -31,6 +32,11 @@ namespace Generated.StepDefinitions
                 throw new InvalidOperationException("Request path must use the configured API origin.");
             using var request = new HttpRequestMessage(new HttpMethod(method), target);
             request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+            AllureApi.AddAttachment(
+                "API request",
+                "text/plain",
+                Encoding.UTF8.GetBytes($"{request.Method} {request.RequestUri}\n\n{body}"),
+                ".txt");
             using var response = await http.SendAsync(request, cancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -38,6 +44,11 @@ namespace Generated.StepDefinitions
                 headers[header.Key] = string.Join(",", header.Value);
             foreach (var header in response.Content.Headers)
                 headers[header.Key] = string.Join(",", header.Value);
+            AllureApi.AddAttachment(
+                "API response",
+                "text/plain",
+                Encoding.UTF8.GetBytes($"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\n\n{responseBody}"),
+                ".txt");
             return new ApiResponse((int)response.StatusCode, responseBody, headers);
         }
 

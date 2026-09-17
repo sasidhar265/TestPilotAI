@@ -146,6 +146,7 @@ app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), na
 INDEX = Path(__file__).parent / "static" / "index.html"
 DOCUMENTATION = Path(__file__).parent / "static" / "documentation.html"
 LOGS = Path(__file__).parent / "static" / "logs.html"
+KNOWLEDGE = Path(__file__).parent / "static" / "knowledge.html"
 LOGIN = Path(__file__).parent / "static" / "login.html"
 logger = logging.getLogger(__name__)
 HTML_HEADERS = {"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"}
@@ -329,6 +330,11 @@ async def documentation() -> FileResponse:
 @app.get("/logs", include_in_schema=False)
 async def logs() -> FileResponse:
     return FileResponse(LOGS, headers=HTML_HEADERS)
+
+
+@app.get("/knowledge", include_in_schema=False)
+async def knowledge() -> FileResponse:
+    return FileResponse(KNOWLEDGE, headers=HTML_HEADERS)
 
 
 @app.get("/api/documentation/company/{document_id}", response_model=CompanyDocument)

@@ -13,6 +13,7 @@
     <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Allure.Reqnroll" Version="2.15.0" />
     <None Update="Input/*.Json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

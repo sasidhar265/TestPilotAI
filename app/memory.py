@@ -230,6 +230,53 @@ class OrganizationalMemory:
         with closing(self._connect()) as connection:
             return int(connection.execute("SELECT COUNT(*) FROM test_suite_memory").fetchone()[0])
 
+    def entries(self, limit: int = 100) -> list[dict[str, object]]:
+        """Return bounded metadata for suites available in organizational memory."""
+        if not self.enabled or not self.path.exists():
+            return []
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT memory_key, suite_json, created_at, last_accessed_at, access_count "
+                "FROM test_suite_memory ORDER BY last_accessed_at DESC LIMIT ?",
+                (max(1, min(limit, 200)),),
+            ).fetchall()
+        entries: list[dict[str, object]] = []
+        for key, suite_json, created_at, last_accessed_at, access_count in rows:
+            suite = TestSuite.model_validate_json(suite_json)
+            entries.append(
+                {
+                    "memory_key": key[:12],
+                    "feature": suite.feature_name,
+                    "cases": len(suite.test_cases),
+                    "created_at": created_at,
+                    "last_accessed_at": last_accessed_at,
+                    "access_count": access_count,
+                }
+            )
+        return entries
+
+    def entry(self, identifier: str) -> dict[str, object] | None:
+        """Return one stored suite, including its persisted request result."""
+        if not self.enabled or not self.path.exists():
+            return None
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT memory_key, suite_json, created_at, last_accessed_at, access_count "
+                "FROM test_suite_memory WHERE memory_key = ? OR memory_key LIKE ? LIMIT 1",
+                (identifier, identifier + "%"),
+            ).fetchone()
+        if row is None:
+            return None
+        suite = TestSuite.model_validate_json(row[1])
+        return {
+            "memory_key": row[0][:12],
+            "feature": suite.feature_name,
+            "created_at": row[2],
+            "last_accessed_at": row[3],
+            "access_count": row[4],
+            "suite": suite.model_dump(mode="json"),
+        }
+
     def recall_workflow(self, key: str) -> str | None:
         if not self.enabled or not self.path.exists():
             return None

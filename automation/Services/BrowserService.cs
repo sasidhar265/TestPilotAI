@@ -32,8 +32,15 @@ public sealed class BrowserService : IAsyncDisposable
                 "Set APP_PASSWORD when browser login is enabled.");
             await page.Locator("#username").FillAsync(username!);
             await page.Locator("#password").FillAsync(password!);
-            await page.Locator("#login-button").ClickAsync();
-            await page.WaitForURLAsync(url => !url.EndsWith("/login", StringComparison.OrdinalIgnoreCase));
+            await page.RunAndWaitForResponseAsync(
+                async () => await page.Locator("#login-button").ClickAsync(),
+                response => response.Url.Contains("/api/auth/login", StringComparison.Ordinal)
+                    && response.Ok
+            );
+            await page.WaitForURLAsync(
+                url => !url.EndsWith("/login", StringComparison.OrdinalIgnoreCase),
+                new PageWaitForURLOptions { WaitUntil = WaitUntilState.Commit }
+            );
         }
     }
 

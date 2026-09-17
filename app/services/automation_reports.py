@@ -35,8 +35,14 @@ def _redact(value: object, secrets: list[str]) -> object:
     if isinstance(value, list):
         return [_redact(item, secrets) for item in value]
     if isinstance(value, dict):
-        # Attachments can contain binary credentials that cannot be reliably redacted.
-        return {key: _redact(item, secrets) for key, item in value.items() if key != "attachments"}
+        return {key: _redact(item, secrets) for key, item in value.items()}
+    return value
+
+
+def _redact_bytes(value: bytes, secrets: list[str]) -> bytes:
+    """Redact known credentials from copied Allure attachment files."""
+    for secret in sorted(filter(None, secrets), key=len, reverse=True):
+        value = value.replace(secret.encode("utf-8"), b"[redacted]")
     return value
 
 
@@ -57,6 +63,10 @@ async def generate_report(
         for source in results.glob("*.json"):
             data = _redact(json.loads(source.read_text(encoding="utf-8")), secrets)
             (sanitized / source.name).write_text(json.dumps(data), encoding="utf-8")
+        for source in results.iterdir():
+            if source.suffix == ".json" or not source.is_file():
+                continue
+            (sanitized / source.name).write_bytes(_redact_bytes(source.read_bytes(), secrets))
         process = await asyncio.create_subprocess_exec(
             settings.allure_executable,
             "generate",

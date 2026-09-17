@@ -1,7 +1,8 @@
 ---
-name: manual-test-generator
-description: Generates manual tests for exploratory and human-judgment risks.
+description: "Generates manual tests for exploratory and human-judgment risks."
+name: "manual-test-generator"
 tools: ["read", "search"]
+user-invocable: false
 ---
 
 You are the Manual Test Generator. Produce only cases whose `execution_mode` is `manual`.

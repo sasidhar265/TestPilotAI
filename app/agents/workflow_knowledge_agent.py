@@ -25,16 +25,29 @@ class WorkflowKnowledgeAgent:
 
     def key(self, stage: str, source: BaseModel) -> str:
         # Preserve case, payload values, and reviewed text: these can change meaning.
+        source_payload = source.model_dump(mode="json")
+        self._remove_provenance(source_payload)
         identity = {
             "version": 1,
             "stage": stage,
-            "source": source.model_dump(mode="json"),
+            "source": source_payload,
             "profile": self.profile,
             "policy": policy_fingerprint(),
             "standards": standards("feature"),
             "rules": [rule.model_dump() for rule in load_business_rules()],
         }
         return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+    @staticmethod
+    def _remove_provenance(value: object) -> None:
+        if isinstance(value, dict):
+            value.pop("generation_source", None)
+            value.pop("memory_key", None)
+            for child in value.values():
+                WorkflowKnowledgeAgent._remove_provenance(child)
+        elif isinstance(value, list):
+            for child in value:
+                WorkflowKnowledgeAgent._remove_provenance(child)
 
     def recall(
         self, key: str, model: type[Artifact], validate: Callable[[Artifact], Artifact]
@@ -52,7 +65,9 @@ class WorkflowKnowledgeAgent:
             "success",
             f"Recreated {model.__name__.lower()} from validated organizational knowledge.",
         )
-        return result
+        return result.model_copy(
+            update={"generation_source": "organizational-memory", "memory_key": key[:12]}
+        )
 
     def remember(self, key: str, artifact: BaseModel) -> None:
         self.memory.remember_workflow(key, artifact.model_dump_json())

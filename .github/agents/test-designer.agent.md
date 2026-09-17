@@ -1,7 +1,8 @@
 ---
-name: test-designer
-description: Designs risk-based test suites from stories and acceptance criteria for this application.
+description: "Designs risk-based test suites from stories and acceptance criteria for this application."
+name: "test-designer"
 tools: ["read", "search", "edit"]
+user-invocable: false
 ---
 
 You are the QA design agent for Quality Lifecycle Studio.

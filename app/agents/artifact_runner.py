@@ -24,6 +24,7 @@ from app.agents.runner import (
 from app.config import Settings
 from app.generator import _codex_failure_message, _openai_output_text, _strict_json_schema
 from app.subprocess_cleanup import stop_process_tree
+from app.services.model_access import mark_provider_exhausted, clear_provider_exhausted
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +53,16 @@ class ArtifactGenerationRunner:
         async def codex(current_prompt: str) -> OutputModel:
             return await self._codex(definition, instructions, current_prompt)
 
+        async def gemini(current_prompt: str) -> OutputModel:
+            return await self._gemini(definition, instructions, current_prompt)
+
         providers: list[tuple[str, Callable[[str], Awaitable[OutputModel]]]] = [
             ("github-copilot", copilot)
         ]
         if self.settings.openai_api_key_value:
             providers.append(("openai-api", openai))
+        if self.settings.gemini_api_key_value:
+            providers.append(("gemini-api", gemini))
         if shutil.which(self.settings.codex_executable):
             providers.append(("codex-cli", codex))
         last_validation: ValueError | None = None
@@ -69,7 +75,10 @@ class ArtifactGenerationRunner:
                     artifact = await generate(current_prompt)
                 except CopilotGenerationError as error:
                     logger.warning("artifact_provider_unavailable route=%s", name)
-                    failures.append(f"{name}: {error}")
+                    message = str(error)
+                    failures.append(f"{name}: {message}")
+                    if any(token in message.casefold() for token in ("quota", "429", "exhausted", "usage limit", "rate limit")):
+                        mark_provider_exhausted(name, message)
                     break
                 if validate is None:
                     return artifact
@@ -91,6 +100,7 @@ class ArtifactGenerationRunner:
                         )
                     )
                 else:
+                    clear_provider_exhausted(name)
                     logger.info("artifact_implementation_complete route=%s", name)
                     return result
         if last_validation is not None:
@@ -221,3 +231,50 @@ class ArtifactGenerationRunner:
         finally:
             if process is not None:
                 await stop_process_tree(process)
+
+    async def _gemini(
+        self, definition: StructuredAgentDefinition[OutputModel], instructions: str, prompt: str
+    ) -> OutputModel:
+        """Generate a schema-constrained artifact through Gemini when configured."""
+        try:
+            body = {
+                "systemInstruction": {"parts": [{"text": instructions}]},
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "responseFormat": {
+                        "text": {
+                            "mimeType": "application/json",
+                            "schema": definition.output_model.model_json_schema(),
+                        }
+                    }
+                },
+            }
+            async with httpx.AsyncClient(timeout=self.settings.gemini_timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.settings.gemini_base_url.rstrip('/')}/models/"
+                    f"{self.settings.gemini_model}:generateContent",
+                    headers={"x-goog-api-key": self.settings.gemini_api_key_value},
+                    json=body,
+                )
+                response.raise_for_status()
+            candidate = response.json()["candidates"][0]
+            if candidate.get("finishReason") != "STOP":
+                raise ValueError("Gemini response was blocked or incomplete")
+            content = "".join(
+                part.get("text", "")
+                for part in candidate["content"]["parts"]
+                if not part.get("thought")
+            )
+            return definition.output_model.model_validate_json(json_object(content))
+        except httpx.HTTPStatusError as error:
+            status = error.response.status_code
+            message = (
+                "Gemini API quota or rate limit is exhausted."
+                if status == 429
+                else f"Gemini code generation failed (HTTP {status}). Check API configuration."
+            )
+            raise CopilotGenerationError(message) from error
+        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as error:
+            raise CopilotGenerationError(
+                "Gemini code generation returned an invalid or incomplete artifact."
+            ) from error

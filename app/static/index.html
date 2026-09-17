@@ -6,16 +6,17 @@
     <meta name="theme-color" content="#f6f7fb" />
     <title>AI Quality Lifecycle — Governed quality engineering</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
-    <link rel="stylesheet" href="/static/styles/index.css?v=20260914-generation-actions" />
+    <link rel="stylesheet" href="/static/styles/index.css?v=20260916-final-ui" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
-    <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260913" />
+    <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260914-story-jira" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260917-stage-buttons-3" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260916-final-ui" />
   </head>
   <body>
     <div class="app-shell">
@@ -55,6 +56,9 @@
             <span class="nav-label">Explore</span>
             <a class="nav-item" href="/documentation"
               ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <a class="nav-item" href="/knowledge"
+              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
             >
             <a class="nav-item" href="/logs"
               ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
@@ -270,9 +274,14 @@
                   <h2>Shape requirements into stories</h2>
                   <p>Review the stories, select those to accept, and enter the reviewer name.</p>
                 </div>
-                <button class="primary" id="stage-stories" type="button" disabled>
-                  Create stories →
-                </button>
+                <div class="stage-actions">
+                  <button class="primary" id="stage-stories" type="button" disabled>
+                    Create stories →
+                  </button>
+                  <button class="primary" id="review-stories" type="button" disabled>
+                    Continue to scenarios →
+                  </button>
+                </div>
               </div>
               <div
                 class="result-actions story-approval-toolbar"
@@ -307,9 +316,6 @@
                     >
                       ✓ Approve selected
                     </button>
-                    <button class="secondary compact" id="review-stories" type="button" disabled>
-                      Continue to scenarios →
-                    </button>
                     <button class="primary compact" id="story-jira-open" type="button" disabled>
                       Upload to Jira
                     </button>
@@ -335,9 +341,14 @@
                   <h2>Design scenario coverage</h2>
                   <p>Trace every action and expected outcome to its owning story.</p>
                 </div>
-                <button class="primary" id="stage-scenarios" type="button" disabled>
-                  Create scenarios →
-                </button>
+                <div class="stage-actions">
+                  <button class="primary" id="stage-scenarios" type="button" disabled>
+                    Create scenarios →
+                  </button>
+                  <button class="primary" id="review-scenarios" type="button" disabled>
+                    Continue to test cases →
+                  </button>
+                </div>
               </div>
               <div
                 class="result-actions scenario-approval-toolbar"
@@ -359,9 +370,6 @@
                   </div>
                   <button class="primary compact" id="accept-scenarios" type="button" disabled>
                     ✓ Approve scenarios
-                  </button>
-                  <button class="secondary compact" id="review-scenarios" type="button" disabled>
-                    Continue to test cases →
                   </button>
                 </div>
               </div>
@@ -815,6 +823,7 @@
                   <div class="automation-language-control">
                     <select
                       id="automation-language"
+                      data-automation-control
                       class="secondary"
                       aria-label="Coding language"
                       title="Coding language"
@@ -829,16 +838,17 @@
                     <span aria-hidden="true">▾</span>
                   </div>
                   <details class="suite-menu" id="suite-view-menu">
-                    <summary class="secondary">View <span aria-hidden="true">▾</span></summary>
+                    <summary class="secondary" id="suite-view-trigger" data-automation-control>View <span aria-hidden="true">▾</span></summary>
                     <div class="suite-menu-options" aria-label="View generated files">
-                      <button id="view-feature" type="button">
+                      <button id="view-feature" type="button" data-automation-control>
                         .feature <span>Feature file</span>
                       </button>
-                      <button id="generate-step-definitions" type="button">
+                      <button id="generate-step-definitions" type="button" data-automation-control>
                         Code <span>Step definitions</span>
                       </button>
                       <button
                         id="view-csharp-pack"
+                        data-automation-control
                         type="button"
                         title="View the automation pack, including bindings and implementations"
                       >
@@ -853,13 +863,13 @@
                       <button id="csv" type="button">.csv <span>CSV spreadsheet</span></button>
                       <button id="pdf" type="button">.pdf <span>PDF document</span></button>
                       <button id="json" type="button">.json <span>JSON data</span></button>
-                      <button id="download-feature" type="button">
+                      <button id="download-feature" type="button" data-automation-control>
                         .feature <span>Feature file</span>
                       </button>
-                      <button id="suite-download-cs" type="button">
+                      <button id="suite-download-cs" type="button" data-automation-control>
                         Code <span>Step definition files</span>
                       </button>
-                      <button id="download-csharp-pack" type="button">
+                      <button id="download-csharp-pack" type="button" data-automation-control>
                         .zip <span>Automation pack</span>
                       </button>
                     </div>
@@ -884,7 +894,7 @@
                       </div>
                     </div>
                   </details>
-                  <button id="open-script-pack" class="secondary" type="button" disabled>
+                  <button id="open-script-pack" class="secondary" type="button" disabled data-automation-control>
                     Test scripts
                   </button>
                 </div>
@@ -1285,7 +1295,7 @@
         <span class="knowledge-notice-icon" aria-hidden="true">◎</span>
         <span class="section-kicker">Knowledge base match</span>
         <h2 id="knowledge-notice-title">Approved test knowledge reused</h2>
-        <p>
+        <p id="knowledge-notice-description">
           This suite was retrieved from a previously validated knowledge-base entry instead of
           consuming a new AI generation request.
         </p>
@@ -1324,12 +1334,21 @@
       </div>
       <p id="script-pack-scope"></p>
       <form id="script-pack-form">
-        <label for="script-pack-target">Script type</label>
-        <select id="script-pack-target">
-          <option value="jmeter">Performance · Apache JMeter</option>
-          <option value="sql">Database · SQL</option>
-          <option value="oracle">Database · Oracle SQL / PL/SQL</option>
-        </select>
+        <div class="script-pack-options">
+          <fieldset class="generation-select-control">
+            <legend>Script type</legend>
+            <select id="script-pack-target" aria-label="Script type">
+              <option value="jmeter">Performance · Apache JMeter</option>
+              <option value="sql">Database · SQL</option>
+              <option value="oracle">Database · Oracle SQL / PL/SQL</option>
+            </select>
+          </fieldset>
+          <div class="generation-actions">
+            <button id="generate-script-pack" type="submit" class="primary">
+              Generate scripts <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
         <div id="script-load-settings" class="script-load-settings">
           <label
             >Concurrent users<input
@@ -1361,12 +1380,11 @@
         </div>
         <p id="script-pack-help"></p>
         <div id="script-case-mappings"></div>
-        <button id="generate-script-pack" type="submit" class="primary">Generate scripts</button>
       </form>
       <p id="script-pack-status" role="status"></p>
       <section id="script-pack-preview" hidden>
-        <div class="panel-head">
-          <label>Preview file<select id="script-pack-file"></select></label
+        <div class="panel-head script-pack-preview-actions">
+          <label>Preview file<select id="script-pack-file" aria-label="Preview file"></select></label
           ><button id="download-script-pack" type="button" class="secondary">
             Download pack · ZIP
           </button>
@@ -1378,12 +1396,12 @@
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260913-stage-progress" defer></script>
+    <script src="/static/scripts/index.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260913-reporting" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-    <script src="/static/scripts/suite-files.js?v=20260913-script-packs" defer></script>
-    <script src="/static/scripts/script-packs.js?v=20260913" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260914-story-jira" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
+    <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260917-stage-locks" defer></script>
   </body>
 </html>

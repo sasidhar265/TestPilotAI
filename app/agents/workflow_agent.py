@@ -1,5 +1,7 @@
 """Markdown-directed story and scenario agents with validated stage handoffs."""
 
+import json
+
 from app.agent_instructions import load_agent_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
@@ -68,12 +70,17 @@ class WorkflowAgent:
 
 
 def test_case_request(handoff: ScenarioHandoff) -> GenerateRequest:
+    stories = handoff.stories.model_dump(mode="json")
+    scenarios = handoff.scenarios.model_dump(mode="json")
+    for payload in (stories, scenarios):
+        payload.pop("generation_source", None)
+        payload.pop("memory_key", None)
     context = "\n\n".join(
         [
             handoff.request.additional_context,
             load_agent_instructions("workflow-test-cases"),
-            handoff.stories.model_dump_json(),
-            handoff.scenarios.model_dump_json(),
+            json.dumps(stories),
+            json.dumps(scenarios),
         ]
     )
     if len(context) > 100_000:

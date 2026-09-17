@@ -59,14 +59,19 @@ function setProfilePanel(open) {
   $("profile-toggle").setAttribute("aria-expanded", String(open));
 }
 function showKnowledgeNotice(data) {
-  const key = data.memory_key || data.feature_name;
+  const label = data.feature_name ? "suite" : data.knowledge_stage || "result";
+  const key = data.memory_key || data.feature_name || label;
   if (shownKnowledgeNotices.has(key)) return;
   shownKnowledgeNotices.add(key);
   $("knowledge-notice-overlay").classList.remove("hidden");
+  $("knowledge-notice-title").textContent = "Approved test knowledge reused";
+  $("knowledge-notice-description").textContent = data.feature_name
+    ? "This suite was retrieved from a previously validated knowledge-base entry instead of consuming a new AI generation request."
+    : `These ${label} were retrieved from a previously validated knowledge-base entry instead of consuming a new AI generation request.`;
   document.body.classList.add("dialog-open");
   addNotification(
     "Knowledge base result",
-    `${data.feature_name} was retrieved from approved organizational knowledge.`,
+    `${data.feature_name || `Validated ${label}`} was retrieved from approved organizational knowledge.`,
     "success",
   );
 }
@@ -1181,8 +1186,16 @@ function syncManualTestingType() {
   control.title = manual
     ? "Choose the human-led testing discipline."
     : "Manual testing type applies only to Manual or Both output.";
+  if (typeof syncSuiteFileActions === "function") syncSuiteFileActions();
+}
+function automationControlsRestricted() {
+  const target = $("output-target").value;
+  const manualType = $("manual-testing-type").value;
+  return (target === "manual" || target === "both") &&
+    ["performance", "database"].includes(manualType);
 }
 $("output-target").addEventListener("change", syncManualTestingType);
+$("manual-testing-type").addEventListener("change", syncManualTestingType);
 async function loadAvailableModels() {
   const select = $("llm-model"),
     refresh = $("refresh-llm-models"),
