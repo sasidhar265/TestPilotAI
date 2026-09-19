@@ -78,7 +78,7 @@ async def test_automation_agent_uses_fixed_project_and_redacts_output(monkeypatc
     assert report.skipped == 1
     assert "secret" not in report.output
     assert captured["command"][0:2] == ("dotnet", "test")
-    assert "--no-restore" in captured["command"]
+    assert "--no-restore" not in captured["command"]
     assert "shell" not in captured["kwargs"]
 
 
@@ -161,3 +161,93 @@ async def test_timeout_and_cancellation_cleanup(monkeypatch, cancel):
     assert captured["killed"] == 12345
     assert captured["waited"]
     assert captured["env"]["API_AUTH_TOKEN"] == "settings-token"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("dirty,results", [(False, True), (True, True), (True, False)])
+async def test_prebuilt_render_run_rebuilds_installed_pack(tmp_path, monkeypatch, dirty, results):
+    monkeypatch.chdir(tmp_path)
+    project = tmp_path / "automation" / "Tests.csproj"
+    project.parent.mkdir()
+    project.write_text('<Project Sdk="Microsoft.NET.Sdk" />')
+    marker = project.parent / ".automation-build-required"
+    if dirty:
+        marker.write_text("installed-pack-revision")
+    captured = {}
+
+    class Process:
+        returncode = 0 if results else 1
+
+        def __init__(self):
+            self.stdout = asyncio.StreamReader()
+            self.stdout.feed_eof()
+
+        async def wait(self):
+            return self.returncode
+
+    async def spawn(*command, **kwargs):
+        captured["command"] = command
+        if results:
+            folder = Path(command[command.index("--results-directory") + 1])
+            (folder / "results.trx").write_text(
+                '<TestRun><Results><UnitTestResult outcome="Passed" /></Results></TestRun>'
+            )
+        return Process()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    report = await AutomationExecutionAgent(
+        Settings(
+            _env_file=None,
+            automation_project_path=project,
+            automation_skip_build=True,
+        )
+    ).run(AutomationRunRequest())
+    assert ("--no-build" in captured["command"]) is (not dirty)
+    assert ("--no-restore" in captured["command"]) is (not dirty)
+    assert marker.exists() is (dirty and not results)
+    assert report.results_available is results
+
+
+@pytest.mark.asyncio
+async def test_browser_only_auth_is_forwarded_as_redacted_session(tmp_path, monkeypatch):
+    from app.auth import SESSION_COOKIE, valid_session
+
+    settings = Settings(
+        _env_file=None,
+        api_auth_token="",
+        app_username="bdd-user",
+        app_password="local-verification-password",
+        session_secret="s" * 32,
+        user_database_path=tmp_path / "users.db",
+    )
+    captured = {}
+
+    class Process:
+        returncode = 0
+
+        def __init__(self, cookie):
+            self.stdout = asyncio.StreamReader()
+            self.stdout.feed_data(cookie.encode())
+            self.stdout.feed_eof()
+
+        async def wait(self):
+            return 0
+
+    async def spawn(*command, **kwargs):
+        env = kwargs["env"]
+        cookie = env["API_SESSION_COOKIE"]
+        captured["cookie"] = cookie
+        assert not env["API_AUTH_TOKEN"]
+        assert cookie.startswith(SESSION_COOKIE + "=")
+        assert valid_session(cookie.split("=", 1)[1], settings)
+        folder = Path(command[command.index("--results-directory") + 1])
+        (folder / "results.trx").write_text(
+            '<TestRun><Results><UnitTestResult outcome="Passed" /></Results></TestRun>'
+        )
+        return Process(cookie)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    report = await AutomationExecutionAgent(settings).run(AutomationRunRequest())
+    assert report.status == "passed"
+    assert captured["cookie"] not in report.output
+    assert "[redacted]" in report.output

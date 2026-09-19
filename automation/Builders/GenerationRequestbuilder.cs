@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using QualityLifecycle.Automation.Utilities;
 using System.Net.Http.Json;
 using QualityLifecycle.Automation.Models;
 namespace QualityLifecycle.Automation.Builders;
@@ -11,9 +11,7 @@ public static class GenerationRequestBuilder
         {
             Content = JsonContent.Create(new GenerationRequestModel(description))
         };
-        var token = Environment.GetEnvironmentVariable("API_AUTH_TOKEN");
-        if (authenticated && !string.IsNullOrWhiteSpace(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (authenticated) AuthenticationUtility.Apply(request);
         return request;
     }
 }

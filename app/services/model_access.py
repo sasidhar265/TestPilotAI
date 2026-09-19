@@ -3,6 +3,7 @@
 import asyncio
 import re
 import shutil
+import time
 from typing import Any
 
 import httpx
@@ -10,14 +11,14 @@ import httpx
 from app.config import Settings
 from app.models import LlmModel
 
-
 # Providers that recently reported a hard quota/usage limit. Access probes can validate
 # credentials and model policy, but they cannot reliably predict provider generation quota.
-_exhausted_providers: dict[str, str] = {}
+_exhausted_providers: dict[str, tuple[str, float]] = {}
+_EXHAUSTION_TTL_SECONDS = 60.0
 
 
 def mark_provider_exhausted(provider: str, reason: str) -> None:
-    _exhausted_providers[provider] = reason[:500]
+    _exhausted_providers[provider] = (reason[:500], time.monotonic() + _EXHAUSTION_TTL_SECONDS)
 
 
 def clear_provider_exhausted(provider: str) -> None:
@@ -27,10 +28,13 @@ def clear_provider_exhausted(provider: str) -> None:
 def _apply_runtime_exhaustion(result: dict[str, Any]) -> dict[str, Any]:
     aliases = {"openai": "openai-api", "gemini": "gemini-api", "codex": "codex-cli"}
     model = result.get("model", "")
-    reason = _exhausted_providers.get(model) or _exhausted_providers.get(
-        aliases.get(model, model)
-    )
-    if reason is None:
+    provider = aliases.get(model, model)
+    exhaustion = _exhausted_providers.get(provider)
+    if exhaustion is None:
+        return result
+    reason, expires = exhaustion
+    if time.monotonic() >= expires:
+        clear_provider_exhausted(provider)
         return result
     result = dict(result)
     result["available"] = False

@@ -74,6 +74,7 @@ class CopilotAgentRunner:
             from copilot import CopilotClient
             from copilot.session_events import (
                 AssistantMessageData,
+                AssistantUsageData,
                 ModelCallFailureData,
                 SessionErrorData,
                 SessionIdleData,
@@ -121,6 +122,20 @@ class CopilotAgentRunner:
                 def on_event(event: Any) -> None:
                     nonlocal content, provider_failure
                     data = getattr(event, "data", None)
+                    if isinstance(data, AssistantUsageData):
+                        from app.services.usage import record_provider_usage
+
+                        record_provider_usage(
+                            self.settings,
+                            "github-copilot",
+                            {
+                                "model": data.model,
+                                "input_tokens": data.input_tokens,
+                                "output_tokens": data.output_tokens,
+                                "cached_input_tokens": data.cache_read_tokens,
+                                "id": data.api_call_id,
+                            },
+                        )
                     if capture_response and isinstance(data, AssistantMessageData):
                         content = data.content
                     elif isinstance(data, SessionErrorData):

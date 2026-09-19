@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using QualityLifecycle.Automation.Utilities;
 using System.Text;
 using System.Text.Json;
 
@@ -19,9 +19,7 @@ public static class ScriptPackRequestBuilder
         {
             Content = new StringContent(Input(fixture).GetRawText(), Encoding.UTF8, "application/json")
         };
-        var token = Environment.GetEnvironmentVariable("API_AUTH_TOKEN");
-        if (!string.IsNullOrWhiteSpace(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        AuthenticationUtility.Apply(request);
         return request;
     }
 }

@@ -1087,6 +1087,48 @@ textarea:focus {
   font-size: 0.76rem;
   line-height: 1.55;
 }
+.pack-file-progress {
+  margin: 18px auto 0;
+  display: grid;
+  gap: 12px;
+  max-width: 500px;
+  text-align: left;
+}
+.pack-file-progress-current,
+.pack-file-progress-completed {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.pack-file-progress span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pack-file-progress strong,
+.pack-file-progress li {
+  overflow-wrap: anywhere;
+  font: 0.76rem "SFMono-Regular", Consolas, monospace;
+}
+.pack-file-progress ul {
+  max-height: 150px;
+  margin: 0;
+  padding-left: 20px;
+  overflow-y: auto;
+}
+.pack-file-progress li + li {
+  margin-top: 5px;
+}
+.pack-file-progress .empty-file-progress {
+  color: var(--muted);
+  list-style: none;
+  margin-left: -20px;
+}
 .generation-llm-details {
   margin: 18px 0 12px;
   display: grid;

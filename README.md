@@ -784,3 +784,6 @@ reviewed stories, agent policies, and feature standards. Changes generate fresh 
 similar wording is not treated as an exact duplicate. Recalled stages are validated again
 before use. `ORGANIZATIONAL_MEMORY_ENABLED=false` disables this reuse. Earlier stories
 and scenarios that were never stored need one initial generation to populate memory.
+
+Local development can use [Microsoft User Secrets](docs/local-user-secrets.md) for the
+Python app and C# BDD runner. This is opt-in; hosted configuration remains environment-based.

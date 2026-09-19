@@ -221,11 +221,23 @@ class TestGenerationService:
         return (await self.pipeline.run(request)).suite
 
     async def expand(self, expansion: ExpandRequest) -> TestSuite:
-        return await self.registry.get_test_design_agent().generate(
-            BusinessRulesAgent().enrich(expansion.request),
-            phase="expand",
-            existing_titles=expansion.existing_titles,
-        )
+        from app.services.dashboard import DashboardStore, suite_details
+
+        dashboard = DashboardStore(self.memory.path)
+        run_id = dashboard.start("test_generation")
+        try:
+            suite = await self.registry.get_test_design_agent().generate(
+                BusinessRulesAgent().enrich(expansion.request),
+                phase="expand",
+                existing_titles=expansion.existing_titles,
+            )
+        except BaseException as error:
+            dashboard.finish(
+                run_id, "cancelled" if isinstance(error, asyncio.CancelledError) else "failed"
+            )
+            raise
+        dashboard.finish(run_id, "completed", suite_details(suite, False))
+        return suite
 
 
 class RequirementToTestCaseService:

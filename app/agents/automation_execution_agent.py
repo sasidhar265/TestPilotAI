@@ -11,10 +11,12 @@ from contextlib import suppress
 from pathlib import Path
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
+from app.auth import SESSION_COOKIE, issue_browser_session
 from app.config import Settings
 from app.models import AutomationRunReport, AutomationRunRequest
 from app.observability import publish_lifecycle_event
 from app.services.automation_reports import generate_report
+from app.users import authenticate
 
 _OUTPUT_LIMIT = 12_000
 _SAFE_ENVIRONMENT = (
@@ -116,11 +118,28 @@ class AutomationExecutionAgent:
             API_AUTH_TOKEN=self.settings.api_auth_token_value,
             APP_USERNAME=self.settings.app_username,
             APP_PASSWORD=self.settings.app_password_value,
+            ENVIRONMENT=self.settings.environment,
+            # The server resolves secrets once and forwards only approved runner values.
+            # Do not reload a different local store in the child process.
+            USER_SECRETS_ENABLED="false",
         )
+        if not self.settings.api_auth_token_value and self.settings.browser_login_enabled:
+            user = authenticate(
+                self.settings, self.settings.app_username, self.settings.app_password_value
+            )
+            if user is None:
+                raise AutomationExecutionError(
+                    "BDD login failed. Configure valid APP_USERNAME/APP_PASSWORD or API_AUTH_TOKEN."
+                )
+            environment["API_SESSION_COOKIE"] = f"{SESSION_COOKIE}=" + issue_browser_session(
+                str(user["username"]), self.settings
+            )
         # Existing Render services may not have reapplied the Blueprint environment.
         # Derive the local app port rather than silently testing localhost:8000 there.
         environment.setdefault(
-            "QUALITY_LIFECYCLE_BASE_URL", f"http://127.0.0.1:{os.environ.get('PORT', '8000')}"
+            "QUALITY_LIFECYCLE_BASE_URL",
+            self.settings.quality_lifecycle_base_url
+            or f"http://127.0.0.1:{os.environ.get('PORT', '8000')}",
         )
         target_configuration = {
             "API_BASE_URL": self.settings.api_base_url,
@@ -132,8 +151,11 @@ class AutomationExecutionAgent:
         environment.update({key: value for key, value in target_configuration.items() if value})
         secrets = [
             environment.get(key, "")
-            for key in ("API_AUTH_TOKEN", "API_BEARER_TOKEN", "APP_PASSWORD")
+            for key in ("API_AUTH_TOKEN", "API_BEARER_TOKEN", "APP_PASSWORD", "API_SESSION_COOKIE")
         ]
+        build_marker = project.parent / ".automation-build-required"
+        build_revision = build_marker.read_text(encoding="utf-8") if build_marker.exists() else None
+        skip_build = self.settings.automation_skip_build and build_revision is None
         started = time.perf_counter()
         timeout = min(
             request.timeout_seconds or self.settings.automation_timeout_seconds,
@@ -151,8 +173,7 @@ class AutomationExecutionAgent:
                 "dotnet",
                 "test",
                 str(project),
-                "--no-restore",
-                *(("--no-build",) if self.settings.automation_skip_build else ()),
+                *(("--no-build", "--no-restore") if skip_build else ()),
                 "--blame-hang-timeout",
                 f"{min(self.settings.automation_test_timeout_seconds, timeout):g}s",
                 "--blame-hang-dump-type",
@@ -175,7 +196,7 @@ class AutomationExecutionAgent:
                 raise AutomationExecutionError(
                     "Unable to start the approved C# automation project."
                 ) from error
-            progress = RunnerProgress(secrets, timeout, self.settings.automation_skip_build)
+            progress = RunnerProgress(secrets, timeout, skip_build)
             heartbeat = asyncio.create_task(progress.heartbeat())
             try:
                 output = await asyncio.wait_for(
@@ -195,6 +216,14 @@ class AutomationExecutionAgent:
                 with suppress(asyncio.CancelledError):
                     await heartbeat
             passed, failed, skipped, result_error = _read_results(Path(results) / "results.trx")
+            # A TRX proves the build reached test execution, even when assertions failed.
+            # Retain the marker on build/startup failures or a newer installation.
+            if result_error is None and build_revision is not None:
+                if (
+                    build_marker.exists()
+                    and build_marker.read_text(encoding="utf-8") == build_revision
+                ):
+                    build_marker.unlink()
             remaining = timeout - (time.perf_counter() - started)
             report_id: str | None = None
             report_error: str | None = "Run time limit reached; Allure report was not generated."

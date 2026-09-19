@@ -111,3 +111,13 @@ def test_copilot_options_respect_policy_and_quota(remaining, enabled, expected):
         [model], SimpleNamespace(quota_snapshots={}), "gpt-5.4"
     )
     assert not missing["can_use"]
+
+
+def test_runtime_quota_expires_without_restart(monkeypatch):
+    monkeypatch.setattr(model_access, "_exhausted_providers", {})
+    monkeypatch.setattr(model_access.time, "monotonic", lambda: 100.0)
+    model_access.mark_provider_exhausted("openai-api", "Rate limited")
+    ready = {"model": "openai", "available": True, "can_use": True}
+    assert not model_access._apply_runtime_exhaustion(ready)["can_use"]
+    monkeypatch.setattr(model_access.time, "monotonic", lambda: 161.0)
+    assert model_access._apply_runtime_exhaustion(ready)["can_use"]

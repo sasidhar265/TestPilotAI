@@ -1,0 +1,50 @@
+.usage-dashboard { margin-bottom: 24px; padding: 26px; }
+.usage-heading, .usage-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.usage-heading { justify-content: space-between; }
+.usage-heading h2 { margin: 8px 0; font-size: 1.45rem; letter-spacing: -.035em; }
+.usage-heading p, .usage-detail > p, .usage-pricing p, #usage-status { color: var(--muted); font-size: .78rem; line-height: 1.65; }
+.usage-actions label { color: var(--muted); font-size: .75rem; }
+.usage-actions select { width: auto; }
+#usage-status { margin: 18px 0; }
+.usage-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.usage-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-soft); border-top: 3px solid var(--primary); }
+.usage-card.manual { border-top-color: #8b5cf6; }
+.usage-card.automation { border-top-color: #14b8a6; }
+.usage-card.cost { border-top-color: #e6a23c; }
+.usage-card > span { display: block; color: var(--ink-soft); font-size: .76rem; font-weight: 650; }
+.usage-card strong { display: block; margin: 14px 0 10px; font-size: clamp(1.3rem, 2vw, 2rem); letter-spacing: -.04em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.usage-card small { color: var(--muted); font-size: .68rem; line-height: 1.5; }
+.usage-detail-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin: 20px 0; }
+.usage-detail { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 14px; }
+.usage-detail h3 { margin: 0; font-size: .95rem; }
+.usage-legend { display: flex; gap: 18px; font-size: .7rem; margin: 18px 0; }
+.usage-legend span:first-child { color: var(--primary); }
+.usage-legend span:last-child { color: var(--success); }
+.usage-trend { max-height: 300px; overflow-y: auto; }
+.usage-day { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 10px; min-height: 30px; font-size: .7rem; }
+.usage-day > span { text-align: right; font-variant-numeric: tabular-nums; }
+.usage-bar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; background: var(--surface-soft); }
+.usage-bar .manual { background: #8b5cf6; }
+.usage-bar .automation { background: #14b8a6; }
+#usage-summary { margin: 14px 0; }
+#usage-summary > div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .74rem; }
+#usage-summary dt { color: var(--muted); }
+#usage-summary dd { margin: 0; font-weight: 700; }
+.usage-table-wrap { overflow-x: auto; }
+.usage-models table { width: 100%; border-collapse: collapse; font-size: .75rem; white-space: nowrap; }
+.usage-models th, .usage-models td { text-align: right; padding: 14px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.usage-models th:first-child { text-align: left; }
+.usage-models thead th { color: var(--muted); font-size: .68rem; }
+.usage-models small { display: block; color: var(--muted); margin-top: 5px; font-size: .65rem; font-weight: 400; }
+.usage-empty { padding: 24px 0; color: var(--muted); font-size: .78rem; text-align: center; white-space: normal; }
+.usage-pricing { margin-top: 20px; font-size: .75rem; }
+.usage-pricing summary { cursor: pointer; font-weight: 650; padding: 8px 0; }
+.usage-pricing a { color: var(--primary); }
+@media (max-width: 1100px) { .usage-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .usage-dashboard { padding: 16px; }
+  .usage-detail-grid { grid-template-columns: 1fr; }
+  .usage-card, .usage-detail { padding: 15px; }
+  .usage-actions { width: 100%; }
+  .usage-actions select { flex: 1; min-width: 0; }
+}

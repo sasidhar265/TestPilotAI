@@ -63,9 +63,10 @@ public sealed class WorkspaceStepDefinition
         ConfidentialDataUtility.AssertNoProviderSecrets(context.Api.ResponseBody);
 
     [Given("API bearer authentication is configured")]
+    [Given("API authentication is configured")]
     public void RequireApiAuth() =>
         Assert.That(ConfigurationUtility.ApiAuthConfigured, Is.True,
-            "Set API_AUTH_TOKEN when running the security feature.");
+            "Configure API_AUTH_TOKEN or an authenticated API_SESSION_COOKIE for the security feature.");
 
     [Then("the page title contains {string}")]
     public async Task AssertTitle(string value) =>

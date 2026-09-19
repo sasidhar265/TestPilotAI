@@ -3,6 +3,10 @@ let featureFile = null;
 let stepDefinitionTask = null;
 let stepDefinitionTimer = null;
 let stepDefinitionRequest = null;
+let packFileProgressTimer = null;
+let packFileProgressSequence = 0;
+let packFileProgressRequest = null;
+const packGeneratedFiles = new Set();
 const stepDefinitionCache = new Map();
 function selectedLanguage() {
   return $("automation-language").value;
@@ -25,6 +29,65 @@ function closeStepDefinitionProgress() {
 
 function showStepDefinitionProgress() {
   if (!$("cs-generation-dialog").open) $("cs-generation-dialog").showModal();
+}
+
+function resetPackFileProgress() {
+  if (packFileProgressTimer) clearTimeout(packFileProgressTimer);
+  packFileProgressTimer = null;
+  packFileProgressRequest = null;
+  packFileProgressSequence = 0;
+  packGeneratedFiles.clear();
+  $("cs-generation-current-file").textContent = "Preparing files…";
+  $("cs-generation-completed-files").innerHTML =
+    '<li class="empty-file-progress">No files generated yet.</li>';
+}
+
+function updatePackFileProgress(events) {
+  events.forEach((event) => {
+    packFileProgressSequence = Math.max(packFileProgressSequence, event.sequence);
+    if (event.action === "pack_stage" || event.action === "pack_generation") {
+      $("cs-generation-current-file").textContent = event.summary;
+      return;
+    }
+    if (event.action !== "file_generated" || event.status !== "success") return;
+    const path = event.summary.replace(/^(?:Generating|Generated) file:\s*/, "");
+    if (!path) return;
+    packGeneratedFiles.add(path);
+    $("cs-generation-completed-files").replaceChildren(
+      ...Array.from(packGeneratedFiles, (file) => {
+        const item = document.createElement("li");
+        item.textContent = file;
+        return item;
+      }),
+    );
+  });
+}
+
+async function pollPackFileProgress(requestId) {
+  if (packFileProgressRequest !== requestId) return;
+  packFileProgressTimer = null;
+  let complete = false;
+  try {
+    const response = await fetch(
+      `/api/generation/${encodeURIComponent(requestId)}/events?after=${packFileProgressSequence}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
+    if (response.ok) {
+      const data = await response.json();
+      if (packFileProgressRequest !== requestId) return;
+      updatePackFileProgress(data.events || []);
+      complete = data.complete;
+    }
+  } catch {}
+  if (packFileProgressRequest === requestId && !complete) {
+    packFileProgressTimer = setTimeout(() => pollPackFileProgress(requestId), 250);
+  }
+}
+
+function startPackFileProgress(requestId) {
+  resetPackFileProgress();
+  packFileProgressRequest = requestId;
+  pollPackFileProgress(requestId);
 }
 
 function startStepDefinitionProgress() {
@@ -58,6 +121,7 @@ function closeSuiteMenus() {
 function resetSuiteFiles() {
   window.resetScriptPack?.();
   closeStepDefinitionProgress();
+  resetPackFileProgress();
   featureFile = null;
   stepDefinitionArtifact = null;
   stepDefinitionTask = null;
@@ -179,6 +243,7 @@ async function ensureStepDefinitions() {
   $("status").textContent = "Generating automation pack…";
   $("automation-language").disabled = true;
   startStepDefinitionProgress();
+  startPackFileProgress(generation.requestId);
   const task = (async () => {
     const response = await api(
       "/api/step-definitions/languages/pack",
@@ -210,6 +275,7 @@ async function ensureStepDefinitions() {
     }
     failed = true;
     if (stepDefinitionTask === task) {
+      $("cs-generation-current-file").textContent = "Pack generation failed";
       $("cs-generation-title").textContent = "Automation generation could not complete";
       $("cs-generation-message").textContent = error.message;
       $("cs-generation-dialog").querySelector('[role="progressbar"]').classList.add("hidden");
@@ -225,6 +291,9 @@ async function ensureStepDefinitions() {
       stepDefinitionRequest = null;
       clearInterval(stepDefinitionTimer);
       stepDefinitionTimer = null;
+      packFileProgressRequest = null;
+      if (packFileProgressTimer) clearTimeout(packFileProgressTimer);
+      packFileProgressTimer = null;
       if (!failed) closeStepDefinitionProgress();
     }
   }

@@ -21,3 +21,42 @@ body {
     16px system-ui,
     sans-serif;
 }
+
+/* Match workspace actions without changing Swagger's method/status colors. */
+.api-header {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.api-header a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border: 1px solid #d7dae6;
+  border-radius: 10px;
+  color: #5b5bd6;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.api-header a:hover { background: #ececff; }
+.swagger-ui .btn {
+  min-height: 40px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  box-shadow: none;
+  font-weight: 600;
+}
+.swagger-ui .btn.execute {
+  border-color: #7c3aed;
+  background: #7c3aed;
+  color: #fff;
+}
+.swagger-ui .btn.execute:hover { background: #6d28d9; }
+.api-header a:focus-visible, .swagger-ui button:focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 3px;
+}
+.swagger-ui .btn:disabled { opacity: 0.45; cursor: not-allowed; }

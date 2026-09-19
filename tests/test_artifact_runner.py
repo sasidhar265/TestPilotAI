@@ -82,7 +82,10 @@ async def test_code_generation_fails_over_to_configured_gemini() -> None:
             },
         )
     )
-    assert await runner.generate_structured(STEP_DEFINITION_AGENT, instructions="C#", prompt="suite") == artifact()
+    assert (
+        await runner.generate_structured(STEP_DEFINITION_AGENT, instructions="C#", prompt="suite")
+        == artifact()
+    )
     assert route.called
 
 
@@ -236,3 +239,18 @@ async def test_incomplete_bindings_keep_diagnostics_out_of_user_error(monkeypatc
     assert "Provider rejected an earlier draft." in repair
     record = next(r for r in caplog.records if r.message == "artifact_implementation_rejected")
     assert findings[-1] in record.event_details["findings"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("validate", [None, lambda value: value])
+async def test_success_clears_runtime_quota(monkeypatch, validate):
+    from app.services import model_access
+
+    monkeypatch.setattr(model_access, "_exhausted_providers", {})
+    model_access.mark_provider_exhausted("github-copilot", "Rate limited")
+    runner = ArtifactGenerationRunner(settings())
+    runner.copilot.generate_structured = AsyncMock(return_value=artifact())
+    await runner.generate_structured(
+        STEP_DEFINITION_AGENT, instructions="C#", prompt="suite", validate=validate
+    )
+    assert "github-copilot" not in model_access._exhausted_providers

@@ -2,11 +2,16 @@ from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, SecretStr, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+
+from app.user_secrets import DEFAULT_USER_SECRETS_ID, UserSecretsSource
 
 
 class Settings(BaseSettings):
     environment: str = "development"
+    user_secrets_enabled: bool = False
+    user_secrets_id: str = DEFAULT_USER_SECRETS_ID
+    quality_lifecycle_base_url: str = ""
     log_level: str = "INFO"
     json_logs: bool = True
     api_auth_token: SecretStr = SecretStr("")
@@ -75,6 +80,23 @@ class Settings(BaseSettings):
         extra="ignore",
         case_sensitive=False,
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            UserSecretsSource(settings_cls, dotenv_settings),
+            dotenv_settings,
+            file_secret_settings,
+        )
 
     @property
     def is_production(self) -> bool:

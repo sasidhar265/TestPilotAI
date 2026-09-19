@@ -27,6 +27,7 @@ from app.automation_pack import TEMPLATES, shared_assets
 from app.automation_style import step_style_findings
 from app.config import Settings
 from app.models import ExecutionMode
+from app.observability import publish_lifecycle_event
 from app.quotation_contract import quotation_feature, quotation_instructions
 from app.workspace_policy import standards
 
@@ -178,7 +179,24 @@ class MultiLanguageAgent:
         )
 
     async def generate(self, request: LanguageRequest) -> LanguageArtifact:
+        publish_lifecycle_event(
+            "Automation pack", "pack_stage", "running", "Preparing approved scenario bindings"
+        )
+        artifact = await self._generate(request)
+        for file in artifact.files:
+            publish_lifecycle_event(
+                "Automation pack", "file_generated", "success", f"Generated file: {file.path}"
+            )
+        publish_lifecycle_event(
+            "Automation pack", "pack_stage", "running", "Preparing validated pack files"
+        )
+        return artifact
+
+    async def _generate(self, request: LanguageRequest) -> LanguageArtifact:
         baseline = self.bindings(request)
+        publish_lifecycle_event(
+            "Automation pack", "pack_stage", "running", "Generating and validating implementations"
+        )
         if request.language == "csharp":
             result = await ReqnRollStepDefinitionAgent(self.settings).generate(request)
             artifact = LanguageArtifact(**(result.model_dump() | {"language": "csharp"}))

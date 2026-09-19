@@ -10,13 +10,14 @@
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+    <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
     <link rel="stylesheet" href="/static/styles/workflow.css?v=20260917-stage-buttons-3" />
-    <link rel="stylesheet" href="/static/styles/controls.css?v=20260917-purple-disabled" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
   </head>
   <body>
     <div class="app-shell">
@@ -1076,6 +1077,37 @@
           </section>
         </div>
         <div data-workspace-page="/quality-lifecycle" hidden>
+          <section class="panel usage-dashboard" id="usage-dashboard" aria-labelledby="usage-title">
+            <div class="usage-heading">
+              <div><span class="section-kicker">Workspace overview</span><h2 id="usage-title">Application usage</h2>
+                <p>Track test generation, AI consumption and estimated spend across your workspace.</p></div>
+              <div class="usage-actions"><label for="usage-period">Period</label>
+                <select id="usage-period"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All recorded activity</option></select>
+                <button type="button" class="secondary" id="refresh-usage">↻ Refresh</button></div>
+            </div>
+            <p id="usage-status" role="status">Loading application usage…</p>
+            <div id="usage-content" hidden>
+              <div class="usage-cards" id="usage-cards"></div>
+              <div class="usage-detail-grid">
+                <article class="usage-detail"><h3>Test generation activity</h3><p>Manual and automation output by day · UTC</p>
+                  <div class="usage-legend"><span>● Manual</span><span>● Automation</span></div>
+                  <div id="usage-trend" class="usage-trend"></div></article>
+                <article class="usage-detail"><h3>Usage at a glance</h3><dl id="usage-summary"></dl>
+                  <p>Generated counts include revisions and output awaiting validation. Approved knowledge reused from memory is counted separately.</p></article>
+              </div>
+              <article class="usage-detail usage-models"><h3>Tokens &amp; estimated cost by model</h3>
+                <p>Input includes cached tokens. Output includes provider-reported reasoning tokens.</p>
+                <div class="usage-table-wrap" tabindex="0" role="region" aria-label="Model usage table">
+                  <table><thead><tr><th scope="col">Provider / model</th><th scope="col">Calls</th><th scope="col">Input</th><th scope="col">Cached input</th><th scope="col">Output</th><th scope="col">Estimated USD</th></tr></thead><tbody id="usage-models"></tbody></table>
+                </div>
+              </article>
+              <details class="usage-pricing"><summary>Pricing &amp; data coverage</summary>
+                <p id="usage-scope"></p><p>Costs cover priced API text tokens only, excluding taxes, tools, subscriptions and negotiated rates. Unpriced or unreported usage is excluded from the subtotal.</p>
+                <p>OpenAI GPT-5.4 standard rates per million tokens: $2.50 input, $0.25 cached input, $15.00 output. Above 272,000 input tokens, input rates double and output rates increase by 50%. Custom endpoints and non-standard service tiers are not priced.</p>
+                <a href="https://developers.openai.com/api/docs/models/gpt-5.4" target="_blank" rel="noopener noreferrer">Pricing source · verified 19 September 2026 ↗</a>
+              </details>
+            </div>
+          </section>
           <section
             class="panel agent-workspace workspace-page-panel"
             id="agent-workspace"
@@ -1155,6 +1187,18 @@
       <p id="cs-generation-message" role="status">
         Creating reusable step definitions for your BDD scenarios. Your files will open when ready.
       </p>
+      <section class="pack-file-progress" aria-label="Automation pack file progress">
+        <div class="pack-file-progress-current">
+          <span>Current stage</span>
+          <strong id="cs-generation-current-file">Preparing files…</strong>
+        </div>
+        <div class="pack-file-progress-completed">
+          <span>Generated files</span>
+          <ul id="cs-generation-completed-files" aria-live="polite">
+            <li class="empty-file-progress">No files generated yet.</li>
+          </ul>
+        </div>
+      </section>
       <div
         class="generation-progress"
         role="progressbar"
@@ -1392,12 +1436,13 @@
         <pre id="script-pack-content" tabindex="0" aria-label="Generated script preview"></pre>
       </section>
     </dialog>
-    <script src="/static/scripts/workspace-pages.js?v=20260910" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20260919-usage" defer></script>
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
     <script src="/static/scripts/index.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
+    <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260913-reporting" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>

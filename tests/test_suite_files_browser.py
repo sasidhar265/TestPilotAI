@@ -383,3 +383,55 @@ def test_business_scenarios_and_test_case_headings_are_distinct() -> None:
         assert page.evaluate("selectedCaseIds()") == ["TC-001", "TC-002"]
         page.screenshot(path="/tmp/test-case-hierarchy-mobile.png", full_page=True)
         browser.close()
+
+
+@pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
+def test_pack_progress_ignores_stale_responses_and_preserves_failure():
+    playwright = pytest.importorskip("playwright.sync_api")
+    static = Path(__file__).parents[1] / "app/static"
+
+    def route_request(route):
+        path = urlparse(route.request.url).path
+        if path == "/" or path.startswith("/static/"):
+            file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
+            route.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
+        else:
+            route.fulfill(json={"events": [], "history": [], "active": [], "models": []})
+
+    with playwright.sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page()
+        page.route("**/*", route_request)
+        page.goto("http://localhost/")
+        result = page.evaluate("""async () => {
+          const originalFetch = window.fetch;
+          let resolveOld;
+          window.fetch = () => new Promise(resolve => { resolveOld = resolve; });
+          resetPackFileProgress();
+          packFileProgressRequest = "old";
+          const pending = pollPackFileProgress("old");
+          resetPackFileProgress();
+          packFileProgressRequest = "new";
+          resolveOld({ok: true, json: async () => ({complete: true, events: [
+            {sequence: 99, action: "file_generated", status: "success",
+             summary: "Generated file: old.cs"}
+          ]})});
+          await pending;
+          const staleIgnored = packFileProgressSequence === 0 && packGeneratedFiles.size === 0;
+          window.fetch = async () => ({ok: true, json: async () => ({complete: true, events: [
+            {sequence: 1, action: "pack_generation", status: "failed",
+             summary: "Pack generation failed"}
+          ]})});
+          await pollPackFileProgress("new");
+          const message = $("cs-generation-current-file").textContent;
+          const timerStopped = packFileProgressTimer === null;
+          resetPackFileProgress();
+          window.fetch = originalFetch;
+          return {staleIgnored, message, timerStopped};
+        }""")
+        assert result == {
+            "staleIgnored": True,
+            "message": "Pack generation failed",
+            "timerStopped": True,
+        }
+        browser.close()

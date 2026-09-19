@@ -1,78 +1,94 @@
-/* Shared control language, based on the Test Cases stage. */
-button,
-select {
-  -webkit-tap-highlight-color: transparent;
+/* Shared actions. Tabs, menus and icon controls retain their own geometry. */
+:root {
+  --primary-button: #7c3aed;
+  --primary-button-hover: #6d28d9;
 }
-
-button:not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button) {
-  min-height: 40px;
-  padding: 0 15px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  color: var(--ink-soft, var(--ink));
-  background: var(--surface, #fff);
-  font-size: 0.72rem;
-  font-weight: 750;
-  line-height: 1.2;
-  transition: transform 0.16s, box-shadow 0.16s, background 0.16s, border-color 0.16s;
-}
-
-button:not(:disabled):not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button):hover {
-  transform: translateY(-1px);
-}
-
-button:focus-visible,
-select:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
-  outline-offset: 2px;
-}
-
-button.primary,
-button.button.primary,
-a.button.primary {
+button, a.button, select { -webkit-tap-highlight-color: transparent; }
+button, a.button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
+button:is(.primary, .secondary, .quiet-button, .stop, .inspect-button), a.button {
+  box-sizing: border-box;
   min-height: 44px;
-  color: #fff;
-  background: var(--primary);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9),
-    0 8px 18px color-mix(in srgb, var(--primary) 35%, transparent);
+  max-width: 100%;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line-strong, #d7dae6);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
-
-button.primary:hover:not(:disabled),
-button.button.primary:hover:not(:disabled),
-a.button.primary:hover {
+button.primary, a.button.primary, :root .api-cta .button.primary,
+:root[data-theme="dark"] .api-cta .button.primary {
   color: #fff;
-  background: var(--primary-dark);
+  border-color: transparent;
+  background: var(--primary-button);
+  box-shadow: 0 2px 4px rgb(40 20 80 / 12%);
 }
-
-button.primary:disabled,
-button.button.primary:disabled {
+button.primary:hover:not(:disabled), a.button.primary:hover, :root .api-cta .button.primary:hover {
   color: #fff;
-  background: var(--primary);
-  opacity: 0.78;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72),
-    0 7px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+  background: var(--primary-button-hover);
+  box-shadow: 0 4px 10px rgb(40 20 80 / 18%);
+  transform: none;
 }
-
-button.secondary,
-button.button.secondary,
-a.button.secondary {
-  color: var(--ink-soft, var(--ink));
-  border-color: var(--line-strong, var(--line));
+button:is(.secondary, .inspect-button), a.button.secondary {
+  color: var(--ink-soft, var(--ink, #34384e));
+  border-color: var(--line-strong, var(--line, #d7dae6));
   background: var(--surface, #fff);
   box-shadow: none;
 }
-
-button.secondary:hover:not(:disabled),
-button.button.secondary:hover:not(:disabled),
-a.button.secondary:hover {
+button:is(.secondary, .inspect-button):hover:not(:disabled), a.button.secondary:hover {
+  color: var(--ink, #171a2b);
+  border-color: var(--muted, #72778c);
   background: var(--surface-soft, #f8f9fc);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
   transform: none;
 }
+button.quiet-button {
+  color: var(--primary, #5b5bd6);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+button.quiet-button:hover:not(:disabled) { background: var(--primary-soft, #ececff); transform: none; }
+button.stop, button.generation-action-button--cancel {
+  color: var(--danger, #c33d55);
+  border-color: color-mix(in srgb, var(--danger, #c33d55) 30%, transparent);
+  background: color-mix(in srgb, var(--danger, #c33d55) 8%, var(--surface, #fff));
+  box-shadow: none;
+}
+button.stop:hover:not(:disabled), button.generation-action-button--cancel:hover:not(:disabled) {
+  color: var(--danger, #c33d55);
+  border-color: var(--danger, #c33d55);
+  background: color-mix(in srgb, var(--danger, #c33d55) 14%, var(--surface, #fff));
+}
+button:focus-visible, a.button:focus-visible, select:focus-visible,
+button.password-toggle:focus-visible, button.forgot-password:focus-visible {
+  outline: 3px solid var(--primary, #7c3aed);
+  outline-offset: 3px;
+}
+button:disabled, button.primary:disabled, button.secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+button[aria-busy="true"] { cursor: progress; }
+button:is(.primary, .secondary, .quiet-button, .stop):active:not(:disabled), a.button:active {
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 12%);
+}
+/* Prevent login defaults from leaking into appearance controls. */
+.theme-options button, button.theme-gear { margin: 0; }
+.theme-options button { box-shadow: none; }
+button.password-toggle:hover { transform: translateY(-50%); }
+button.password-toggle { min-height: 38px; padding: 0; }
+button.forgot-password { min-height: 36px; }
+button[hidden], a.button[hidden], button.hidden, a.button.hidden { display: none; }
 
 select {
   min-height: 44px;
@@ -96,8 +112,6 @@ select:disabled {
   cursor: not-allowed;
 }
 
-@media (max-width: 620px) {
-  button:not(.avatar):not(.notification-bell):not(.sidebar-toggle):not(.theme-gear):not(.reference):not(.bdd-trend-run):not(.stage-tabs button):not(.theme-options button):not(.suite-menu-options button):not(.log-status-options button) {
-    min-height: 42px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  button, a.button { transition: none !important; animation: none !important; }
 }

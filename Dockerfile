@@ -28,7 +28,8 @@ COPY .github/agent-profiles ./.github/agent-profiles
 RUN python -m pip install .
 
 COPY automation ./automation
-# Restore and build during deployment; runtime tests use --no-build --no-restore.
+# Restore and build during deployment; unchanged runtime tests reuse these binaries.
+# Installing a generated pack marks the project for restore/build on its next run.
 RUN dotnet build automation/QualityLifecycle.Automation.csproj \
     && dotnet tool install --tool-path /opt/powershell PowerShell --version 7.4.6 \
     && /opt/powershell/pwsh automation/bin/Debug/net8.0/playwright.ps1 install --with-deps chromium \

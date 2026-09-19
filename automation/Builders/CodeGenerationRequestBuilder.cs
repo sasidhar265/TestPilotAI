@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using QualityLifecycle.Automation.Utilities;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -24,9 +24,7 @@ public static class CodeGenerationRequestBuilder
         {
             Content = new StringContent(data.ToJsonString(), Encoding.UTF8, "application/json")
         };
-        var token = Environment.GetEnvironmentVariable("API_AUTH_TOKEN");
-        if (!string.IsNullOrWhiteSpace(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        AuthenticationUtility.Apply(request);
         return request;
     }
 }

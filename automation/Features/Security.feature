@@ -6,7 +6,7 @@ Feature: Quality Lifecycle Studio security controls
 
   Scenario: Protected generation endpoint rejects an absent bearer token
     Given the Quality Lifecycle Studio is available
-    And API bearer authentication is configured
+    And API authentication is configured
     When I submit a generation request without credentials
     Then the response status is 401
 

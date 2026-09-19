@@ -30,6 +30,7 @@ from app.models import (
     TestFormat,
     TestSuite,
 )
+from app.services.usage import codex_output, record_provider_usage
 from app.subprocess_cleanup import stop_process_tree
 
 logger = logging.getLogger(__name__)
@@ -243,6 +244,7 @@ class OpenAIGenerator:
                 )
                 response.raise_for_status()
             payload = response.json()
+            record_provider_usage(self.settings, "openai-api", payload)
             content = _openai_output_text(payload)
             suite = TestSuite.model_validate(
                 _normalize_suite_payload(json.loads(json_object(content)))
@@ -312,7 +314,9 @@ class GeminiGenerator:
                     json=body,
                 )
                 response.raise_for_status()
-            candidate = response.json()["candidates"][0]
+            payload = response.json()
+            record_provider_usage(self.settings, "gemini-api", payload)
+            candidate = payload["candidates"][0]
             if candidate.get("finishReason") != "STOP":
                 raise ValueError("Gemini response was blocked or incomplete")
             content = "".join(
@@ -389,6 +393,7 @@ class CodexGenerator:
                 command = [
                     executable,
                     "exec",
+                    "--json",
                     "--ephemeral",
                     "--sandbox",
                     "read-only",
@@ -413,12 +418,13 @@ class CodexGenerator:
                     process.communicate(prompt.encode("utf-8")),
                     timeout=self.settings.codex_timeout_seconds,
                 )
+                fallback_output = codex_output(self.settings, stdout)
                 if process.returncode != 0:
                     raise CopilotGenerationError(_codex_failure_message(stderr))
                 content = (
                     output_path.read_text(encoding="utf-8")
                     if output_path.exists()
-                    else stdout.decode("utf-8")
+                    else fallback_output
                 )
                 suite = TestSuite.model_validate(
                     _normalize_suite_payload(json.loads(json_object(content)))

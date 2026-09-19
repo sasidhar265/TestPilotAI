@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 import sqlite3
 import time
 from contextlib import closing
@@ -49,6 +50,12 @@ class DashboardStore:
 
         if record["request_id"] != "-":
             record["events"] = lifecycle_events.read(record["request_id"], 0).get("events", [])
+        from app.services.usage import UsageStore
+
+        try:
+            UsageStore(self.path).generation(record)
+        except (OSError, sqlite3.Error):
+            logging.getLogger(__name__).warning("generation_usage_record_unavailable")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(self.path)) as connection, connection:
             connection.execute(

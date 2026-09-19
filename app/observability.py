@@ -217,7 +217,7 @@ class LifecycleEvent:
 class LifecycleEventRegistry:
     """Keep bounded, payload-free agent activity for live UI inspection."""
 
-    def __init__(self, request_capacity: int = 200, events_per_request: int = 100) -> None:
+    def __init__(self, request_capacity: int = 200, events_per_request: int = 250) -> None:
         self._request_capacity = request_capacity
         self._events_per_request = events_per_request
         self._events: dict[str, deque[LifecycleEvent]] = {}

@@ -23,8 +23,9 @@ from app.agents.runner import (
 )
 from app.config import Settings
 from app.generator import _codex_failure_message, _openai_output_text, _strict_json_schema
+from app.services.model_access import clear_provider_exhausted, mark_provider_exhausted
+from app.services.usage import codex_output, record_provider_usage
 from app.subprocess_cleanup import stop_process_tree
-from app.services.model_access import mark_provider_exhausted, clear_provider_exhausted
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +78,13 @@ class ArtifactGenerationRunner:
                     logger.warning("artifact_provider_unavailable route=%s", name)
                     message = str(error)
                     failures.append(f"{name}: {message}")
-                    if any(token in message.casefold() for token in ("quota", "429", "exhausted", "usage limit", "rate limit")):
+                    if any(
+                        token in message.casefold()
+                        for token in ("quota", "429", "exhausted", "usage limit", "rate limit")
+                    ):
                         mark_provider_exhausted(name, message)
                     break
+                clear_provider_exhausted(name)
                 if validate is None:
                     return artifact
                 try:
@@ -100,7 +105,6 @@ class ArtifactGenerationRunner:
                         )
                     )
                 else:
-                    clear_provider_exhausted(name)
                     logger.info("artifact_implementation_complete route=%s", name)
                     return result
         if last_validation is not None:
@@ -148,8 +152,10 @@ class ArtifactGenerationRunner:
                     },
                 )
                 response.raise_for_status()
+            payload = response.json()
+            record_provider_usage(self.settings, "openai-api", payload)
             return definition.output_model.model_validate_json(
-                json_object(_openai_output_text(response.json()))
+                json_object(_openai_output_text(payload))
             )
         except httpx.HTTPStatusError as error:
             logger.warning(
@@ -183,6 +189,7 @@ class ArtifactGenerationRunner:
                 command = [
                     executable,
                     "exec",
+                    "--json",
                     "--ephemeral",
                     "--sandbox",
                     "read-only",
@@ -207,9 +214,10 @@ class ArtifactGenerationRunner:
                     process.communicate((instructions + "\n\n" + prompt).encode("utf-8")),
                     timeout=self.settings.codex_artifact_timeout_seconds,
                 )
+                fallback_output = codex_output(self.settings, stdout)
                 if process.returncode != 0:
                     raise CopilotGenerationError(_codex_failure_message(stderr))
-                content = output.read_text(encoding="utf-8") if output.exists() else stdout.decode()
+                content = output.read_text(encoding="utf-8") if output.exists() else fallback_output
                 return definition.output_model.model_validate_json(json_object(content))
         except TimeoutError as error:
             logger.warning(
@@ -257,7 +265,9 @@ class ArtifactGenerationRunner:
                     json=body,
                 )
                 response.raise_for_status()
-            candidate = response.json()["candidates"][0]
+            payload = response.json()
+            record_provider_usage(self.settings, "gemini-api", payload)
+            candidate = payload["candidates"][0]
             if candidate.get("finishReason") != "STOP":
                 raise ValueError("Gemini response was blocked or incomplete")
             content = "".join(

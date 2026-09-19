@@ -19,6 +19,7 @@
     const heading = document.querySelector(".topbar h1");
     heading.textContent = titles[path];
     document.title = `${titles[path]} — AI Quality Lifecycle`;
+    window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path } }));
     if (focus) {
       heading.tabIndex = -1;
       heading.focus();

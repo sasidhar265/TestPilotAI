@@ -31,8 +31,12 @@ pwsh automation/bin/Debug/net8.0/playwright.ps1 install chromium
 dotnet test automation/QualityLifecycle.Automation.csproj --filter TestCategory=ui
 ```
 
-`QUALITY_LIFECYCLE_BASE_URL` defaults to `http://127.0.0.1:8000`. Security scenarios require
-`API_AUTH_TOKEN` to be configured and only assert behavior; they never print its value.
+`QUALITY_LIFECYCLE_BASE_URL` defaults to `http://127.0.0.1:8000`. Security scenarios require authenticated access to be configured. The in-app runner uses
+`API_AUTH_TOKEN` when available; otherwise it authenticates the configured
+`APP_USERNAME`/`APP_PASSWORD` and supplies a signed `API_SESSION_COOKIE` to the BDD process.
+Request builders attach credentials only to authenticated requests. The negative security
+scenario sends neither a bearer token nor a session cookie, and still requires HTTP 401.
+Session cookies and passwords are redacted from runner output and API attachments.
 
 The Python unit and integration suite remains under `tests/` and runs with `pytest`. The
 ReqnRoll project here is the live UI/API/security automation suite and runs with `dotnet test`.
@@ -141,3 +145,25 @@ dotnet test automation/QualityLifecycle.Automation.csproj --filter FullyQualifie
 This verifies the code-generation API boundary. Execute the returned pack separately to verify
 its discovered Gherkin scenarios against `API_BASE_URL`; repository API results are not generated
 suite execution evidence.
+
+## Running installed packs on Render
+
+The Docker deployment builds the repository project once. `AUTOMATION_SKIP_BUILD=true`
+uses those binaries until a generated C# pack is installed. Installation marks the project
+as requiring a build; the next BDD run restores dependencies and builds the current sources
+before executing them. The marker remains after build or startup failures so retries cannot
+silently fall back to the previous assembly. Existing feature files are retained.
+
+If a Render run fails, open its saved runner output in Progress & execution. A build/restore
+failure, failed scenario, and Allure report failure are separate outcomes. Check that
+`QUALITY_LIFECYCLE_BASE_URL` points to `http://127.0.0.1:10000` and that the deployed Docker
+image contains the .NET SDK, browser dependencies, and Allure. Changes to the Docker image
+or application source require a deployment before they affect the hosted runner.
+
+## Microsoft User Secrets in local development
+
+The project uses `UserSecretsId=quality-lifecycle-studio-local`. Set
+`USER_SECRETS_ENABLED=true` and `ENVIRONMENT=development` to load credentials from
+Microsoft's local `secrets.json` during direct `dotnet test` runs. The Python app can
+read the same store. See [local User Secrets setup](../docs/local-user-secrets.md) for
+commands, file locations, and precedence. Production uses environment variables.

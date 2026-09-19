@@ -24,8 +24,8 @@ public sealed class BrowserService : IAsyncDisposable
         await page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         if (page.Url.EndsWith("/login", StringComparison.OrdinalIgnoreCase))
         {
-            var username = Environment.GetEnvironmentVariable("APP_USERNAME");
-            var password = Environment.GetEnvironmentVariable("APP_PASSWORD");
+            var username = ConfigurationUtility.GetValue("APP_USERNAME");
+            var password = ConfigurationUtility.GetValue("APP_PASSWORD");
             Assert.That(username, Is.Not.Null.And.Not.Empty,
                 "Set APP_USERNAME when browser login is enabled.");
             Assert.That(password, Is.Not.Null.And.Not.Empty,
