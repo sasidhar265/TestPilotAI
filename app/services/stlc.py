@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 from uuid import uuid4
 
+from app.audit_integrity import append_event, initialize_audit, verify_audit
 from app.automation_layout import validate_layout_paths
 from app.stlc_models import (
     AttemptInput,
@@ -47,6 +48,8 @@ class LifecycleStore:
                 "record_id TEXT NOT NULL, action TEXT NOT NULL, actor TEXT NOT NULL, "
                 "comment TEXT NOT NULL, created_at TEXT NOT NULL)"
             )
+            initialize_audit(db)
+            verify_audit(db)
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
@@ -89,8 +92,8 @@ class LifecycleStore:
     def event(
         db: sqlite3.Connection, identifier: str, action: str, actor: str, comment: str
     ) -> None:
-        db.execute(
-            "INSERT INTO audit(record_id,action,actor,comment,created_at) VALUES(?,?,?,?,?)",
+        append_event(
+            db,
             (identifier, action, actor, comment, datetime.now(UTC).isoformat()),
         )
 

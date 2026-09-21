@@ -1,5 +1,9 @@
 # Operations
 
+For local audit verification, backup/restore commands and the outstanding organizational controls,
+see the [DORA readiness assessment](dora-readiness.md). Application controls alone do not establish
+DORA compliance.
+
 ## Required runtime
 
 - Python 3.11 or newer

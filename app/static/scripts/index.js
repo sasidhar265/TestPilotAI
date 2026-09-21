@@ -1176,6 +1176,41 @@ function renderStepDefinitions(artifact) {
   setWorkflowStage(3);
   $("step-definitions").scrollIntoView({ behavior: "smooth", block: "start" });
 }
+function syncAgentWorkflow() {
+  const target = $("output-target").value;
+  const discipline = $("manual-testing-type").selectedOptions[0].textContent;
+  const descriptions = {
+    api: "Review requests, responses and API business rules.",
+    ui: "Review user journeys, screen behavior and accessibility.",
+    performance: "Review workload, response time and throughput criteria.",
+    database: "Review data integrity, queries and persistence rules.",
+  };
+  const manual = ["ManualTestCaseGeneratorAgent", `${discipline}: ${descriptions[$("manual-testing-type").value]}`];
+  const automation = ["AutomationTestCaseGeneratorAgent", "Generate BDD / Gherkin scenarios from approved coverage."];
+  const steps = [
+    ["InputAgent + BusinessRulesAgent", "Prepare requirements and supplied business rules."],
+    ["StoryGeneratorAgent", "Create user stories for review and acceptance."],
+    ["ScenarioGeneratorAgent", "Design scenarios linked to approved stories."],
+    ["DecisionAgent", "Route coverage to the selected testing track."],
+  ];
+  if (target !== "automation") steps.push(manual);
+  if (target !== "manual") steps.push(automation);
+  steps.push(
+    ["TestCaseValidatorAgent", "Check completeness, traceability and quality rules."],
+    ["ContextConverterAgent + OutputAgent", "Format exports and retain approved artifacts."],
+  );
+  if (target !== "manual") steps.push(
+    ["AutomationExecutionAgent", "Check readiness and run configured BDD tests."],
+  );
+  $("agent-workflow-summary").textContent = {
+    manual: `Manual · ${discipline}`,
+    automation: "Automation · BDD / Gherkin",
+    both: `Manual · ${discipline} + Automation · BDD / Gherkin`,
+  }[target];
+  $("agent-workflow-steps").innerHTML = steps.map(([title, description], index) =>
+    `<li class="agent-route-step"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(title)}</strong><small>${esc(description)}</small></div></li>`,
+  ).join("");
+}
 function syncManualTestingType() {
   const target = $("output-target").value,
     manual = target === "manual" || target === "both",
@@ -1186,6 +1221,7 @@ function syncManualTestingType() {
   control.title = manual
     ? "Choose the human-led testing discipline."
     : "Manual testing type applies only to Manual or Both output.";
+  syncAgentWorkflow();
   if (typeof syncSuiteFileActions === "function") syncSuiteFileActions();
 }
 function automationControlsRestricted() {

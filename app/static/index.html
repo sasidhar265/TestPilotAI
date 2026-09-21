@@ -16,7 +16,7 @@
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260917-stage-buttons-3" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260920-governed-note" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
   </head>
   <body>
@@ -435,6 +435,42 @@
           </section>
 
           <section class="studio-layout">
+            <aside class="context-panel workspace-context-bar" aria-label="Runtime context">
+              <div class="workspace-context-intro">
+              <div class="context-head">
+                <span class="section-kicker">Active workspace</span
+                ><span class="live-badge">LIVE</span>
+              </div>
+              <h2>AI Quality Lifecycle Agent</h2>
+              <p>Requirement-grounded quality design with governed AI execution.</p>
+              </div>
+              <dl class="context-list">
+                <div>
+                  <dt>Host</dt>
+                  <dd id="server-location">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Agent</dt>
+                  <dd id="active-agent">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Runtime</dt>
+                  <dd id="runtime-id">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Model</dt>
+                  <dd id="model-name">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Authentication</dt>
+                  <dd id="auth-mode">Detecting…</dd>
+                </div>
+                <div>
+                  <dt>Knowledge</dt>
+                  <dd id="memory-status">Detecting…</dd>
+                </div>
+              </dl>
+            </aside>
             <section class="panel composer" id="test-studio">
               <div class="panel-head">
                 <div>
@@ -446,6 +482,14 @@
                   </p>
                 </div>
                 <span class="secure">PRIVATE BY DESIGN</span>
+              </div>
+
+              <div class="trust-note">
+                <span>✓</span>
+                <p>
+                  <strong>Governed generation</strong> Requirements are validated against typed
+                  schemas and the active Quality Gate.
+                </p>
               </div>
 
               <form id="generate-form">
@@ -688,47 +732,21 @@
               </div>
             </section>
 
-            <aside class="context-panel" aria-label="Runtime context">
-              <div class="context-head">
-                <span class="section-kicker">Active workspace</span
-                ><span class="live-badge">LIVE</span>
-              </div>
-              <h2>AI Quality Lifecycle Agent</h2>
-              <p>Requirement-grounded quality design with governed AI execution.</p>
-              <dl class="context-list">
-                <div>
-                  <dt>Host</dt>
-                  <dd id="server-location">Detecting…</dd>
+            <div class="agent-workflow-sidebar">
+              <section class="agent-route-card" aria-labelledby="agent-workflow-title">
+                <div class="agent-route-heading">
+                  <h2 id="agent-workflow-title">Your agent workflow</h2>
+                  <span class="agent-route-badge">LIVE ROUTING</span>
                 </div>
-                <div>
-                  <dt>Agent</dt>
-                  <dd id="active-agent">Detecting…</dd>
+                <p class="agent-route-orchestrator">Orchestrated by OrchestratorAgent</p>
+                <p id="agent-workflow-summary" aria-live="polite"></p>
+                <ol id="agent-workflow-steps" aria-label="Selected testing workflow"></ol>
+                <div class="agent-route-note">
+                  <span aria-hidden="true">◇</span>
+                  <p><strong>Quality gates, built in.</strong><br />Specialist agents validate outputs before the next stage.</p>
                 </div>
-                <div>
-                  <dt>Runtime</dt>
-                  <dd id="runtime-id">Detecting…</dd>
-                </div>
-                <div>
-                  <dt>Model</dt>
-                  <dd id="model-name">Detecting…</dd>
-                </div>
-                <div>
-                  <dt>Authentication</dt>
-                  <dd id="auth-mode">Detecting…</dd>
-                </div>
-                <div>
-                  <dt>Knowledge</dt>
-                  <dd id="memory-status">Detecting…</dd>
-                </div>
-              </dl>
-              <div class="trust-note">
-                <span>✓</span>
-                <p>
-                  <strong>Governed generation</strong>Requirements are validated against typed
-                  schemas and the active Quality Gate.
-                </p>
-              </div>
-            </aside>
+              </section>
+            </div>
           </section>
 
           <details class="runtime-disclosure">
@@ -1440,7 +1458,7 @@
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260916-final-ui" defer></script>
+    <script src="/static/scripts/index.js?v=20260920-agent-route" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260913-reporting" defer></script>
