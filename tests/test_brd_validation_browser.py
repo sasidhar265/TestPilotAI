@@ -39,11 +39,9 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
             request.fulfill(status=422, json={"detail": {"message": report["message"], "requirements_validation": report}})
         elif path == "/api/workflow/brd/pdf":
             downloaded_text.append(parse_qs(request.request.post_data)["text"][0])
-            if len(downloaded_text) == 1:
-                request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf",
-                                headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"'})
-            else:
-                request.fulfill(status=422, json={"detail": "The BRD draft is too long."})
+            request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf",
+                            headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"',
+                                     "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'"})
         elif path == "/api/workspace/rules":
             request.fulfill(json={"business_rules": []})
         elif path == "/api/auth/profile":
@@ -74,8 +72,10 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         assert download.suggested_filename == "proposed-brd.pdf"
         assert Path(download.path()).read_bytes().startswith(b"%PDF-")
         assert downloaded_text == ["Reviewed BRD correction"]
+        assert urlparse(page.url).path == "/"
+        page.locator("#brd-draft-text").fill(" ")
         page.locator("#download-brd-draft").click()
-        playwright.expect(page.locator("#status")).to_have_text("The BRD draft is too long.")
+        playwright.expect(page.locator("#status")).to_contain_text("must contain 1 to 50,000 characters")
         page.locator("#file-remove").click()
         playwright.expect(panel).to_be_hidden()
         browser.close()

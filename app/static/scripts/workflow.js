@@ -334,33 +334,22 @@
         if (!preview.hidden) panel.querySelector("#brd-draft-text").focus();
       };
       panel.querySelector("#download-brd-draft").onclick = () => {
-        const frame = document.createElement("iframe");
-        frame.name = `brd-download-${crypto.randomUUID()}`;
-        frame.hidden = true;
-        frame.onload = () => {
-          const body = frame.contentDocument?.body?.textContent?.trim();
-          if (!body) return;
-          try {
-            const detail = JSON.parse(body).detail;
-            status(typeof detail === "string" ? detail : "PDF download failed. Review the BRD draft and try again.");
-          } catch {
-            status("PDF download failed. Review the BRD draft and try again.");
-          }
-        };
-        document.body.append(frame);
+        const draftText = panel.querySelector("#brd-draft-text").value;
+        if (!draftText.trim() || draftText.length > 50000) {
+          status("The proposed BRD must contain 1 to 50,000 characters before download.");
+          return;
+        }
         const form = document.createElement("form");
         form.method = "post";
         form.action = "/api/workflow/brd/pdf";
-        form.target = frame.name;
         form.hidden = true;
         const field = document.createElement("textarea");
         field.name = "text";
-        field.value = panel.querySelector("#brd-draft-text").value;
+        field.value = draftText;
         form.append(field);
         document.body.append(form);
         form.submit();
         form.remove();
-        setTimeout(() => frame.remove(), 60000);
       };
     }
     if (report.status !== "aligned") {
