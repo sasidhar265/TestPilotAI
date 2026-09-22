@@ -818,6 +818,48 @@
   justify-content: space-between;
   gap: 12px;
 }
+.execution-tab-intro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.execution-tab-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: 1.2rem;
+}
+.execution-tab-intro strong { display: block; margin-top: 3px; font-size: .9rem; }
+.execution-tab-intro p { margin: 4px 0 0; color: var(--muted); font-size: .71rem; }
+.execution-case-summary,
+.execution-technical-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.execution-case-summary article,
+.execution-technical-summary article {
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.execution-case-summary span,
+.execution-technical-summary span { display: block; color: var(--muted); font-size: .68rem; }
+.execution-case-summary strong,
+.execution-technical-summary strong { display: block; margin-top: 6px; font-size: 1.25rem; }
+.execution-case-summary .passed strong { color: var(--success); }
+.execution-case-summary .failed strong,
+.execution-technical-summary .error strong { color: var(--danger); }
+.execution-technical-summary .warning strong { color: var(--warning); }
+.execution-case-card,
+.execution-technical-card { padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .execution-case-toolbar {
   margin-bottom: 12px;
   color: var(--muted);
@@ -837,6 +879,7 @@
 .execution-case-table-wrap {
   border-radius: 12px;
 }
+.execution-case-card .execution-logs-pagination { margin-top: 14px; }
 .execution-case-table tbody tr:hover {
   background: var(--surface-soft);
 }
@@ -886,6 +929,7 @@
   background: #0d1d2b;
   font: 0.72rem/1.6 "SFMono-Regular", Consolas, monospace;
 }
+.execution-technical-match { min-height: 1em; margin: 8px 0 0; color: var(--muted); font-size: .68rem; }
 .execution-technical-line {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
@@ -929,6 +973,67 @@
 .execution-app-log-list p { margin: 0; overflow-wrap: anywhere; }
 .execution-app-log-level { color: var(--primary-dark); font-weight: 800; }
 .execution-app-log-level.error { color: var(--danger); }
+.execution-api-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-size: .77rem;
+  font-weight: 700;
+}
+.execution-api-summary small { color: var(--muted); font-size: .68rem; font-weight: 400; }
+.execution-api-list { display: grid; gap: 10px; }
+.execution-api-empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.execution-api-empty > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+.execution-api-empty strong { font-size: .79rem; }
+.execution-api-empty p { margin: 4px 0 0; color: var(--muted); font-size: .72rem; }
+.execution-api-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.execution-api-index {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: .72rem;
+  font-weight: 800;
+}
+.execution-api-card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; min-height: 30px; }
+.execution-api-card time { color: var(--muted); font-size: .68rem; }
+.execution-api-method { padding: 5px 8px; border-radius: 6px; color: var(--primary-dark); background: var(--primary-soft); font: 800 .65rem/1.1 "SFMono-Regular", Consolas, monospace; }
+.execution-api-method.post,
+.execution-api-method.put,
+.execution-api-method.patch { color: var(--warning); background: var(--warning-soft); }
+.execution-api-method.delete { color: var(--danger); background: var(--danger-soft); }
+.execution-api-card p { margin: 7px 0 0; color: var(--ink-soft); font-size: .74rem; line-height: 1.5; overflow-wrap: anywhere; }
 .execution-detail-empty {
   color: var(--muted);
   font-size: 0.76rem;
@@ -1106,6 +1211,13 @@
   }
 }
 @media (max-width: 600px) {
+  .execution-case-summary,
+  .execution-technical-summary { gap: 6px; }
+  .execution-case-summary article,
+  .execution-technical-summary article { padding: 10px; }
+  .execution-case-card,
+  .execution-technical-card { padding: 10px; }
+  .execution-api-summary { align-items: flex-start; flex-direction: column; }
   .execution-details-hero {
     flex-direction: column;
     padding: 18px;

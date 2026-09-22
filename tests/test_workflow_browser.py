@@ -11,7 +11,7 @@ import pytest
 
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
-@pytest.mark.parametrize("mode", ["manual", "automation"])
+@pytest.mark.parametrize("mode", ["manual", "automation", "non_functional"])
 def test_five_stage_workflow_and_source_invalidation(mode):
     pw = pytest.importorskip("playwright.sync_api")
     static = Path(__file__).parents[1] / "app/static"
@@ -28,7 +28,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
 
     suite = automation_suite().model_dump(mode="json")
     suite["test_cases"][0]["acceptance_criteria_covered"] = ["ST-001", "SC-001"]
-    if mode == "manual":
+    if mode != "automation":
         suite["test_cases"][0]["execution_mode"] = "manual"
         suite["test_cases"][0]["gherkin"] = None
     errors, calls, pending_stories, cancellations = [], [], [], []
@@ -193,7 +193,17 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             pw.expect(page.locator(f"#{control}")).to_be_visible()
         page.screenshot(path="/tmp/workflow-input-mobile.png", full_page=True)
         page.set_viewport_size({"width": 1440, "height": 1000})
+        pw.expect(page.locator("#output-target option")).to_have_text([
+            "Functional", "Automation (BDD / Gherkin)", "Non-Functional",
+            "Both (Automation + Functional)",
+        ])
         page.locator("#output-target").select_option(mode)
+        expected_types = ["performance", "database"] if mode == "non_functional" else ["api", "ui"]
+        assert page.locator("#manual-testing-type option").evaluate_all(
+            "options => options.map(option => option.value)"
+        ) == expected_types
+        if mode == "non_functional":
+            page.locator("#manual-testing-type").select_option("database")
         if mode == "automation":
             page.locator("#requirement-file").set_input_files(
                 {
@@ -406,7 +416,12 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.locator("#jira-key")).to_be_visible()
         pw.expect(page.locator("#jira")).to_be_visible()
         page.locator(".suite-jira summary").click()
-        assert calls[0]["request"]["generation_target"] == mode
+        assert calls[0]["request"]["generation_target"] == (
+            "manual" if mode == "non_functional" else mode
+        )
+        assert calls[0]["request"]["manual_testing_type"] == (
+            "database" if mode == "non_functional" else "api"
+        )
         assert calls[0]["request"]["description"] == handoff["request"]["description"]
         assert calls[0]["stories"] == handoff["stories"]
         assert calls[0]["scenarios"] == handoff["scenarios"]

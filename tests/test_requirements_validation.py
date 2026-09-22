@@ -16,6 +16,7 @@ from app.config import Settings
 from app.memory import OrganizationalMemory
 from app.models import GenerateRequest
 from app.services import MultiAgentTestPipeline, RequirementToTestCaseService, TestGenerationService
+from app.uploaded_brd import issue_brd_receipt
 
 SOURCE = "Quotation requests must reject a negative deposit."
 REQUEST = GenerateRequest(description=SOURCE)
@@ -111,6 +112,38 @@ async def test_unavailable_baseline_blocks(tmp_path, change):
     with pytest.raises(RequirementsBlocked):
         await instance.require(REQUEST)
     instance.runner.generate_structured.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_uploaded_brd_can_source_workflow_when_baseline_is_empty(tmp_path):
+    instance = agent(tmp_path)
+    instance.settings.requirements_baseline_path.write_text('{"sources": []}')
+    document = "Quotation requests must reject a negative deposit."
+    request = GenerateRequest(
+        description="Generate tests for PCP quotations.\n\n" + document,
+        uploaded_brd_text=document,
+        uploaded_brd_receipt=issue_brd_receipt(document, instance.settings),
+    )
+    report = await instance.require(request)
+    assert report.status == "aligned"
+    assert report.sources[0]["status"] == "user_provided"
+    assert "Business approval" in report.message
+    instance.runner.generate_structured.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_uploaded_brd_receipt_cannot_authorize_changed_text(tmp_path):
+    instance = agent(tmp_path)
+    instance.settings.requirements_baseline_path.write_text('{"sources": []}')
+    document = "Quotation requests must reject a negative deposit."
+    request = GenerateRequest(
+        description="Quotation requests may accept a negative deposit.",
+        uploaded_brd_text=document,
+        uploaded_brd_receipt=issue_brd_receipt(document, instance.settings),
+    )
+    with pytest.raises(RequirementsBlocked) as error:
+        await instance.require(request)
+    assert "verification failed" in error.value.report.message
 
 
 @pytest.mark.asyncio

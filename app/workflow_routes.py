@@ -27,6 +27,7 @@ from app.observability import (
 )
 from app.services import MultiAgentTestPipeline
 from app.services.document_ingestion import DocumentIngestionError, DocumentIngestionService
+from app.uploaded_brd import issue_brd_receipt
 from app.workflow_models import (
     JiraStoriesRequest,
     ScenarioHandoff,
@@ -84,7 +85,8 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
             )
         except DocumentIngestionError as error:
             raise HTTPException(422, str(error)) from error
-        return {"description": document.text, "filename": document.filename}
+        return {"description": document.text, "filename": document.filename,
+                "uploaded_brd_receipt": issue_brd_receipt(document.text, settings)}
 
 
 @router.post("/validate-requirements", response_model=RequirementsReport)

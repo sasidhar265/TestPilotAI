@@ -153,6 +153,8 @@ class GenerateRequest(BaseModel):
     output_format: TestFormat = TestFormat.NORMAL
     generation_target: GenerationTarget = GenerationTarget.AUTO
     manual_testing_type: ManualTestingType = ManualTestingType.API
+    uploaded_brd_receipt: str | None = Field(default=None, max_length=200)
+    uploaded_brd_text: str | None = Field(default=None, max_length=30000)
     llm_model: LlmModel = LlmModel.AUTO_FALLBACK
     business_rules: list[BusinessRule] = Field(default_factory=list, max_length=100)
 

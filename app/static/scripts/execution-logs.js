@@ -79,6 +79,9 @@
     `<dl class="execution-log-facts">${items.map(([label, value]) =>
       `<div><dt>${safe(label)}</dt><dd>${safe(value == null || value === "" ? "Not recorded" : value)}</dd></div>`).join("")}</dl>`;
   const empty = (message) => `<p class="execution-detail-empty">${safe(message)}</p>`;
+  const tabIntro = (icon, eyebrow, title, description) =>
+    `<div class="execution-tab-intro"><span class="execution-tab-icon" aria-hidden="true">${icon}</span><div><span class="section-kicker">${eyebrow}</span><strong>${title}</strong><p>${description}</p></div></div>`;
+  const apiEmpty = (message) => `<div class="execution-api-empty"><span aria-hidden="true">⇄</span><div><strong>No transactions to show</strong><p>${safe(message)}</p></div></div>`;
   function reportMarkup(counts, scenarioCount, executedCount) {
     const outcomes = [
       ["passed", "Passed", "✓", counts.passed],
@@ -159,8 +162,12 @@
   }
   function technicalLogMarkup(output) {
     const lines = output ? String(output).split(/\r?\n/) : [];
-    return `<div class="execution-technical-toolbar"><div><span class="section-kicker">RUNNER OUTPUT</span><strong>${lines.length} ${lines.length === 1 ? "line" : "lines"} recorded</strong></div><div><input id="execution-technical-search" type="search" placeholder="Find in logs…" aria-label="Find in technical logs" /><button type="button" class="secondary" id="execution-technical-copy" ${lines.length ? "" : "disabled"}>Copy logs</button></div></div>
-      <div class="execution-technical-console" id="execution-technical-console" role="log" aria-label="Runner technical output"></div>
+    const errors = lines.filter((line) => /\b(error|fail(?:ed|ure)?|exception|fatal)\b/i.test(line)).length;
+    const warnings = lines.filter((line) => /\b(warn|warning|skipped)\b/i.test(line) && !/\b(error|fail(?:ed|ure)?|exception|fatal)\b/i.test(line)).length;
+    return `${tabIntro("⌘", "EXECUTION EVIDENCE", "Technical Logs", "Search runner output and inspect application events linked to this run.")}
+      <div class="execution-technical-summary"><article><span>Runner lines</span><strong>${lines.length}</strong></article><article class="error"><span>Error lines</span><strong>${errors}</strong></article><article class="warning"><span>Warning lines</span><strong>${warnings}</strong></article></div>
+      <div class="execution-technical-card"><div class="execution-technical-toolbar"><div><span class="section-kicker">RUNNER OUTPUT</span><strong>${lines.length} ${lines.length === 1 ? "line" : "lines"} recorded</strong></div><div><input id="execution-technical-search" type="search" placeholder="Find in logs…" aria-label="Find in technical logs" /><button type="button" class="secondary" id="execution-technical-copy" ${lines.length ? "" : "disabled"}>Copy logs</button></div></div>
+      <div class="execution-technical-console" id="execution-technical-console" role="log" aria-label="Runner technical output"></div><p class="execution-technical-match" id="execution-technical-match" role="status"></p></div>
       <div class="execution-correlated-logs" id="execution-correlated-logs"></div>`;
   }
   function renderTechnicalLines() {
@@ -171,8 +178,9 @@
     const query = $log("execution-technical-search").value.trim().toLowerCase();
     const lines = output ? String(output).split(/\r?\n/) : [];
     const matching = lines.map((line, index) => [line, index + 1]).filter(([line]) => line.toLowerCase().includes(query));
+    $log("execution-technical-match").textContent = query ? `${matching.length} of ${lines.length} lines match` : "";
     target.innerHTML = matching.length ? matching.map(([line, number]) => {
-      const severity = /\b(error|failed|exception|fatal)\b/i.test(line) ? "error" : /\b(warn|warning|skipped)\b/i.test(line) ? "warning" : "normal";
+      const severity = /\b(error|fail(?:ed|ure)?|exception|fatal)\b/i.test(line) ? "error" : /\b(warn|warning|skipped)\b/i.test(line) ? "warning" : "normal";
       return `<div class="execution-technical-line ${severity}"><span aria-hidden="true">${number}</span><code>${safe(line || " ")}</code></div>`;
     }).join("") : empty(lines.length ? "No log lines match this search." : "No runner output was retained.");
   }
@@ -212,11 +220,11 @@
       section("failures", "Recent Failures", failures.length
         ? `<div class="test-failure-list">${failures.map(ExecutionFailures.card).join("")}</div>`
         : empty("No failed test cases were recorded.")) +
-      section("cases", "Test Cases", entries.length
-        ? `<div class="execution-case-toolbar"><span>${entries.length} recorded test cases</span><input id="execution-case-search" type="search" placeholder="Search test cases…" aria-label="Search test cases" /></div><div class="execution-logs-table-wrap execution-case-table-wrap"><table class="execution-logs-table execution-case-table"><thead><tr><th>Test case</th><th>Outcome</th><th>Duration</th><th>Details</th></tr></thead><tbody id="execution-case-rows"></tbody></table></div><nav class="execution-logs-pagination" aria-label="Test case pages"><span id="execution-case-page-summary"></span><div><button type="button" class="secondary" id="execution-case-previous">Previous</button><span id="execution-case-page-number"></span><button type="button" class="secondary" id="execution-case-next">Next</button></div></nav>`
-        : empty("No test-level results were recorded for this execution.")) +
+      section("cases", "Test Cases", tabIntro("▣", "CASE EVIDENCE", "Test Cases", "Review outcomes and open recorded failure reasons.") + (entries.length
+        ? `<div class="execution-case-summary"><article><span>Recorded</span><strong>${entries.length}</strong></article><article class="passed"><span>Passed</span><strong>${entries.filter((entry) => caseStatus(entry) === "passed").length}</strong></article><article class="failed"><span>Failed</span><strong>${failures.length}</strong></article></div><div class="execution-case-card"><div class="execution-case-toolbar"><span>${entries.length} recorded test cases</span><input id="execution-case-search" type="search" placeholder="Search test cases…" aria-label="Search test cases" /></div><div class="execution-logs-table-wrap execution-case-table-wrap"><table class="execution-logs-table execution-case-table"><thead><tr><th>Test case</th><th>Outcome</th><th>Duration</th><th>Details</th></tr></thead><tbody id="execution-case-rows"></tbody></table></div><nav class="execution-logs-pagination" aria-label="Test case pages"><span id="execution-case-page-summary"></span><div><button type="button" class="secondary" id="execution-case-previous">Previous</button><span id="execution-case-page-number"></span><button type="button" class="secondary" id="execution-case-next">Next</button></div></nav></div>`
+        : empty("No test-level results were recorded for this execution."))) +
       section("activity", "Agent Activity", agentActivityMarkup(events, agent)) +
-      section("transactions", "API Transactions", '<div id="execution-api-transactions">' + empty("Checking correlated API activity…") + "</div>") +
+      section("transactions", "API Transactions", tabIntro("⇄", "CORRELATED REQUESTS", "API Transactions", "HTTP activity retained under this execution's correlation ID.") + '<div id="execution-api-transactions">' + apiEmpty("Checking correlated API activity…") + "</div>") +
       section("errors", "Errors & failures", detail.error || failures.length
         ? `${detail.error ? `<p class="execution-log-error">${safe(detail.error)}</p>` : ""}<div class="test-failure-list">${failures.map(ExecutionFailures.card).join("")}</div>`
         : empty("No error details were recorded.")) +
@@ -241,7 +249,7 @@
     const apiTarget = $log("execution-api-transactions");
     const logTarget = $log("execution-correlated-logs");
     if (!requestId || requestId === "-" || !/^[A-Za-z0-9._-]{1,128}$/.test(requestId)) {
-      apiTarget.innerHTML = empty("No correlation ID was recorded for API transactions.");
+      apiTarget.innerHTML = apiEmpty("No correlation ID was recorded for API transactions.");
       return;
     }
     try {
@@ -253,15 +261,19 @@
       const transactions = data.entries.filter((entry) =>
         /\b(GET|POST|PUT|PATCH|DELETE)\b|HTTP Request/i.test(entry.message || ""));
       apiTarget.innerHTML = transactions.length
-        ? `<ol>${transactions.map((entry) => `<li><time>${safe(when(entry.timestamp))}</time> ${safe(entry.message)}</li>`).join("")}</ol>`
-        : empty("No API transactions were retained for this correlation ID.");
+        ? `<div class="execution-api-summary"><span>${transactions.length} ${transactions.length === 1 ? "transaction" : "transactions"} recorded</span><small>From correlated application logs</small></div><div class="execution-api-list">${transactions.map((entry, index) => {
+          const message = String(entry.message || "");
+          const method = message.match(/\b(GET|POST|PUT|PATCH|DELETE)\b/i)?.[0]?.toUpperCase();
+          return `<article class="execution-api-card"><span class="execution-api-index">${index + 1}</span><div><div class="execution-api-card-head">${method ? `<span class="execution-api-method ${safe(method.toLowerCase())}">${safe(method)}</span>` : ""}<time>${safe(when(entry.timestamp))}</time></div><p>${safe(message)}</p></div></article>`;
+        }).join("")}</div>`
+        : apiEmpty("No API transactions were retained for this correlation ID.");
       logTarget.innerHTML = data.entries.length
         ? `<div class="execution-app-logs-head"><span class="section-kicker">APPLICATION LOGS</span><strong>${data.entries.length} correlated entries</strong></div><div class="execution-app-log-list">${data.entries.map((entry) =>
           `<article><time>${safe(when(entry.timestamp))}</time><span class="execution-app-log-level ${safe(String(entry.level || "info").toLowerCase())}">${safe(entry.level || "INFO")}</span><p>${safe(entry.message)}</p></article>`).join("")}</div>`
         : empty("No application logs were retained for this correlation ID.");
     } catch {
       if (selectedId !== item.id) return;
-      apiTarget.innerHTML = empty("Correlated API transactions are unavailable.");
+      apiTarget.innerHTML = apiEmpty("Correlated API transactions are unavailable.");
       logTarget.innerHTML = empty("Correlated application logs are unavailable.");
     }
   }

@@ -66,7 +66,7 @@ def test_execution_logs_filters_and_per_run_details():
                 request.fulfill(json={"history": [bdd], "active": [], "scope": "Retained", "timeout_seconds": 900})
             elif path == "/api/logs":
                 request.fulfill(json={"entries": [
-                    {"timestamp": "2026-09-20T10:00:30Z", "level": "INFO", "message": "Runner checkpoint"}
+                    {"timestamp": "2026-09-20T10:00:30Z", "level": "INFO", "message": "POST /api/automation/run completed"}
                 ]})
             else:
                 request.fulfill(json={"models": [], "events": [], "history": [], "active": [], "business_rules": []})
@@ -91,6 +91,7 @@ def test_execution_logs_filters_and_per_run_details():
         playwright.expect(page.locator("#execution-detail-panel-execution")).to_contain_text("Not recorded")
         playwright.expect(page.locator("#execution-log-allure-download")).to_be_hidden()
         page.locator("#execution-detail-tab-cases").click()
+        playwright.expect(page.locator("#execution-detail-panel-cases .execution-case-summary article")).to_have_count(3)
         playwright.expect(page.locator("#execution-detail-panel-cases")).to_contain_text("Valid PCP quote")
         playwright.expect(page.locator("#execution-detail-panel-cases")).to_contain_text("TC-2")
         page.locator("#execution-case-rows .test-failure-disclosure").first.locator("summary").click()
@@ -115,6 +116,7 @@ def test_execution_logs_filters_and_per_run_details():
         playwright.expect(page.locator("#execution-detail-panel-execution")).to_be_hidden()
         page.locator("#execution-detail-tab-transactions").click()
         playwright.expect(page.locator("#execution-detail-panel-transactions")).to_be_visible()
+        playwright.expect(page.locator("#execution-detail-panel-transactions .execution-tab-intro")).to_be_visible()
         page.locator("#execution-log-detail-close").click()
         page.locator("#execution-logs-type").select_option("repository_checks")
         page.locator("#execution-logs-status").select_option("failed")
@@ -151,11 +153,17 @@ def test_execution_logs_filters_and_per_run_details():
         )
         page.locator("#execution-detail-tab-logs").click()
         playwright.expect(page.locator("#execution-detail-panel-logs")).to_contain_text("Runner failure detail")
+        playwright.expect(page.locator(".execution-technical-summary strong")).to_have_text(["3", "1", "1"])
         playwright.expect(page.locator(".execution-technical-line")).to_have_count(3)
         page.locator("#execution-technical-search").fill("failure")
         playwright.expect(page.locator(".execution-technical-line")).to_have_count(1)
+        playwright.expect(page.locator("#execution-technical-match")).to_have_text("1 of 3 lines match")
         page.locator("#execution-technical-search").fill("")
         playwright.expect(page.locator(".execution-app-log-list article")).to_have_count(1)
+        page.locator("#execution-detail-tab-transactions").click()
+        playwright.expect(page.locator(".execution-api-card")).to_have_count(1)
+        playwright.expect(page.locator(".execution-api-method")).to_have_text("POST")
+        page.locator("#execution-detail-tab-logs").click()
         page.screenshot(path="/tmp/execution-technical-logs-desktop.png")
         page.locator("#execution-detail-tab-logs").focus()
         page.keyboard.press("Home")

@@ -289,7 +289,7 @@ function showGenerationOverlay(target) {
   window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: true } }));
   const stories = target === "stories",
     automatic = target === "auto",
-    manual = target === "manual",
+    manual = target === "manual" || target === "non_functional",
     both = target === "both";
   $("generation-agent-label").textContent = stories
     ? "Story Agent is working"
@@ -301,7 +301,7 @@ function showGenerationOverlay(target) {
       : both
         ? "Generating combined test coverage"
         : manual
-          ? "Generating manual test cases"
+          ? target === "non_functional" ? "Generating non-functional test cases" : "Generating functional test cases"
           : "Generating automation test cases";
   $("generation-overlay-message").textContent = stories
     ? "Reading your BRD and creating source-grounded stories with acceptance criteria. You can run this in the background while keeping this page open."
@@ -872,11 +872,11 @@ $("generate-form").addEventListener("submit", async (e) => {
     () => ($("timer").textContent = elapsed(performance.now() - start)),
     250,
   );
-  const generationTarget = $("output-target").value,
+  const generationTarget = selectedGenerationTarget(),
     format = generationTarget === "manual" ? "normal" : "bdd",
     manualTestingType = $("manual-testing-type").value,
     llmModel = $("llm-model").value;
-  showGenerationOverlay(generationTarget);
+  showGenerationOverlay($("output-target").value);
   try {
     $("status").textContent = selectedFile
       ? "The Input Agent is preparing the document…"
@@ -1198,41 +1198,45 @@ function syncAgentWorkflow() {
     ["DecisionAgent", "Route coverage to the selected testing track."],
   ];
   if (target !== "automation") steps.push(manual);
-  if (target !== "manual") steps.push(automation);
+  if (target === "automation" || target === "both") steps.push(automation);
   steps.push(
     ["TestCaseValidatorAgent", "Check completeness, traceability and quality rules."],
     ["ContextConverterAgent + OutputAgent", "Format exports and retain approved artifacts."],
   );
-  if (target !== "manual") steps.push(
+  if (target === "automation" || target === "both") steps.push(
     ["AutomationExecutionAgent", "Check readiness and run configured BDD tests."],
   );
   $("agent-workflow-summary").textContent = {
-    manual: `Manual · ${discipline}`,
-    automation: "Automation · BDD / Gherkin",
-    both: `Manual · ${discipline} + Automation · BDD / Gherkin`,
+    manual: `Functional · ${discipline}`,
+    non_functional: `Non-Functional · ${discipline}`,
+    automation: `Automation · BDD / Gherkin · ${discipline}`,
+    both: `Functional · ${discipline} + Automation · BDD / Gherkin`,
   }[target];
   $("agent-workflow-steps").innerHTML = steps.map(([title, description], index) =>
     `<li class="agent-route-step"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(title)}</strong><small>${esc(description)}</small></div></li>`,
   ).join("");
 }
+function selectedGenerationTarget() {
+  return $("output-target").value === "non_functional" ? "manual" : $("output-target").value;
+}
 function syncManualTestingType() {
-  const target = $("output-target").value,
-    manual = target === "manual" || target === "both",
-    control = $("manual-type-control"),
-    select = $("manual-testing-type");
-  select.disabled = !manual;
-  control.classList.toggle("is-disabled", !manual);
-  control.title = manual
-    ? "Choose the human-led testing discipline."
-    : "Manual testing type applies only to Manual or Both output.";
+  const nonFunctional = $("output-target").value === "non_functional";
+  const select = $("manual-testing-type");
+  const choices = nonFunctional
+    ? [["performance", "Performance testing"], ["database", "Database testing"]]
+    : [["api", "API testing"], ["ui", "UI testing"]];
+  const previous = select.value;
+  select.replaceChildren(...choices.map(([value, label]) => new Option(label, value)));
+  select.value = choices.some(([value]) => value === previous) ? previous : choices[0][0];
+  $("manual-type-control").title = nonFunctional
+    ? "Choose performance or database testing."
+    : "Choose API or UI testing.";
   syncAgentWorkflow();
   if (typeof syncSuiteFileActions === "function") syncSuiteFileActions();
 }
 function automationControlsRestricted() {
   const target = $("output-target").value;
-  const manualType = $("manual-testing-type").value;
-  return (target === "manual" || target === "both") &&
-    ["performance", "database"].includes(manualType);
+  return target === "non_functional";
 }
 $("output-target").addEventListener("change", syncManualTestingType);
 $("manual-testing-type").addEventListener("change", syncManualTestingType);

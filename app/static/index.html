@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20260921" />
-    <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260922-failures" />
+    <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260922-detail-tabs" />
   </head>
   <body>
     <div class="app-shell">
@@ -824,26 +824,25 @@
                   <div class="generation-options">
                     <fieldset class="generation-select-control">
                       <legend>Type of test cases</legend>
-                      <select id="output-target" name="output_target" aria-label="Output format">
-                        <option value="manual">Manual</option>
+                      <select id="output-target" name="output_target" aria-label="Type of test cases">
+                        <option value="manual">Functional</option>
                         <option value="automation" selected>Automation (BDD / Gherkin)</option>
-                        <option value="both">Both manual and automation</option>
+                        <option value="non_functional">Non-Functional</option>
+                        <option value="both">Both (Automation + Functional)</option>
                       </select>
                       <small class="option-help"
-                        >Choose manual test cases, executable automation, or both.</small
+                        >Choose the test case coverage you want to generate.</small
                       >
                     </fieldset>
                     <fieldset class="manual-type-control" id="manual-type-control">
-                      <legend>Manual testing type</legend>
+                      <legend>Testing type</legend>
                       <select
                         id="manual-testing-type"
                         name="manual_testing_type"
-                        aria-label="Manual testing type"
+                        aria-label="Testing type"
                       >
                         <option value="api">API testing</option>
                         <option value="ui">UI testing</option>
-                        <option value="performance">Performance testing</option>
-                        <option value="database">Database testing</option>
                       </select>
                     </fieldset>
                     <fieldset class="generation-select-control">
@@ -1787,16 +1786,16 @@
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260921-requirements-gate" defer></script>
+    <script src="/static/scripts/index.js?v=20260922-test-types" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260922-failures" defer></script>
-    <script src="/static/scripts/execution-logs.js?v=20260922-failures" defer></script>
+    <script src="/static/scripts/execution-logs.js?v=20260922-detail-tabs" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260921-requirements-gate" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260922-test-types" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20260921" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20260921" defer></script>
   </body>

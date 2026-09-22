@@ -14,6 +14,7 @@ from app.agents.runner import StructuredAgentDefinition
 from app.config import Settings, get_settings
 from app.models import GenerateRequest
 from app.observability import publish_lifecycle_event
+from app.uploaded_brd import verify_brd_receipt
 from app.workspace_policy import apply_rules
 
 
@@ -171,6 +172,26 @@ class RequirementsValidationAgent:
                 for s in sources
             ]
             if not sources:
+                if request.uploaded_brd_receipt or request.uploaded_brd_text:
+                    document = request.uploaded_brd_text or ""
+                    if (not request.uploaded_brd_receipt
+                            or document not in request.description
+                            or not verify_brd_receipt(document, request.uploaded_brd_receipt, self.settings)):
+                        return report(
+                            "Requirements blocked: uploaded BRD verification failed. Upload the document again."
+                        )
+                    source_metadata = [{
+                        "id": "UPLOADED-BRD",
+                        "title": "Uploaded BRD for this workflow",
+                        "status": "user_provided",
+                        "fingerprint": hashlib.sha256(document.encode()).hexdigest(),
+                    }]
+                    result = report(
+                        "Uploaded BRD verified as this workflow's source. Business approval and "
+                        "regulatory compliance were not assessed."
+                    )
+                    result.status = "aligned"
+                    return result
                 return report(
                     "Requirements blocked: no effective approved business sources are configured. "
                     "Have the business owner approve and populate the requirements baseline."

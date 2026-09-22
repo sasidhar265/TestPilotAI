@@ -272,7 +272,7 @@
   const post = async (path, body) =>
     (await api(`/api/workflow/${path}`, body, transportOptions())).json();
   function requestOptions() {
-    const target = $("output-target").value;
+    const target = selectedGenerationTarget();
     return {
       ...state.request,
       generation_target: target,
@@ -283,6 +283,8 @@
   }
   async function readRequirementSource(current) {
     let description = $("description").value.trim();
+    let uploadedBrdText = null;
+    let uploadedBrdReceipt = null;
     const selected = attachedFile;
     if (selected) {
       const form = new FormData();
@@ -292,6 +294,8 @@
       ).json();
       current();
       description = [description, result.description].filter(Boolean).join("\n\n");
+      uploadedBrdText = result.description;
+      uploadedBrdReceipt = result.uploaded_brd_receipt;
     }
     if (description.length < 10)
       throw new Error("Enter at least 10 characters or attach a readable BRD.");
@@ -300,7 +304,8 @@
     current();
     await resolveBusinessRules(transportOptions());
     current();
-    return { description, business_rules: parseBusinessRules(), additional_context: "" };
+    return { description, business_rules: parseBusinessRules(), additional_context: "",
+      uploaded_brd_text: uploadedBrdText, uploaded_brd_receipt: uploadedBrdReceipt };
   }
   function renderRequirementsValidation(report) {
     const panel = $("requirements-validation-report");
@@ -316,7 +321,7 @@
   $("validate-requirements").onclick = () => work("Validating business alignment…", async (current) => {
     $("requirements-validation-report").hidden = true;
     const source = await readRequirementSource(current);
-    const report = await post("validate-requirements", { ...source, generation_target: $("output-target").value });
+    const report = await post("validate-requirements", { ...source, generation_target: selectedGenerationTarget() });
     current();
     renderRequirementsValidation(report);
     status(report.message);
