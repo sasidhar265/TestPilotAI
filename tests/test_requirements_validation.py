@@ -14,7 +14,7 @@ from app.agents.requirements_validation import (
 )
 from app.config import Settings
 from app.memory import OrganizationalMemory
-from app.models import GenerateRequest
+from app.models import GenerateRequest, LlmModel
 from app.services import MultiAgentTestPipeline, RequirementToTestCaseService, TestGenerationService
 from app.uploaded_brd import issue_brd_receipt
 
@@ -144,6 +144,30 @@ async def test_uploaded_brd_receipt_cannot_authorize_changed_text(tmp_path):
     with pytest.raises(RequirementsBlocked) as error:
         await instance.require(request)
     assert "verification failed" in error.value.report.message
+
+
+@pytest.mark.asyncio
+async def test_document_pipeline_passes_extracted_brd_to_requirements_gate(tmp_path):
+    from app.services.document_ingestion import ExtractedDocument
+
+    validator = agent(tmp_path)
+    validator.settings.requirements_baseline_path.write_text('{"sources": []}')
+    document = ExtractedDocument("requirements.pdf", "application/pdf", SOURCE)
+    pipeline = object.__new__(MultiAgentTestPipeline)
+    pipeline.input_agent = SimpleNamespace(
+        from_document=lambda *args: (document, GenerateRequest(description=SOURCE))
+    )
+    pipeline.requirements_validator = validator
+    pipeline.run = AsyncMock(return_value=SimpleNamespace(suite=None, validation=None, trace=()))
+
+    result = await pipeline.run_document(
+        "requirements.pdf", b"document", llm_model=LlmModel.AUTO_FALLBACK
+    )
+
+    request = result.source_request
+    assert request.uploaded_brd_text == SOURCE
+    assert await validator.require(request)
+    pipeline.run.assert_awaited_once_with(request)
 
 
 @pytest.mark.asyncio

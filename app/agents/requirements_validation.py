@@ -194,7 +194,8 @@ class RequirementsValidationAgent:
                     return result
                 return report(
                     "Requirements blocked: no effective approved business sources are configured. "
-                    "Have the business owner approve and populate the requirements baseline."
+                    "Upload a readable BRD for this workflow, or have the business owner "
+                    "approve and populate the requirements baseline."
                 )
             instructions = load_agent_instructions("requirements-validation")
             context = load_profile_instructions(self.settings.agent_profile)

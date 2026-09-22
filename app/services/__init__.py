@@ -190,8 +190,14 @@ class MultiAgentTestPipeline:
         document, request = self.input_agent.from_document(
             filename, content, additional_context, output_format
         )
+        from app.uploaded_brd import issue_brd_receipt
+
         request = request.model_copy(
             update={
+                "uploaded_brd_text": document.text,
+                "uploaded_brd_receipt": issue_brd_receipt(
+                    document.text, self.requirements_validator.settings
+                ),
                 "business_rules": business_rules or [],
                 "manual_testing_type": manual_testing_type,
                 "generation_target": generation_target,
