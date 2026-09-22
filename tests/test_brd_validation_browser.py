@@ -4,9 +4,10 @@ import mimetypes
 import os
 import re
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 
 import pytest
+from pypdf import PdfReader
 
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
@@ -26,7 +27,7 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         }],
         "requirements": {"REQ-001": source},
     }
-    downloaded_text = []
+    endpoint_calls = []
 
     def route(request):
         path = urlparse(request.request.url).path
@@ -38,10 +39,8 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         elif path == "/api/workflow/validate-requirements":
             request.fulfill(status=422, json={"detail": {"message": report["message"], "requirements_validation": report}})
         elif path == "/api/workflow/brd/pdf":
-            downloaded_text.append(parse_qs(request.request.post_data)["text"][0])
-            request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf",
-                            headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"',
-                                     "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'"})
+            endpoint_calls.append(path)
+            request.fulfill(status=404, json={"detail": "Not Found"})
         elif path == "/api/workspace/rules":
             request.fulfill(json={"business_rules": []})
         elif path == "/api/auth/profile":
@@ -69,9 +68,15 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         with page.expect_download() as download_info:
             page.locator("#download-brd-draft").click()
         download = download_info.value
-        assert download.suggested_filename == "proposed-brd.pdf"
-        assert Path(download.path()).read_bytes().startswith(b"%PDF-")
-        assert downloaded_text == ["Reviewed BRD correction"]
+        assert download.suggested_filename == "Requirements-proposed-brd.pdf"
+        payload = Path(download.path()).read_bytes()
+        assert payload.startswith(b"%PDF-")
+        assert len(PdfReader(download.path()).pages) == 1
+        assert not endpoint_calls
+        page.locator("#brd-draft-text").fill("Reviewed requirement with café terms.\n" * 100)
+        with page.expect_download() as longer_download:
+            page.locator("#download-brd-draft").click()
+        assert len(PdfReader(longer_download.value.path()).pages) > 1
         assert urlparse(page.url).path == "/"
         page.locator("#brd-draft-text").fill(" ")
         page.locator("#download-brd-draft").click()

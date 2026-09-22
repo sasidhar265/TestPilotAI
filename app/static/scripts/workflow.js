@@ -339,17 +339,14 @@
           status("The proposed BRD must contain 1 to 50,000 characters before download.");
           return;
         }
-        const form = document.createElement("form");
-        form.method = "post";
-        form.action = "/api/workflow/brd/pdf";
-        form.hidden = true;
-        const field = document.createElement("textarea");
-        field.name = "text";
-        field.value = draftText;
-        form.append(field);
-        document.body.append(form);
-        form.submit();
-        form.remove();
+        try {
+          BrdPdf.download(
+            draftText,
+            `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.pdf`,
+          );
+        } catch {
+          status("The PDF could not be created. Try a shorter BRD draft.");
+        }
       };
     }
     if (report.status !== "aligned") {
