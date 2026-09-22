@@ -333,14 +333,24 @@
         event.currentTarget.setAttribute("aria-expanded", String(!preview.hidden));
         if (!preview.hidden) panel.querySelector("#brd-draft-text").focus();
       };
-      panel.querySelector("#download-brd-draft").onclick = () => {
-        const file = new Blob([panel.querySelector("#brd-draft-text").value], { type: "text/markdown;charset=utf-8" });
-        const url = URL.createObjectURL(file);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.md`;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      panel.querySelector("#download-brd-draft").onclick = async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          const response = await api("/api/workflow/brd/pdf", {
+            text: panel.querySelector("#brd-draft-text").value,
+          });
+          const url = URL.createObjectURL(await response.blob());
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.pdf`;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+          status(error.message);
+        } finally {
+          button.disabled = false;
+        }
       };
     }
     if (report.status !== "aligned") {

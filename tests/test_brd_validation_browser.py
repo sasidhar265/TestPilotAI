@@ -1,6 +1,7 @@
 """The workflow exposes failed BRD findings as an editable download."""
 
 import mimetypes
+import json
 import os
 import re
 from pathlib import Path
@@ -26,6 +27,7 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         }],
         "requirements": {"REQ-001": source},
     }
+    downloaded_text = []
 
     def route(request):
         path = urlparse(request.request.url).path
@@ -36,6 +38,9 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
             request.fulfill(json={"description": source, "filename": "Requirements.pdf", "uploaded_brd_receipt": "receipt"})
         elif path == "/api/workflow/validate-requirements":
             request.fulfill(status=422, json={"detail": {"message": report["message"], "requirements_validation": report}})
+        elif path == "/api/workflow/brd/pdf":
+            downloaded_text.append(json.loads(request.request.post_data)["text"])
+            request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf")
         elif path == "/api/workspace/rules":
             request.fulfill(json={"business_rules": []})
         elif path == "/api/auth/profile":
@@ -63,8 +68,9 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         with page.expect_download() as download_info:
             page.locator("#download-brd-draft").click()
         download = download_info.value
-        assert download.suggested_filename == "Requirements-proposed-brd.md"
-        assert Path(download.path()).read_text() == "Reviewed BRD correction"
+        assert download.suggested_filename == "Requirements-proposed-brd.pdf"
+        assert Path(download.path()).read_bytes().startswith(b"%PDF-")
+        assert downloaded_text == ["Reviewed BRD correction"]
         page.locator("#file-remove").click()
         playwright.expect(panel).to_be_hidden()
         browser.close()

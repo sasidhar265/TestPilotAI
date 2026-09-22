@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
-from pydantic import ValidationError
+from fastapi.responses import Response
+from pydantic import BaseModel, Field, ValidationError
 
 from app.agents.context_converter_agent import ContextConverterAgent
 from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
@@ -25,6 +26,7 @@ from app.observability import (
     publish_lifecycle_event,
     request_id_context,
 )
+from app.pdf_exporter import brd_draft_to_pdf
 from app.services import MultiAgentTestPipeline
 from app.services.document_ingestion import DocumentIngestionError, DocumentIngestionService
 from app.uploaded_brd import issue_brd_receipt
@@ -41,6 +43,10 @@ router = APIRouter(prefix="/api/workflow", tags=["Five-stage workflow"])
 
 class ExecutionPlanRequest(SuiteRequest):
     request: GenerateRequest
+
+
+class BrdDraftRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=50000)
 
 
 Config = Annotated[Settings, Depends(get_settings)]
@@ -93,6 +99,15 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
 async def validate_requirements(request: GenerateRequest, settings: Config) -> RequirementsReport:
     with stage_operation("Requirements validation"):
         return await RequirementsValidationAgent(settings).require(request)
+
+
+@router.post("/brd/pdf")
+async def download_brd_draft(request: BrdDraftRequest) -> Response:
+    return Response(
+        content=brd_draft_to_pdf(request.text),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"'},
+    )
 
 
 @router.post("/stories", response_model=Stories)
