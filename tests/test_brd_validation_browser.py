@@ -1,11 +1,10 @@
 """The workflow exposes failed BRD findings as an editable download."""
 
 import mimetypes
-import json
 import os
 import re
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -39,8 +38,12 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         elif path == "/api/workflow/validate-requirements":
             request.fulfill(status=422, json={"detail": {"message": report["message"], "requirements_validation": report}})
         elif path == "/api/workflow/brd/pdf":
-            downloaded_text.append(json.loads(request.request.post_data)["text"])
-            request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf")
+            downloaded_text.append(parse_qs(request.request.post_data)["text"][0])
+            if len(downloaded_text) == 1:
+                request.fulfill(body=b"%PDF-1.4\nfixture", content_type="application/pdf",
+                                headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"'})
+            else:
+                request.fulfill(status=422, json={"detail": "The BRD draft is too long."})
         elif path == "/api/workspace/rules":
             request.fulfill(json={"business_rules": []})
         elif path == "/api/auth/profile":
@@ -68,9 +71,11 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         with page.expect_download() as download_info:
             page.locator("#download-brd-draft").click()
         download = download_info.value
-        assert download.suggested_filename == "Requirements-proposed-brd.pdf"
+        assert download.suggested_filename == "proposed-brd.pdf"
         assert Path(download.path()).read_bytes().startswith(b"%PDF-")
         assert downloaded_text == ["Reviewed BRD correction"]
+        page.locator("#download-brd-draft").click()
+        playwright.expect(page.locator("#status")).to_have_text("The BRD draft is too long.")
         page.locator("#file-remove").click()
         playwright.expect(panel).to_be_hidden()
         browser.close()

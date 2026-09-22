@@ -7,9 +7,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from fastapi.responses import Response
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import ValidationError
 
 from app.agents.context_converter_agent import ContextConverterAgent
 from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
@@ -43,10 +43,6 @@ router = APIRouter(prefix="/api/workflow", tags=["Five-stage workflow"])
 
 class ExecutionPlanRequest(SuiteRequest):
     request: GenerateRequest
-
-
-class BrdDraftRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=50000)
 
 
 Config = Annotated[Settings, Depends(get_settings)]
@@ -102,9 +98,9 @@ async def validate_requirements(request: GenerateRequest, settings: Config) -> R
 
 
 @router.post("/brd/pdf")
-async def download_brd_draft(request: BrdDraftRequest) -> Response:
+async def download_brd_draft(text: Annotated[str, Form(min_length=1, max_length=50000)]) -> Response:
     return Response(
-        content=brd_draft_to_pdf(request.text),
+        content=brd_draft_to_pdf(text),
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="proposed-brd.pdf"'},
     )

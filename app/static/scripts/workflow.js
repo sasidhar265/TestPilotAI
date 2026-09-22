@@ -333,24 +333,34 @@
         event.currentTarget.setAttribute("aria-expanded", String(!preview.hidden));
         if (!preview.hidden) panel.querySelector("#brd-draft-text").focus();
       };
-      panel.querySelector("#download-brd-draft").onclick = async (event) => {
-        const button = event.currentTarget;
-        button.disabled = true;
-        try {
-          const response = await api("/api/workflow/brd/pdf", {
-            text: panel.querySelector("#brd-draft-text").value,
-          });
-          const url = URL.createObjectURL(await response.blob());
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.pdf`;
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (error) {
-          status(error.message);
-        } finally {
-          button.disabled = false;
-        }
+      panel.querySelector("#download-brd-draft").onclick = () => {
+        const frame = document.createElement("iframe");
+        frame.name = `brd-download-${crypto.randomUUID()}`;
+        frame.hidden = true;
+        frame.onload = () => {
+          const body = frame.contentDocument?.body?.textContent?.trim();
+          if (!body) return;
+          try {
+            const detail = JSON.parse(body).detail;
+            status(typeof detail === "string" ? detail : "PDF download failed. Review the BRD draft and try again.");
+          } catch {
+            status("PDF download failed. Review the BRD draft and try again.");
+          }
+        };
+        document.body.append(frame);
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = "/api/workflow/brd/pdf";
+        form.target = frame.name;
+        form.hidden = true;
+        const field = document.createElement("textarea");
+        field.name = "text";
+        field.value = panel.querySelector("#brd-draft-text").value;
+        form.append(field);
+        document.body.append(form);
+        form.submit();
+        form.remove();
+        setTimeout(() => frame.remove(), 60000);
       };
     }
     if (report.status !== "aligned") {
