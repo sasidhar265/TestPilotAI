@@ -6,9 +6,12 @@ let suite = null,
   stepDefinitionArtifact = null,
   attachedFile = null,
   activeGeneration = null,
+  generationSubmitPending = false,
   executionSummary = null,
   defectDrafts = [],
   activeLifecycleTimer = null,
+  activeLifecycleRequestId = null,
+  lifecyclePollPromise = null,
   lifecycleSequence = 0,
   generationOverlayTimer = null,
   runtimeDetails = null,
@@ -530,7 +533,7 @@ function syncGenerateAvailability() {
   const hasInput = Boolean(attachedFile || $("description").value.trim()),
     modelUnavailable = ["checking", "blocked"].includes($("llm-model").dataset.access);
   $("generate").disabled =
-    Boolean(activeGeneration) ||
+    Boolean(activeGeneration || generationSubmitPending) ||
     !hasInput ||
     (!document.querySelector(".stage-workspace") && modelUnavailable);
 }
@@ -592,9 +595,10 @@ function lifecycleItem(event) {
   return item;
 }
 function renderLifecycleEvents(events) {
-  if (events.length) $("generation-background-events").querySelector(".empty-event")?.remove();
   events.forEach((event) => {
-    lifecycleSequence = Math.max(lifecycleSequence, event.sequence);
+    if (event.sequence <= lifecycleSequence) return;
+    $("generation-background-events").querySelector(".empty-event")?.remove();
+    lifecycleSequence = event.sequence;
     $("live-agent-events").append(lifecycleItem(event));
     $("generation-background-events").append(lifecycleItem(event));
   });
@@ -602,12 +606,16 @@ function renderLifecycleEvents(events) {
   $("generation-background-events").scrollTop = $("generation-background-events").scrollHeight;
 }
 async function pollLifecycle(requestId) {
+  if (requestId !== activeLifecycleRequestId) return;
+  if (lifecyclePollPromise) return lifecyclePollPromise;
+  const poll = (async () => {
   try {
     const response = await fetch(
       `/api/generation/${encodeURIComponent(requestId)}/events?after=${lifecycleSequence}`,
     );
     if (!response.ok) return;
     const data = await response.json();
+    if (requestId !== activeLifecycleRequestId) return;
     renderLifecycleEvents(data.events || []);
     if (data.complete) {
       $("live-agent-feed-state").textContent = "COMPLETE";
@@ -625,9 +633,18 @@ async function pollLifecycle(requestId) {
       }
     }
   } catch {}
+  })();
+  lifecyclePollPromise = poll;
+  try {
+    await poll;
+  } finally {
+    if (lifecyclePollPromise === poll) lifecyclePollPromise = null;
+  }
 }
 function startLifecycleFeed(requestId) {
   if (activeLifecycleTimer) clearInterval(activeLifecycleTimer);
+  activeLifecycleRequestId = requestId;
+  lifecyclePollPromise = null;
   resetLifecycleFeed();
   addNotification(
     "Generation started",
@@ -639,9 +656,14 @@ function startLifecycleFeed(requestId) {
   activeLifecycleTimer = setInterval(() => pollLifecycle(requestId), 500);
 }
 async function stopLifecycleFeed(requestId) {
+  if (requestId !== activeLifecycleRequestId) return;
   if (activeLifecycleTimer) clearInterval(activeLifecycleTimer);
   activeLifecycleTimer = null;
+  if (lifecyclePollPromise) await lifecyclePollPromise;
+  if (requestId !== activeLifecycleRequestId) return;
   await pollLifecycle(requestId);
+  if (requestId !== activeLifecycleRequestId) return;
+  activeLifecycleRequestId = null;
   if ($("live-agent-feed-state").textContent === "RUNNING")
     $("live-agent-feed-state").textContent = "STOPPED";
   if ($("generation-background-state").textContent === "RUNNING")
@@ -844,10 +866,15 @@ $("upload-zone").addEventListener("drop", (e) => {
 });
 $("generate-form").addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (generationSubmitPending || activeGeneration) return;
+  generationSubmitPending = true;
+  syncGenerateAvailability();
   const selectedFile = attachedFile,
     description = $("description").value.trim();
   if (!selectedFile && description.length < 10) {
     $("status").textContent = "Paste at least 10 characters or select a supported document.";
+    generationSubmitPending = false;
+    syncGenerateAvailability();
     return;
   }
   let businessRules;
@@ -856,6 +883,8 @@ $("generate-form").addEventListener("submit", async (e) => {
   } catch (error) {
     $("status").textContent = error.message;
     $("rule-control").open = true;
+    generationSubmitPending = false;
+    syncGenerateAvailability();
     return;
   }
   setWorkflowStage(1);
@@ -942,6 +971,7 @@ $("generate-form").addEventListener("submit", async (e) => {
     clearInterval(ticker);
     await stopLifecycleFeed(requestId);
     activeGeneration = null;
+    generationSubmitPending = false;
     syncGenerateAvailability();
     $("stop-generation").classList.add("hidden");
     hideGenerationOverlay();
