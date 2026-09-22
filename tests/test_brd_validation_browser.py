@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 import pytest
 from pypdf import PdfReader
 
+from app.services.document_ingestion import DocumentIngestionService
+
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
 def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
@@ -71,12 +73,22 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         assert download.suggested_filename == "Requirements-proposed-brd.pdf"
         payload = Path(download.path()).read_bytes()
         assert payload.startswith(b"%PDF-")
-        assert len(PdfReader(download.path()).pages) == 1
+        first_pdf = PdfReader(download.path())
+        assert len(first_pdf.pages) == 1
+        assert "Reviewed BRD correction" in first_pdf.pages[0].extract_text()
+        extracted = DocumentIngestionService().extract("proposed-brd.pdf", payload)
+        assert "Reviewed BRD correction" in extracted.text
         assert not endpoint_calls
-        page.locator("#brd-draft-text").fill("Reviewed requirement with café terms.\n" * 100)
+        page.locator("#brd-draft-text").fill("Reviewed requirement with café terms • approved.\n" * 100)
         with page.expect_download() as longer_download:
             page.locator("#download-brd-draft").click()
-        assert len(PdfReader(longer_download.value.path()).pages) > 1
+        longer_pdf = PdfReader(longer_download.value.path())
+        assert len(longer_pdf.pages) > 1
+        assert "café" in longer_pdf.pages[0].extract_text()
+        assert "•" in longer_pdf.pages[0].extract_text()
+        assert "café" in DocumentIngestionService().extract(
+            "proposed-brd.pdf", Path(longer_download.value.path()).read_bytes()
+        ).text
         assert urlparse(page.url).path == "/"
         page.locator("#brd-draft-text").fill(" ")
         page.locator("#download-brd-draft").click()
