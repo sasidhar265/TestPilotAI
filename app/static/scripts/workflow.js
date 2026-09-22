@@ -176,8 +176,11 @@
     sync();
   }
   let revision = 0;
+  let latestBrdText = null;
   function sourceChanged() {
     revision += 1;
+    latestBrdText = null;
+    $("requirements-validation-report").hidden = true;
     if (!state.request) return;
     invalidate(1);
     status("Requirements changed. Generate stories again to refresh downstream stages.");
@@ -296,6 +299,7 @@
       description = [description, result.description].filter(Boolean).join("\n\n");
       uploadedBrdText = result.description;
       uploadedBrdReceipt = result.uploaded_brd_receipt;
+      latestBrdText = uploadedBrdText;
     }
     if (description.length < 10)
       throw new Error("Enter at least 10 characters or attach a readable BRD.");
@@ -311,7 +315,34 @@
     const panel = $("requirements-validation-report");
     panel.hidden = false;
     panel.dataset.status = report.status;
-    panel.innerHTML = `<strong>${esc(report.message)}</strong><ul>${(report.findings || []).map((finding) => `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p>${finding.suggested_change ? `<p>Next step: ${esc(finding.suggested_change)}</p>` : ""}${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`).join("")}</ul><small>Business alignment assessment · Regulatory compliance not assessed.</small>`;
+    const brdText = latestBrdText || (attachedFile ? Object.values(report.requirements || {}).join("\n") : "");
+    const findings = (report.findings || []).filter((finding) => finding.status !== "aligned");
+    const suggestions = findings.map((finding) => `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p><p><strong>Suggested fix:</strong> ${esc(finding.suggested_change || "Review this requirement with the business owner and clarify the expected behavior.")}</p>${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`).join("");
+    const uploadHelp = report.message.includes("verification failed")
+      ? "The uploaded document could not be verified. Re-upload the BRD and validate again."
+      : "Review the suggested changes with the business owner, update the BRD, then upload it and validate again.";
+    const showDraft = report.status === "blocked" && Boolean(brdText);
+    panel.innerHTML = `<strong>${esc(report.message)}</strong>${report.status === "blocked" ? `<div class="requirements-fix-guidance"><h4>How to fix the BRD</h4><p>${esc(uploadHelp)}</p>${suggestions ? `<ul>${suggestions}</ul>` : ""}</div>` : ""}${showDraft ? `<div class="requirements-draft-actions"><button type="button" class="secondary" id="preview-brd-draft" aria-expanded="false" aria-controls="brd-draft-preview">Preview proposed BRD</button><button type="button" class="secondary" id="download-brd-draft">Download proposed BRD</button></div><div id="brd-draft-preview" hidden><label for="brd-draft-text">Proposed BRD draft · review and edit before download</label><textarea id="brd-draft-text" spellcheck="true"></textarea><small>Suggestions are review notes. The extracted requirement text is preserved until you edit this draft.</small></div>` : ""}<small>Business alignment assessment · Regulatory compliance not assessed.</small>`;
+    if (showDraft) {
+      const notes = findings.map((finding) => `### ${finding.requirement_id} · ${finding.status}\nCurrent requirement: ${report.requirements?.[finding.requirement_id] || "See the original BRD"}\nReason: ${finding.reason}\nSuggested fix: ${finding.suggested_change || "Clarify the expected behavior with the business owner."}`).join("\n\n");
+      const draft = `# Proposed BRD revision\n\n## Extracted requirements\n\n${brdText}\n\n## Validation review notes\n\n${notes || uploadHelp}\n`;
+      const preview = panel.querySelector("#brd-draft-preview");
+      panel.querySelector("#brd-draft-text").value = draft;
+      panel.querySelector("#preview-brd-draft").onclick = (event) => {
+        preview.hidden = !preview.hidden;
+        event.currentTarget.setAttribute("aria-expanded", String(!preview.hidden));
+        if (!preview.hidden) panel.querySelector("#brd-draft-text").focus();
+      };
+      panel.querySelector("#download-brd-draft").onclick = () => {
+        const file = new Blob([panel.querySelector("#brd-draft-text").value], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.md`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+    }
     if (report.status !== "aligned") {
       state.plan = null;
       sync();

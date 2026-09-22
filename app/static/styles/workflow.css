@@ -529,4 +529,11 @@
 #requirements-validation-report ul { padding-left: 20px; }
 #requirements-validation-report li { margin-bottom: 12px; }
 #requirements-validation-report blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--primary); }
+.requirements-fix-guidance { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.requirements-fix-guidance h4 { margin: 0 0 6px; font-size: 12px; }
+.requirements-draft-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+#brd-draft-preview { margin: 12px 0; }
+#brd-draft-preview label { display: block; margin-bottom: 8px; font-weight: 700; }
+#brd-draft-text { width: 100%; min-height: 260px; box-sizing: border-box; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); font: 12px/1.5 "SFMono-Regular", Consolas, monospace; }
+#brd-draft-preview small { display: block; margin-top: 6px; color: var(--muted); }
 #requirements-validation-report[hidden] { display: none; }
