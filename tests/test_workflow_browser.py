@@ -167,10 +167,24 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             pw.expect(page.locator("#stop-generation")).to_be_hidden()
 
         page.goto("http://localhost/")
+        page.locator("#finance-explore").click()
+        pw.expect(page.locator('[data-finance-product="PCP"]')).to_be_focused()
+        page.locator('[data-finance-product="BCH"]').focus()
+        page.keyboard.press("Enter")
+        pw.expect(page.locator("#finance-product-name")).to_have_text("Business Contract Hire")
+        pw.expect(page.locator('[data-finance-product="BCH"]')).to_have_attribute(
+            "aria-pressed", "true"
+        )
+        pw.expect(page.locator("#description")).to_have_value("")
+        page.locator("#finance-start").click()
+        pw.expect(page.locator("#description")).to_be_focused()
+        page.locator('[data-finance-product="PCP"]').click()
         pw.expect(page.get_by_role("tab")).to_have_count(0)
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         page.screenshot(path="/tmp/workflow-input.png", full_page=True)
-        pw.expect(page.get_by_role("heading", name="What should we test?")).to_be_visible()
+        pw.expect(
+            page.get_by_role("heading", name="Which finance requirement should we test?")
+        ).to_be_visible()
         for control in ("output-target", "manual-testing-type", "llm-model"):
             pw.expect(page.locator(f"#generate-form #{control}")).to_be_visible()
         page.set_viewport_size({"width": 390, "height": 844})
@@ -260,7 +274,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.locator("#story-cards")).to_contain_text("ST-001")
         pw.expect(page.locator("#stage-status")).to_contain_text("Stories ready")
         first_story = page.locator('[data-story-index="0"]')
-        pw.expect(page.locator("#stage-stories")).to_be_enabled()
+        pw.expect(page.locator("#stage-stories")).to_be_disabled()
         pw.expect(page.locator("#story-jira-open")).to_be_disabled()
         pw.expect(page.locator("#review-stories")).to_be_disabled()
         page.locator("#select-all-stories").uncheck()
@@ -294,8 +308,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.locator("#stage-stories")).to_be_disabled()
         pw.expect(page.locator("#stage-stories")).to_have_attribute(
             "title",
-            "Stories are approved. Continue to scenarios, "
-            "or change the requirements to create new stories.",
+            "Stories are already created. Change the requirements to create new stories.",
         )
         page.locator("#select-all-stories").uncheck()
         first_story.locator(".story-check").check()
@@ -402,6 +415,19 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 "#review-cases", "/api/workflow/execution-plan", "Preparing the execution plan"
             )
             pw.expect(page.locator("#stage-execution-list")).to_contain_text("generated.feature")
+            page.locator("#stage-tab-4").click()
+            stage_popup(
+                "#stage-tab-5",
+                "/api/workflow/execution-plan",
+                "Preparing the execution plan",
+                fail=True,
+            )
+            pw.expect(page.locator("#stage-run")).to_be_disabled()
+            page.locator("#stage-tab-4").click()
+            stage_popup(
+                "#stage-tab-5", "/api/workflow/execution-plan", "Preparing the execution plan"
+            )
+            pw.expect(page.locator("#stage-run")).to_be_enabled()
             stage_popup(
                 "#stage-run",
                 "/api/workflow/execute",

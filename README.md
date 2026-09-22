@@ -1,6 +1,12 @@
-# Quality Lifecycle Studio
+# Auto Finance Quality
 
-Governed agentic test design from requirements to accepted quality artifacts.
+Automobile finance test design from quotation requirements to reviewed execution evidence.
+
+The workspace is tailored to vehicle finance quotation testing, with guidance for PCP, HP, LP,
+PCH, BCH, PFL and BFL. Its existing `auto-finance-quotation` profile supplies the domain baseline;
+current requirements and approved contracts remain authoritative. The product guide is reference
+material and does not silently insert business rules, financial formulas or request fields.
+Credit decisioning, contracting and servicing require separately supplied requirements.
 
 Validated cases can also produce [JMeter and SQL/Oracle test script packs](docs/test-script-packs.md).
 The execution dashboard provides run summaries, test-level evidence and filtered CSV exports.

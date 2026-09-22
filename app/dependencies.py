@@ -4,6 +4,7 @@ from app.agent_runtime import AgentRuntime
 from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.output_agent import OutputAgent
 from app.agents.reqnroll_step_definition_agent import ReqnRollStepDefinitionAgent
+from app.agents.requirements_validation import RequirementsValidationAgent
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.config import Settings, get_settings
@@ -36,7 +37,7 @@ def get_test_generation_service(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
     )
-    return TestGenerationService(registry, memory)
+    return TestGenerationService(registry, memory, RequirementsValidationAgent(settings))
 
 
 def get_requirement_to_test_case_service(
@@ -47,7 +48,7 @@ def get_requirement_to_test_case_service(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
     )
-    return RequirementToTestCaseService(registry, memory)
+    return RequirementToTestCaseService(registry, memory, RequirementsValidationAgent(settings))
 
 
 def get_multi_agent_pipeline(
@@ -71,4 +72,6 @@ def get_multi_agent_pipeline(
         if settings.model_directed_runtime_enabled
         else None
     )
-    return MultiAgentTestPipeline(input_agent, generator, validator, storage, runtime)
+    return MultiAgentTestPipeline(
+        input_agent, generator, validator, storage, runtime, RequirementsValidationAgent(settings)
+    )

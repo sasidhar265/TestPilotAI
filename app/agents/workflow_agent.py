@@ -5,6 +5,7 @@ import json
 from app.agent_instructions import load_agent_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
+from app.agents.requirements_validation import RequirementsValidationAgent
 from app.agents.runner import StructuredAgentDefinition
 from app.agents.workflow_knowledge_agent import WorkflowKnowledgeAgent
 from app.config import Settings
@@ -16,8 +17,11 @@ class WorkflowAgent:
     def __init__(self, settings: Settings):
         self.runner = ArtifactGenerationRunner(settings)
         self.knowledge = WorkflowKnowledgeAgent(settings)
+        self.requirements_validator = RequirementsValidationAgent(settings)
 
     async def stories(self, request: GenerateRequest) -> Stories:
+        await self.requirements_validator.require(request)
+
         def validate(result: Stories) -> Stories:
             StoryHandoff(request=request, stories=result)
             return result
@@ -43,6 +47,16 @@ class WorkflowAgent:
         return result
 
     async def scenarios(self, handoff: StoryHandoff) -> Scenarios:
+        await self.requirements_validator.require(
+            handoff.request.model_copy(
+                update={
+                    "additional_context": handoff.request.additional_context
+                    + "\n"
+                    + handoff.stories.model_dump_json()
+                }
+            )
+        )
+
         def validate(result: Scenarios) -> Scenarios:
             ScenarioHandoff(request=handoff.request, stories=handoff.stories, scenarios=result)
             return result

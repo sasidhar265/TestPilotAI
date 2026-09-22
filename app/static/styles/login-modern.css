@@ -1,0 +1,182 @@
+/* Keep the sign-in experience in the same visual system as the finance workspace. */
+:root:not([data-theme="dark"]) {
+  --bg: #f1f5f8;
+  --ink: #172d43;
+  --ink-soft: #30485e;
+  --muted: #617487;
+  --primary: #087e83;
+  --primary-dark: #08676c;
+  --primary-soft: #e2f3f1;
+  --surface-tint: #edf6f7;
+  --line: #dce6ec;
+  --line-strong: #c6d6e0;
+}
+:root[data-theme="dark"] {
+  --bg: #0c1622;
+  --surface: #142333;
+  --surface-soft: #192c3e;
+  --surface-tint: #1a3241;
+  --primary: #70d7cd;
+  --primary-dark: #94e7df;
+  --primary-soft: #1b3b42;
+  --line: #294050;
+  --line-strong: #3b5769;
+}
+body {
+  background: var(--bg);
+}
+.login-shell {
+  width: min(1240px, calc(100% - 48px));
+  min-height: min(760px, calc(100dvh - 64px));
+  margin: 32px auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  border-radius: 24px;
+  box-shadow: 0 16px 48px #16334d18;
+}
+.product-story {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(30px, 4vw, 58px);
+  color: #f5fcff;
+  background: radial-gradient(ellipse at 95% 0%, #17575a 0%, transparent 55%),
+    linear-gradient(120deg, #10263e, #0a1c2b);
+}
+.product-story::after {
+  position: absolute;
+  z-index: -1;
+  right: -110px;
+  bottom: 90px;
+  width: 350px;
+  height: 350px;
+  border: 1px solid #8fe4dc24;
+  border-radius: 50%;
+  box-shadow: 0 0 0 45px #8fe4dc08, 0 0 0 90px #8fe4dc05;
+  content: "";
+}
+.product-story .brand-mark {
+  background: linear-gradient(145deg, #0d3349, #0b9994);
+  box-shadow: 0 5px 14px #0b7e832b;
+}
+.product-story .brand small,
+.product-story .story-copy p,
+.product-story .trust small {
+  color: #b9d0dd;
+}
+.product-story .story-copy {
+  margin: 38px 0 0;
+}
+.product-story .eyebrow {
+  color: #88dbd3;
+}
+.product-story .eyebrow span {
+  margin-right: 6px;
+  font-size: 1.1rem;
+}
+.story-copy h1 {
+  max-width: 590px;
+  font-size: clamp(2.6rem, 4vw, 4.2rem);
+  line-height: 1.07;
+  letter-spacing: -0.05em;
+}
+.story-copy p {
+  max-width: 490px;
+  font-size: 0.86rem;
+  line-height: 1.8;
+}
+.login-vehicle {
+  width: min(520px, 100%);
+  margin: 4px auto -12px;
+  text-align: center;
+}
+.login-vehicle span {
+  color: #91c2c5;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+}
+.login-vehicle svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 26px #4fd3c21a);
+}
+.agent-flow {
+  margin-top: auto;
+  gap: 20px;
+  color: #9dbac8;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+}
+.agent-flow span {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.trust {
+  margin-top: 20px;
+}
+.trust > span {
+  color: #8be4d8;
+  background: #8be4d820;
+}
+.login-panel {
+  padding: clamp(32px, 5vw, 72px);
+}
+.login-panel .eyebrow {
+  color: var(--primary);
+}
+.login-panel input:focus {
+  box-shadow: 0 0 0 4px #087e8326;
+}
+#login-button {
+  color: #fff;
+  background: #087e83;
+  box-shadow: 0 9px 24px #087e8333;
+}
+#login-button:hover {
+  background: #08676c;
+}
+.auth-overlay.help .auth-error-icon {
+  background: linear-gradient(145deg, #0d3349, #0b9994);
+  box-shadow: 0 10px 24px #087e8333;
+}
+.auth-overlay.help .auth-dialog-button {
+  background: #087e83;
+  box-shadow: 0 9px 24px #087e8333;
+}
+@media (max-width: 800px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+  .product-story {
+    min-height: 0;
+  }
+  .login-vehicle {
+    max-width: 420px;
+  }
+}
+@media (max-width: 520px) {
+  .login-shell {
+    width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+  .product-story {
+    padding: 28px 22px;
+  }
+  .story-copy h1 {
+    font-size: clamp(2.25rem, 10vw, 2.8rem);
+  }
+  .login-vehicle {
+    margin-bottom: -22px;
+  }
+  .agent-flow {
+    gap: 14px;
+  }
+  .theme-settings {
+    position: static;
+    padding: 0 22px 22px;
+    background: var(--surface);
+  }
+}

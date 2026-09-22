@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>AI Quality Lifecycle — Governed quality engineering</title>
+    <title>Auto Finance Quality — Governed quality engineering</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/index.css?v=20260916-final-ui" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
@@ -16,17 +16,20 @@
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260920-governed-note" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260921-requirements-gate" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260922-failures" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
         <div class="sidebar-header">
-          <a class="brand" href="/" aria-label="Quality Lifecycle Studio home">
+          <a class="brand" href="/" aria-label="Auto Finance Quality home">
             <span class="brand-mark" aria-hidden="true">Q</span>
             <span
-              ><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
             > </a
           ><button
             class="sidebar-toggle"
@@ -45,6 +48,9 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
+            <a class="nav-item" href="/project-dashboard"
+              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
+            >
             <a class="nav-item active" href="/" aria-current="page"
               ><span class="nav-icon">✦</span><span>Quality workspace</span></a
             >
@@ -109,8 +115,8 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <div class="eyebrow">AI quality lifecycle workspace</div>
-            <h1>Design trusted quality coverage with AI agents.</h1>
+            <div class="eyebrow">Automobile finance · Quality workspace</div>
+            <h1>Build confidence in every vehicle finance quote.</h1>
           </div>
           <div class="top-actions">
             <span class="runtime-pill" id="runtime-health">● Checking service…</span>
@@ -181,6 +187,106 @@
         </header>
 
         <div data-workspace-page="/">
+          <section class="finance-hero" aria-labelledby="finance-hero-title">
+            <div class="finance-hero-copy">
+              <span class="finance-eyebrow"
+                ><span aria-hidden="true">✦</span> AUTOMOBILE FINANCE INTELLIGENCE</span
+              >
+              <h2 id="finance-hero-title">Every journey starts<br />with a confident quote.</h2>
+              <p>
+                Bring your finance requirements into focus. Build traceable coverage from the first
+                business rule to the final test result.
+              </p>
+              <div class="finance-hero-actions">
+                <button type="button" id="finance-start">
+                  Create test coverage <span aria-hidden="true">↗</span>
+                </button>
+                <button type="button" id="finance-explore">
+                  Explore products <span aria-hidden="true">↓</span>
+                </button>
+              </div>
+              <div class="finance-hero-tags">
+                <span>01 / Define</span><span>02 / Review</span><span>03 / Execute</span>
+              </div>
+            </div>
+            <div class="finance-visual" aria-hidden="true">
+              <div class="finance-orbit"></div>
+              <span class="finance-visual-label">PRECISION AT EVERY TURN</span>
+              <svg viewBox="0 0 500 240" fill="none">
+                <ellipse cx="255" cy="198" rx="207" ry="17" fill="#020e1c" opacity=".5" />
+                <path
+                  d="M43 159 59 130 125 117 181 69Q197 58 222 58H304Q327 59 350 84L391 118 439 134 454 165 445 180H55Z"
+                  fill="#143c50"
+                  stroke="#82e4db"
+                  stroke-width="2"
+                />
+                <path
+                  d="m143 116 50-43h40v43Zm102-43h57q15 0 31 17l27 26H245Z"
+                  fill="#092432"
+                  stroke="#4ca59f"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="m58 138 56-9m287 6 32 11M166 151h178m-108-26v49m137-52 13 52"
+                  stroke="#64b9b8"
+                  stroke-width="2"
+                />
+                <path d="m58 143 31-4-7 11-29 3m368-9 20 9" stroke="#defff9" stroke-width="4" />
+                <circle cx="129" cy="177" r="31" fill="#081a2b" stroke="#a5dedb" stroke-width="3" />
+                <circle cx="129" cy="177" r="16" stroke="#5f949c" stroke-width="7" />
+                <circle cx="371" cy="177" r="31" fill="#081a2b" stroke="#a5dedb" stroke-width="3" />
+                <circle cx="371" cy="177" r="16" stroke="#5f949c" stroke-width="7" />
+              </svg>
+              <div class="finance-visual-note">
+                <span>◇</span>
+                <div>
+                  <strong>Built around your rules</strong
+                  ><small>Products · Pricing · Evidence</small>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="finance-explorer" aria-labelledby="finance-explorer-title">
+            <div class="finance-explorer-heading">
+              <div>
+                <span class="section-kicker">PRODUCT SPOTLIGHT</span>
+                <h2 id="finance-explorer-title">One workspace. Every finance product.</h2>
+              </div>
+              <span class="finance-reference-label">Coverage reference</span>
+            </div>
+            <div class="finance-product-picker" role="group" aria-label="Explore finance products">
+              <button type="button" data-finance-product="PCP" aria-pressed="true">PCP</button>
+              <button type="button" data-finance-product="HP" aria-pressed="false">HP</button>
+              <button type="button" data-finance-product="LP" aria-pressed="false">LP</button>
+              <button type="button" data-finance-product="PCH" aria-pressed="false">PCH</button>
+              <button type="button" data-finance-product="BCH" aria-pressed="false">BCH</button>
+              <button type="button" data-finance-product="PFL" aria-pressed="false">PFL</button>
+              <button type="button" data-finance-product="BFL" aria-pressed="false">BFL</button>
+            </div>
+            <div class="finance-product-detail" aria-live="polite" aria-atomic="true">
+              <div>
+                <span id="finance-product-category">PURCHASE FINANCE</span>
+                <h3 id="finance-product-name">Personal Contract Purchase</h3>
+                <p id="finance-product-description">
+                  Follow the quotation from regular instalments to guaranteed future value and
+                  optional final payment.
+                </p>
+              </div>
+              <div>
+                <span class="finance-focus-label">TEST FOCUS</span>
+                <ul id="finance-product-focus">
+                  <li>Deposit, term and mileage</li>
+                  <li>GFV and optional final payment</li>
+                  <li>Total charge and payable</li>
+                </ul>
+              </div>
+            </div>
+            <p class="finance-reference-note">
+              Use approved configuration and calculation examples. Exploring a product leaves your
+              requirements unchanged.
+            </p>
+          </section>
+
           <section class="stage-workspace" aria-label="Requirements to execution" hidden>
             <div class="stage-tabs" role="tablist" aria-label="Quality workflow stages">
               <button
@@ -437,12 +543,12 @@
           <section class="studio-layout">
             <aside class="context-panel workspace-context-bar" aria-label="Runtime context">
               <div class="workspace-context-intro">
-              <div class="context-head">
-                <span class="section-kicker">Active workspace</span
-                ><span class="live-badge">LIVE</span>
-              </div>
-              <h2>AI Quality Lifecycle Agent</h2>
-              <p>Requirement-grounded quality design with governed AI execution.</p>
+                <div class="context-head">
+                  <span class="section-kicker">Active workspace</span
+                  ><span class="live-badge">LIVE</span>
+                </div>
+                <h2>Auto Finance Quality Agent</h2>
+                <p>Quotation requirements, reviewed coverage and execution evidence.</p>
               </div>
               <dl class="context-list">
                 <div>
@@ -475,33 +581,74 @@
               <div class="panel-head">
                 <div>
                   <span class="section-kicker">New test suite</span>
-                  <h2>What should we test?</h2>
+                  <h2>Which finance requirement should we test?</h2>
                   <p>
-                    Paste a requirement or attach a project document. The AI Quality Lifecycle Agent
-                    will guide you through stories, scenarios, test cases and execution.
+                    Paste a vehicle finance requirement or attach your quotation BRD. Review
+                    stories, scenarios and test cases, then capture execution evidence.
                   </p>
                 </div>
                 <span class="secure">PRIVATE BY DESIGN</span>
               </div>
 
-              <div class="trust-note">
-                <span>✓</span>
+              <details class="finance-guide">
+                <summary>Automobile finance coverage guide</summary>
                 <p>
-                  <strong>Governed generation</strong> Requirements are validated against typed
-                  schemas and the active Quality Gate.
+                  Use the quotation catalogue below to scope your requirements. Product availability
+                  and eligible combinations depend on your approved configuration.
                 </p>
-              </div>
+                <dl class="finance-products">
+                  <div>
+                    <dt>PCP · Personal Contract Purchase</dt>
+                    <dd>Instalments, guaranteed future value and optional final payment.</dd>
+                  </div>
+                  <div>
+                    <dt>HP · Hire Purchase</dt>
+                    <dd>Amount financed, instalments, applicable fees and total payable.</dd>
+                  </div>
+                  <div>
+                    <dt>LP · Lease Purchase</dt>
+                    <dd>Instalments, balloon payment and financial reconciliation.</dd>
+                  </div>
+                  <div>
+                    <dt>PCH · Personal Contract Hire</dt>
+                    <dd>Initial and regular rentals, mileage, maintenance and VAT.</dd>
+                  </div>
+                  <div>
+                    <dt>BCH · Business Contract Hire</dt>
+                    <dd>Rental net, VAT and gross values with approved business eligibility.</dd>
+                  </div>
+                  <div>
+                    <dt>PFL · Personal Finance Lease</dt>
+                    <dd>Approved rental structure, maintenance and applicable final rental.</dd>
+                  </div>
+                  <div>
+                    <dt>BFL · Business Finance Lease</dt>
+                    <dd>Finance amount, rentals, residual or balloon and applicable VAT.</dd>
+                  </div>
+                </dl>
+                <p>
+                  <strong>Review coverage:</strong> vehicle and product eligibility; deposit, term
+                  and mileage boundaries; effective-dated rates and campaigns; residual values;
+                  maintenance; fees; decimal precision; safe errors and audit evidence.
+                </p>
+                <p>
+                  <strong>Supply approved expectations:</strong> calculation examples, rounding
+                  rules, response mappings and permitted combinations. Product codes alone do not
+                  establish regulatory treatment. This reference does not add rules to your
+                  requirement.
+                </p>
+              </details>
 
               <form id="generate-form">
                 <label class="field-label" for="description"
-                  >Requirement or acceptance criteria</label
+                  >Finance requirement or acceptance criteria</label
                 >
                 <div class="textarea-wrap">
                   <textarea
                     id="description"
                     minlength="10"
                     aria-describedby="description-help"
-                    placeholder="Example: Generate positive, negative and boundary coverage for this feature…"
+                    placeholder="Example: Test PCP quotation validation for deposit, term and annual mileage using the approved limits, request contract and expected financial results…"
                   ></textarea>
                   <span class="file-preview attached-requirement hidden" id="file-preview"
                     ><span class="file-badge" id="file-type"></span
@@ -592,9 +739,15 @@
                   </div>
                 </div>
                 <p class="field-help" id="description-help">
-                  Use business language. The active workspace profile supplies governed quality
-                  rules.
+                  Include the finance product, customer context, vehicle details and approved
+                  business rules. Supply expected calculations and limits where applicable.
                 </p>
+
+                <section class="requirements-check" aria-labelledby="requirements-check-title">
+                  <div><h3 id="requirements-check-title">Business alignment gate</h3><p>Requirements must align with approved business sources before stories, test cases or generated-suite execution can proceed.</p></div>
+                  <button class="secondary" id="validate-requirements" type="button">Validate requirements</button>
+                  <div id="requirements-validation-report" role="status" aria-live="polite" hidden></div>
+                </section>
 
                 <details class="rule-control" id="rule-control">
                   <summary>
@@ -609,7 +762,7 @@
                       <textarea
                         id="business-rules"
                         maxlength="200000"
-                        placeholder="BR-CUSTOM-001: Requests must reject invalid or expired input.&#10;BR-CUSTOM-002: Every response must include a correlation ID."
+                        placeholder="Use your approved rule IDs and wording, including deposit and term limits, effective-dated pricing, rounding and expected quotation errors."
                       ></textarea>
                       <span
                         class="file-preview attached-rule-document hidden"
@@ -743,7 +896,10 @@
                 <ol id="agent-workflow-steps" aria-label="Selected testing workflow"></ol>
                 <div class="agent-route-note">
                   <span aria-hidden="true">◇</span>
-                  <p><strong>Quality gates, built in.</strong><br />Specialist agents validate outputs before the next stage.</p>
+                  <p>
+                    <strong>Quality gates, built in.</strong><br />Specialist agents validate
+                    outputs before the next stage.
+                  </p>
                 </div>
               </section>
             </div>
@@ -857,7 +1013,9 @@
                     <span aria-hidden="true">▾</span>
                   </div>
                   <details class="suite-menu" id="suite-view-menu">
-                    <summary class="secondary" id="suite-view-trigger" data-automation-control>View <span aria-hidden="true">▾</span></summary>
+                    <summary class="secondary" id="suite-view-trigger" data-automation-control>
+                      View <span aria-hidden="true">▾</span>
+                    </summary>
                     <div class="suite-menu-options" aria-label="View generated files">
                       <button id="view-feature" type="button" data-automation-control>
                         .feature <span>Feature file</span>
@@ -913,7 +1071,13 @@
                       </div>
                     </div>
                   </details>
-                  <button id="open-script-pack" class="secondary" type="button" disabled data-automation-control>
+                  <button
+                    id="open-script-pack"
+                    class="secondary"
+                    type="button"
+                    disabled
+                    data-automation-control
+                  >
                     Test scripts
                   </button>
                 </div>
@@ -1001,7 +1165,93 @@
             </details>
           </section>
         </div>
+        <div data-workspace-page="/project-dashboard" hidden>
+          <section class="pm-heading">
+            <div>
+              <span class="section-kicker">MANAGEMENT OVERVIEW</span>
+              <h2>See progress. Focus the next conversation.</h2>
+              <p>Workspace quality delivery, based on recorded suite activity.</p>
+            </div>
+            <a class="secondary button" href="/">Open quality workspace ↗</a>
+          </section>
+          <section class="pm-toolbar" aria-label="Dashboard filters">
+            <label
+              >Activity period<select id="pm-period">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="0">All retained history</option>
+              </select></label
+            ><label
+              >Feature<input
+                type="search"
+                id="pm-search"
+                placeholder="Filter by feature name" /></label
+            ><button class="secondary" id="pm-refresh" type="button">Refresh dashboard</button>
+          </section>
+          <p id="pm-status" role="status" aria-live="polite">
+            Open this dashboard to load saved activity.
+          </p>
+          <div id="pm-content" hidden>
+            <div id="pm-metrics" class="pm-metrics"></div>
+            <div class="pm-columns">
+              <section class="pm-card">
+                <span class="section-kicker">RECORDED CASE OUTCOMES</span>
+                <h3>Execution evidence</h3>
+                <div id="pm-outcomes"></div>
+                <p class="pm-note">
+                  Latest recorded case execution per suite version. These results do not include
+                  repository BDD checks or infer outcomes from design validation.
+                </p>
+              </section>
+              <section class="pm-card">
+                <span class="section-kicker">NEXT CONVERSATION</span>
+                <h3>Needs attention</h3>
+                <ul id="pm-attention"></ul>
+              </section>
+            </div>
+            <section class="pm-card">
+              <div class="pm-table-heading">
+                <div>
+                  <span class="section-kicker">DELIVERY INVENTORY</span>
+                  <h3>Suite progress</h3>
+                </div>
+                <span id="pm-suite-count"></span>
+              </div>
+              <div class="pm-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Feature / version</th>
+                      <th scope="col">Cases</th>
+                      <th scope="col">Design validation</th>
+                      <th scope="col">Recorded execution</th>
+                      <th scope="col">Last activity</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pm-suites"></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="pm-card">
+              <h3>Reporting scope</h3>
+              <p id="pm-scope"></p>
+              <p class="pm-note">
+                This is a workspace overview, not a release-readiness decision. Approvals, delivery
+                owners, sprint commitments and deadlines are not available in this reporting source.
+                Different suite versions are listed separately; filtered history may omit earlier
+                evidence.
+              </p>
+              <a href="/progress">View repository BDD checks separately ↗</a>
+            </section>
+          </div>
+        </div>
         <div data-workspace-page="/progress" hidden>
+          <nav class="execution-subnav" aria-label="Progress and execution views">
+            <button type="button" class="active" data-execution-view="dashboard" aria-current="page">Dashboard</button>
+            <button type="button" data-execution-view="logs">Execution logs</button>
+          </nav>
+          <div id="progress-dashboard-view">
           <section
             class="panel workspace-page-panel"
             id="work-dashboard"
@@ -1064,7 +1314,6 @@
             <section class="bdd-history-card" aria-labelledby="bdd-history-title">
               <div class="bdd-history-heading">
                 <div>
-                  <span class="section-kicker">EXECUTION LOG</span>
                   <h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3>
                 </div>
                 <div class="bdd-history-controls">
@@ -1093,36 +1342,115 @@
             </section>
             <p id="dashboard-scope">Loading BDD execution history…</p>
           </section>
+          </div>
+          <section id="execution-logs-view" class="execution-logs-view" aria-labelledby="execution-logs-title" hidden>
+            <div class="execution-logs-heading">
+              <div><span class="section-kicker">QUALITY / EXECUTION LOGS</span><h2 id="execution-logs-title">Execution history</h2><p>Review recorded BDD runs and case execution evidence.</p></div>
+              <button class="secondary" id="execution-logs-refresh" type="button">↻ Refresh logs</button>
+            </div>
+            <div class="execution-logs-metrics" id="execution-logs-metrics" aria-label="Execution log summary"></div>
+            <div class="execution-logs-overview" id="execution-logs-overview" aria-label="Overall run outcomes"></div>
+            <div class="execution-logs-controls">
+              <label>Search <input id="execution-logs-search" type="search" placeholder="Run ID, project, case, status…" /></label>
+              <label>Type <select id="execution-logs-type"><option value="all">All executions</option><option value="repository_checks">Repository BDD</option><option value="case_execution">Case execution</option></select></label>
+              <label>Status <select id="execution-logs-status"><option value="all">All statuses</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option><option value="completed">Completed</option><option value="error">Error</option><option value="cancelled">Cancelled</option></select></label>
+              <label>Period <select id="execution-logs-period"><option value="0">All retained</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+            </div>
+            <p id="execution-logs-status-text" role="status">Open Execution logs to load history.</p>
+            <div class="execution-logs-table-wrap"><table class="execution-logs-table"><thead><tr><th scope="col">Execution</th><th scope="col">Started</th><th scope="col">Status</th><th scope="col">Results</th><th scope="col">Duration</th><th scope="col">View</th></tr></thead><tbody id="execution-logs-rows"></tbody></table></div>
+            <nav class="execution-logs-pagination" aria-label="Execution log pages"><span id="execution-logs-page-summary"></span><div><button type="button" class="secondary" id="execution-logs-previous">Previous</button><span id="execution-logs-page-number"></span><button type="button" class="secondary" id="execution-logs-next">Next</button></div></nav>
+            <p class="execution-logs-scope" id="execution-logs-scope"></p>
+            <dialog class="execution-log-detail" id="execution-log-detail" aria-labelledby="execution-log-detail-title">
+              <div class="execution-log-detail-head"><div><span class="section-kicker">EXECUTION RECORD</span><h3 id="execution-log-detail-title">Run details</h3></div><div class="execution-log-detail-actions"><a class="secondary execution-allure-download" id="execution-log-allure-download" href="#" download hidden>Download Allure report</a><button type="button" class="secondary" id="execution-log-detail-close" aria-label="Close execution details">Close</button></div></div>
+              <nav class="execution-detail-tabs" id="execution-detail-tabs" role="tablist" aria-label="Execution detail sections"></nav>
+              <div id="execution-log-detail-content"></div>
+            </dialog>
+          </section>
         </div>
         <div data-workspace-page="/quality-lifecycle" hidden>
           <section class="panel usage-dashboard" id="usage-dashboard" aria-labelledby="usage-title">
             <div class="usage-heading">
-              <div><span class="section-kicker">Workspace overview</span><h2 id="usage-title">Application usage</h2>
-                <p>Track test generation, AI consumption and estimated spend across your workspace.</p></div>
-              <div class="usage-actions"><label for="usage-period">Period</label>
-                <select id="usage-period"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All recorded activity</option></select>
-                <button type="button" class="secondary" id="refresh-usage">↻ Refresh</button></div>
+              <div>
+                <span class="section-kicker">Workspace overview</span>
+                <h2 id="usage-title">Application usage</h2>
+                <p>
+                  Track test generation, AI consumption and estimated spend across your workspace.
+                </p>
+              </div>
+              <div class="usage-actions">
+                <label for="usage-period">Period</label>
+                <select id="usage-period">
+                  <option value="7">Last 7 days</option>
+                  <option value="30" selected>Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                  <option value="0">All recorded activity</option>
+                </select>
+                <button type="button" class="secondary" id="refresh-usage">↻ Refresh</button>
+              </div>
             </div>
             <p id="usage-status" role="status">Loading application usage…</p>
             <div id="usage-content" hidden>
               <div class="usage-cards" id="usage-cards"></div>
               <div class="usage-detail-grid">
-                <article class="usage-detail"><h3>Test generation activity</h3><p>Manual and automation output by day · UTC</p>
+                <article class="usage-detail">
+                  <h3>Test generation activity</h3>
+                  <p>Manual and automation output by day · UTC</p>
                   <div class="usage-legend"><span>● Manual</span><span>● Automation</span></div>
-                  <div id="usage-trend" class="usage-trend"></div></article>
-                <article class="usage-detail"><h3>Usage at a glance</h3><dl id="usage-summary"></dl>
-                  <p>Generated counts include revisions and output awaiting validation. Approved knowledge reused from memory is counted separately.</p></article>
+                  <div id="usage-trend" class="usage-trend"></div>
+                </article>
+                <article class="usage-detail">
+                  <h3>Usage at a glance</h3>
+                  <dl id="usage-summary"></dl>
+                  <p>
+                    Generated counts include revisions and output awaiting validation. Approved
+                    knowledge reused from memory is counted separately.
+                  </p>
+                </article>
               </div>
-              <article class="usage-detail usage-models"><h3>Tokens &amp; estimated cost by model</h3>
-                <p>Input includes cached tokens. Output includes provider-reported reasoning tokens.</p>
-                <div class="usage-table-wrap" tabindex="0" role="region" aria-label="Model usage table">
-                  <table><thead><tr><th scope="col">Provider / model</th><th scope="col">Calls</th><th scope="col">Input</th><th scope="col">Cached input</th><th scope="col">Output</th><th scope="col">Estimated USD</th></tr></thead><tbody id="usage-models"></tbody></table>
+              <article class="usage-detail usage-models">
+                <h3>Tokens &amp; estimated cost by model</h3>
+                <p>
+                  Input includes cached tokens. Output includes provider-reported reasoning tokens.
+                </p>
+                <div
+                  class="usage-table-wrap"
+                  tabindex="0"
+                  role="region"
+                  aria-label="Model usage table"
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Provider / model</th>
+                        <th scope="col">Calls</th>
+                        <th scope="col">Input</th>
+                        <th scope="col">Cached input</th>
+                        <th scope="col">Output</th>
+                        <th scope="col">Estimated USD</th>
+                      </tr>
+                    </thead>
+                    <tbody id="usage-models"></tbody>
+                  </table>
                 </div>
               </article>
-              <details class="usage-pricing"><summary>Pricing &amp; data coverage</summary>
-                <p id="usage-scope"></p><p>Costs cover priced API text tokens only, excluding taxes, tools, subscriptions and negotiated rates. Unpriced or unreported usage is excluded from the subtotal.</p>
-                <p>OpenAI GPT-5.4 standard rates per million tokens: $2.50 input, $0.25 cached input, $15.00 output. Above 272,000 input tokens, input rates double and output rates increase by 50%. Custom endpoints and non-standard service tiers are not priced.</p>
-                <a href="https://developers.openai.com/api/docs/models/gpt-5.4" target="_blank" rel="noopener noreferrer">Pricing source · verified 19 September 2026 ↗</a>
+              <details class="usage-pricing">
+                <summary>Pricing &amp; data coverage</summary>
+                <p id="usage-scope"></p>
+                <p>
+                  Costs cover priced API text tokens only, excluding taxes, tools, subscriptions and
+                  negotiated rates. Unpriced or unreported usage is excluded from the subtotal.
+                </p>
+                <p>
+                  OpenAI GPT-5.4 standard rates per million tokens: $2.50 input, $0.25 cached input,
+                  $15.00 output. Above 272,000 input tokens, input rates double and output rates
+                  increase by 50%. Custom endpoints and non-standard service tiers are not priced.
+                </p>
+                <a
+                  href="https://developers.openai.com/api/docs/models/gpt-5.4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Pricing source · verified 19 September 2026 ↗</a
+                >
               </details>
             </div>
           </section>
@@ -1446,7 +1774,8 @@
       <p id="script-pack-status" role="status"></p>
       <section id="script-pack-preview" hidden>
         <div class="panel-head script-pack-preview-actions">
-          <label>Preview file<select id="script-pack-file" aria-label="Preview file"></select></label
+          <label
+            >Preview file<select id="script-pack-file" aria-label="Preview file"></select></label
           ><button id="download-script-pack" type="button" class="secondary">
             Download pack · ZIP
           </button>
@@ -1454,17 +1783,21 @@
         <pre id="script-pack-content" tabindex="0" aria-label="Generated script preview"></pre>
       </section>
     </dialog>
-    <script src="/static/scripts/workspace-pages.js?v=20260919-usage" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20260921-auto-finance" defer></script>
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260920-agent-route" defer></script>
+    <script src="/static/scripts/index.js?v=20260921-requirements-gate" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
-    <script src="/static/scripts/dashboard.js?v=20260913-reporting" defer></script>
+    <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
+    <script src="/static/scripts/dashboard.js?v=20260922-failures" defer></script>
+    <script src="/static/scripts/execution-logs.js?v=20260922-failures" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260917-stage-locks" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260921-requirements-gate" defer></script>
+    <script src="/static/scripts/finance-explorer.js?v=20260921" defer></script>
+    <script src="/static/scripts/project-dashboard.js?v=20260921" defer></script>
   </body>
 </html>

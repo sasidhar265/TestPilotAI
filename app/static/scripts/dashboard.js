@@ -71,7 +71,7 @@
           .sort((a, b) => Number(b.status === "Failed") - Number(a.status === "Failed"))
           .map(
             (test) =>
-              `<tr><th scope="row">${esc(test.name || "Unnamed test")}</th><td>${badge((test.status || "Unknown").toLowerCase())}</td><td>${esc(test.duration || "Not recorded")}</td><td>${test.error ? `<details><summary>View failure</summary><pre>${esc(test.error)}</pre></details>` : test.status === "Failed" ? "See the run log or downloadable report" : "—"}</td></tr>`,
+              `<tr><th scope="row">${esc(test.name || "Unnamed test")}</th><td>${badge((test.status || "Unknown").toLowerCase())}</td><td>${esc(test.duration || "Not recorded")}</td><td>${["failed", "error"].includes((test.status || "").toLowerCase()) ? ExecutionFailures.disclosure(test) : "—"}</td></tr>`,
           )
           .join("")}</tbody></table>`
       : '<p class="bdd-empty-history">No test-level evidence was recorded for this run. Aggregate counts, where available, appear above.</p>';

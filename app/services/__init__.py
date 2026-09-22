@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from app.agent_runtime import AgentEvent, AgentRuntime
 from app.agents import AgentRegistry, TestStorageAgent
 from app.agents.lifecycle_agents import BusinessRulesAgent, KnowledgeAgent, TestDataAgent
+from app.agents.requirements_validation import RequirementsValidationAgent
 from app.memory import OrganizationalMemory
 from app.models import (
     BusinessRule,
@@ -51,6 +52,7 @@ class MultiAgentTestPipeline:
         validator: TestCaseValidatorAgent,
         storage: TestStorageAgent,
         runtime: AgentRuntime | None = None,
+        requirements_validator: RequirementsValidationAgent | None = None,
     ) -> None:
         self.input_agent = input_agent
         self.generator = generator
@@ -60,6 +62,7 @@ class MultiAgentTestPipeline:
         self.knowledge = KnowledgeAgent(storage)
         self.test_data = TestDataAgent()
         self.runtime = runtime
+        self.requirements_validator = requirements_validator or RequirementsValidationAgent()
 
     async def run(self, request: GenerateRequest) -> PipelineResult:
         from app.services.dashboard import DashboardStore, suite_details
@@ -84,6 +87,7 @@ class MultiAgentTestPipeline:
         request = self.business_rules.enrich(request)
         targeted = self.storage.memory.latest_targeted_review(request)
         request = self.storage.memory.with_reviews(request)
+        await self.requirements_validator.require(request)
         publish_lifecycle_event(
             "Business Rules Agent",
             "enrich_requirements",
@@ -201,13 +205,19 @@ class MultiAgentTestPipeline:
 class TestGenerationService:
     """Application boundary for test-design use cases."""
 
-    def __init__(self, registry: AgentRegistry, memory: OrganizationalMemory) -> None:
+    def __init__(
+        self,
+        registry: AgentRegistry,
+        memory: OrganizationalMemory,
+        requirements_validator: RequirementsValidationAgent | None = None,
+    ) -> None:
         from app.agents.output_agent import OutputAgent
         from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
         from app.agents.test_case_validator import TestCaseValidatorAgent
 
         self.registry = registry
         self.memory = memory
+        self.requirements_validator = requirements_validator or RequirementsValidationAgent()
         validator = TestCaseValidatorAgent()
         knowledge_source = OutputAgent(memory.path, memory.enabled)
         self.pipeline = MultiAgentTestPipeline(
@@ -215,6 +225,7 @@ class TestGenerationService:
             TestCaseGeneratorAgent(registry, validator, knowledge_source),
             validator,
             TestStorageAgent(memory),
+            requirements_validator=self.requirements_validator,
         )
 
     async def generate(self, request: GenerateRequest) -> TestSuite:
@@ -223,6 +234,7 @@ class TestGenerationService:
     async def expand(self, expansion: ExpandRequest) -> TestSuite:
         from app.services.dashboard import DashboardStore, suite_details
 
+        await self.requirements_validator.require(expansion.request)
         dashboard = DashboardStore(self.memory.path)
         run_id = dashboard.start("test_generation")
         try:
@@ -243,12 +255,19 @@ class TestGenerationService:
 class RequirementToTestCaseService:
     """Orchestrate normalized requirement-to-test conversion."""
 
-    def __init__(self, registry: AgentRegistry, memory: OrganizationalMemory) -> None:
+    def __init__(
+        self,
+        registry: AgentRegistry,
+        memory: OrganizationalMemory,
+        requirements_validator: RequirementsValidationAgent | None = None,
+    ) -> None:
         self.registry = registry
         self.memory = memory
+        self.requirements_validator = requirements_validator or RequirementsValidationAgent()
 
     async def convert(self, request: GenerateRequest) -> TestSuite:
         request = BusinessRulesAgent().enrich(request)
+        await self.requirements_validator.require(request)
         known_suite = self.memory.get(request)
         if known_suite is not None:
             return known_suite
@@ -257,6 +276,7 @@ class RequirementToTestCaseService:
         return self.memory.put(request, generated)
 
     async def expand(self, expansion: ExpandRequest) -> TestSuite:
+        await self.requirements_validator.require(expansion.request)
         agent = self.registry.get_requirement_to_test_case_agent()
         return await agent.generate(
             BusinessRulesAgent().enrich(expansion.request),

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import ValidationError
 
 from app.agents.context_converter_agent import ContextConverterAgent
+from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.agents.workflow_agent import WorkflowAgent, test_case_request
@@ -84,6 +85,12 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
         except DocumentIngestionError as error:
             raise HTTPException(422, str(error)) from error
         return {"description": document.text, "filename": document.filename}
+
+
+@router.post("/validate-requirements", response_model=RequirementsReport)
+async def validate_requirements(request: GenerateRequest, settings: Config) -> RequirementsReport:
+    with stage_operation("Requirements validation"):
+        return await RequirementsValidationAgent(settings).require(request)
 
 
 @router.post("/stories", response_model=Stories)
@@ -224,12 +231,14 @@ def execution_plan(request: ExecutionPlanRequest, settings: Settings) -> dict[st
 @router.post("/execution-plan")
 async def get_execution_plan(request: ExecutionPlanRequest, settings: Config) -> dict[str, Any]:
     with stage_operation("Execution planning"):
+        await RequirementsValidationAgent(settings).require(request.request)
         return execution_plan(request, settings)
 
 
 @router.post("/execute")
 async def execute(request: ExecutionPlanRequest, settings: Config) -> Any:
     with stage_operation("Test execution"):
+        await RequirementsValidationAgent(settings).require(request.request)
         plan = execution_plan(request, settings)
         if not plan["ready"]:
             raise HTTPException(422, plan["reason"])

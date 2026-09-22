@@ -32,6 +32,7 @@ from app.agents.reqnroll_step_definition_agent import (
     StepDefinitionRequest,
 )
 from app.agents.reqnroll_validation import implementation_findings
+from app.agents.requirements_validation import RequirementsBlocked, RequirementsValidationAgent
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
@@ -307,6 +308,7 @@ async def logout() -> Response:
     return response
 
 
+@app.get("/project-dashboard", include_in_schema=False)
 @app.get("/progress", include_in_schema=False)
 @app.get("/quality-lifecycle", include_in_schema=False)
 @app.get("/", include_in_schema=False)
@@ -405,6 +407,8 @@ async def llm_model_access(
     """Inspect model policy and quota without consuming a generation request."""
     try:
         return await inspect_model_access(settings, model_id.value)
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("llm_model_access", 503, error)
         raise HTTPException(
@@ -454,6 +458,7 @@ async def list_agents() -> list[dict[str, object]]:
         for agent in (
             InputAgent.descriptor,
             BusinessRulesAgent.descriptor,
+            RequirementsValidationAgent.descriptor,
             STORY_AGENT,
             SCENARIO_AGENT,
             KnowledgeAgent.descriptor,
@@ -504,6 +509,8 @@ async def generate(
     except CopilotGenerationError as error:
         log_operation_failure("generate", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("generate", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
@@ -531,8 +538,13 @@ async def summarize_execution(
         dashboard = DashboardStore(settings.organizational_memory_path)
         details = suite_details(request.suite, False)
         statuses = {item.case_id: item.status.value for item in summary.results}
+        recorded_results = {item.case_id: item for item in summary.results}
         for case in details["cases"]:
             case["execution"] = statuses.get(case["id"], "not_run")
+            result = recorded_results.get(case["id"])
+            if result is not None:
+                case["actual_result"] = result.actual_result
+                case["duration_ms"] = result.duration_ms
         details.update(summary.model_dump(mode="json", exclude={"results"}))
         dashboard.finish(dashboard.start("case_execution"), "completed", details)
         complete_lifecycle_action(
@@ -692,6 +704,8 @@ async def run_agent(
         )
         log_operation_failure("agent_run", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("agent_run", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
@@ -762,6 +776,8 @@ async def generate_from_document(
     except CopilotGenerationError as error:
         log_operation_failure("document_generation", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("document_generation", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
@@ -811,6 +827,8 @@ async def expand_generation(
     except CopilotGenerationError as error:
         log_operation_failure("expand_generation", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("expand_generation", 502, error)
         raise HTTPException(status_code=502, detail=copilot_error_message(error)) from error
@@ -978,6 +996,8 @@ async def publish_to_jira(
     except RuntimeError as error:
         log_operation_failure("jira_publish", 503, error)
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except RequirementsBlocked:
+        raise
     except Exception as error:
         log_operation_failure("jira_publish", 502, error)
         raise HTTPException(status_code=502, detail="Jira publish failed") from error

@@ -347,13 +347,17 @@ def _test_results(path: Path, secrets: list[str] | None = None) -> list[dict[str
                 value = value.replace(secret, "[redacted]")
             return value[:1000]
 
-        return [
-            {
+        results = []
+        for item in root.findall(".//{*}UnitTestResult"):
+            result = {
                 "name": safe_name(item.attrib.get("testName", "Unnamed case")),
                 "status": item.attrib.get("outcome", "Unknown"),
                 "duration": item.attrib.get("duration", ""),
             }
-            for item in root.findall(".//{*}UnitTestResult")
-        ]
+            failure = item.find(".//{*}ErrorInfo/{*}Message")
+            if failure is not None and failure.text:
+                result["error"] = safe_name(failure.text)[:3000]
+            results.append(result)
+        return results
     except (OSError, ET.ParseError):
         return []

@@ -119,7 +119,9 @@ def test_actual_runner_case_names_redact_target_credentials(tmp_path):
     path = tmp_path / "results.trx"
     path.write_text(
         '<TestRun><Results><UnitTestResult testName="case(secret-token)" '
-        'outcome="Failed" duration="00:00:01"/></Results></TestRun>'
+        'outcome="Failed" duration="00:00:01"><Output><ErrorInfo>'
+        '<Message>secret-token failed the assertion</Message></ErrorInfo></Output>'
+        '</UnitTestResult></Results></TestRun>'
     )
     result = _test_results(path, ["secret-token"])
-    assert result == [{"name": "case([redacted])", "status": "Failed", "duration": "00:00:01"}]
+    assert result == [{"name": "case([redacted])", "status": "Failed", "duration": "00:00:01", "error": "[redacted] failed the assertion"}]

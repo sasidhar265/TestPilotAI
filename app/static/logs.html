@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>AI Quality Lifecycle — Application logs</title>
+    <title>Auto Finance Quality — Application logs</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/logs.css?v=20260912-taller-logs" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
@@ -12,15 +12,17 @@
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
   </head>
-  <body>
+  <body class="explore-page">
     <div class="shell">
       <aside class="sidebar">
         <div class="sidebar-header">
-          <a class="brand" href="/" aria-label="Quality Lifecycle Studio home"
+          <a class="brand" href="/" aria-label="Auto Finance Quality home"
             ><span class="brand-mark" aria-hidden="true">Q</span
             ><span
-              ><strong>AI Quality Lifecycle</strong><small>Quality engineering agent</small></span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
             ></a
           ><button
             class="sidebar-toggle"
@@ -39,6 +41,9 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
+            <a class="nav-item" href="/project-dashboard"
+              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
+            >
             <a class="nav-item" href="/"
               ><span class="nav-icon">✦</span><span>Quality workspace</span></a
             >
@@ -99,7 +104,7 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <div class="eyebrow">Operations / diagnostics</div>
+            <div class="eyebrow">Explore / runtime diagnostics</div>
             <h1>Application logs</h1>
           </div>
           <div class="top-actions">
@@ -135,6 +140,21 @@
             </div>
           </div>
         </header>
+        <section class="explore-banner" aria-labelledby="explore-banner-title">
+          <div>
+            <span class="explore-kicker">WORKSPACE DIAGNOSTICS</span>
+            <h2 id="explore-banner-title">Follow the evidence. Find the answer.</h2>
+            <p>
+              Trace generation and execution activity using a reference ID. Filter by severity to
+              focus your investigation.
+            </p>
+            <nav class="explore-banner-actions" aria-label="Page shortcuts">
+              <a href="#log-reference">Search by reference ↗</a
+              ><a href="#result-title">View recent activity ↓</a>
+            </nav>
+          </div>
+          <span class="explore-banner-symbol" aria-hidden="true">⌁</span>
+        </section>
         <section class="results-card">
           <div class="results-head">
             <div>

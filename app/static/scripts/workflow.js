@@ -34,6 +34,9 @@
       $(`stage-panel-${index + 1}`).hidden = !active;
       if (active && focus) tab.focus();
     });
+    if (stage === 5 && suite) {
+      work("Loading feature execution plan…", refreshExecution, "execution-plan");
+    }
   }
   tabs.forEach((tab, index) => {
     tab.onclick = () => show(index + 1, false);
@@ -51,6 +54,7 @@
     workspace.hidden = !state.stories && !suite;
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
+    $("validate-requirements").disabled = state.busy || Boolean(activeGeneration);
     $("stage-stories").disabled = state.busy || !state.request || Boolean(state.stories);
     $("stage-stories").textContent = state.stories ? "Stories created ✓" : "Create stories →";
     $("stage-stories").title = state.stories
@@ -136,6 +140,7 @@
     );
   }
   function invalidate(from) {
+    $("requirements-validation-report").hidden = true;
     if (from <= 1) state.request = null;
     if (from <= 2) {
       state.stories = null;
@@ -276,6 +281,46 @@
       llm_model: $("llm-model").value || "auto-fallback",
     };
   }
+  async function readRequirementSource(current) {
+    let description = $("description").value.trim();
+    const selected = attachedFile;
+    if (selected) {
+      const form = new FormData();
+      form.append("file", selected);
+      const result = await (
+        await upload("/api/workflow/requirements/document", form, transportOptions())
+      ).json();
+      current();
+      description = [description, result.description].filter(Boolean).join("\n\n");
+    }
+    if (description.length < 10)
+      throw new Error("Enter at least 10 characters or attach a readable BRD.");
+    if (description.length > 30000)
+      throw new Error("Split the requirements into batches of at most 30,000 characters.");
+    current();
+    await resolveBusinessRules(transportOptions());
+    current();
+    return { description, business_rules: parseBusinessRules(), additional_context: "" };
+  }
+  function renderRequirementsValidation(report) {
+    const panel = $("requirements-validation-report");
+    panel.hidden = false;
+    panel.dataset.status = report.status;
+    panel.innerHTML = `<strong>${esc(report.message)}</strong><ul>${(report.findings || []).map((finding) => `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p>${finding.suggested_change ? `<p>Next step: ${esc(finding.suggested_change)}</p>` : ""}${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`).join("")}</ul><small>Business alignment assessment · Regulatory compliance not assessed.</small>`;
+    if (report.status !== "aligned") {
+      state.plan = null;
+      sync();
+    }
+  }
+  window.addEventListener("requirements-validation", (event) => renderRequirementsValidation(event.detail));
+  $("validate-requirements").onclick = () => work("Validating business alignment…", async (current) => {
+    $("requirements-validation-report").hidden = true;
+    const source = await readRequirementSource(current);
+    const report = await post("validate-requirements", { ...source, generation_target: $("output-target").value });
+    current();
+    renderRequirementsValidation(report);
+    status(report.message);
+  });
   $("generate-form").addEventListener(
     "submit",
     (event) => {
@@ -284,30 +329,9 @@
       work(
         "Reading source requirements…",
         async (current) => {
-          let description = $("description").value.trim();
-          const selected = attachedFile;
-          if (selected) {
-            const form = new FormData();
-            form.append("file", selected);
-            const result = await (
-              await upload("/api/workflow/requirements/document", form, transportOptions())
-            ).json();
-            current();
-            description = [description, result.description].filter(Boolean).join("\n\n");
-          }
-          if (description.length < 10)
-            throw new Error("Enter at least 10 characters or attach a readable BRD.");
-          if (description.length > 30000)
-            throw new Error("Split the requirements into batches of at most 30,000 characters.");
-          current();
-          await resolveBusinessRules(transportOptions());
-          current();
+          const source = await readRequirementSource(current);
           invalidate(2);
-          state.request = {
-            description,
-            business_rules: parseBusinessRules(),
-            additional_context: "",
-          };
+          state.request = source;
           status("Story Agent is converting requirements into stories…");
           const result = await post("stories", requestOptions());
           current();
@@ -804,6 +828,9 @@
       .join("");
   }
   async function refreshExecution(current) {
+    state.plan = null;
+    $("stage-execution-list").replaceChildren();
+    $("stage-execution-reason").textContent = "Loading the execution plan…";
     manualMarkup();
     if (!suite.test_cases.some((item) => item.execution_mode === "automation")) {
       state.plan = null;
@@ -812,7 +839,14 @@
       $("stage-execution-reason").textContent = "This suite contains manual cases only.";
       return;
     }
-    const result = await post("execution-plan", { suite, request: reviewSourceRequest });
+    let result;
+    try {
+      result = await post("execution-plan", { suite, request: reviewSourceRequest });
+    } catch (error) {
+      $("stage-execution-reason").textContent =
+        "The execution plan could not be loaded. Re-enter this stage or use Refresh execution plan to retry.";
+      throw error;
+    }
     current();
     state.plan = result;
     $("stage-execution-reason").textContent = result.reason;
@@ -825,7 +859,6 @@
   }
   $("review-cases").onclick = () => {
     show(5);
-    work("Loading feature execution plan…", refreshExecution, "execution-plan");
   };
   $("stage-refresh-execution").onclick = () =>
     work("Refreshing feature execution plan…", refreshExecution, "execution-plan");
@@ -869,7 +902,8 @@
     $("stage-execution-results").replaceChildren();
     $("stage-execution-list").replaceChildren();
     $("stage-manual").replaceChildren();
-    $("stage-execution-reason").textContent = "Refresh the execution plan for the current suite.";
+    $("stage-execution-reason").textContent =
+      "The execution plan loads automatically when you enter this stage.";
     $("stage-case-empty").hidden = true;
     show(4, false);
     sync();

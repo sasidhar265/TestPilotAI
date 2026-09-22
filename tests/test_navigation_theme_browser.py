@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
-@pytest.mark.parametrize("name", ["index", "documentation", "logs", "users"])
+@pytest.mark.parametrize("name", ["index", "documentation", "knowledge", "logs", "users"])
 def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
     root = Path(__file__).parents[1] / "app/static"
     sync_playwright = pytest.importorskip("playwright.sync_api").sync_playwright
@@ -32,6 +32,15 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
                 data = []
             elif path == "/api/logs":
                 data = {"count": 0, "entries": []}
+            elif path == "/api/workspace/knowledge":
+                data = {
+                    "suite_count": 0,
+                    "approved_output_count": 0,
+                    "scenario_count": 0,
+                    "enabled": True,
+                    "suites": [],
+                    "approved_outputs": [],
+                }
             elif path.startswith("/api/documentation/company"):
                 data = {"content": "# Guide"}
             elif path == "/api/llm/models":
@@ -58,5 +67,10 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
             assert page.locator("#theme-menu").is_hidden()
         page.reload()
         assert page.locator("#sidebar-toggle").get_attribute("aria-expanded") == "false"
+        if name in {"documentation", "knowledge", "logs"}:
+            page.screenshot(path=f"/tmp/explore-{name}-desktop.png", full_page=True)
+            page.set_viewport_size({"width": 390, "height": 844})
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            page.screenshot(path=f"/tmp/explore-{name}-mobile.png", full_page=True)
         page.close()
         browser.close()

@@ -1,3 +1,32 @@
+.finance-guide {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.finance-guide summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.finance-guide p,
+.finance-products dd {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.finance-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+}
+.finance-products dt {
+  font-size: 13px;
+  font-weight: 700;
+}
+.finance-products dd {
+  margin: 4px 0 0;
+}
 .stage-workspace[hidden] {
   display: none !important;
 }
@@ -373,15 +402,6 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
-#test-studio > .trust-note {
-  margin: 0 0 20px;
-  padding: 8px 12px;
-  align-items: center;
-}
-#test-studio > .trust-note strong {
-  display: inline;
-  margin-right: 6px;
-}
 @media (max-width: 1100px) {
   .workspace-context-bar .context-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -499,3 +519,14 @@
   line-height: 1.7;
 }
 .agent-route-note strong { color: var(--primary); }
+.requirements-check { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 20px 0; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-soft); }
+.requirements-check > div:first-child { flex: 1 1 240px; }
+.requirements-check h3 { font-size: 14px; margin: 0 0 6px; }
+.requirements-check p { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 4px 0; }
+#requirements-validation-report { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; border-top: 1px solid var(--line); padding-top: 14px; font-size: 12px; }
+#requirements-validation-report[data-status="blocked"] > strong { color: var(--danger); }
+#requirements-validation-report[data-status="aligned"] > strong { color: var(--success); }
+#requirements-validation-report ul { padding-left: 20px; }
+#requirements-validation-report li { margin-bottom: 12px; }
+#requirements-validation-report blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--primary); }
+#requirements-validation-report[hidden] { display: none; }

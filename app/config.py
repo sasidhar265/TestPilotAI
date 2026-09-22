@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     codex_timeout_seconds: float = Field(default=300, gt=0, le=1800)
     codex_artifact_timeout_seconds: float = Field(default=900, gt=0, le=1800)
     agent_profile: str = "auto-finance-quotation"
+    requirements_baseline_path: Path = Path("workspace/requirements-baseline.json")
     organizational_memory_enabled: bool = True
     organizational_memory_path: Path = Path(".agent-memory/test_suites.db")
     accepted_output_directory: Path = Path("output")

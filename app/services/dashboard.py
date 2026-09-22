@@ -127,6 +127,7 @@ def suite_details(suite: TestSuite, validated: bool) -> dict[str, Any]:
         "cases": [
             {
                 "id": case.id,
+                "title": case.title,
                 "category": case.category.value,
                 "mode": case.execution_mode.value,
                 "priority": case.priority,

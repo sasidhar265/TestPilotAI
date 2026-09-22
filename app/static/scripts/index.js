@@ -79,6 +79,10 @@ async function responseError(response) {
   let message = `Request failed (${response.status})`;
   try {
     const detail = (await response.json()).detail;
+    if (detail?.requirements_validation) {
+      window.dispatchEvent(new CustomEvent("requirements-validation", { detail: detail.requirements_validation }));
+      message = detail.message;
+    }
     message = Array.isArray(detail)
       ? detail
           .map(
@@ -152,7 +156,7 @@ async function loadRuntimeStatus() {
     showRuntimeDetails(health);
     $("runtime-health").textContent = health.ok ? "● Service online" : "● Service unavailable";
     $("runtime-health").classList.toggle("live", Boolean(health.ok));
-    $("active-agent").textContent = "AI Quality Lifecycle Agent";
+    $("active-agent").textContent = "Auto Finance Quality Agent";
     $("runtime-id").textContent = health.agent_runtime_id;
     $("model-name").textContent = "Automatic fallback";
     $("llm-model-detail").textContent =

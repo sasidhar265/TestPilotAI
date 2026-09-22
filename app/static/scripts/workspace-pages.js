@@ -1,7 +1,8 @@
 /* Keep the active suite and ongoing work alive across workspace pages. */
 (() => {
   const titles = {
-    "/": "Design trusted quality coverage with AI agents.",
+    "/project-dashboard": "Project dashboard",
+    "/": "Build confidence in every vehicle finance quote.",
     "/progress": "Progress & execution",
     "/quality-lifecycle": "Quality Lifecycle",
   };
@@ -18,7 +19,7 @@
     });
     const heading = document.querySelector(".topbar h1");
     heading.textContent = titles[path];
-    document.title = `${titles[path]} — AI Quality Lifecycle`;
+    document.title = `${titles[path]} — Auto Finance Quality`;
     window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path } }));
     if (focus) {
       heading.tabIndex = -1;
