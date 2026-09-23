@@ -2,6 +2,7 @@
 
 import secrets
 import sqlite3
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
@@ -9,7 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from app.auth import GUEST_COOKIE, SESSION_COOKIE, session_username, valid_guest_session
+from app.auth import (
+    GUEST_COOKIE,
+    SESSION_COOKIE,
+    guest_session_expiry,
+    session_username,
+    valid_guest_session,
+)
 from app.config import Settings, get_settings
 from app.users import database, get_user, password_hash, public_user
 
@@ -62,13 +69,13 @@ def profile(
 ) -> dict[str, Any]:
     parts = user["display_name"].split()
     initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper() if parts else "?"
-    deadline = settings.temporary_guest_access_until
+    guest_expiry = guest_session_expiry(request.cookies.get(GUEST_COOKIE, ""), settings)
     return public_user(user) | {
         "initials": initials,
         "is_admin": user["role"] == "admin",
         "is_guest": user["role"] == "guest",
-        "guest_access_until": deadline.isoformat()
-        if deadline and user["role"] == "guest" and settings.temporary_guest_access_active
+        "guest_access_until": datetime.fromtimestamp(guest_expiry, UTC).isoformat()
+        if guest_expiry and user["role"] == "guest"
         else None,
     }
 

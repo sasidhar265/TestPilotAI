@@ -3,7 +3,7 @@ import io
 import logging
 import os
 import zipfile
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -47,6 +47,7 @@ from app.agents.workflow_agent import SCENARIO_AGENT, STORY_AGENT
 from app.auth import (
     GUEST_COOKIE,
     SESSION_COOKIE,
+    guest_session_expiry,
     issue_browser_session,
     issue_guest_session,
     valid_guest_session,
@@ -304,11 +305,15 @@ async def continue_as_guest() -> Response:
         raise HTTPException(403, "Guest access has ended. Please sign in.")
     deadline = settings_at_startup.temporary_guest_access_until
     assert deadline is not None
+    guest_session = issue_guest_session(settings_at_startup)
+    guest_expires = guest_session_expiry(guest_session, settings_at_startup)
+    assert guest_expires is not None
     response = RedirectResponse("/", status_code=303)
     response.set_cookie(
         GUEST_COOKIE,
-        issue_guest_session(settings_at_startup),
-        expires=deadline.astimezone(UTC),
+        guest_session,
+        expires=datetime.fromtimestamp(guest_expires, UTC),
+        max_age=guest_expires - int(datetime.now(UTC).timestamp()),
         httponly=True,
         secure=settings_at_startup.is_production,
         samesite="strict",

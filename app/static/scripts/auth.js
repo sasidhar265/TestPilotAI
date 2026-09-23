@@ -7,6 +7,9 @@ let audioContext = null;
 let lastHeartbeatSecond = null;
 let workspaceBusy = false;
 let guestAccessUntil = 0;
+let guestWarningStage = 0;
+let guestWarningDismissTimer = null;
+const isGuest = document.body.dataset.guest === "true";
 
 fetch("/api/auth/profile")
   .then((response) => response.ok ? response.json() : null)
@@ -35,13 +38,15 @@ overlay.innerHTML = `
   <div class="session-dialog">
     <span class="session-kicker">Session security</span>
     <h2 id="session-title">Are you still working?</h2>
-    <p>You have been inactive for nearly five minutes. Continue to keep your workspace open.</p>
+    <p id="session-message">You have been inactive for nearly five minutes. Continue to keep your workspace open.</p>
     <div class="session-countdown"><span>Signing out automatically in</span><strong id="session-seconds">10s</strong></div>
     <div class="session-actions"><button id="continue-session" type="button">Continue session</button><button class="session-signout" id="close-session" type="button">Sign out</button></div>
   </div>`;
 document.body.append(overlay);
 
 const seconds = document.getElementById("session-seconds");
+const sessionTitle = document.getElementById("session-title");
+const sessionMessage = document.getElementById("session-message");
 const continueButton = document.getElementById("continue-session");
 const closeButton = document.getElementById("close-session");
 
@@ -89,6 +94,26 @@ function continueSession() {
   document.body.classList.remove("dialog-open");
 }
 
+function showGuestWarning(stage, remainingSeconds) {
+  guestWarningStage = stage;
+  sessionTitle.textContent = "Guest session ending soon";
+  sessionMessage.textContent = stage === 3
+    ? "Your guest session will close in a few seconds."
+    : `Your guest session will close in ${stage === 2 ? "about one minute" : "about two minutes"}.`;
+  seconds.textContent = stage === 3 ? `${remainingSeconds}s` : stage === 2 ? "1 min" : "2 min";
+  continueButton.hidden = true;
+  closeButton.hidden = true;
+  overlay.hidden = false;
+  document.body.classList.add("dialog-open");
+  if (guestWarningDismissTimer) clearTimeout(guestWarningDismissTimer);
+  if (stage < 3) {
+    guestWarningDismissTimer = setTimeout(() => {
+      overlay.hidden = true;
+      document.body.classList.remove("dialog-open");
+    }, 7000);
+  }
+}
+
 function noteActivity() {
   enableAlertAudio();
   if (!warningOpen) lastActivity = Date.now();
@@ -117,8 +142,26 @@ document.getElementById("logout")?.addEventListener("click", async () => {
 });
 
 setInterval(() => {
-  if (guestAccessUntil > Date.now()) return;
-  if (guestAccessUntil) {
+  if (isGuest && guestAccessUntil) {
+    const remaining = guestAccessUntil - Date.now();
+    if (remaining <= 0) {
+      window.location.replace("/login");
+      return;
+    }
+    if (remaining <= 10_000) {
+      showGuestWarning(3, Math.max(1, Math.ceil(remaining / 1000)));
+      return;
+    }
+    if (remaining <= 60_000 && guestWarningStage < 2) {
+      showGuestWarning(2, Math.ceil(remaining / 1000));
+      return;
+    }
+    if (remaining <= 120_000 && guestWarningStage < 1) {
+      showGuestWarning(1, Math.ceil(remaining / 1000));
+    }
+    return;
+  }
+  if (guestAccessUntil && guestAccessUntil <= Date.now()) {
     window.location.replace("/login");
     return;
   }

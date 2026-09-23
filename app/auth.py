@@ -10,6 +10,7 @@ from app.users import get_user
 
 SESSION_COOKIE = "quality_lifecycle_session"
 GUEST_COOKIE = "quality_lifecycle_guest"
+GUEST_SESSION_MAX_SECONDS = 10 * 60
 GUEST_PAGES = frozenset({"/", "/progress"})
 GUEST_READ_PATHS = GUEST_PAGES | {
     "/api/auth/profile",
@@ -25,11 +26,22 @@ def issue_guest_session(settings: Settings) -> str:
     deadline = settings.temporary_guest_access_until
     if not settings.temporary_guest_access_active or deadline is None:
         raise ValueError("Guest access is unavailable")
-    payload = f"guest.{int(deadline.timestamp())}"
+    expires = min(int(deadline.timestamp()), int(time.time()) + GUEST_SESSION_MAX_SECONDS)
+    payload = f"guest.{expires}"
     signature = hmac.new(
         settings.session_secret_value.encode(), payload.encode(), hashlib.sha256
     ).hexdigest()
     return f"{payload}.{signature}"
+
+
+def guest_session_expiry(value: str, settings: Settings) -> int | None:
+    if not valid_guest_session(value, settings):
+        return None
+    try:
+        _, expires, _ = value.split(".")
+        return int(expires)
+    except ValueError:
+        return None
 
 
 def valid_guest_session(value: str, settings: Settings) -> bool:
