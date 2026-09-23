@@ -8,11 +8,12 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260912" />
     <link rel="shortcut icon" href="/static/favicon.svg?v=20260912" />
     <link rel="stylesheet" href="/static/styles/login.css?v=20260902-login-feedback" />
-    <link rel="stylesheet" href="/static/styles/login-feedback.css?v=20260902" />
+    <link rel="stylesheet" href="/static/styles/login-feedback.css?v=20260923-guest-entry" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/login-modern.css?v=20260922" />
+    <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
   </head>
   <body>
     <main class="login-shell">
@@ -96,9 +97,14 @@
           </button>
           <div class="login-status" id="login-status" role="alert" aria-live="polite"></div>
         </form>
+        <form id="guest-entry" hidden action="/guest" method="post">
+          <button class="secondary" id="continue-as-guest" type="submit">Continue as guest</button>
+          <p class="guest-entry-note">View Quality workspace and Progress &amp; execution without signing in. Guest access is available for a limited time.</p>
+        </form>
         <small class="access-note"
           >Access is restricted to authorized quality-engineering users.</small
         >
+        <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </section>
     </main>
     <div

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from app.auth import SESSION_COOKIE, session_username
+from app.auth import GUEST_COOKIE, SESSION_COOKIE, session_username, valid_guest_session
 from app.config import Settings, get_settings
 from app.users import database, get_user, password_hash, public_user
 
@@ -20,6 +20,14 @@ Config = Annotated[Settings, Depends(get_settings)]
 def current_user(request: Request, settings: Config) -> dict[str, Any]:
     username = session_username(request.cookies.get(SESSION_COOKIE, ""), settings)
     user = get_user(settings, username) if username else None
+    if user is None and valid_guest_session(request.cookies.get(GUEST_COOKIE, ""), settings):
+        return {
+            "username": "temporary-guest",
+            "display_name": "Guest",
+            "role": "guest",
+            "enabled": True,
+            "managed": False,
+        }
     if user is None:
         raise HTTPException(401, "Sign in to access your account")
     return user
@@ -49,10 +57,20 @@ class UserAccess(BaseModel):
 
 
 @router.get("/api/auth/profile", include_in_schema=False)
-def profile(user: Annotated[dict[str, Any], Depends(current_user)]) -> dict[str, Any]:
+def profile(
+    user: Annotated[dict[str, Any], Depends(current_user)], settings: Config
+) -> dict[str, Any]:
     parts = user["display_name"].split()
     initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper() if parts else "?"
-    return public_user(user) | {"initials": initials, "is_admin": user["role"] == "admin"}
+    deadline = settings.temporary_guest_access_until
+    return public_user(user) | {
+        "initials": initials,
+        "is_admin": user["role"] == "admin",
+        "is_guest": user["role"] == "guest",
+        "guest_access_until": deadline.isoformat()
+        if deadline and user["role"] == "guest" and settings.temporary_guest_access_active
+        else None,
+    }
 
 
 @router.get("/admin/users", include_in_schema=False)

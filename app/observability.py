@@ -21,7 +21,13 @@ from uuid import uuid4
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.auth import SESSION_COOKIE, valid_session
+from app.auth import (
+    GUEST_COOKIE,
+    SESSION_COOKIE,
+    guest_request_allowed,
+    valid_guest_session,
+    valid_session,
+)
 from app.config import Settings
 
 request_id_context: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
@@ -317,8 +323,15 @@ class OrganizationHttpMiddleware:
     def _authorized(self, scope: Scope, headers: dict[bytes, bytes]) -> bool:
         expected = self.settings.api_auth_token_value
         path = str(scope.get("path", ""))
-        public_paths = {"/login", "/api/auth/login", "/api/health", "/api/live", "/api/ready"}
-        if path in public_paths or path.startswith("/static/"):
+        public_paths = {
+            "/login",
+            "/guest",
+            "/api/auth/login",
+            "/api/health",
+            "/api/live",
+            "/api/ready",
+        }
+        if path in public_paths or (path.startswith("/static/") and not path.endswith(".html")):
             return True
         cookie = SimpleCookie()
         try:
@@ -328,15 +341,27 @@ class OrganizationHttpMiddleware:
         session = cookie.get(SESSION_COOKIE)
         if session is not None and valid_session(session.value, self.settings):
             return True
+        supplied = headers.get(b"authorization", b"").decode("ascii", "ignore")
+        scheme, separator, token = supplied.partition(" ")
+        if (
+            expected
+            and separator
+            and scheme.casefold() == "bearer"
+            and hmac.compare_digest(token, expected)
+        ):
+            return True
+        guest = cookie.get(GUEST_COOKIE)
+        if guest is not None:
+            if not valid_guest_session(guest.value, self.settings):
+                return False
+            allowed = guest_request_allowed(path, str(scope.get("method", "GET")))
+            scope["guest_access_denied"] = not allowed
+            return allowed
         if not path.startswith("/api/") and path not in {"/docs", "/openapi.json"}:
             return not self.settings.browser_login_enabled
         if not expected:
             return not self.settings.browser_login_enabled
-        supplied = headers.get(b"authorization", b"").decode("ascii", "ignore")
-        scheme, separator, token = supplied.partition(" ")
-        return bool(
-            separator and scheme.casefold() == "bearer" and hmac.compare_digest(token, expected)
-        )
+        return False
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -367,6 +392,15 @@ class OrganizationHttpMiddleware:
             request_id_context.reset(token)
             return
         if not self._authorized(scope, headers):
+            if scope.get("guest_access_denied"):
+                await self._reject(
+                    send,
+                    403,
+                    "Guest access is view-only for Quality workspace and Progress & execution",
+                    request_id,
+                )
+                request_id_context.reset(token)
+                return
             if not str(scope.get("path", "")).startswith("/api/"):
                 await send(
                     {

@@ -7,6 +7,9 @@
     "/quality-lifecycle": "Quality Lifecycle",
   };
   function showPage(focus = false) {
+    if (document.body.dataset.guest === "true" && !["/", "/progress"].includes(location.pathname)) {
+      history.replaceState(null, "", "/");
+    }
     const path = location.pathname;
     document.querySelectorAll("[data-workspace-page]").forEach((page) => {
       page.hidden = page.dataset.workspacePage !== path;

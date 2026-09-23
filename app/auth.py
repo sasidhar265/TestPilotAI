@@ -9,6 +9,53 @@ from app.config import Settings
 from app.users import get_user
 
 SESSION_COOKIE = "quality_lifecycle_session"
+GUEST_COOKIE = "quality_lifecycle_guest"
+GUEST_PAGES = frozenset({"/", "/progress"})
+GUEST_READ_PATHS = GUEST_PAGES | {
+    "/api/auth/profile",
+    "/api/workspace/rules",
+    "/api/workspace/standards",
+    "/api/automation/languages",
+    "/api/dashboard",
+    "/api/automation/history",
+}
+
+
+def issue_guest_session(settings: Settings) -> str:
+    deadline = settings.temporary_guest_access_until
+    if not settings.temporary_guest_access_active or deadline is None:
+        raise ValueError("Guest access is unavailable")
+    payload = f"guest.{int(deadline.timestamp())}"
+    signature = hmac.new(
+        settings.session_secret_value.encode(), payload.encode(), hashlib.sha256
+    ).hexdigest()
+    return f"{payload}.{signature}"
+
+
+def valid_guest_session(value: str, settings: Settings) -> bool:
+    if not value or not settings.session_secret_value or not settings.temporary_guest_access_active:
+        return False
+    try:
+        marker, expires, signature = value.split(".")
+        payload = f"{marker}.{expires}"
+        expected = hmac.new(
+            settings.session_secret_value.encode(), payload.encode(), hashlib.sha256
+        ).hexdigest()
+        return (
+            marker == "guest"
+            and int(expires) > time.time()
+            and hmac.compare_digest(signature.encode(), expected.encode())
+        )
+    except ValueError:
+        return False
+
+
+def guest_request_allowed(path: str, method: str) -> bool:
+    if path == "/api/auth/logout" and method == "POST":
+        return True
+    return method in {"GET", "HEAD"} and (
+        path in GUEST_READ_PATHS or path.startswith("/api/automation/reports/")
+    )
 
 
 def issue_browser_session(username: str, settings: Settings) -> str:

@@ -1309,7 +1309,7 @@ async function loadAvailableModels() {
   }
 }
 $("refresh-llm-models").addEventListener("click", loadAvailableModels);
-loadAvailableModels();
+if (document.body.dataset.guest !== "true") loadAvailableModels();
 $("llm-model").addEventListener("change", checkModelAccess);
 const descriptionInput = $("description"),
   characterCount = $("character-count");
@@ -1336,7 +1336,7 @@ async function loadUserProfile() {
     }
     $("manage-users").classList.toggle("hidden", !profile.is_admin);
     $("profile-name").textContent = profile.display_name;
-    $("profile-role").textContent = profile.is_admin ? "Administrator" : "Workspace account";
+    $("profile-role").textContent = profile.is_guest ? "Guest · View only" : profile.is_admin ? "Administrator" : "Workspace account";
     $("profile-toggle").setAttribute(
       "aria-label",
       `Open profile menu for ${profile.display_name}${profile.is_admin ? " (Administrator)" : ""}`,

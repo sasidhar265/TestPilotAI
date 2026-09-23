@@ -248,6 +248,11 @@
     const requestId = item.request_id;
     const apiTarget = $log("execution-api-transactions");
     const logTarget = $log("execution-correlated-logs");
+    if (document.body.dataset.guest === "true") {
+      apiTarget.innerHTML = apiEmpty("Sign in to view correlated API transactions.");
+      logTarget.innerHTML = empty("Sign in to view application logs.");
+      return;
+    }
     if (!requestId || requestId === "-" || !/^[A-Za-z0-9._-]{1,128}$/.test(requestId)) {
       apiTarget.innerHTML = apiEmpty("No correlation ID was recorded for API transactions.");
       return;

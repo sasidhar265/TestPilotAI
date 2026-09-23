@@ -1,0 +1,28 @@
+.guest-banner {
+  display: none;
+}
+body[data-guest="true"] .guest-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.guest-banner a {
+  color: var(--primary);
+  font-weight: 700;
+}
+body[data-guest="true"] .primary-nav a:not([href="/"]):not([href="/progress"]),
+body[data-guest="true"] #manage-users,
+body[data-guest="true"] [data-workspace-page]:not([data-workspace-page="/"]):not([data-workspace-page="/progress"]),
+body[data-guest="true"] #run-repository-bdd,
+body[data-guest="true"] #cancel-repository-bdd {
+  display: none !important;
+}

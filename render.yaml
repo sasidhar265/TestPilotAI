@@ -32,6 +32,8 @@ services:
         value: admin
       - key: APP_PASSWORD
         sync: false
+      - key: TEMPORARY_GUEST_ACCESS_UNTIL
+        value: "2026-10-07T23:59:00+01:00"
       - key: COPILOT_GITHUB_TOKEN
         sync: false
       - key: OPENAI_API_KEY

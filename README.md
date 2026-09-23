@@ -239,6 +239,27 @@ supported independently through `API_AUTH_TOKEN`.
 On Windows PowerShell, activate the environment with `.\.venv\Scripts\Activate.ps1`. If the
 `uvicorn` command is not on `PATH`, use `python -m uvicorn app.main:app --reload` on any platform.
 
+## Temporary guest access on Render
+
+The Render Blueprint enables **Continue as guest** on the sign-in page until
+**7 October 2026 at 23:59 London time**, using
+`TEMPORARY_GUEST_ACCESS_UNTIL=2026-10-07T23:59:00+01:00`.
+For an existing Render service, deploy this code, set that variable in **Environment**,
+and choose **Save and deploy**. Keep `APP_PASSWORD`, `SESSION_SECRET`, and `API_AUTH_TOKEN`
+configured. Normal sign-in remains available and gives the account its usual access.
+
+Guests must select the button to receive a signed HttpOnly guest cookie. They can only view
+**Quality workspace** and **Progress & execution**. A banner explains this limitation;
+other navigation is hidden, and the server rejects other pages, APIs, and write operations.
+Guests cannot generate tests, run executions, change data, or administer accounts. They can
+browse execution history and download its reports. Guest access does not grant an administrator
+identity. Signing out clears the guest cookie; signing in replaces guest access with the account.
+
+The absolute deadline is checked on every request, including existing guest sessions; restarting
+the service does not extend it. Open guest tabs return to sign-in at expiry. Remove or empty the
+variable and redeploy to end guest access early. A different deadline must include a timezone.
+Guest access is disabled when the variable is unset or no session secret is configured.
+
 ## Deploy on Render
 
 The repository includes a `render.yaml` Blueprint for deploying the Dockerized FastAPI webpage as
@@ -814,3 +835,5 @@ Open **Explore → User guide** in the application sidebar, or visit `/static/us
 The guide covers requirements, story and scenario approval, test case review,
 downloads, execution, reports and troubleshooting. Use **Print / Save as PDF**
 to keep an offline copy. Technical documentation remains available at `/documentation`.
+
+© 2026 Sasidhar Rajupalem. All rights reserved.

@@ -6,6 +6,14 @@ let signingOut = false;
 let audioContext = null;
 let lastHeartbeatSecond = null;
 let workspaceBusy = false;
+let guestAccessUntil = 0;
+
+fetch("/api/auth/profile")
+  .then((response) => response.ok ? response.json() : null)
+  .then((profile) => {
+    guestAccessUntil = Date.parse(profile?.guest_access_until || "") || 0;
+  })
+  .catch(() => {});
 
 const style = document.createElement("style");
 style.textContent = `
@@ -109,6 +117,11 @@ document.getElementById("logout")?.addEventListener("click", async () => {
 });
 
 setInterval(() => {
+  if (guestAccessUntil > Date.now()) return;
+  if (guestAccessUntil) {
+    window.location.replace("/login");
+    return;
+  }
   if (workspaceBusy) {
     lastActivity = Date.now();
     return;

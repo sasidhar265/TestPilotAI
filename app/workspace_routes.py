@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
@@ -23,6 +23,7 @@ from app.agents.multilanguage_agent import (
 )
 from app.agents.output_agent import OutputAgent
 from app.agents.runner import CopilotGenerationError
+from app.auth import GUEST_COOKIE, SESSION_COOKIE, valid_guest_session, valid_session
 from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
 from app.memory import OrganizationalMemory
@@ -123,9 +124,14 @@ async def languages() -> list[dict[str, str]]:
 
 @router.get("/dashboard")
 async def dashboard(
+    request: Request,
     settings: Annotated[Settings, Depends(get_settings)],
     days: Annotated[int, Query(ge=0, le=90)] = 30,
 ) -> dict[str, object]:
+    if valid_guest_session(request.cookies.get(GUEST_COOKIE, ""), settings) and not valid_session(
+        request.cookies.get(SESSION_COOKIE, ""), settings
+    ):
+        return DashboardStore(settings.organizational_memory_path).snapshot("case_execution")
     snapshot = DashboardStore(settings.organizational_memory_path).snapshot()
     usage = UsageStore(settings.organizational_memory_path)
     for record in snapshot["history"]:

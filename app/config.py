@@ -1,7 +1,8 @@
+from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import AwareDatetime, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from app.user_secrets import DEFAULT_USER_SECRETS_ID, UserSecretsSource
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     app_password: SecretStr = SecretStr("")
     session_secret: SecretStr = SecretStr("")
     session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=7 * 24 * 60 * 60)
+    temporary_guest_access_until: AwareDatetime | None = None
     allowed_hosts: str = "localhost,127.0.0.1,testserver"
     max_request_body_bytes: int = Field(default=16 * 1024 * 1024, ge=1024)
     max_upload_bytes: int = Field(default=15 * 1024 * 1024, ge=1024)
@@ -126,6 +128,19 @@ class Settings(BaseSettings):
     @property
     def browser_login_enabled(self) -> bool:
         return bool(self.app_password_value and self.session_secret_value)
+
+    @field_validator("temporary_guest_access_until", mode="before")
+    @classmethod
+    def empty_guest_deadline(cls, value: object) -> object:
+        return None if value == "" else value
+
+    @property
+    def temporary_guest_access_active(self) -> bool:
+        return (
+            self.temporary_guest_access_until is not None
+            and bool(self.session_secret_value)
+            and datetime.now(UTC) < self.temporary_guest_access_until
+        )
 
     @property
     def allowed_host_list(self) -> list[str]:

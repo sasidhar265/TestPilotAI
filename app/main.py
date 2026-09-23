@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import zipfile
+from datetime import UTC
 from pathlib import Path
 
 import httpx
@@ -43,7 +44,14 @@ from app.agents.test_case_generator_agent import (
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.agents.workflow_agent import SCENARIO_AGENT, STORY_AGENT
-from app.auth import SESSION_COOKIE, issue_browser_session, valid_session
+from app.auth import (
+    GUEST_COOKIE,
+    SESSION_COOKIE,
+    issue_browser_session,
+    issue_guest_session,
+    valid_guest_session,
+    valid_session,
+)
 from app.automation_layout import validate_layout
 from app.config import Settings, get_settings
 from app.dependencies import (
@@ -278,7 +286,37 @@ COMPANY_DOCUMENTS = {
 async def login_page(request: Request) -> Response:
     if valid_session(request.cookies.get(SESSION_COOKIE, ""), settings_at_startup):
         return RedirectResponse("/", status_code=303)
+    if settings_at_startup.temporary_guest_access_active:
+        html = LOGIN.read_text().replace('id="guest-entry" hidden', 'id="guest-entry"')
+        deadline = settings_at_startup.temporary_guest_access_until
+        assert deadline is not None
+        html = html.replace(
+            "Guest access is available for a limited time.",
+            f"Available until {deadline.strftime('%d %B %Y at %H:%M %z')}.",
+        )
+        return Response(html, media_type="text/html", headers=HTML_HEADERS)
     return FileResponse(LOGIN, headers=HTML_HEADERS)
+
+
+@app.post("/guest", include_in_schema=False)
+async def continue_as_guest() -> Response:
+    if not settings_at_startup.temporary_guest_access_active:
+        raise HTTPException(403, "Guest access has ended. Please sign in.")
+    deadline = settings_at_startup.temporary_guest_access_until
+    assert deadline is not None
+    response = RedirectResponse("/", status_code=303)
+    response.set_cookie(
+        GUEST_COOKIE,
+        issue_guest_session(settings_at_startup),
+        expires=deadline.astimezone(UTC),
+        httponly=True,
+        secure=settings_at_startup.is_production,
+        samesite="strict",
+        path="/",
+    )
+    response.delete_cookie(SESSION_COOKIE, path="/", samesite="strict")
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.post("/api/auth/login", include_in_schema=False)
@@ -289,6 +327,7 @@ def login(credentials: LoginRequest) -> Response:
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     response = Response(content='{"authenticated":true}', media_type="application/json")
+    response.delete_cookie(GUEST_COOKIE, path="/", samesite="strict")
     response.set_cookie(
         SESSION_COOKIE,
         issue_browser_session(user["username"], settings_at_startup),
@@ -305,6 +344,7 @@ def login(credentials: LoginRequest) -> Response:
 async def logout() -> Response:
     response = Response(content='{"authenticated":false}', media_type="application/json")
     response.delete_cookie(SESSION_COOKIE, path="/", samesite="strict")
+    response.delete_cookie(GUEST_COOKIE, path="/", samesite="strict")
     return response
 
 
@@ -312,7 +352,12 @@ async def logout() -> Response:
 @app.get("/progress", include_in_schema=False)
 @app.get("/quality-lifecycle", include_in_schema=False)
 @app.get("/", include_in_schema=False)
-async def index() -> FileResponse:
+async def index(request: Request) -> Response:
+    if not valid_session(
+        request.cookies.get(SESSION_COOKIE, ""), settings_at_startup
+    ) and valid_guest_session(request.cookies.get(GUEST_COOKIE, ""), settings_at_startup):
+        html = INDEX.read_text().replace("<body>", '<body data-guest="true">', 1)
+        return Response(html, media_type="text/html", headers=HTML_HEADERS)
     return FileResponse(INDEX, headers=HTML_HEADERS)
 
 

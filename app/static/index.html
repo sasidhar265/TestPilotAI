@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20260921" />
     <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260922-detail-tabs" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/guest.css?v=20260923-guest-views" />
   </head>
   <body>
     <div class="app-shell">
@@ -120,6 +122,11 @@
       </aside>
 
       <main class="workspace">
+        <aside class="guest-banner" role="status">
+          <strong>Guest access · View only</strong>
+          <span>You can view only Quality workspace and Progress &amp; execution. Sign in to access other areas or make changes.</span>
+          <a href="/login">Sign in</a>
+        </aside>
         <header class="topbar">
           <div>
             <div class="eyebrow">Automobile finance · Quality workspace</div>
@@ -1527,6 +1534,7 @@
             </div>
           </section>
         </div>
+        <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </main>
     </div>
     <dialog
@@ -1789,16 +1797,17 @@
         <pre id="script-pack-content" tabindex="0" aria-label="Generated script preview"></pre>
       </section>
     </dialog>
-    <script src="/static/scripts/workspace-pages.js?v=20260923-alignment" defer></script>
+    <script src="/static/scripts/guest.js?v=20260923-guest-views" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20260923-guest-views" defer></script>
     <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
-    <script src="/static/scripts/index.js?v=20260922-single-flight-progress" defer></script>
+    <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>
+    <script src="/static/scripts/index.js?v=20260923-guest-views" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260922-failures" defer></script>
-    <script src="/static/scripts/execution-logs.js?v=20260922-detail-tabs" defer></script>
+    <script src="/static/scripts/execution-logs.js?v=20260923-guest-views" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
