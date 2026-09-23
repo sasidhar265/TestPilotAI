@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import re
 import signal
 import tempfile
 import time
@@ -341,6 +342,11 @@ def _test_results(path: Path, secrets: list[str] | None = None) -> list[dict[str
         if path.stat().st_size > 10 * 1024 * 1024:
             return []
         root = ET.parse(path).getroot()
+        catalog_path = Path(__file__).resolve().parents[2] / "automation/Input/CaseTitles.Json"
+        try:
+            titles = json.loads(catalog_path.read_text())
+        except (OSError, ValueError):
+            titles = {}
 
         def safe_name(value: str) -> str:
             for secret in sorted(filter(None, secrets or []), key=len, reverse=True):
@@ -349,8 +355,14 @@ def _test_results(path: Path, secrets: list[str] | None = None) -> list[dict[str
 
         results = []
         for item in root.findall(".//{*}UnitTestResult"):
+            name = item.attrib.get("testName", "Unnamed case")
+            case_id = re.search(r"\bTC[-_]([A-Z]+)[-_](\d{3})(?=_|\b)", name)
+            if case_id:
+                identifier = f"TC-{case_id[1]}-{case_id[2]}"
+                if identifier in titles:
+                    name = f"{identifier} - {titles[identifier]}"
             result = {
-                "name": safe_name(item.attrib.get("testName", "Unnamed case")),
+                "name": safe_name(name),
                 "status": item.attrib.get("outcome", "Unknown"),
                 "duration": item.attrib.get("duration", ""),
             }

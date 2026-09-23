@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Auto Finance Quality — User guide</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
+    <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/user-guide.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+  </head>
+  <body class="explore-page">
+    <div class="docs-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Auto Finance Quality home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <a class="nav-item" href="/project-dashboard"
+              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
+            >
+            <a class="nav-item" href="/"
+              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
+            >
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+            >
+            <span class="nav-label">Explore</span>
+            <a class="nav-item active" aria-current="page" href="/static/user-guide.html"
+              ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
+            >
+            <a class="nav-item" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <a class="nav-item" href="/knowledge"
+              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
+            >
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+            <a class="nav-item" href="/docs"
+              ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
+            >
+          </nav>
+          <nav class="docs-nav" aria-label="On this page">
+            <span class="nav-label">On this page</span><a href="#start">Before you start</a
+            ><a href="#requirements">1. Prepare and validate requirements</a
+            ><a href="#stories">2. Review and approve stories</a
+            ><a href="#scenarios">3. Review and approve scenarios</a
+            ><a href="#cases">4. Generate and review test cases</a
+            ><a href="#downloads">Download, preview and share</a
+            ><a href="#execution">5. Execute and inspect results</a
+            ><a href="#reports">Find reports and track progress</a
+            ><a href="#troubleshooting">Troubleshooting</a><a href="#terms">Quick reference</a>
+          </nav>
+          <div class="side-status">
+            <div class="status-line" id="status">
+              <span class="pulse"></span><span class="status-copy">User guide</span>
+            </div>
+            <div class="model">WORKSPACE HELP</div>
+          </div>
+          <div class="theme-settings">
+            <div
+              class="theme-menu"
+              id="theme-menu"
+              role="dialog"
+              aria-labelledby="theme-menu-title"
+              hidden
+            >
+              <strong id="theme-menu-title">Appearance</strong
+              ><span>Choose your workspace theme</span>
+              <div class="theme-options" role="group" aria-label="Color theme">
+                <button type="button" data-theme-option="light">
+                  <span aria-hidden="true">☀</span>Light</button
+                ><button type="button" data-theme-option="dark">
+                  <span aria-hidden="true">◐</span>Dark</button
+                ><button type="button" data-theme-option="system">
+                  <span aria-hidden="true">◫</span>System
+                </button>
+              </div>
+            </div>
+            <button
+              class="theme-gear"
+              id="theme-gear"
+              type="button"
+              aria-label="Open appearance settings"
+              aria-expanded="false"
+              aria-controls="theme-menu"
+            >
+              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace docs-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Help &amp; learning</div>
+            <h1>User guide</h1>
+          </div>
+          <div class="top-actions">
+            <a class="api-link" href="/docs">API reference ↗</a>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
+          </div>
+        </header>
+
+        <article class="content" id="guide-content">
+          <header class="hero" id="overview">
+            <div class="hero-copy">
+              <span class="eyebrow">Step-by-step user guide</span>
+              <h1>From requirements to test results</h1>
+              <p>
+                Learn how to prepare, review, export and execute your work in Auto Finance Quality.
+              </p>
+              <div class="actions">
+                <a class="button primary" href="/">Open Quality workspace →</a
+                ><button class="button secondary" id="print-guide" type="button">
+                  Print / Save as PDF
+                </button>
+              </div>
+            </div>
+          </header>
+          <section class="section" id="start">
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <div><h2>Before you start</h2></div>
+            </div>
+            <p>
+              Auto Finance Quality turns supplied requirements into reviewed stories, scenarios and
+              test cases. You can export the results, prepare automation files and inspect execution
+              evidence.
+            </p>
+            <ol class="guide-steps">
+              <li>
+                <strong>Sign in.</strong> Use the account supplied by your administrator. Open
+                <a href="/">Quality workspace</a> to begin.
+              </li>
+              <li>
+                <strong>Gather your source material.</strong> Have the requirement or BRD,
+                acceptance criteria, approved business rules and test data ready. For API tests,
+                include the approved request contract and expected responses. For UI tests, describe
+                the user actions and expected screen behavior.
+              </li>
+              <li>
+                <strong>Check access.</strong> Generation needs an available model. Jira actions
+                need a configured connection. Automation needs a configured runner and target
+                application; ask your administrator if these are unavailable.
+              </li>
+            </ol>
+            <p>
+              Keep credentials out of requirement text and uploaded documents. Use the environment
+              configuration supplied by your administrator.
+            </p>
+          </section>
+          <section class="section" id="requirements">
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <div><h2>1. Prepare and validate requirements</h2></div>
+            </div>
+            <ol class="guide-steps">
+              <li>
+                Enter your requirement in
+                <strong>Finance requirement or acceptance criteria</strong>. Use the
+                <strong>+</strong> source control to upload a document or connect a Jira ticket.
+                Follow the file types and size limits shown by the upload control.
+              </li>
+              <li>
+                Review the imported text. Include the relevant product, business rules, boundaries,
+                approved data and expected outcomes. Supply missing information rather than asking
+                the generator to invent financial rules.
+              </li>
+              <li>
+                Review <strong>Shared business rules</strong>. Choose a test-case type: Functional,
+                Automation (BDD / Gherkin), Non-Functional, or Both. Select the testing type and an
+                available model.
+              </li>
+              <li>
+                Select <strong>Validate requirements</strong> in the Business alignment gate.
+                Address its findings against approved business sources before continuing.
+              </li>
+              <li>Select <strong>Read requirements</strong> to prepare the next stage.</li>
+            </ol>
+            <div class="callout">
+              <span>A useful requirement is specific</span>
+              <p>
+                Describe what should happen for an approved quotation request, which supplied fields
+                may change, and the expected response for each condition. Include the actual
+                approved limits and expected values in your source material.
+              </p>
+            </div>
+          </section>
+          <section class="section" id="stories">
+            <div class="section-heading">
+              <span class="section-number">03</span>
+              <div><h2>2. Review and approve stories</h2></div>
+            </div>
+            <ol class="guide-steps">
+              <li>
+                Select <strong>Create stories</strong>. Read each story, acceptance criterion and
+                source excerpt.
+              </li>
+              <li>
+                Check that the story reflects the requirement and has supporting source evidence.
+                Correct the source or reviewable content when something is missing or incorrect.
+              </li>
+              <li>
+                Select the stories you want to approve, enter the reviewer name or ID, and select
+                <strong>Approve selected</strong>.
+              </li>
+              <li>
+                Select <strong>Continue to scenarios</strong> when the required review is complete.
+              </li>
+            </ol>
+            <p>
+              <strong>Upload to Jira</strong> is a separate action for approved story selections.
+              Review the destination and selection before submitting. Approving a story does not
+              automatically publish it.
+            </p>
+          </section>
+          <section class="section" id="scenarios">
+            <div class="section-heading">
+              <span class="section-number">04</span>
+              <div><h2>3. Review and approve scenarios</h2></div>
+            </div>
+            <ol class="guide-steps">
+              <li>Select <strong>Create scenarios</strong>.</li>
+              <li>
+                Check that every scenario belongs to the correct story. Review its preconditions,
+                action and expected outcome, including relevant positive, negative and boundary
+                conditions.
+              </li>
+              <li>Enter the reviewer name or ID and select <strong>Approve scenarios</strong>.</li>
+              <li>Select <strong>Continue to test cases</strong>.</li>
+            </ol>
+            <p>
+              Changing the source requirements clears downstream drafts. Finish reviewing the
+              current source before approving the next stage. Export useful work before reloading;
+              workflow drafts are not a substitute for saved artifacts.
+            </p>
+          </section>
+          <section class="section" id="cases">
+            <div class="section-heading">
+              <span class="section-number">05</span>
+              <div><h2>4. Generate and review test cases</h2></div>
+            </div>
+            <ol class="guide-steps">
+              <li>
+                Select <strong>Create test cases</strong>. The type, testing discipline and model
+                come from the Requirements stage.
+              </li>
+              <li>
+                Review each test case’s ID, title, objective, preconditions, data, actions and
+                expected results. Automation cases also include Given / When / Then steps.
+              </li>
+              <li>
+                Read the <strong>Quality Gate</strong> findings. Resolve missing information or
+                design errors and regenerate or revise as needed.
+              </li>
+              <li>
+                Select the cases to retain, enter the reviewer details, and use the approval
+                controls. Review the selection again before downloading or sharing it.
+              </li>
+            </ol>
+            <div class="callout">
+              <span>Approval and execution answer different questions</span>
+              <p>
+                A Quality Gate pass checks the test design. Reviewer approval records acceptance. A
+                passing execution result requires running the case against its target and checking
+                the outcome.
+              </p>
+            </div>
+            <p>
+              A title should describe the behavior being checked. For example,
+              <strong
+                >TC-UI-001 — Display the generation form and disable Generate until requirements are
+                entered</strong
+              >. Use the case ID when discussing a finding or failed run.
+            </p>
+          </section>
+          <section class="section" id="downloads">
+            <div class="section-heading">
+              <span class="section-number">06</span>
+              <div><h2>Download, preview and share</h2></div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>Test case documents</h3>
+                <p>
+                  Use <strong>Download</strong> for Excel, CSV, PDF or JSON. Check the selected
+                  cases before export. These files describe the tests; downloading them does not
+                  execute them.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Automation files</h3>
+                <p>
+                  Choose a coding language. Use <strong>View</strong> to inspect the feature file,
+                  step definitions or automation pack. Download the required artifacts after review.
+                  A feature file or bindings alone may need supporting implementation; use the
+                  complete pack and its README for execution setup.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Jira attachments</h3>
+                <p>
+                  Enter the destination issue and use <strong>Attach selected</strong> to share
+                  selected cases. Check that the issue is correct and that your configured
+                  connection has permission.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Saved knowledge</h3>
+                <p>
+                  Open <a href="/knowledge">Knowledge source</a> to inspect retained suites and
+                  accepted outputs. Check the source and version before reusing material.
+                </p>
+              </article>
+            </div>
+          </section>
+          <section class="section" id="execution">
+            <div class="section-heading">
+              <span class="section-number">07</span>
+              <div><h2>5. Execute and inspect results</h2></div>
+            </div>
+            <ol class="guide-steps">
+              <li>
+                Select <strong>Continue to execution</strong>. For manual cases, perform the steps
+                in the target application and record the outcome and actual result.
+              </li>
+              <li>
+                For automation, arrange for the reviewed pack to be installed in the configured
+                project and its target URL, credentials and input data to be configured. Follow the
+                pack’s README or ask the automation owner.
+              </li>
+              <li>
+                Select <strong>Refresh execution plan</strong>. Read the readiness message and
+                feature list. Confirm the listed scenarios are the ones you intend to execute.
+              </li>
+              <li>
+                When ready, select <strong>Run feature files</strong>. Individual results appear
+                after the runner returns. Read failed-case details and
+                <strong>Runner output</strong>.
+              </li>
+            </ol>
+            <p>
+              Languages and script types have their own execution setup. Downloading a Java, Python,
+              JavaScript, TypeScript, Ruby, performance or database pack does not make it executable
+              by the configured C# ReqnRoll runner.
+            </p>
+            <div class="callout">
+              <span>Check the scope of the run</span>
+              <p>
+                <a href="/progress">Progress &amp; execution</a> →
+                <strong>Run BDD tests</strong> runs the configured repository project. A repository
+                smoke-test pass does not prove that your newly generated suite ran. Confirm the
+                execution plan, discovered cases and actual results.
+              </p>
+            </div>
+          </section>
+          <section class="section" id="reports">
+            <div class="section-heading">
+              <span class="section-number">08</span>
+              <div><h2>Find reports and track progress</h2></div>
+            </div>
+            <ul class="guide-steps">
+              <li>
+                <strong>Project dashboard:</strong> inspect the workspace overview and suite
+                activity. Read its reporting-scope note before treating totals as a delivery or
+                release decision.
+              </li>
+              <li>
+                <strong>Progress &amp; execution:</strong> refresh history, select a run and inspect
+                its status, case results and execution logs. Export history as CSV or download the
+                Allure HTML report when available.
+              </li>
+              <li>
+                <strong>Quality Lifecycle:</strong> inspect suite traceability and Application
+                usage. Usage totals describe recorded activity; they are not a count of unique
+                approved cases.
+              </li>
+              <li>
+                <strong>Runtime logs:</strong> inspect application events and reference IDs when
+                investigating an operation.
+              </li>
+            </ul>
+            <p>
+              Passed, failed and not-run counts describe execution evidence. A build error,
+              authentication error or timeout can prevent a usable result. An Allure
+              report-generation error is reported separately and does not turn failed tests into
+              passed tests.
+            </p>
+          </section>
+          <section class="section" id="troubleshooting">
+            <div class="section-heading">
+              <span class="section-number">09</span>
+              <div><h2>Troubleshooting</h2></div>
+            </div>
+            <div class="grid two">
+              <article class="card">
+                <h3>A button is disabled</h3>
+                <p>
+                  Read the message beside the current stage. Check requirements validation, the
+                  selected cases, reviewer details and approval of the preceding stage. Execution
+                  also requires a ready plan and target configuration.
+                </p>
+              </article>
+              <article class="card">
+                <h3>No model is available</h3>
+                <p>
+                  Refresh the model list. If it remains unavailable, ask the administrator to verify
+                  provider access and configuration. Capture the displayed error or reference ID.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Generation stops or fails</h3>
+                <p>
+                  Inspect the activity feed and Runtime logs. Resolve missing source details or
+                  provider errors before retrying. Avoid starting repeated requests while the
+                  current operation is still active.
+                </p>
+              </article>
+              <article class="card">
+                <h3>A test run fails</h3>
+                <p>
+                  Open the run’s case results and Technical Logs or Runner output. An assertion
+                  failure identifies an actual/expected mismatch; a startup or build error means the
+                  runner may not have executed the cases. Record the failed case ID and the exact
+                  message.
+                </p>
+              </article>
+              <article class="card">
+                <h3>The hosted run times out</h3>
+                <p>
+                  Refresh run history before retrying to check whether the run completed. Share the
+                  run ID, time, error and runner output with the administrator. Ask them to check
+                  the deployed build, target configuration and execution limits.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Report or Jira action fails</h3>
+                <p>
+                  For a missing report, read the report-generation error separately from test
+                  outcomes. For Jira, check the selected records, destination and reviewer approval;
+                  ask the administrator to verify connection permissions.
+                </p>
+              </article>
+            </div>
+            <p>
+              When reporting an issue, include the page, action, run or case ID, time, expected
+              behavior and displayed error. Remove passwords, tokens and confidential test data.
+            </p>
+          </section>
+          <section class="section" id="terms">
+            <div class="section-heading">
+              <span class="section-number">10</span>
+              <div><h2>Quick reference</h2></div>
+            </div>
+            <dl>
+              <dt><strong>Requirement</strong></dt>
+              <dd>The supplied business need or rule.</dd>
+              <dt><strong>Story</strong></dt>
+              <dd>A reviewable unit of work linked to source requirements.</dd>
+              <dt><strong>Scenario</strong></dt>
+              <dd>A condition or journey with a defined expected outcome.</dd>
+              <dt><strong>Test case / suite</strong></dt>
+              <dd>An executable or manual check / a collection of checks.</dd>
+              <dt><strong>BDD / Gherkin</strong></dt>
+              <dd>
+                Given describes setup, When describes an action, and Then describes the expected
+                result.
+              </dd>
+              <dt><strong>Automation pack</strong></dt>
+              <dd>
+                Feature files and supporting code, configuration and input data used to run
+                automated checks.
+              </dd>
+            </dl>
+            <p>
+              For architecture, agent roles and administrator information, open
+              <a href="/documentation">Documentation</a>. Developers can use the
+              <a href="/docs">API reference</a>.
+            </p>
+          </section>
+        </article>
+      </main>
+    </div>
+
+    <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
+    <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
+    <script src="/static/scripts/user-guide.js?v=20260923" defer></script>
+  </body>
+</html>

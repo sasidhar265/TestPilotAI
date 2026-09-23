@@ -4,14 +4,14 @@ Feature: Quality Lifecycle Studio workspace
   I want the workspace to expose the governed test-generation flow
   So that UI automation can verify the reviewer experience
 
-  Scenario: Workspace loads its guarded generation controls
+  Scenario: TC-UI-001 - Display the generation form and disable Generate until requirements are entered
     Given the Quality Lifecycle Studio is available
     When I open the workspace in a browser
-    Then the page title contains "AI Quality Lifecycle"
+    Then the page title contains "Auto Finance Quality"
     And the generation form is visible
     And the generation submit button is disabled until requirements are supplied
 
-  Scenario: Workspace offers automation-oriented generation
+  Scenario: TC-UI-002 - Display the Automation option and model selector
     Given the Quality Lifecycle Studio is available
     When I open the workspace in a browser
     Then the generation target includes "Automation"

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
   </head>
   <body class="explore-page">
     <div class="docs-shell">
@@ -53,6 +54,9 @@
               ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
             >
             <span class="nav-label">Explore</span>
+            <a class="nav-item" href="/static/user-guide.html"
+              ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
+            >
             <a class="nav-item" href="/documentation"
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
@@ -61,6 +65,9 @@
             >
             <a class="nav-item" href="/logs"
               ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+            <a class="nav-item" href="/docs"
+              ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
           </nav>
           <div class="side-status">
@@ -151,9 +158,31 @@
           </div>
           <span class="explore-banner-symbol" aria-hidden="true">◈</span>
         </section>
+        <section class="knowledge-card" aria-labelledby="reuse-title">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Knowledge reuse</span>
+              <h2 id="reuse-title">What is saved and reused?</h2>
+            </div>
+            <button class="secondary" id="refresh-knowledge" type="button">
+              Refresh knowledge
+            </button>
+          </div>
+          <p class="section-copy" id="reuse-status" role="status">Checking saved knowledge…</p>
+          <p class="section-copy">
+            Stories and scenarios are saved separately from complete test suites. A suite is saved
+            only after its Quality Gate passes. Repeating a matching request can reuse those saved
+            stages; changing the source, reviewed content, model, rules or standards can require
+            fresh generation.
+          </p>
+          <p class="section-copy">
+            Look for “Knowledge Agent” reuse events in the activity feed. The suite table’s Uses
+            column counts matching suite lookups. Saved entries are revalidated before reuse.
+          </p>
+        </section>
         <section class="knowledge-summary" aria-label="Knowledge summary">
           <article>
-            <span>Stored suites</span><strong id="suite-count">—</strong
+            <span>Validated test suites</span><strong id="suite-count">—</strong
             ><small>Exact-match suites in memory</small>
           </article>
           <article>
@@ -169,7 +198,7 @@
           <div class="section-heading">
             <div>
               <span class="section-kicker">Organizational memory</span>
-              <h2 id="suites-title">Available suites</h2>
+              <h2 id="suites-title">Available test suites</h2>
             </div>
             <span class="status-badge" id="memory-status">Checking</span>
           </div>
@@ -251,6 +280,6 @@
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
     <script src="/static/scripts/auth.js?v=20260909" defer></script>
-    <script src="/static/scripts/knowledge.js?v=20260917" defer></script>
+    <script src="/static/scripts/knowledge.js?v=20260923-reuse" defer></script>
   </body>
 </html>

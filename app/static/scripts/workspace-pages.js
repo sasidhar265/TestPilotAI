@@ -20,6 +20,8 @@
     const heading = document.querySelector(".topbar h1");
     heading.textContent = titles[path];
     document.title = `${titles[path]} — Auto Finance Quality`;
+    document.querySelector(".topbar .eyebrow").textContent =
+      path === "/" ? "Automobile finance · Quality workspace" : "Workspace / " + titles[path];
     window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path } }));
     if (focus) {
       heading.tabIndex = -1;

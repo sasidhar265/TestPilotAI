@@ -2,22 +2,184 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quality Lifecycle Studio — OpenAPI Documentation</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Auto Finance Quality — API reference</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
+    <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
     <link rel="stylesheet" href="/static/vendor/swagger-ui/swagger-ui.css" />
-    <link rel="stylesheet" href="/static/styles/api-docs.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/api-docs.css?v=20260923-alignment" />
+    <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+  </head>
+  <body class="explore-page">
+    <div class="docs-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Auto Finance Quality home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <a class="nav-item" href="/project-dashboard"
+              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
+            >
+            <a class="nav-item" href="/"
+              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
+            >
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+            >
+            <span class="nav-label">Explore</span>
+            <a class="nav-item" href="/static/user-guide.html"
+              ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
+            >
+            <a class="nav-item" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <a class="nav-item" href="/knowledge"
+              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
+            >
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+            <a class="nav-item active" aria-current="page" href="/docs"
+              ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
+            >
+          </nav>
+
+          <div class="side-status">
+            <div class="status-line" id="status">
+              <span class="pulse"></span><span class="status-copy">API reference</span>
+            </div>
+            <div class="model">WORKSPACE HELP</div>
+          </div>
+          <div class="theme-settings">
+            <div
+              class="theme-menu"
+              id="theme-menu"
+              role="dialog"
+              aria-labelledby="theme-menu-title"
+              hidden
+            >
+              <strong id="theme-menu-title">Appearance</strong
+              ><span>Choose your workspace theme</span>
+              <div class="theme-options" role="group" aria-label="Color theme">
+                <button type="button" data-theme-option="light">
+                  <span aria-hidden="true">☀</span>Light</button
+                ><button type="button" data-theme-option="dark">
+                  <span aria-hidden="true">◐</span>Dark</button
+                ><button type="button" data-theme-option="system">
+                  <span aria-hidden="true">◫</span>System
+                </button>
+              </div>
+            </div>
+            <button
+              class="theme-gear"
+              id="theme-gear"
+              type="button"
+              aria-label="Open appearance settings"
+              aria-expanded="false"
+              aria-controls="theme-menu"
+            >
+              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace docs-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Explore / Developer tools</div>
+            <h1>API reference</h1>
+          </div>
+          <div class="top-actions">
+            <a class="api-link" href="/documentation">Documentation ↗</a>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
+          </div>
+        </header>
+
+        <section class="api-reference" aria-label="Interactive API reference">
+          <header class="api-header">
+            <div>
+              <h2>Explore the application API</h2>
+              <p>
+                Inspect request fields and responses. Authenticated operations use your configured
+                access.
+              </p>
+            </div>
+            <a class="button secondary" href="/openapi.json">OpenAPI JSON ↗</a>
+          </header>
+          <p id="api-docs-status" role="status">Loading API documentation…</p>
+          <noscript
+            >Enable JavaScript for the interactive reference, or open the OpenAPI JSON link
+            above.</noscript
+          >
+          <div id="swagger-ui"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
+    <script src="/static/scripts/auth.js?v=20260904-rounded-timeout" defer></script>
     <script src="/static/vendor/swagger-ui/swagger-ui-bundle.js" defer></script>
     <script src="/static/scripts/api-docs.js" defer></script>
-  </head>
-  <body>
-    <header class="api-header">
-      <a href="/documentation">← Documentation</a><a href="/openapi.json">OpenAPI JSON</a>
-    </header>
-    <p id="api-docs-status" role="status">Loading API documentation…</p>
-    <noscript
-      >Enable JavaScript to view the interactive reference, or open the OpenAPI JSON link
-      above.</noscript
-    >
-    <div id="swagger-ui"></div>
   </body>
 </html>

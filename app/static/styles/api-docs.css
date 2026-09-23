@@ -1,47 +1,107 @@
-body {
-  margin: 0;
-  background: #fafafa;
+/* The reference shares workspace surfaces; HTTP method colors remain semantic. */
+.api-reference {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .api-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 20px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  font:
-    16px system-ui,
-    sans-serif;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.api-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+}
+.api-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
 }
 .api-header a {
-  color: #174ea6;
+  flex-shrink: 0;
 }
 #api-docs-status {
-  margin: 24px;
-  font:
-    16px system-ui,
-    sans-serif;
+  margin: 24px 0;
+  color: var(--muted);
 }
-
-/* Match workspace actions without changing Swagger's method/status colors. */
-.api-header {
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+.swagger-ui {
+  color: var(--ink);
+  font-family: inherit;
 }
-.api-header a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  box-sizing: border-box;
-  padding: 10px 16px;
-  border: 1px solid #d7dae6;
-  border-radius: 10px;
-  color: #5b5bd6;
-  font-size: 14px;
-  font-weight: 650;
-  text-decoration: none;
+.swagger-ui .wrapper {
+  padding: 0;
 }
-.api-header a:hover { background: #ececff; }
+.swagger-ui .information-container .info {
+  margin: 24px 0;
+}
+.swagger-ui .info .title {
+  font-size: 1.5rem;
+}
+.swagger-ui
+  :is(
+    .info .title,
+    .info p,
+    .info li,
+    .info h1,
+    .info h2,
+    .info h3,
+    .opblock-tag,
+    .opblock-tag small,
+    .opblock .opblock-summary-description,
+    .opblock .opblock-summary-operation-id,
+    .opblock .opblock-summary-path,
+    .opblock-description-wrapper p,
+    .opblock-external-docs-wrapper p,
+    .opblock-title_normal,
+    .parameter__name,
+    .parameter__type,
+    .parameter__in,
+    .response-col_status,
+    .response-col_links,
+    .responses-inner h4,
+    .responses-inner h5,
+    table thead tr th,
+    table thead tr td,
+    .model,
+    .model-title,
+    .prop-type,
+    section.models h4,
+    .tab li,
+    label,
+    .btn,
+    .loading-container .loading:after
+  ) {
+  color: var(--ink);
+}
+.swagger-ui
+  :is(
+    .scheme-container,
+    .opblock .opblock-section-header,
+    section.models,
+    section.models .model-container,
+    .dialog-ux .modal-ux
+  ) {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.swagger-ui :is(input:not([type="checkbox"]), textarea, select) {
+  max-width: 100%;
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line-strong);
+  border-radius: 8px;
+}
 .swagger-ui .btn {
   min-height: 40px;
   padding: 9px 16px;
@@ -50,13 +110,76 @@ body {
   font-weight: 600;
 }
 .swagger-ui .btn.execute {
-  border-color: #7c3aed;
-  background: #7c3aed;
-  color: #fff;
+  border-color: var(--primary-button);
+  background: var(--primary-button);
+  color: white;
 }
-.swagger-ui .btn.execute:hover { background: #6d28d9; }
-.api-header a:focus-visible, .swagger-ui button:focus-visible {
-  outline: 3px solid #7c3aed;
+.swagger-ui .btn.execute:hover {
+  background: var(--primary-button-hover);
+}
+.swagger-ui .btn.authorize {
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+.swagger-ui .btn.authorize svg {
+  fill: currentColor;
+}
+.swagger-ui a {
+  color: var(--primary-dark);
+}
+.swagger-ui :is(.opblock-tag, section.models, table thead tr th, table thead tr td) {
+  border-color: var(--line);
+}
+.swagger-ui .opblock-summary-path {
+  overflow-wrap: anywhere;
+}
+.swagger-ui
+  :is(
+    .json-schema-2020-12,
+    .json-schema-2020-12-accordion,
+    .json-schema-2020-12-accordion__children
+  ) {
+  min-width: 0;
+  max-width: 100%;
+}
+.swagger-ui .json-schema-2020-12__title {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-align: left;
+}
+.swagger-ui .json-schema-2020-12-accordion {
+  color: var(--ink);
+}
+.swagger-ui :is(.model-box, .responses-wrapper) {
+  overflow-x: auto;
+}
+.swagger-ui button:focus-visible {
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
-.swagger-ui .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.swagger-ui .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+:root[data-theme="dark"]
+  .swagger-ui
+  :is(.expand-operation, .expand-methods, .model-toggle, .opblock-control-arrow)
+  svg {
+  fill: var(--ink);
+}
+@media (max-width: 580px) {
+  .api-reference {
+    padding: 16px;
+  }
+  .swagger-ui .opblock .opblock-summary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .swagger-ui .opblock .opblock-summary-method {
+    min-width: 64px;
+  }
+  .swagger-ui .opblock-tag {
+    font-size: 1.1rem;
+  }
+}

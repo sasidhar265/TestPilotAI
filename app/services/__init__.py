@@ -18,6 +18,7 @@ from app.models import (
     BusinessRule,
     ExpandRequest,
     GenerateRequest,
+    GenerationSource,
     GenerationTarget,
     ManualTestingType,
     TestFormat,
@@ -170,7 +171,15 @@ class MultiAgentTestPipeline:
             return PipelineResult(suite, validation)
         if self.runtime is not None:
             outcome = await self.runtime.run(request)
-            return PipelineResult(outcome.suite, outcome.validation, trace=tuple(outcome.trace))
+            # The coordinator can finish after validation without calling its storage tool.
+            # Persist at the pipeline boundary so successful generation is always reusable.
+            suite = outcome.suite
+            if (
+                outcome.validation.passed
+                and suite.generation_source != GenerationSource.ORGANIZATIONAL_MEMORY
+            ):
+                suite = self.knowledge.remember(request, suite)
+            return PipelineResult(suite, outcome.validation, trace=tuple(outcome.trace))
         generated = self.test_data.generate(await self.generator.generate(request))
         validation = self.validator.validate(request, generated)
         suite = self.knowledge.remember(request, generated) if validation.passed else generated

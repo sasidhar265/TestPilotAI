@@ -167,3 +167,14 @@ The project uses `UserSecretsId=quality-lifecycle-studio-local`. Set
 Microsoft's local `secrets.json` during direct `dotnet test` runs. The Python app can
 read the same store. See [local User Secrets setup](../docs/local-user-secrets.md) for
 commands, file locations, and precedence. Production uses environment variables.
+
+## Test case titles and IDs
+
+Scenario titles use `TC-<AREA>-<NNN> - <expected behavior>` in plain language.
+Areas are UI, API, CODE, SEC, FLOW, JIRA, and SCRIPT. Preserve IDs when rewording
+a title and allocate a new number for new coverage. Each outline example has
+its own `caseId`, included in the title. Steps, fixtures and assertions are unchanged.
+`Input/CaseTitles.Json` lists all 28 IDs and readable titles for the workspace's
+execution results. Keep this catalog in sync when adding or renaming repository
+scenarios. The workspace resolves runner method names to these titles; unknown
+test IDs retain their original runner names. Raw TRX files retain NUnit names.

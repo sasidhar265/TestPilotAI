@@ -82,6 +82,7 @@ async def knowledge_sources(
     return {
         "enabled": settings.organizational_memory_enabled,
         "suite_count": memory.count(),
+        "workflow_counts": memory.workflow_counts(),
         "approved_output_count": outputs.count(),
         "scenario_count": outputs.scenario_count(),
         "suites": memory.entries(),

@@ -329,6 +329,11 @@ async def documentation() -> FileResponse:
     return FileResponse(DOCUMENTATION, headers=HTML_HEADERS)
 
 
+@app.get("/user-guide", include_in_schema=False)
+async def user_guide() -> FileResponse:
+    return FileResponse(DOCUMENTATION.with_name("user-guide.html"), headers=HTML_HEADERS)
+
+
 @app.get("/logs", include_in_schema=False)
 async def logs() -> FileResponse:
     return FileResponse(LOGS, headers=HTML_HEADERS)

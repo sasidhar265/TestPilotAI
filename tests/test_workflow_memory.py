@@ -14,6 +14,14 @@ from app.models import GenerationSource
 from app.workflow_models import StoryHandoff
 
 
+@pytest.fixture(autouse=True)
+def approved_requirement_gate(monkeypatch):
+    """These tests exercise stage reuse after requirements have been approved."""
+    from app.agents.requirements_validation import RequirementsValidationAgent
+
+    monkeypatch.setattr(RequirementsValidationAgent, "require", AsyncMock())
+
+
 @pytest.mark.asyncio
 async def test_duplicate_workflow_survives_new_agent_and_preserves_suite_identity(tmp_path):
     settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")

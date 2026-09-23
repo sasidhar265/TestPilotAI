@@ -6,7 +6,9 @@ import pytest
 
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
-@pytest.mark.parametrize("name", ["index", "documentation", "knowledge", "logs", "users"])
+@pytest.mark.parametrize(
+    "name", ["index", "documentation", "user-guide", "knowledge", "logs", "users", "api-docs"]
+)
 def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
     root = Path(__file__).parents[1] / "app/static"
     sync_playwright = pytest.importorskip("playwright.sync_api").sync_playwright
@@ -45,10 +47,37 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
                 data = {"content": "# Guide"}
             elif path == "/api/llm/models":
                 data = {"models": []}
+            elif path == "/openapi.json":
+                data = {
+                    "openapi": "3.1.0",
+                    "info": {"title": "API", "version": "1"},
+                    "paths": {},
+                    "components": {
+                        "schemas": {
+                            "Body_import_business_rule_document_api_business_rules_document_post": {
+                                "type": "object",
+                                "properties": {"file": {"type": "string"}},
+                            }
+                        }
+                    },
+                }
             r.fulfill(json=data)
 
         page.route("**/*", route)
         page.goto("http://localhost/")
+        for destination in (
+            "/project-dashboard",
+            "/",
+            "/progress",
+            "/quality-lifecycle",
+            "/static/user-guide.html",
+            "/documentation",
+            "/knowledge",
+            "/logs",
+            "/docs",
+        ):
+            assert page.locator(f'.primary-nav a[href="{destination}"]').count() == 1
+        assert page.locator("main").evaluate("e => getComputedStyle(e).paddingLeft") == "40px"
         page.locator("#sidebar-toggle").click()
         for theme in ["dark", "light", "system"]:
             page.locator("#theme-gear").click()
@@ -67,10 +96,11 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
             assert page.locator("#theme-menu").is_hidden()
         page.reload()
         assert page.locator("#sidebar-toggle").get_attribute("aria-expanded") == "false"
-        if name in {"documentation", "knowledge", "logs"}:
+        if name in {"documentation", "user-guide", "knowledge", "logs", "api-docs"}:
             page.screenshot(path=f"/tmp/explore-{name}-desktop.png", full_page=True)
             page.set_viewport_size({"width": 390, "height": 844})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            assert page.locator("main").evaluate("e => getComputedStyle(e).paddingLeft") == "18px"
             page.screenshot(path=f"/tmp/explore-{name}-mobile.png", full_page=True)
         page.close()
         browser.close()

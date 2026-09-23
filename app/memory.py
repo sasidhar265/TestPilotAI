@@ -286,6 +286,23 @@ class OrganizationalMemory:
             ).fetchone()
         return str(row[0]) if row else None
 
+    def workflow_counts(self) -> dict[str, int]:
+        """Count stored stage batches separately from complete test suites."""
+        counts = {"stories": 0, "scenarios": 0}
+        if not self.enabled or not self.path.exists():
+            return counts
+        with closing(self._connect()) as connection:
+            for (artifact,) in connection.execute("SELECT artifact_json FROM workflow_memory"):
+                try:
+                    value = json.loads(artifact)
+                except (TypeError, ValueError):
+                    continue
+                if isinstance(value, dict):
+                    for stage in counts:
+                        if isinstance(value.get(stage), list):
+                            counts[stage] += 1
+        return counts
+
     def remember_workflow(self, key: str, artifact: str) -> None:
         if not self.enabled:
             return

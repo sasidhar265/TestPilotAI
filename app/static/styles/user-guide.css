@@ -1,0 +1,53 @@
+#guide-content .section p,
+#guide-content .section li,
+#guide-content dd {
+  line-height: 1.75;
+}
+#guide-content .section a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#guide-content dd {
+  margin: 0 0 16px;
+}
+@media print {
+  .sidebar,
+  .topbar,
+  .navigation-backdrop,
+  .hero .actions,
+  .theme-menu {
+    display: none !important;
+  }
+  .docs-shell,
+  .docs-main,
+  .content,
+  .hero,
+  .grid {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body,
+  .card,
+  .callout,
+  .hero,
+  .section {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  h2,
+  h3,
+  .section-heading {
+    break-after: avoid;
+  }
+  .card,
+  .callout {
+    break-inside: avoid;
+  }
+  .section {
+    margin-top: 24px !important;
+  }
+}

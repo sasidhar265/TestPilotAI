@@ -22,6 +22,16 @@ from app.models import (
 from app.services import TestGenerationService as GenerationService
 
 
+@pytest.fixture(autouse=True)
+def approved_requirement_gate(monkeypatch):
+    """Isolate cache behavior from the separately tested business-source gate."""
+    from unittest.mock import AsyncMock
+
+    from app.agents.requirements_validation import RequirementsValidationAgent
+
+    monkeypatch.setattr(RequirementsValidationAgent, "require", AsyncMock())
+
+
 def suite() -> Suite:
     return Suite(
         feature_name="Login",
@@ -240,3 +250,61 @@ async def test_duplicate_refreshes_stale_knowledge_once_after_validation(
     assert reused.suite.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
     assert reused.suite.test_cases[0].title == generated.test_cases[0].title
     assert memory.count() == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("passed", [True, False])
+async def test_runtime_result_is_saved_only_after_validation_and_reused(tmp_path, passed):
+    from unittest.mock import AsyncMock, Mock
+
+    from app.agent_runtime import AgentOutcome
+    from app.agents import TestStorageAgent
+    from app.agents.test_case_validator import ValidationReport
+    from app.services import MultiAgentTestPipeline
+    from app.services.document_ingestion import InputAgent
+
+    memory = OrganizationalMemory(tmp_path / "memory.db")
+    report = ValidationReport(
+        passed=passed,
+        score=100 if passed else 0,
+        acceptance_criteria_total=0,
+        acceptance_criteria_covered=0,
+    )
+    runtime = AsyncMock()
+    runtime.run.return_value = AgentOutcome(suite=suite(), validation=report, trace=[])
+    validator = Mock()
+    validator.validate.return_value = report
+    pipeline = MultiAgentTestPipeline(
+        InputAgent(),
+        AsyncMock(),
+        validator,
+        TestStorageAgent(memory),
+        runtime,
+    )
+    request = GenerateRequest(description="As a user, I want secure sign in.")
+    await pipeline.run(request)
+    assert memory.count() == int(passed)
+    repeated = await pipeline.run(request)
+    assert runtime.run.await_count == (1 if passed else 2)
+    if passed:
+        assert repeated.suite.generation_source == GenerationSource.ORGANIZATIONAL_MEMORY
+        assert repeated.suite.test_cases == suite().test_cases
+
+
+def test_workflow_counts_are_separate_from_suites_and_survive_reopening(tmp_path):
+    import json
+
+    path = tmp_path / "memory.db"
+    memory = OrganizationalMemory(path)
+    assert memory.workflow_counts() == {"stories": 0, "scenarios": 0}
+    assert not path.exists()
+    memory.remember_workflow("stories-a", json.dumps({"stories": [{"id": "ST-001"}]}))
+    memory.remember_workflow("stories-b", json.dumps({"stories": [{"id": "ST-002"}]}))
+    memory.remember_workflow("scenarios-a", json.dumps({"scenarios": [{"id": "SC-001"}]}))
+    memory.remember_workflow("invalid", "invalid JSON")
+    assert memory.count() == 0
+    assert OrganizationalMemory(path).workflow_counts() == {"stories": 2, "scenarios": 1}
+    assert OrganizationalMemory(path, enabled=False).workflow_counts() == {
+        "stories": 0,
+        "scenarios": 0,
+    }

@@ -1,0 +1,71 @@
+/* Shared page geometry; individual pages retain their content layouts. */
+@media screen {
+  :is(.app-shell, .docs-shell, .shell) > main {
+    min-width: 0;
+    width: 100%;
+    padding: 32px 40px 72px;
+  }
+  .topbar {
+    min-height: 64px;
+    margin: 0 0 24px;
+    padding: 0;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .topbar > div:first-child {
+    min-width: 0;
+  }
+  .topbar h1 {
+    margin: 6px 0 0;
+    font-size: clamp(1.5rem, 2.4vw, 2.15rem);
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+    overflow-wrap: break-word;
+  }
+  .topbar :is(.page-intro, .users-intro) {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  .sidebar,
+  :root[data-theme="dark"] .sidebar {
+    background: var(--surface);
+    border-color: var(--line);
+  }
+  .top-actions {
+    flex-shrink: 0;
+  }
+  .sidebar .nav-item:not(.active) {
+    color: var(--ink-soft);
+  }
+  .sidebar .nav-label {
+    color: var(--muted);
+  }
+  .topbar .api-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  @media (max-width: 1080px) {
+    :is(.app-shell, .docs-shell, .shell) > main {
+      padding: 24px 24px 64px;
+    }
+  }
+  @media (max-width: 580px) {
+    :is(.app-shell, .docs-shell, .shell) > main {
+      padding: 22px 18px 64px;
+    }
+    .topbar {
+      min-height: auto;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .topbar h1 {
+      font-size: 1.35rem;
+    }
+    .top-actions {
+      flex-wrap: wrap;
+    }
+  }
+}
