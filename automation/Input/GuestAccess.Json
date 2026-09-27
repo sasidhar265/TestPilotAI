@@ -1,0 +1,13 @@
+{
+  "entry": "/guest",
+  "preview": "/",
+  "protected": {
+    "progress": "/progress",
+    "dashboard": "/api/dashboard",
+    "history": "/api/automation/history",
+    "report": "/api/automation/reports/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "rules": "/api/workspace/rules",
+    "standards": "/api/workspace/standards",
+    "knowledge": "/api/workspace/knowledge"
+  }
+}

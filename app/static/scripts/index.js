@@ -773,6 +773,7 @@ function syncBusinessRuleCount() {
   $("rule-save-state").textContent = "Unsaved changes";
 }
 const sharedRulesReady = (async () => {
+  if (document.body.dataset.guest === "true") return;
   const response = await fetch("/api/workspace/rules");
   if (!response.ok) throw await responseError(response);
   const data = await response.json();

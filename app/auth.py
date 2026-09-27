@@ -11,14 +11,10 @@ from app.users import get_user
 SESSION_COOKIE = "quality_lifecycle_session"
 GUEST_COOKIE = "quality_lifecycle_guest"
 GUEST_SESSION_MAX_SECONDS = 10 * 60
-GUEST_PAGES = frozenset({"/", "/progress"})
+GUEST_PAGES = frozenset({"/"})
 GUEST_READ_PATHS = GUEST_PAGES | {
     "/api/auth/profile",
-    "/api/workspace/rules",
-    "/api/workspace/standards",
     "/api/automation/languages",
-    "/api/dashboard",
-    "/api/automation/history",
 }
 
 
@@ -65,9 +61,7 @@ def valid_guest_session(value: str, settings: Settings) -> bool:
 def guest_request_allowed(path: str, method: str) -> bool:
     if path == "/api/auth/logout" and method == "POST":
         return True
-    return method in {"GET", "HEAD"} and (
-        path in GUEST_READ_PATHS or path.startswith("/api/automation/reports/")
-    )
+    return method in {"GET", "HEAD"} and path in GUEST_READ_PATHS
 
 
 def issue_browser_session(username: str, settings: Settings) -> str:

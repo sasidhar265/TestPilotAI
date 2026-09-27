@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import pytest
 
 from app.agents.reqnroll_step_definition_agent import (
@@ -246,15 +248,15 @@ async def test_partial_duplicate_csharp_is_supplied_as_knowledge(tmp_path, monke
     monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", generate)
     with pytest.raises(CopilotGenerationError, match="offline"):
         await agent.generate(StepDefinitionRequest(suite=changed, validation=_validation(True)))
-    import sqlite3
 
-    with sqlite3.connect(settings.organizational_memory_path) as connection:
+    with closing(
+        settings.memory_protection.connect(settings.organizational_memory_path)
+    ) as connection:
         assert connection.execute("SELECT count(*) FROM reqnroll_memory").fetchone()[0] == 1
 
 
 @pytest.mark.asyncio
 async def test_corrupt_csharp_memory_is_not_returned(tmp_path):
-    import sqlite3
 
     settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
     request = StepDefinitionRequest(
@@ -267,8 +269,11 @@ async def test_corrupt_csharp_memory_is_not_returned(tmp_path):
         '{"files": []}',
         original.model_dump_json().replace("api.AssertStatus(expectedStatus);", ""),
     ]:
-        with sqlite3.connect(settings.organizational_memory_path) as connection:
+        with closing(
+            settings.memory_protection.connect(settings.organizational_memory_path)
+        ) as connection:
             connection.execute("UPDATE reqnroll_memory SET artifact_json = ?", (content,))
+            connection.commit()
         regenerated = await agent.generate(request)
         assert regenerated.files == original.files
         assert all(item.status == "generated" for item in regenerated.coverage)

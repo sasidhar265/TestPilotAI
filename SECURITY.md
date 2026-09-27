@@ -13,7 +13,13 @@ exploit details.
 - Keep Jira publishing explicit and least privileged.
 - Rotate a credential immediately if it appears in source, logs, chat, or CI output.
 - Treat `.agent-memory/test_suites.db` as organizational data. Keep it out of Git and apply the
-  deployment environment's access, encryption, retention, backup, and deletion controls.
+  deployment environment's access, backup, and deletion controls. Enabled memory requires an
+  externally managed Fernet key; the complete SQLite snapshot is encrypted on disk. Plaintext
+  legacy databases are refused. Retention defaults to 30 days, with expiry on access, startup,
+  and hourly during operation. See `docs/memory-protection.md` for migration and erasure.
+- Guest sessions may access the static Quality workspace preview and basic profile/language
+  metadata only. Progress, execution history, reports, business rules and knowledge require
+  authenticated access. Keep guest entry disabled when a preview is not required.
 
 ## Production boundary
 

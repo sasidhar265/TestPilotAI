@@ -1,5 +1,6 @@
 /* Recorded execution evidence from the retained workspace and BDD histories. */
 (() => {
+  if (document.body.dataset.guest === "true") return;
   const $log = (id) => document.getElementById(id);
   const view = $log("execution-logs-view");
   if (!view) return;

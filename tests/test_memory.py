@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import pytest
 
 from app.agents import AgentCapability, AgentDescriptor, AgentRegistry
@@ -182,9 +184,15 @@ def test_legacy_database_retains_old_suite_until_refreshed(tmp_path) -> None:
             "INSERT INTO test_suite_memory VALUES (?, ?, 'created', 'accessed', 3)",
             (memory.key_for(request), suite().model_dump_json()),
         )
+    from app.memory_admin import migrate
+
+    encrypted = tmp_path / "migrated.db"
+    migrate(path, encrypted, memory.protection)
+    path = encrypted
+    memory = OrganizationalMemory(path)
     assert memory.get(request) is None
     assert memory.count() == 1
-    with sqlite3.connect(path) as connection:
+    with closing(memory.protection.connect(path)) as connection:
         row = connection.execute(
             "SELECT suite_json, access_count, generation_policy_version FROM test_suite_memory"
         ).fetchone()
@@ -204,7 +212,6 @@ def test_legacy_database_retains_old_suite_until_refreshed(tmp_path) -> None:
 async def test_duplicate_refreshes_stale_knowledge_once_after_validation(
     tmp_path, old_policy
 ) -> None:
-    import sqlite3
     from unittest.mock import AsyncMock
 
     from app.agents import TestStorageAgent
@@ -215,10 +222,11 @@ async def test_duplicate_refreshes_stale_knowledge_once_after_validation(
     memory = OrganizationalMemory(tmp_path / "memory.db")
     request = GenerateRequest(description="As a user, I want secure sign in.")
     memory.put(request, suite())
-    with sqlite3.connect(memory.path) as connection:
+    with closing(memory.protection.connect(memory.path)) as connection:
         connection.execute(
             "UPDATE test_suite_memory SET generation_policy_version = ?", (old_policy,)
         )
+        connection.commit()
     generated = suite()
     generated.test_cases[0].title = "Valid credentials open the account dashboard"
     generator = AsyncMock()
@@ -240,7 +248,7 @@ async def test_duplicate_refreshes_stale_knowledge_once_after_validation(
     rejected = await pipeline.run(request)
     assert not rejected.validation.passed
     assert memory.get(request) is None
-    with sqlite3.connect(memory.path) as connection:
+    with closing(memory.protection.connect(memory.path)) as connection:
         stored = connection.execute("SELECT suite_json FROM test_suite_memory").fetchone()[0]
     assert Suite.model_validate_json(stored).test_cases[0].title == "Valid login"
     validator.passed = True

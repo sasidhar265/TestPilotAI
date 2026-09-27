@@ -64,6 +64,7 @@ from app.exporter import suite_to_csv
 from app.generator import FallbackGenerator, copilot_error_message
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
+from app.memory_lifecycle import memory_lifespan
 from app.models import (
     AcceptanceReceipt,
     AcceptSuiteRequest,
@@ -100,6 +101,7 @@ from app.observability import (
     request_id_context,
     ui_log_handler,
 )
+from app.protected_memory import MemoryProtectionError
 from app.script_packs import router as script_pack_router
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
@@ -125,6 +127,7 @@ settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
 
 app = FastAPI(
+    lifespan=memory_lifespan,
     title="Quality Lifecycle Studio API",
     version="0.1.0",
     description="Governed multi-agent conversion of product requirements into validated tests.",
@@ -417,10 +420,12 @@ async def health(settings: Settings = Depends(get_settings)) -> dict[str, bool |
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     output_agent = OutputAgent(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     return {
         "ok": True,
@@ -496,8 +501,10 @@ async def readiness(settings: Settings = Depends(get_settings)) -> dict[str, obj
             memory_parent.mkdir(parents=True, exist_ok=True)
             checks["memory"] = os.access(memory_parent, os.W_OK)
             if checks["memory"]:
-                OrganizationalMemory(settings.organizational_memory_path).count()
-        except OSError:
+                OrganizationalMemory(
+                    settings.organizational_memory_path, protection=settings.memory_protection
+                ).count()
+        except (OSError, MemoryProtectionError):
             checks["memory"] = False
     ready = all(checks.values())
     if not ready:
@@ -709,7 +716,9 @@ async def save_review_feedback(
 ) -> dict[str, str]:
     """Save requirement-scoped corrections before requesting a new generation."""
     memory = OrganizationalMemory(
-        settings.organizational_memory_path, settings.organizational_memory_enabled
+        settings.organizational_memory_path,
+        settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     try:
         request = BusinessRulesAgent().enrich(review.request)
@@ -914,6 +923,7 @@ async def convert_validated_context(
         OutputAgent(
             settings.organizational_memory_path,
             enabled=settings.organizational_memory_enabled,
+            protection=settings.memory_protection,
         ).store(request.suite, output_format, artifact)
         complete_lifecycle_action(
             "Context Converter → Output Agent",

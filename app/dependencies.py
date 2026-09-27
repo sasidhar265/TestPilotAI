@@ -36,6 +36,7 @@ def get_test_generation_service(
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     return TestGenerationService(registry, memory, RequirementsValidationAgent(settings))
 
@@ -47,6 +48,7 @@ def get_requirement_to_test_case_service(
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     return RequirementToTestCaseService(registry, memory, RequirementsValidationAgent(settings))
 
@@ -58,11 +60,13 @@ def get_multi_agent_pipeline(
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     validator = TestCaseValidatorAgent()
     knowledge_source = OutputAgent(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     generator = TestCaseGeneratorAgent(registry, validator, knowledge_source)
     storage = TestStorageAgent(memory)

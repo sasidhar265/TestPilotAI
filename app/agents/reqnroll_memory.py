@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from app.memory import OrganizationalMemory
 from app.models import TestSuite
+from app.protected_memory import MemoryProtection
 
 if TYPE_CHECKING:
     from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
@@ -22,9 +23,12 @@ def _digest(value: object) -> str:
 
 
 class ReqnRollMemory:
-    def __init__(self, path: Path, enabled: bool = True) -> None:
+    def __init__(
+        self, path: Path, enabled: bool = True, *, protection: MemoryProtection | None = None
+    ) -> None:
         self.path = path
         self.enabled = enabled
+        self.protection = protection or MemoryProtection.from_environment()
 
     @staticmethod
     def identity(suite: TestSuite, profile: str, instructions: str) -> tuple[str, list[str]]:
@@ -101,13 +105,18 @@ class ReqnRollMemory:
             logger.warning("reqnroll_memory_write_failed")
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=5)
-        OrganizationalMemory._restrict_permissions(self.path, 0o600)
-        connection.execute(
-            "CREATE TABLE IF NOT EXISTS reqnroll_memory (memory_key TEXT PRIMARY KEY, "
-            "scope TEXT NOT NULL, scenarios_json TEXT NOT NULL, artifact_json TEXT NOT NULL)"
-        )
-        connection.execute(
-            "CREATE INDEX IF NOT EXISTS reqnroll_memory_scope ON reqnroll_memory(scope)"
-        )
-        return connection
+        connection = self.protection.connect(self.path)
+        try:
+            OrganizationalMemory._restrict_permissions(self.path, 0o600)
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS reqnroll_memory (memory_key TEXT PRIMARY KEY, "
+                "scope TEXT NOT NULL, scenarios_json TEXT NOT NULL, artifact_json TEXT NOT NULL)"
+            )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS reqnroll_memory_scope ON reqnroll_memory(scope)"
+            )
+            self.protection.prepare(connection)
+            return connection
+        except BaseException:
+            connection.abort()
+            raise

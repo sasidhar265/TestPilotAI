@@ -72,7 +72,9 @@ class ReqnRollStepDefinitionAgent:
         self.settings = settings
         self.client_factory = client_factory
         self.memory = ReqnRollMemory(
-            settings.organizational_memory_path, settings.organizational_memory_enabled
+            settings.organizational_memory_path,
+            settings.organizational_memory_enabled,
+            protection=settings.memory_protection,
         )
 
     def generate_bindings(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:

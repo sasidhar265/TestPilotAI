@@ -22,10 +22,10 @@ body[data-guest="true"] .profile-menu {
   color: var(--primary);
   font-weight: 700;
 }
-body[data-guest="true"] .primary-nav a:not([href="/"]):not([href="/progress"]),
+body[data-guest="true"] .primary-nav a:not([href="/"]),
 body[data-guest="true"] .primary-nav .explore-nav-label,
 body[data-guest="true"] #manage-users,
-body[data-guest="true"] [data-workspace-page]:not([data-workspace-page="/"]):not([data-workspace-page="/progress"]),
+body[data-guest="true"] [data-workspace-page]:not([data-workspace-page="/"]),
 body[data-guest="true"] #run-repository-bdd,
 body[data-guest="true"] #cancel-repository-bdd {
   display: none !important;

@@ -8,8 +8,7 @@
       control.title = "Sign in to make changes. Guest access is view-only.";
     });
     document.querySelectorAll('a[href]').forEach((link) => {
-      if (link.origin !== location.origin || ["/", "/progress", "/login"].includes(link.pathname)
-          || link.pathname.startsWith("/api/automation/reports/")) return;
+      if (link.origin !== location.origin || ["/", "/login"].includes(link.pathname)) return;
       link.hidden = true;
       link.style.display = "none";
     });
@@ -27,8 +26,7 @@
     if (!control) return;
     const forbiddenAction = workspace.contains(control) && control.matches(blockedControl);
     const forbiddenLink = control.matches("a[href]") && control.origin === location.origin
-      && !["/", "/progress", "/login"].includes(control.pathname)
-      && !control.pathname.startsWith("/api/automation/reports/");
+      && !["/", "/login"].includes(control.pathname);
     if (forbiddenAction || forbiddenLink) {
       event.preventDefault();
       event.stopImmediatePropagation();

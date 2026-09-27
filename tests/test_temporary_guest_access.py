@@ -46,9 +46,7 @@ def test_expiry_is_checked_without_reloading_settings(monkeypatch):
     assert settings.browser_login_enabled
 
 
-@pytest.mark.parametrize(
-    "path", ["/", "/progress", "/api/dashboard", "/api/automation/history", "/api/auth/profile"]
-)
+@pytest.mark.parametrize("path", ["/", "/api/auth/profile"])
 def test_guest_policy_expires_for_workspace_paths(path, monkeypatch):
     deadline = datetime(2026, 9, 25, tzinfo=UTC)
     settings = configured(temporary_guest_access_until=deadline)
@@ -78,6 +76,13 @@ def test_guest_policy_does_not_allow_account_administration(path):
 @pytest.mark.parametrize(
     "path,method",
     [
+        ("/progress", "GET"),
+        ("/api/dashboard", "GET"),
+        ("/api/automation/history", "GET"),
+        ("/api/automation/reports/" + "a" * 32, "GET"),
+        ("/api/automation/reports/" + "a" * 32, "HEAD"),
+        ("/api/workspace/rules", "GET"),
+        ("/api/workspace/standards", "GET"),
         ("/project-dashboard", "GET"),
         ("/quality-lifecycle", "GET"),
         ("/knowledge", "GET"),

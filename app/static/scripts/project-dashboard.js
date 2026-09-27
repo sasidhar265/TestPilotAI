@@ -1,5 +1,6 @@
 /* Management reporting uses recorded suite versions, never inferred project outcomes. */
 (() => {
+  if (document.body.dataset.guest === "true") return;
   const get = (id) => document.getElementById(id);
   let snapshot = null;
   let loading = false;

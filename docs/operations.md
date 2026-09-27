@@ -26,9 +26,13 @@ Copy `.env.example` to `.env`. Secrets must be supplied through the deployment p
 store and must never be committed. `COPILOT_MODEL` is fixed to `claude-haiku-4.5` and must be allowed by the
 organization’s Copilot policy.
 
-Organizational memory is enabled by default at `.agent-memory/test_suites.db`. The directory is
-ignored by Git. Back up, encrypt, retain, and delete this database according to the organization's
-data policy. Set `ORGANIZATIONAL_MEMORY_ENABLED=false` to disable reuse.
+Organizational memory is disabled by default. To enable it, supply
+`ORGANIZATIONAL_MEMORY_ENCRYPTION_KEY` through the approved secret manager and select
+`ORGANIZATIONAL_MEMORY_RETENTION_DAYS` (1–365, default 30). The default path remains
+`.agent-memory/test_suites.db`, but its new format is an encrypted snapshot, not a directly
+readable SQLite file. Legacy plaintext stores are refused, never silently converted or deleted.
+See [memory protection](memory-protection.md) for migration, backup and erasure commands.
+Guest entry is a static preview only: history, reports and workspace data require sign-in.
 
 Explicitly accepted test cases are stored beneath `ACCEPTED_OUTPUT_DIRECTORY` (`output` by
 default). The server writes manual cases as the reviewer-selected CSV or Excel format, automation

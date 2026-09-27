@@ -9,6 +9,7 @@ from pathlib import Path
 
 from app.agent_instructions import load_agent_section
 from app.models import GenerateRequest, GenerationSource, LlmModel, TestSuite
+from app.protected_memory import MemoryProtection
 
 
 class OrganizationalMemory:
@@ -18,9 +19,12 @@ class OrganizationalMemory:
     # Existing records remain stored; stale versions are not reused for new generation.
     GENERATION_POLICY_VERSION = 2
 
-    def __init__(self, path: Path, enabled: bool = True) -> None:
+    def __init__(
+        self, path: Path, enabled: bool = True, *, protection: MemoryProtection | None = None
+    ) -> None:
         self.path = path
         self.enabled = enabled
+        self.protection = protection or MemoryProtection.from_environment()
 
     @staticmethod
     def key_for(request: GenerateRequest, *, include_standards: bool = True) -> str:
@@ -317,53 +321,60 @@ class OrganizationalMemory:
             connection.commit()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=5)
-        self._restrict_permissions(self.path, 0o600)
-        connection.execute("PRAGMA journal_mode=WAL")
-        connection.execute("PRAGMA synchronous=NORMAL")
-        connection.execute("PRAGMA busy_timeout=5000")
-        connection.execute(
-            "CREATE TABLE IF NOT EXISTS workflow_memory "
-            "(memory_key TEXT PRIMARY KEY, artifact_json TEXT NOT NULL)"
-        )
-        connection.execute(
-            """CREATE TABLE IF NOT EXISTS test_suite_memory (
-                 memory_key TEXT PRIMARY KEY,
-                 suite_json TEXT NOT NULL,
-                 created_at TEXT NOT NULL,
-                 last_accessed_at TEXT NOT NULL,
-                 access_count INTEGER NOT NULL DEFAULT 0,
-                 generation_policy_version INTEGER NOT NULL DEFAULT 0
-               )"""
-        )
-        connection.execute(
-            """CREATE TABLE IF NOT EXISTS review_feedback (
-                 review_id TEXT PRIMARY KEY,
-                 request_key TEXT NOT NULL,
-                 comments TEXT NOT NULL,
-                 suite_json TEXT NOT NULL,
-                 created_at TEXT NOT NULL
-               )"""
-        )
-        connection.execute(
-            "CREATE INDEX IF NOT EXISTS review_feedback_request ON review_feedback(request_key)"
-        )
-        review_columns = {
-            row[1] for row in connection.execute("PRAGMA table_info(review_feedback)")
-        }
-        if "test_case_id" not in review_columns:
-            connection.execute("ALTER TABLE review_feedback ADD COLUMN test_case_id TEXT")
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")}
-        if "generation_policy_version" not in columns:
-            connection.execute("BEGIN IMMEDIATE")
+        connection = self.protection.connect(self.path)
+        try:
+            self._restrict_permissions(self.path, 0o600)
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=NORMAL")
+            connection.execute("PRAGMA busy_timeout=5000")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS workflow_memory "
+                "(memory_key TEXT PRIMARY KEY, artifact_json TEXT NOT NULL)"
+            )
+            connection.execute(
+                """CREATE TABLE IF NOT EXISTS test_suite_memory (
+                     memory_key TEXT PRIMARY KEY,
+                     suite_json TEXT NOT NULL,
+                     created_at TEXT NOT NULL,
+                     last_accessed_at TEXT NOT NULL,
+                     access_count INTEGER NOT NULL DEFAULT 0,
+                     generation_policy_version INTEGER NOT NULL DEFAULT 0
+                   )"""
+            )
+            connection.execute(
+                """CREATE TABLE IF NOT EXISTS review_feedback (
+                     review_id TEXT PRIMARY KEY,
+                     request_key TEXT NOT NULL,
+                     comments TEXT NOT NULL,
+                     suite_json TEXT NOT NULL,
+                     created_at TEXT NOT NULL
+                   )"""
+            )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS review_feedback_request ON review_feedback(request_key)"
+            )
+            review_columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(review_feedback)")
+            }
+            if "test_case_id" not in review_columns:
+                connection.execute("ALTER TABLE review_feedback ADD COLUMN test_case_id TEXT")
             columns = {row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")}
             if "generation_policy_version" not in columns:
-                connection.execute(
-                    "ALTER TABLE test_suite_memory ADD COLUMN "
-                    "generation_policy_version INTEGER NOT NULL DEFAULT 0"
-                )
-            connection.commit()
-        return connection
+                connection.execute("BEGIN IMMEDIATE")
+                columns = {
+                    row[1] for row in connection.execute("PRAGMA table_info(test_suite_memory)")
+                }
+                if "generation_policy_version" not in columns:
+                    connection.execute(
+                        "ALTER TABLE test_suite_memory ADD COLUMN "
+                        "generation_policy_version INTEGER NOT NULL DEFAULT 0"
+                    )
+                connection.commit()
+            self.protection.prepare(connection)
+            return connection
+        except BaseException:
+            connection.abort()
+            raise
 
     @staticmethod
     def _restrict_permissions(path: Path, mode: int) -> None:

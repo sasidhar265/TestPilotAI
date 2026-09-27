@@ -75,10 +75,12 @@ async def knowledge_sources(
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     outputs = OutputAgent(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     return {
         "enabled": settings.organizational_memory_enabled,
@@ -100,10 +102,12 @@ async def knowledge_source_detail(
     memory = OrganizationalMemory(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     outputs = OutputAgent(
         settings.organizational_memory_path,
         enabled=settings.organizational_memory_enabled,
+        protection=settings.memory_protection,
     )
     detail: dict[str, object] = {
         "suite": memory.entry(identifier) if source == "suites" else None,

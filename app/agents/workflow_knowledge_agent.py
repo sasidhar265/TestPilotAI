@@ -19,7 +19,9 @@ Artifact = TypeVar("Artifact", bound=BaseModel)
 class WorkflowKnowledgeAgent:
     def __init__(self, settings: Settings) -> None:
         self.memory = OrganizationalMemory(
-            settings.organizational_memory_path, settings.organizational_memory_enabled
+            settings.organizational_memory_path,
+            settings.organizational_memory_enabled,
+            protection=settings.memory_protection,
         )
         self.profile = settings.agent_profile
 

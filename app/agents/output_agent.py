@@ -11,6 +11,7 @@ from pathlib import Path
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.context_converter_agent import ConvertedArtifact
 from app.models import ExportFormat, GenerateRequest, TestSuite
+from app.protected_memory import MemoryProtection
 
 _WORDS = re.compile(r"[a-z0-9]{3,}")
 
@@ -32,9 +33,12 @@ class OutputAgent:
         instruction_file=".github/agents/output.agent.md",
     )
 
-    def __init__(self, path: Path, enabled: bool = True) -> None:
+    def __init__(
+        self, path: Path, enabled: bool = True, *, protection: MemoryProtection | None = None
+    ) -> None:
         self.path = path
         self.enabled = enabled
+        self.protection = protection or MemoryProtection.from_environment()
 
     def store(
         self, suite: TestSuite, output_format: ExportFormat, artifact: ConvertedArtifact
@@ -171,7 +175,8 @@ class OutputAgent:
             return None
         with closing(self._connect()) as connection:
             row = connection.execute(
-                "SELECT artifact_id, filename, output_format, media_type, content, suite_json, created_at "
+                "SELECT artifact_id, filename, output_format, media_type, "
+                "content, suite_json, created_at "
                 "FROM converted_outputs WHERE artifact_id = ? OR artifact_id LIKE ? LIMIT 1",
                 (identifier, identifier + "%"),
             ).fetchone()
@@ -192,33 +197,38 @@ class OutputAgent:
         }
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=5)
-        connection.execute(
-            """CREATE TABLE IF NOT EXISTS converted_outputs (
-                 artifact_id TEXT PRIMARY KEY,
-                 filename TEXT NOT NULL,
-                 output_format TEXT NOT NULL,
-                 media_type TEXT NOT NULL,
-                 content BLOB NOT NULL,
-                 suite_json TEXT NOT NULL,
-                 search_text TEXT NOT NULL,
-                 created_at TEXT NOT NULL
-               )"""
-        )
-        connection.execute(
-            """CREATE TABLE IF NOT EXISTS output_scenarios (
-                 artifact_id TEXT NOT NULL,
-                 case_id TEXT NOT NULL,
-                 title TEXT NOT NULL,
-                 execution_mode TEXT NOT NULL,
-                 gherkin TEXT NOT NULL,
-                 requirements_json TEXT NOT NULL,
-                 scenario_json TEXT NOT NULL,
-                 PRIMARY KEY (artifact_id, case_id),
-                 FOREIGN KEY (artifact_id) REFERENCES converted_outputs(artifact_id)
-               )"""
-        )
-        return connection
+        connection = self.protection.connect(self.path)
+        try:
+            connection.execute(
+                """CREATE TABLE IF NOT EXISTS converted_outputs (
+                     artifact_id TEXT PRIMARY KEY,
+                     filename TEXT NOT NULL,
+                     output_format TEXT NOT NULL,
+                     media_type TEXT NOT NULL,
+                     content BLOB NOT NULL,
+                     suite_json TEXT NOT NULL,
+                     search_text TEXT NOT NULL,
+                     created_at TEXT NOT NULL
+                   )"""
+            )
+            connection.execute(
+                """CREATE TABLE IF NOT EXISTS output_scenarios (
+                     artifact_id TEXT NOT NULL,
+                     case_id TEXT NOT NULL,
+                     title TEXT NOT NULL,
+                     execution_mode TEXT NOT NULL,
+                     gherkin TEXT NOT NULL,
+                     requirements_json TEXT NOT NULL,
+                     scenario_json TEXT NOT NULL,
+                     PRIMARY KEY (artifact_id, case_id),
+                     FOREIGN KEY (artifact_id) REFERENCES converted_outputs(artifact_id)
+                   )"""
+            )
+            self.protection.prepare(connection)
+            return connection
+        except BaseException:
+            connection.abort()
+            raise
 
     @staticmethod
     def _tokens(value: str) -> set[str]:

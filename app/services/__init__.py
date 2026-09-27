@@ -234,7 +234,7 @@ class TestGenerationService:
         self.memory = memory
         self.requirements_validator = requirements_validator or RequirementsValidationAgent()
         validator = TestCaseValidatorAgent()
-        knowledge_source = OutputAgent(memory.path, memory.enabled)
+        knowledge_source = OutputAgent(memory.path, memory.enabled, protection=memory.protection)
         self.pipeline = MultiAgentTestPipeline(
             InputAgent(),
             TestCaseGeneratorAgent(registry, validator, knowledge_source),

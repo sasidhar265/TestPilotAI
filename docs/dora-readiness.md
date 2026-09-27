@@ -52,7 +52,9 @@ the live database. Incomplete bundles/drills have no completion manifest/report 
 treated as successful. Checksums detect corruption, not malicious replacement of both data and
 manifest: use separately protected storage, encryption and signed/immutable backup manifests.
 
-Repeat backup for every configured SQLite store (suite memory, lifecycle, users, dashboard, usage).
+Repeat SQLite backup for lifecycle, users, dashboard and usage stores. Organisational suite
+memory now uses encrypted snapshots: follow [memory protection](memory-protection.md) for its
+separate backup/restore procedure; do not pass that encrypted file to `app.resilience`.
 Separate database snapshots are not an atomic application snapshot: quiesce application writes
 for a coordinated recovery point. Also protect accepted output/evidence files, deployment
 configuration and secret-manager recovery separately. Do not place backups under static/web roots.

@@ -1,5 +1,6 @@
 /* Only measured execution of the repository BDD project belongs in this view. */
 (() => {
+  if (document.body.dataset.guest === "true") return;
   let loading = false,
     running = false,
     selectedId = null,

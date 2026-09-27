@@ -178,3 +178,19 @@ its own `caseId`, included in the title. Steps, fixtures and assertions are unch
 execution results. Keep this catalog in sync when adding or renaming repository
 scenarios. The workspace resolves runner method names to these titles; unknown
 test IDs retain their original runner names. Raw TRX files retain NUnit names.
+
+## Guest confidentiality checks
+
+`Features/GuestAccess.feature` uses `HttpClient` and `Input/GuestAccess.Json` to verify the
+static guest preview and denial of GET/HEAD access to execution evidence and workspace data.
+Run on an isolated target with a future `TEMPORARY_GUEST_ACCESS_UNTIL`, `APP_PASSWORD` and
+`SESSION_SECRET` configured. Never enable guest access on production merely to run these checks.
+For local HTTP use a development target; production Secure cookies require HTTPS. The report ID
+is a synthetic lookup value: access must be rejected by middleware before report lookup.
+Run the full configured pack normally; for the affected security/API regression subset:
+
+```sh
+dotnet test automation/QualityLifecycle.Automation.csproj --filter 'FullyQualifiedName~GuestPreviewConfidentiality|FullyQualifiedName~QualityLifecycleStudioSecurityControls|FullyQualifiedName~QualityLifecycleStudioAPI'
+```
+
+These tests do not call AI providers and do not validate generated quotation suites.

@@ -1,6 +1,10 @@
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.protected_memory import MemoryProtection
 
 from pydantic import AwareDatetime, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -71,13 +75,24 @@ class Settings(BaseSettings):
     codex_artifact_timeout_seconds: float = Field(default=900, gt=0, le=1800)
     agent_profile: str = "auto-finance-quotation"
     requirements_baseline_path: Path = Path("workspace/requirements-baseline.json")
-    organizational_memory_enabled: bool = True
+    organizational_memory_enabled: bool = False
+    organizational_memory_encryption_key: SecretStr = SecretStr("")
+    organizational_memory_retention_days: int = Field(default=30, ge=1, le=365)
     organizational_memory_path: Path = Path(".agent-memory/test_suites.db")
     accepted_output_directory: Path = Path("output")
     jira_base_url: str = ""
     jira_email: str = ""
     jira_api_token: str = ""
     jira_acceptance_criteria_fields: str = ""
+
+    @property
+    def memory_protection(self) -> "MemoryProtection":
+        from app.protected_memory import MemoryProtection
+
+        return MemoryProtection(
+            self.organizational_memory_encryption_key.get_secret_value(),
+            self.organizational_memory_retention_days,
+        )
 
     @property
     def jira_acceptance_criteria_field_list(self) -> list[str]:
@@ -167,6 +182,16 @@ class Settings(BaseSettings):
                 "COPILOT_COORDINATOR_TIMEOUT_SECONDS must be at least four times "
                 "COPILOT_TIMEOUT_SECONDS to cover both specialist routes and revisions"
             )
+        if self.organizational_memory_enabled:
+            from app.protected_memory import MemoryProtectionError, validate_key
+
+            try:
+                validate_key(self.organizational_memory_encryption_key.get_secret_value())
+            except MemoryProtectionError as error:
+                raise ValueError(
+                    "Enabled organisational memory requires ORGANIZATIONAL_MEMORY_ENCRYPTION_KEY. "
+                    "Supply a Fernet key through your secret manager, or disable memory."
+                ) from error
         if self.is_production:
             token = self.api_auth_token_value
             if len(token) < 32:

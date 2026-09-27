@@ -837,3 +837,10 @@ downloads, execution, reports and troubleshooting. Use **Print / Save as PDF**
 to keep an offline copy. Technical documentation remains available at `/documentation`.
 
 © 2026 Sasidhar Rajupalem. All rights reserved.
+
+## Guest previews and protected memory
+
+Guest access exposes a static workspace preview only. Execution history, reports, shared rules
+and knowledge require authentication. Organisational memory is disabled by default; enabling it
+requires an externally managed encryption key. See [memory protection](docs/memory-protection.md)
+for retention, migration of existing plaintext stores, backups and deletion.
