@@ -65,7 +65,7 @@ class UserAccess(BaseModel):
 
 @router.get("/api/auth/profile", include_in_schema=False)
 def profile(
-    user: Annotated[dict[str, Any], Depends(current_user)], settings: Config
+    request: Request, user: Annotated[dict[str, Any], Depends(current_user)], settings: Config
 ) -> dict[str, Any]:
     parts = user["display_name"].split()
     initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper() if parts else "?"
