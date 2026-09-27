@@ -153,3 +153,24 @@ def test_current_service_scope_is_not_replaced_by_default_quotation_profile():
     assert "Do not insert a competing passed/failed Quality Gate verdict" in (
         generation_agent_instructions("automation")
     )
+
+
+@pytest.mark.parametrize("target", ["manual", "automation"])
+def test_finance_risk_evidence_reaches_generation(target):
+    body = generation_agent_instructions(target, "auto-finance-quotation")
+    assert "quotation-risk-and-evidence.md" in body
+    assert "Part exchange and settlement" in body
+    assert "independently approved golden quote" in body
+    assert "not additional approved business requirements" in body
+
+
+def test_finance_risk_evidence_reaches_framework_generation():
+    body = step_definition_agent_instructions("auto-finance-quotation")
+    assert "quotation-risk-and-evidence.md" in body
+    assert "Do not coerce" in body or "do not coerce" in body
+    assert "System.Net.Http.HttpClient" in body
+
+
+def test_finance_risk_evidence_does_not_leak_into_other_profiles():
+    body = load_profile_instructions("testpilot", "automation-test-generator")
+    assert "quotation-risk-and-evidence.md" not in body

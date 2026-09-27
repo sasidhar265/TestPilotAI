@@ -32,7 +32,14 @@
       tab.setAttribute("aria-selected", String(active));
       tab.tabIndex = active ? 0 : -1;
       $(`stage-panel-${index + 1}`).hidden = !active;
-      if (active && focus) tab.focus();
+      if (active && focus) tab.focus({ preventScroll: true });
+      const strip = tab.parentElement;
+      if (active && !workspace.hidden && strip.scrollWidth > strip.clientWidth) {
+        const left = tab.offsetLeft - strip.offsetLeft;
+        if (left < strip.scrollLeft) strip.scrollLeft = left;
+        else if (left + tab.offsetWidth > strip.scrollLeft + strip.clientWidth)
+          strip.scrollLeft = left + tab.offsetWidth - strip.clientWidth;
+      }
     });
     if (stage === 5 && suite) {
       work("Loading feature execution plan…", refreshExecution, "execution-plan");
@@ -50,7 +57,27 @@
       }
     };
   });
+  function emptyOutput(title, description, stage, action) {
+    return `<div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span>
+      <h3>${esc(title)}</h3><p>${esc(description)}</p>
+      <button class="secondary" type="button" data-open-stage="${stage}">${esc(action)} →</button></div>`;
+  }
+  workspace.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-open-stage]");
+    if (action) show(Number(action.dataset.openStage));
+  });
+  function outcomeClass(value) {
+    return ({ passed: "passed", failed: "failed", error: "failed", blocked: "blocked",
+      skipped: "skipped", notexecuted: "skipped", "not-run": "skipped" })[
+      String(value).toLowerCase()] || "unknown";
+  }
   function sync() {
+    document.querySelector(".story-approval-toolbar").hidden = !state.stories;
+    document.querySelector(".scenario-approval-toolbar").hidden = !state.scenarios;
+    if (!suite && !$("stage-execution-list").children.length) {
+      $("stage-execution-list").innerHTML = emptyOutput("Prepare your first test run",
+        "Create and review test cases to see the execution plan and available actions.", 4, "Review test cases");
+    }
     workspace.hidden = !state.stories && !suite;
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
@@ -124,6 +151,18 @@
     $("review-cases").disabled = state.busy || !suite;
     $("stage-refresh-execution").disabled = state.busy || !suite;
     $("stage-run").disabled = state.busy || !state.plan?.ready;
+    const outputCounts = [
+      null,
+      state.stories?.stories.length,
+      state.scenarios?.scenarios.length,
+      suite?.test_cases.length,
+      null,
+    ];
+    tabs.forEach((tab, i) => {
+      const badge = tab.querySelector(".stage-count");
+      badge.hidden = outputCounts[i] == null;
+      badge.textContent = outputCounts[i] ?? "";
+    });
     tabs.forEach((tab, i) =>
       tab.classList.toggle(
         "complete",
@@ -146,7 +185,7 @@
       state.stories = null;
       state.storiesReviewed = false;
       $("story-cards").innerHTML =
-        '<p class="stage-empty">Create stories from the current requirements.</p>';
+        emptyOutput("Your stories will appear here", "Generate stories from your current requirements.", 1, "Review requirements");
       state.acceptedStories.clear();
       state.jiraStories.clear();
       state.dirtyStories.clear();
@@ -158,7 +197,7 @@
       state.acceptedScenarios.clear();
       state.dirtyScenarios.clear();
       $("scenario-cards").innerHTML =
-        '<p class="stage-empty">Review stories before creating scenarios.</p>';
+        emptyOutput("Build coverage from approved stories", "Review and approve stories before creating scenarios.", 2, "Review stories");
     }
     suite = null;
     validationReport = null;
@@ -424,7 +463,7 @@
     return `<article class="stage-card" data-story-index="${index}">
       <div class="story-review-heading"><label><input class="story-check" type="checkbox" checked aria-label="Select ${esc(story.id)} for acceptance" /> <span class="chip">${esc(story.id)}</span></label><span class="story-review-state">Review required</span></div>
       <h3>${esc(story.title)}</h3><p>${esc(story.narrative)}</p>
-      <blockquote>${esc(story.source_excerpt)}</blockquote><strong>Acceptance criteria</strong>
+      <blockquote><span class="output-field-label">Source requirement</span>${esc(story.source_excerpt)}</blockquote><strong class="output-field-label">Acceptance criteria</strong>
       <ul>${story.acceptance_criteria.map((ac) => `<li>${esc(ac)}</li>`).join("")}</ul>
       <button class="secondary story-open-edit" type="button" aria-haspopup="dialog">Edit ${esc(story.id)}</button>
       <dialog class="story-edit story-edit-dialog" aria-labelledby="story-edit-title-${index}">
@@ -639,8 +678,11 @@
             `<article class="stage-card" data-scenario-index="${index}">
         <div class="story-review-heading"><span class="chip">${esc(scenario.id)} → ${esc(scenario.story_id)}</span><span class="scenario-review-state">Review required</span></div>
         <h3>${esc(scenario.title)}</h3>
-        <p><strong>Preconditions:</strong> ${esc(scenario.preconditions.join("; ") || "None specified")}</p>
-        <p><strong>Action:</strong> ${esc(scenario.action)}</p><p><strong>Expected:</strong> ${esc(scenario.expected_result)}</p>
+        <dl class="scenario-facts">
+          <div><dt>Preconditions</dt><dd>${esc(scenario.preconditions.join("; ") || "None specified")}</dd></div>
+          <div><dt>Action</dt><dd>${esc(scenario.action)}</dd></div>
+          <div class="scenario-expected"><dt>Expected result</dt><dd>${esc(scenario.expected_result)}</dd></div>
+        </dl><strong class="output-field-label">Acceptance criteria covered</strong>
         <ul>${scenario.acceptance_criteria.map((ac) => `<li>${esc(ac)}</li>`).join("")}</ul>
         <button class="secondary scenario-open-edit" type="button" aria-haspopup="dialog">Edit ${esc(scenario.id)}</button>
         <dialog class="story-edit-dialog scenario-edit-dialog" aria-labelledby="scenario-edit-title-${index}">
@@ -867,7 +909,7 @@
         (item) =>
           `<article class="stage-card"><span class="chip">${esc(item.feature_file)}</span><h3>${esc(item.scenario)}</h3><p>${running ? "Submitted to runner · individual progress unavailable until results return" : esc(state.plan?.runStatus || (state.plan?.ready ? "Listed in configured project · not run" : "Not run · target configuration required"))}</p></article>`,
       )
-      .join("");
+      .join("") || emptyOutput("No automation cases listed", "Review the execution plan above for configuration or coverage details.", 4, "Review test cases");
   }
   async function refreshExecution(current) {
     state.plan = null;
@@ -915,14 +957,15 @@
           const report = await post("execute", { suite, request: reviewSourceRequest });
           current();
           $("stage-execution-results").innerHTML =
-            `<h3>Run ${esc(report.status)}</h3><p>${report.passed} passed · ${report.failed} failed · ${report.skipped} skipped</p>` +
+            `<div class="run-result-heading"><div><span class="section-kicker">LATEST RUN</span><h3>Execution results</h3></div><span class="outcome-badge ${outcomeClass(report.status)}">${esc(report.status)}</span></div>
+            <dl class="run-result-metrics"><div><dt>Passed</dt><dd>${esc(report.passed ?? "—")}</dd></div><div><dt>Failed</dt><dd>${esc(report.failed ?? "—")}</dd></div><div><dt>Skipped</dt><dd>${esc(report.skipped ?? "—")}</dd></div></dl>` +
             (report.test_results || [])
               .map(
                 (item) =>
-                  `<div class="stage-result"><span>${esc(item.name)}</span><strong>${esc(item.status)}</strong></div>`,
+                  `<div class="stage-result"><div><span>${esc(item.name)}</span>${item.error ? `<details class="result-failure"><summary>Failure details</summary><pre>${esc(item.error)}</pre></details>` : ""}</div><strong class="outcome-badge ${outcomeClass(item.status)}">${esc(item.status)}</strong></div>`,
               )
               .join("") +
-            (report.error ? `<p>${esc(report.error)}</p>` : "");
+            (report.error ? `<p class="run-result-error">${esc(report.error)}</p>` : "");
           state.runReport = report;
           $("stage-execution-results").insertAdjacentHTML(
             "beforeend",

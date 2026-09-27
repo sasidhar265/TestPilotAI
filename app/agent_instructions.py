@@ -50,7 +50,12 @@ def load_agent_instructions(agent_id: str) -> str:
     filename = AGENT_FILES.get(agent_id)
     if filename is None:
         raise KeyError(f"Unknown Markdown agent: {agent_id}")
-    return _instruction_body(AGENT_DIRECTORY / filename)
+    return "\n\n".join(
+        [
+            _instruction_body(AGENT_DIRECTORY / filename),
+            _instruction_body(AGENT_DIRECTORY / "model-policy.md"),
+        ]
+    )
 
 
 def load_profile_instructions(profile: str, agent_id: str | None = None) -> str:

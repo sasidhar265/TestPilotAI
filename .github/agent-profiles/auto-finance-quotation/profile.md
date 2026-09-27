@@ -78,3 +78,10 @@ negative, missing-value, configured-boundary, and effective-date cases where the
 Across the suite, map all nineteen BRD business errors exactly and do not replace them with older
 aliases. Each error case asserts `status`, `code`, safe `message`, relevant `field` when supplied,
 and `correlationId`, plus absence of stack traces or confidential calculation details.
+
+## Risk and evidence playbook
+
+Use `knowledge/quotation-risk-and-evidence.md` to select relevant financial edge cases,
+independent oracle requirements, framework safeguards and execution-evidence checks.
+This is risk guidance, not an expansion of the approved BRD. Separate proposed scenarios
+from executable cases whenever business semantics or approved fixture data are unavailable.

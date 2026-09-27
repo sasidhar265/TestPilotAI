@@ -49,6 +49,8 @@ services:
       - key: MAX_CONCURRENT_REQUESTS
         value: "10"
       - key: COPILOT_MODEL
-        value: ""
+        value: "claude-haiku-4.5"
+      - key: CODEX_MODEL
+        value: "gpt-6-astra"
       - key: ORGANIZATIONAL_MEMORY_ENABLED
         value: "true"

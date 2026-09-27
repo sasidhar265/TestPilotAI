@@ -635,43 +635,41 @@ async def _run_automation(
     request_id = request_id_context.get()
     lifecycle_events.start(request_id)
     generation_cancellations.register(request_id, "repository_bdd_execution")
+    final_status = "error"
+    final_details: dict[str, object] = {"results_available": False}
+    final_summary = "Automation execution ended unexpectedly; inspect server logs."
     try:
         report = await AutomationExecutionAgent(settings).run(request)
         report = report.model_copy(update={"execution_scope": scope})
-        dashboard.finish(run_id, report.status, report.model_dump())
-        complete_lifecycle_action(
-            "Automation Execution Agent",
-            "run_csharp_bdd_suite",
+        final_status = report.status
+        final_details = report.model_dump()
+        final_summary = (
             f"Automation run {report.status}: {report.passed} passed, "
-            f"{report.failed} failed, {report.skipped} skipped.",
+            f"{report.failed} failed, {report.skipped} skipped."
         )
         return report
     except AutomationExecutionError as error:
-        dashboard.finish(
-            run_id,
-            "error",
-            {"error": str(error), "output": error.output, "results_available": False},
-        )
-        publish_lifecycle_event(
-            "Automation Execution Agent", "run_csharp_bdd_suite", "failed", str(error)
-        )
-        lifecycle_events.complete(request_id_context.get())
+        final_details = {
+            "error": str(error),
+            "output": error.output,
+            "results_available": False,
+        }
+        final_summary = str(error)
         raise HTTPException(status_code=422, detail=str(error)) from error
     except asyncio.CancelledError as error:
-        dashboard.finish(
-            run_id,
-            "cancelled",
-            {"error": "BDD execution cancelled by the user.", "results_available": False},
-        )
-        publish_lifecycle_event(
-            "Automation Execution Agent",
-            "run_csharp_bdd_suite",
-            "failed",
-            "BDD execution cancelled; runner processes stopped.",
-        )
+        final_status = "cancelled"
+        final_details = {
+            "error": "BDD execution cancelled by the user.",
+            "results_available": False,
+        }
+        final_summary = "BDD execution cancelled; runner processes stopped."
         raise HTTPException(499, "BDD execution cancelled.") from error
     finally:
-        dashboard.finish(run_id, "error", {"results_available": False})
+        # Persist only after the terminal event exists, so history and live activity agree.
+        publish_lifecycle_event(
+            "Automation Execution Agent", "run_csharp_bdd_suite", final_status, final_summary
+        )
+        dashboard.finish(run_id, final_status, final_details)
         generation_cancellations.unregister(request_id)
         lifecycle_events.complete(request_id)
 

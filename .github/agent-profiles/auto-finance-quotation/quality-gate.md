@@ -42,3 +42,10 @@ typed synthetic data suitable for ReqnRoll bindings.
 
 For automation Gherkin require Given/When/Then, no more than four executable step lines, and no
 step text over 100 characters. Detailed values belong in Examples or structured test data.
+
+Apply the risk and evidence playbook to relevant supplied requirements. Check that financial
+expected values have an independent approved oracle, field-specific rounding/tolerance and
+version evidence; a repeated response or successful HTTP status is insufficient. Reject
+response-derived expected values, silently defaulted missing money fields and guessed
+ProductId mappings. Report unavailable approved rules or input controls as gaps rather than
+inventing request fields or imposing every playbook risk on a narrow request.

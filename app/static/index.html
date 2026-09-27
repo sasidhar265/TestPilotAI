@@ -9,19 +9,20 @@
     <link rel="stylesheet" href="/static/styles/index.css?v=20260916-final-ui" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260909-modern-nav" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260927-mobile-drawer" />
     <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260922-brd-review" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
-    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20260921" />
-    <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260922-detail-tabs" />
+    <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260927-live-activity" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/workflow-results.css?v=20260927" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/guest.css?v=20260923-guest-views" />
   </head>
@@ -302,6 +303,10 @@
           </section>
 
           <section class="stage-workspace" aria-label="Requirements to execution" hidden>
+            <div class="stage-navigation-heading">
+              <div><span class="stage-eyebrow">YOUR WORKSPACE</span><h2>Workflow outputs</h2></div>
+              <p>Review, refine and move to the next stage.</p>
+            </div>
             <div class="stage-tabs" role="tablist" aria-label="Quality workflow stages">
               <button
                 type="button"
@@ -312,9 +317,12 @@
                 tabindex="0"
                 data-stage="1"
               >
-                <span class="stage-number">01</span
-                ><span><small>Stage 1</small><strong>Requirements</strong></span
-                ><span class="stage-indicator" aria-hidden="true"></span>
+                <span class="stage-number" aria-hidden="true">01</span>
+                <span class="stage-tab-copy">
+                  <span class="stage-tab-title"><strong>Requirements</strong><span class="stage-count" hidden></span></span>
+                  <small>Source & context</small>
+                </span>
+                <span class="stage-indicator" aria-hidden="true">✓</span>
               </button>
               <button
                 type="button"
@@ -325,9 +333,12 @@
                 tabindex="-1"
                 data-stage="2"
               >
-                <span class="stage-number">02</span
-                ><span><small>Stage 2</small><strong>Stories</strong></span
-                ><span class="stage-indicator" aria-hidden="true"></span>
+                <span class="stage-number" aria-hidden="true">02</span>
+                <span class="stage-tab-copy">
+                  <span class="stage-tab-title"><strong>Stories</strong><span class="stage-count" hidden></span></span>
+                  <small>Review & approve</small>
+                </span>
+                <span class="stage-indicator" aria-hidden="true">✓</span>
               </button>
               <button
                 type="button"
@@ -338,9 +349,12 @@
                 tabindex="-1"
                 data-stage="3"
               >
-                <span class="stage-number">03</span
-                ><span><small>Stage 3</small><strong>Scenarios</strong></span
-                ><span class="stage-indicator" aria-hidden="true"></span>
+                <span class="stage-number" aria-hidden="true">03</span>
+                <span class="stage-tab-copy">
+                  <span class="stage-tab-title"><strong>Scenarios</strong><span class="stage-count" hidden></span></span>
+                  <small>Coverage & risks</small>
+                </span>
+                <span class="stage-indicator" aria-hidden="true">✓</span>
               </button>
               <button
                 type="button"
@@ -351,9 +365,12 @@
                 tabindex="-1"
                 data-stage="4"
               >
-                <span class="stage-number">04</span
-                ><span><small>Stage 4</small><strong>Test cases</strong></span
-                ><span class="stage-indicator" aria-hidden="true"></span>
+                <span class="stage-number" aria-hidden="true">04</span>
+                <span class="stage-tab-copy">
+                  <span class="stage-tab-title"><strong>Test cases</strong><span class="stage-count" hidden></span></span>
+                  <small>Steps & expectations</small>
+                </span>
+                <span class="stage-indicator" aria-hidden="true">✓</span>
               </button>
               <button
                 type="button"
@@ -364,9 +381,12 @@
                 tabindex="-1"
                 data-stage="5"
               >
-                <span class="stage-number">05</span
-                ><span><small>Stage 5</small><strong>Execution</strong></span
-                ><span class="stage-indicator" aria-hidden="true"></span>
+                <span class="stage-number" aria-hidden="true">05</span>
+                <span class="stage-tab-copy">
+                  <span class="stage-tab-title"><strong>Execution</strong><span class="stage-count" hidden></span></span>
+                  <small>Runs & results</small>
+                </span>
+                <span class="stage-indicator" aria-hidden="true">✓</span>
               </button>
             </div>
             <p id="stage-status" role="status">
@@ -392,11 +412,12 @@
             >
               <div class="stage-heading">
                 <div>
+                  <span class="section-kicker">STORY DESIGN</span>
                   <h2>Shape requirements into stories</h2>
                   <p>Review the stories, select those to accept, and enter the reviewer name.</p>
                 </div>
                 <div class="stage-actions">
-                  <button class="primary" id="stage-stories" type="button" disabled>
+                  <button class="secondary" id="stage-stories" type="button" disabled>
                     Create stories →
                   </button>
                   <button class="primary" id="review-stories" type="button" disabled>
@@ -437,14 +458,14 @@
                     >
                       ✓ Approve selected
                     </button>
-                    <button class="primary compact" id="story-jira-open" type="button" disabled>
+                    <button class="secondary compact" id="story-jira-open" type="button" disabled>
                       Upload to Jira
                     </button>
                   </div>
                 </div>
               </div>
               <div id="story-cards" class="stage-cards">
-                <p class="stage-empty">Read your requirements in stage 1 to begin.</p>
+                <div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Your stories will appear here</h3><p>Start with your requirements, then generate stories to review and approve.</p><button class="secondary" type="button" data-open-stage="1">Review requirements →</button></div>
               </div>
               <p id="story-review-progress" role="status">
                 Review and accept each story to continue.
@@ -459,11 +480,12 @@
             >
               <div class="stage-heading">
                 <div>
+                  <span class="section-kicker">COVERAGE DESIGN</span>
                   <h2>Design scenario coverage</h2>
                   <p>Trace every action and expected outcome to its owning story.</p>
                 </div>
                 <div class="stage-actions">
-                  <button class="primary" id="stage-scenarios" type="button" disabled>
+                  <button class="secondary" id="stage-scenarios" type="button" disabled>
                     Create scenarios →
                   </button>
                   <button class="primary" id="review-scenarios" type="button" disabled>
@@ -495,7 +517,7 @@
                 </div>
               </div>
               <div id="scenario-cards" class="stage-cards">
-                <p class="stage-empty">Review stories in stage 2 first.</p>
+                <div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Build coverage from approved stories</h3><p>Review and approve your stories before creating scenarios.</p><button class="secondary" type="button" data-open-stage="2">Review stories →</button></div>
               </div>
             </div>
             <div
@@ -507,6 +529,7 @@
             >
               <div class="stage-heading">
                 <div>
+                  <span class="section-kicker">TEST DESIGN</span>
                   <h2>Create test cases</h2>
                   <p>
                     Review and export test cases and feature files created using your input choices.
@@ -520,7 +543,7 @@
                 Your test-case type, testing type and LLM choices come from Requirements. Return to
                 stage 1 to change them.
               </p>
-              <p id="stage-case-empty" class="stage-empty">Review scenarios in stage 3 first.</p>
+              <div id="stage-case-empty" class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Turn scenarios into test cases</h3><p>Approve your scenario coverage, then create cases with steps and expected results.</p><button class="secondary" type="button" data-open-stage="3">Review scenarios →</button></div>
               <button class="primary stage-next" id="review-cases" type="button" disabled>
                 Continue to execution →
               </button>
@@ -534,6 +557,7 @@
             >
               <div class="stage-heading">
                 <div>
+                  <span class="section-kicker">EXECUTION EVIDENCE</span>
                   <h2>Execute and follow results</h2>
                   <p>Record manual outcomes or run the configured ReqnRoll feature files.</p>
                 </div>
@@ -549,7 +573,7 @@
                 </button>
               </div>
               <p id="stage-execution-reason">Create test cases in stage 4 first.</p>
-              <div id="stage-execution-list" class="stage-cards"></div>
+              <div id="stage-execution-list" class="stage-cards"><div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Prepare your first test run</h3><p>Create and review test cases to see the execution plan and available actions.</p><button class="secondary" type="button" data-open-stage="4">Review test cases →</button></div></div>
               <div id="stage-execution-results" aria-live="polite"></div>
             </div>
           </section>
@@ -1799,7 +1823,7 @@
     </dialog>
     <script src="/static/scripts/guest.js?v=20260923-guest-views" defer></script>
     <script src="/static/scripts/workspace-pages.js?v=20260923-guest-views" defer></script>
-    <script src="/static/scripts/navigation.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/navigation.js?v=20260927-mobile-drawer" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260923-guest-expiry-warnings" defer></script>
     <script src="/static/scripts/index.js?v=20260923-guest-views" defer></script>
@@ -1807,12 +1831,12 @@
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260922-failures" defer></script>
-    <script src="/static/scripts/execution-logs.js?v=20260923-guest-views" defer></script>
+    <script src="/static/scripts/execution-logs.js?v=20260927-live-activity" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260922-brd-pdf-local" defer></script>
+    <script src="/static/scripts/workflow.js?v=20260927-output-panels" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20260921" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20260921" defer></script>
   </body>

@@ -182,3 +182,21 @@ Provider output cannot replace these supplied C# contract sources, and reused so
 the current contract. Explicit value overrides use the builder; metadata and response oracles stay
 outside the body. The same JSON is included in every pack's Input folder. Static step-definition
 checks reject conditional dispatch across languages, including cached C# implementations.
+
+### Auto Finance risk and execution evidence
+
+The Auto Finance profile includes `knowledge/quotation-risk-and-evidence.md`, an engineering
+playbook for equity/settlement, payment schedules, contributions/fees, APR, vehicle/residual,
+mileage, maintenance, tax, effective configuration and access/resilience risks. It distinguishes
+risk prompts from approved business requirements and links external terminology sources.
+The existing profile loader supplies it to manual/automation generation and framework generation;
+policy fingerprinting invalidates previously generated suite reuse when it changes. Other
+profiles do not load this knowledge. Financial expected values still require approved independent
+oracles and runtime fixtures; this knowledge does not implement a reference finance calculator.
+
+Execution summaries reject duplicate suite/result IDs, unknown IDs, omitted cases and failures
+without an observable actual result. Callers must explicitly submit blocked/not-run results.
+The summary pass rate retains its suite-wide denominator (passed / all submitted cases), while
+metrics count only passed + failed as executed. These checks validate submitted evidence integrity,
+not the authenticity of a runner or correctness of financial calculations. Generated-pack BDD
+execution in the target environment remains necessary.

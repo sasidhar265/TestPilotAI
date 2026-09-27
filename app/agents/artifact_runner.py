@@ -23,6 +23,7 @@ from app.agents.runner import (
 )
 from app.config import Settings
 from app.generator import _codex_failure_message, _openai_output_text, _strict_json_schema
+from app.model_policy import CODEX_MODEL
 from app.services.model_access import clear_provider_exhausted, mark_provider_exhausted
 from app.services.usage import codex_output, record_provider_usage
 from app.subprocess_cleanup import stop_process_tree
@@ -199,8 +200,7 @@ class ArtifactGenerationRunner:
                     "--output-last-message",
                     str(output),
                 ]
-                if self.settings.codex_model:
-                    command.extend(["--model", self.settings.codex_model])
+                command.extend(["--model", CODEX_MODEL])
                 command.append("-")
                 process = await asyncio.create_subprocess_exec(
                     *command,

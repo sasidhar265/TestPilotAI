@@ -5,10 +5,21 @@ from pathlib import Path
 from pydantic import AwareDatetime, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
+from app.model_policy import CODEX_MODEL, COPILOT_MODEL
 from app.user_secrets import DEFAULT_USER_SECRETS_ID, UserSecretsSource
 
 
 class Settings(BaseSettings):
+    @field_validator("copilot_model", mode="before")
+    @classmethod
+    def enforce_copilot_model(cls, value: object) -> str:
+        return COPILOT_MODEL
+
+    @field_validator("codex_model", mode="before")
+    @classmethod
+    def enforce_codex_model(cls, value: object) -> str:
+        return CODEX_MODEL
+
     environment: str = "development"
     user_secrets_enabled: bool = False
     user_secrets_id: str = DEFAULT_USER_SECRETS_ID
@@ -42,7 +53,7 @@ class Settings(BaseSettings):
     request_queue_timeout_seconds: float = Field(default=2.0, gt=0, le=60)
     model_directed_runtime_enabled: bool = True
     copilot_github_token: str = ""
-    copilot_model: str = ""
+    copilot_model: str = COPILOT_MODEL
     copilot_timeout_seconds: float = 300
     copilot_coordinator_timeout_seconds: float = Field(default=1800, gt=0, le=3600)
     copilot_working_directory: Path = Path.cwd()
@@ -55,7 +66,7 @@ class Settings(BaseSettings):
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_timeout_seconds: float = Field(default=300, gt=0, le=1800)
     codex_executable: str = "codex"
-    codex_model: str = ""
+    codex_model: str = CODEX_MODEL
     codex_timeout_seconds: float = Field(default=300, gt=0, le=1800)
     codex_artifact_timeout_seconds: float = Field(default=900, gt=0, le=1800)
     agent_profile: str = "auto-finance-quotation"

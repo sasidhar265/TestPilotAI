@@ -376,23 +376,6 @@ body {
 #test-studio {
   scroll-margin-top: 24px;
 }
-.stage-tabs {
-  border-radius: 16px;
-  padding: 5px;
-  gap: 5px;
-}
-.stage-tabs button {
-  border: 0;
-  border-radius: 11px;
-  transition: background 0.18s;
-}
-.stage-tabs button:hover {
-  background: var(--surface-soft);
-}
-.stage-tabs button[aria-selected="true"] {
-  background: var(--primary-soft);
-  box-shadow: inset 0 -2px var(--primary);
-}
 .finance-guide {
   background: var(--surface-soft);
 }

@@ -12,6 +12,25 @@
   backdrop.setAttribute("aria-label", "Close navigation");
   backdrop.hidden = true;
   document.body.append(backdrop);
+  const placeholder = document.createElement("div");
+  placeholder.className = "navigation-placeholder";
+  placeholder.setAttribute("aria-hidden", "true");
+  sidebar.after(placeholder);
+  let lockedScroll = null;
+  function setMobileOpen(open) {
+    if (open && !lockedScroll) {
+      lockedScroll = { top: window.scrollY, left: window.scrollX };
+      document.body.style.setProperty("--navigation-scroll-top", `${-lockedScroll.top}px`);
+    }
+    document.body.classList.toggle("navigation-open", open);
+    document.documentElement.classList.toggle("navigation-open", open);
+    if (!open && lockedScroll) {
+      const previous = lockedScroll;
+      lockedScroll = null;
+      document.body.style.removeProperty("--navigation-scroll-top");
+      window.scrollTo({ ...previous, behavior: "instant" });
+    }
+  }
   sidebar.querySelectorAll(".primary-nav a").forEach((link) => {
     const label = link.textContent.trim();
     const text = link.querySelector("span:last-child")?.textContent.trim() || label;
@@ -31,7 +50,7 @@
     sidebar.dataset.collapsed = String(collapsed);
     content.hidden = mobile.matches && collapsed;
     backdrop.hidden = !mobile.matches || collapsed;
-    document.body.classList.toggle("navigation-open", mobile.matches && !collapsed);
+    setMobileOpen(mobile.matches && !collapsed);
     document.querySelector("main").inert = mobile.matches && !collapsed;
     toggle.setAttribute("aria-expanded", String(!collapsed));
     const label = collapsed ? "Expand navigation" : "Collapse navigation";
@@ -39,8 +58,9 @@
     toggle.title = label;
 
     if (collapsed) {
-      document.getElementById("theme-menu").hidden = true;
-      document.getElementById("theme-gear").setAttribute("aria-expanded", "false");
+      const themeMenu = document.getElementById("theme-menu");
+      if (themeMenu) themeMenu.hidden = true;
+      document.getElementById("theme-gear")?.setAttribute("aria-expanded", "false");
     }
   }
   toggle.addEventListener("click", () => {
@@ -69,15 +89,33 @@
       }
     }
     if (event.key === "Escape" && mobile.matches && !content.hidden) {
+      // Let the theme picker handle its own Escape before dismissing the drawer.
+      if (document.getElementById("theme-menu")?.hidden === false) return;
+      event.preventDefault();
+      event.stopPropagation();
       setCollapsed(true);
       toggle.focus();
     }
   });
-  sidebar.querySelectorAll(".primary-nav a").forEach((link) =>
+  sidebar.querySelectorAll("a[href]").forEach((link) =>
     link.addEventListener("click", () => {
       if (mobile.matches) setCollapsed(true);
     }),
   );
-  mobile.addEventListener("change", () => setCollapsed(mobile.matches || desktopCollapsed));
+  const updateHeaderHeight = () => {
+    if (mobile.matches) {
+      const height = `${sidebar.getBoundingClientRect().height}px`;
+      sidebar.style.setProperty("--navigation-header-height", height);
+      placeholder.style.height = height;
+    }
+  };
+  new ResizeObserver(updateHeaderHeight).observe(sidebar);
+  mobile.addEventListener("change", () => {
+    setCollapsed(mobile.matches || desktopCollapsed);
+    updateHeaderHeight();
+  });
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) setCollapsed(mobile.matches || desktopCollapsed);
+  });
   setCollapsed(mobile.matches || desktopCollapsed);
 })();

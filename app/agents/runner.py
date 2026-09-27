@@ -11,6 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.agent_instructions import load_agent_section
 from app.config import Settings
+from app.model_policy import COPILOT_MODEL
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
 logger = logging.getLogger(__name__)
@@ -110,8 +111,7 @@ class CopilotAgentRunner:
         }
         if supplied_tools:
             session_options["tools"] = supplied_tools
-        if self.settings.copilot_model:
-            session_options["model"] = self.settings.copilot_model
+        session_options["model"] = COPILOT_MODEL
 
         content: str | None = None
         provider_failure: dict[str, str | int | None] | None = None

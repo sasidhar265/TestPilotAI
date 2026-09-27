@@ -1361,3 +1361,34 @@
     text-align: center !important;
   }
 }
+
+.execution-agent-current {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.execution-agent-current strong { display: block; margin: 6px 0; font-size: 16px; }
+.execution-agent-current p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.execution-agent-status.passed,
+.execution-agent-status.completed { color: var(--success); background: var(--success-soft); }
+.execution-agent-status.cancelled,
+.execution-agent-status.recorded { color: var(--muted); background: var(--surface); }
+.execution-agent-timeline .timeline-node.passed { border-color: var(--success); }
+.execution-agent-status.running::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+@media (max-width: 600px) {
+  .execution-agent-current { align-items: flex-start; flex-wrap: wrap; }
+}

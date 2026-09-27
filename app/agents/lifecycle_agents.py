@@ -103,11 +103,26 @@ class ExecutionAgent:
 
     def summarize(self, request: ExecutionRequest) -> ExecutionSummary:
         known_ids = {case.id for case in request.suite.test_cases}
+        if len(known_ids) != len(request.suite.test_cases):
+            raise ValueError("Suite contains duplicate test case IDs")
+        result_ids = [result.case_id for result in request.results]
+        if len(set(result_ids)) != len(result_ids):
+            raise ValueError("Duplicate execution result case IDs")
         unknown = {result.case_id for result in request.results} - known_ids
         if unknown:
             raise ValueError(f"Unknown test case IDs: {', '.join(sorted(unknown))}")
+        missing = known_ids - set(result_ids)
+        if missing:
+            raise ValueError(
+                f"Missing test case results: {', '.join(sorted(missing))}. "
+                "Record blocked or not-run explicitly."
+            )
         counts = {status: 0 for status in ExecutionStatus}
         for result in request.results:
+            if result.status == ExecutionStatus.FAILED and not result.actual_result.strip():
+                raise ValueError(
+                    f"Failed case {result.case_id} requires an observable actual result"
+                )
             counts[result.status] += 1
         total = len(request.results)
         passed = counts[ExecutionStatus.PASSED]
@@ -178,7 +193,7 @@ class MetricsAgent:
         total = len(suite.test_cases)
         automated = sum(case.execution_mode.value == "automation" for case in suite.test_cases)
         manual = total - automated
-        executed = execution.total if execution else 0
+        executed = execution.passed + execution.failed if execution else 0
         passed = execution.passed if execution else 0
         failed = execution.failed if execution else 0
         blocked = execution.blocked if execution else 0

@@ -13,3 +13,11 @@ reporting completion. Verify actual discovered/executed results; Python unit tes
 compilation alone do not demonstrate a BDD run. If target configuration is unavailable,
 state which scenarios could not run. Do not claim repository smoke-test results cover
 generated suites: execute the relevant pack in its configured test environment.
+
+# Mandatory LLM models
+
+Application agents using Codex AI / Codex CLI must use `gpt-6-astra` (GPT-6-ASTRA).
+Application agents using GitHub Copilot must use `claude-haiku-4.5` (Claude Haiku 4.5).
+Enforce these models in runtime calls as well as agent instructions, including retries
+and repairs. Do not allow environment overrides or account defaults to change them.
+See `.github/agents/model-policy.md` for route and fallback behavior.

@@ -6,6 +6,9 @@
   let records = [];
   let selectedId = null;
   let loading = false;
+  let detailRefreshTimer = null;
+  let detailRevision = 0;
+  const isRunning = (item) => !item.finished_at && ["running", "queued", "pending"].includes(item.status);
   let pageNumber = 1;
   let casePageNumber = 1;
   const pageSize = 10;
@@ -133,12 +136,20 @@
         <div><dt>Duration</dt><dd>${item.duration_ms == null ? "Not recorded" : safe(duration(item.duration_ms))}</dd></div>
       </dl></div>`;
   }
-  function agentActivityMarkup(events, fallbackAgent) {
-    if (!events.length) return `<div class="execution-agent-empty"><span aria-hidden="true">◇</span><div><strong>No agent activity retained</strong><p>Agent events were not recorded for this execution.</p></div></div>`;
-    return `<div class="execution-agent-heading"><span class="execution-agent-icon" aria-hidden="true">◇</span><div><span class="section-kicker">RECORDED ACTIVITY</span><strong>${events.length} ${events.length === 1 ? "event" : "events"} in this run</strong><p>Agent actions are shown in recorded order.</p></div></div>
-      <div class="execution-overview-timeline execution-agent-timeline"><ol>${events.map((event) => {
-        const status = String(event.status || "recorded").toLowerCase();
-        return `<li><span class="timeline-node ${safe(status)}" aria-hidden="true"></span><div class="execution-agent-event"><div class="execution-agent-event-head"><time>${safe(when(event.timestamp))}</time><span class="execution-agent-status ${safe(status)}">${safe(status)}</span></div><strong>${safe(event.agent || fallbackAgent)}</strong><span class="execution-agent-action">${safe(event.action || "Activity")}</span><p>${safe(event.summary || "No summary was recorded.")}</p></div></li>`;
+  function agentActivityMarkup(events, fallbackAgent, item) {
+    const live = isRunning(item);
+    const state = live ? "running" : item.status || "unknown";
+    const summary = `<div class="execution-agent-current" role="status"><div><span class="section-kicker">${live ? "LIVE ACTIVITY" : "RUN FINISHED"}</span><strong>${safe(live ? "Agents are working" : `Run ${state}`)}</strong><p>${live ? "Updates every 3 seconds while this record is open." : "This run is no longer active. Events below are historical evidence."}</p></div><span class="execution-agent-status ${safe(state)}">${safe(state)}</span></div>`;
+    if (!events.length) return summary + `<div class="execution-agent-empty"><span aria-hidden="true">◇</span><div><strong>No agent activity retained</strong><p>Agent events were not recorded for this execution.</p></div></div>`;
+    return summary + `<div class="execution-agent-heading"><span class="execution-agent-icon" aria-hidden="true">◇</span><div><span class="section-kicker">RECORDED ACTIVITY</span><strong>${events.length} ${events.length === 1 ? "event" : "events"} in this run</strong><p>Agent actions are shown in recorded order.</p></div></div>
+      <div class="execution-overview-timeline execution-agent-timeline"><ol>${events.map((event, index) => {
+        const originalStatus = String(event.status || "recorded").toLowerCase();
+        const laterUpdate = events.slice(index + 1).some((next) =>
+          next.agent === event.agent && next.action === event.action);
+        const historicalStart = ["running", "queued", "pending"].includes(originalStatus) && (!live || laterUpdate);
+        const status = historicalStart ? "recorded" : originalStatus;
+        const label = historicalStart ? "Progress recorded" : originalStatus;
+        return `<li><span class="timeline-node ${safe(status)}" aria-hidden="true"></span><div class="execution-agent-event"><div class="execution-agent-event-head"><time>${safe(when(event.timestamp))}</time><span class="execution-agent-status ${safe(status)}">${safe(label)}</span></div><strong>${safe(event.agent || fallbackAgent)}</strong><span class="execution-agent-action">${safe(event.action || "Activity")}</span><p>${safe(event.summary || "No summary was recorded.")}</p></div></li>`;
       }).join("")}</ol></div>`;
   }
   const caseStatus = (entry) => String(entry.execution || entry.status || "unknown").toLowerCase().replaceAll("-", "_");
@@ -185,6 +196,7 @@
     }).join("") : empty(lines.length ? "No log lines match this search." : "No runner output was retained.");
   }
   function drawDetail(item) {
+    detailRevision += 1;
     const detail = item.details || {};
     const entries = cases(item);
     const counts = resultCounts(item);
@@ -223,7 +235,7 @@
       section("cases", "Test Cases", tabIntro("▣", "CASE EVIDENCE", "Test Cases", "Review outcomes and open recorded failure reasons.") + (entries.length
         ? `<div class="execution-case-summary"><article><span>Recorded</span><strong>${entries.length}</strong></article><article class="passed"><span>Passed</span><strong>${entries.filter((entry) => caseStatus(entry) === "passed").length}</strong></article><article class="failed"><span>Failed</span><strong>${failures.length}</strong></article></div><div class="execution-case-card"><div class="execution-case-toolbar"><span>${entries.length} recorded test cases</span><input id="execution-case-search" type="search" placeholder="Search test cases…" aria-label="Search test cases" /></div><div class="execution-logs-table-wrap execution-case-table-wrap"><table class="execution-logs-table execution-case-table"><thead><tr><th>Test case</th><th>Outcome</th><th>Duration</th><th>Details</th></tr></thead><tbody id="execution-case-rows"></tbody></table></div><nav class="execution-logs-pagination" aria-label="Test case pages"><span id="execution-case-page-summary"></span><div><button type="button" class="secondary" id="execution-case-previous">Previous</button><span id="execution-case-page-number"></span><button type="button" class="secondary" id="execution-case-next">Next</button></div></nav></div>`
         : empty("No test-level results were recorded for this execution."))) +
-      section("activity", "Agent Activity", agentActivityMarkup(events, agent)) +
+      section("activity", "Agent Activity", agentActivityMarkup(events, agent, item)) +
       section("transactions", "API Transactions", tabIntro("⇄", "CORRELATED REQUESTS", "API Transactions", "HTTP activity retained under this execution's correlation ID.") + '<div id="execution-api-transactions">' + apiEmpty("Checking correlated API activity…") + "</div>") +
       section("errors", "Errors & failures", detail.error || failures.length
         ? `${detail.error ? `<p class="execution-log-error">${safe(detail.error)}</p>` : ""}<div class="test-failure-list">${failures.map(ExecutionFailures.card).join("")}</div>`
@@ -245,6 +257,7 @@
     });
   }
   async function loadCorrelatedLogs(item) {
+    const revision = detailRevision;
     const requestId = item.request_id;
     const apiTarget = $log("execution-api-transactions");
     const logTarget = $log("execution-correlated-logs");
@@ -262,7 +275,7 @@
         { signal: AbortSignal.timeout(10000) });
       if (!response.ok) throw new Error("Correlated logs unavailable");
       const data = await response.json();
-      if (selectedId !== item.id || !Array.isArray(data.entries)) return;
+      if (selectedId !== item.id || revision !== detailRevision || !Array.isArray(data.entries)) return;
       const transactions = data.entries.filter((entry) =>
         /\b(GET|POST|PUT|PATCH|DELETE)\b|HTTP Request/i.test(entry.message || ""));
       apiTarget.innerHTML = transactions.length
@@ -277,7 +290,7 @@
           `<article><time>${safe(when(entry.timestamp))}</time><span class="execution-app-log-level ${safe(String(entry.level || "info").toLowerCase())}">${safe(entry.level || "INFO")}</span><p>${safe(entry.message)}</p></article>`).join("")}</div>`
         : empty("No application logs were retained for this correlation ID.");
     } catch {
-      if (selectedId !== item.id) return;
+      if (selectedId !== item.id || revision !== detailRevision) return;
       apiTarget.innerHTML = apiEmpty("Correlated API transactions are unavailable.");
       logTarget.innerHTML = empty("Correlated application logs are unavailable.");
     }
@@ -314,10 +327,35 @@
     $log("execution-logs-previous").disabled = pageNumber === 1;
     $log("execution-logs-next").disabled = pageNumber === pageCount;
   }
-  async function refresh() {
+  function scheduleDetailRefresh() {
+    clearTimeout(detailRefreshTimer);
+    const item = records.find((entry) => entry.id === selectedId);
+    if ($log("execution-log-detail").open && item && isRunning(item)) {
+      detailRefreshTimer = setTimeout(() => refresh(true), 3000);
+    }
+  }
+  function updateOpenDetail(item) {
+    const activeKey = document.querySelector("[data-detail-tab][aria-selected='true']")?.dataset.detailTab || "execution";
+    const caseQuery = $log("execution-case-search")?.value || "";
+    const logQuery = $log("execution-technical-search")?.value || "";
+    const currentPage = casePageNumber;
+    const scroll = $log("execution-log-detail").scrollTop;
+    const focusId = document.activeElement?.id;
+    drawDetail(item);
+    activateDetailTab(activeKey);
+    if ($log("execution-case-search")) $log("execution-case-search").value = caseQuery;
+    if ($log("execution-technical-search")) $log("execution-technical-search").value = logQuery;
+    casePageNumber = currentPage;
+    renderCasePage();
+    renderTechnicalLines();
+    if (focusId) $log(focusId)?.focus({ preventScroll: true });
+    $log("execution-log-detail").scrollTop = scroll;
+    loadCorrelatedLogs(item);
+  }
+  async function refresh(background = false) {
     if (loading) return;
     loading = true;
-    $log("execution-logs-status-text").textContent = "Loading execution history…";
+    if (!background) $log("execution-logs-status-text").textContent = "Loading execution history…";
     try {
       const [workspaceResponse, bddResponse] = await Promise.all([
         fetch("/api/dashboard", { signal: AbortSignal.timeout(15000) }),
@@ -327,19 +365,31 @@
       const [workspace, bdd] = await Promise.all([workspaceResponse.json(), bddResponse.json()]);
       if (!Array.isArray(workspace.history) || !Array.isArray(bdd.history)) throw new Error("Execution history is unavailable.");
       const merged = new Map();
-      workspace.history.filter((item) => item.operation === "case_execution").forEach((item) => merged.set(item.id, item));
-      bdd.history.filter((item) => item.operation === "repository_checks").forEach((item) => merged.set(item.id, item));
+      [...(workspace.active || []), ...workspace.history].filter((item) => item.operation === "case_execution").forEach((item) => merged.set(item.id, item));
+      [...(bdd.active || []), ...bdd.history].filter((item) => item.operation === "repository_checks").forEach((item) => merged.set(item.id, item));
       records = [...merged.values()].sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
-      $log("execution-logs-scope").textContent = "Retained history: up to 200 recent workspace actions and 200 repository BDD runs. Times are shown in your local timezone.";
+      $log("execution-logs-scope").textContent = "Active runs and retained history: up to 200 recent workspace actions and 200 repository BDD runs. Times are shown in your local timezone.";
       draw();
+      if ($log("execution-log-detail").open) {
+        const selected = records.find((item) => item.id === selectedId);
+        if (selected) updateOpenDetail(selected);
+        else {
+          const current = document.querySelector(".execution-agent-current");
+          if (current) current.innerHTML = empty("This run is no longer available in retained history. Refresh logs to check again.");
+        }
+      }
     } catch (error) {
       $log("execution-logs-status-text").textContent = `${error.message} Select Refresh logs to retry.`;
       $log("execution-logs-rows").innerHTML = '<tr><td colspan="6" class="execution-logs-empty">History unavailable.</td></tr>';
       $log("execution-logs-metrics").innerHTML = "";
       $log("execution-logs-overview").innerHTML = "";
-      if ($log("execution-log-detail").open) $log("execution-log-detail").close();
+      if ($log("execution-log-detail").open) {
+        const current = document.querySelector(".execution-agent-current");
+        if (current) current.innerHTML = empty("Live updates unavailable. Showing the last recorded activity; retrying shortly.");
+      }
     } finally {
       loading = false;
+      scheduleDetailRefresh();
     }
   }
   document.querySelectorAll("[data-execution-view]").forEach((button) => button.addEventListener("click", () => {
@@ -366,7 +416,7 @@
     pageNumber += 1;
     draw();
   });
-  $log("execution-logs-refresh").addEventListener("click", refresh);
+  $log("execution-logs-refresh").addEventListener("click", () => refresh());
   $log("execution-detail-tabs").addEventListener("click", (event) => {
     const tab = event.target.closest("[data-detail-tab]");
     if (tab) activateDetailTab(tab.dataset.detailTab);
@@ -416,11 +466,16 @@
     drawDetail(item);
     $log("execution-log-detail").showModal();
     loadCorrelatedLogs(item);
+    scheduleDetailRefresh();
   });
   $log("execution-log-detail-close").addEventListener("click", () => {
     $log("execution-log-detail").close();
   });
-  $log("execution-log-detail").addEventListener("close", () => { selectedId = null; });
+  $log("execution-log-detail").addEventListener("close", () => {
+    selectedId = null;
+    detailRevision += 1;
+    clearTimeout(detailRefreshTimer);
+  });
   $log("execution-log-detail").addEventListener("click", (event) => {
     if (event.target === $log("execution-log-detail")) $log("execution-log-detail").close();
   });

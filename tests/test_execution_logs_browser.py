@@ -207,3 +207,59 @@ def test_execution_logs_filters_and_per_run_details():
         )
         assert not errors
         browser.close()
+
+
+@pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
+@pytest.mark.parametrize("terminal_status", ["passed", "failed", "cancelled"])
+def test_open_agent_activity_updates_when_run_finishes(terminal_status):
+    playwright = pytest.importorskip("playwright.sync_api")
+    static = Path(__file__).parents[1] / "app/static"
+    finished = False
+    record = {
+        "id": "live-bdd", "operation": "repository_checks", "status": "running",
+        "started_at": "2026-09-27T10:00:00Z", "duration_ms": 1000,
+        "events": [{"timestamp": "2026-09-27T10:00:00Z", "agent": "Execution Agent",
+                    "action": "run", "status": "running", "summary": "Runner started"}],
+    }
+    with playwright.sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        errors = []
+        page.on("pageerror", lambda error: errors.append(str(error)))
+
+        def route(request):
+            path = urlparse(request.request.url).path
+            if path == "/progress" or path.startswith("/static/"):
+                file = static / ("index.html" if path == "/progress" else path.removeprefix("/static/"))
+                request.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
+            elif path == "/api/automation/history":
+                final = {**record, "status": terminal_status, "finished_at": "2026-09-27T10:00:05Z"}
+                # Older records can lack the terminal event: the run status remains authoritative.
+                request.fulfill(json={"active": [] if finished else [record],
+                                      "history": [final] if finished else [], "timeout_seconds": 900})
+            else:
+                request.fulfill(json={"models": [], "events": [], "history": [], "active": [],
+                                      "business_rules": [], "usage": {}})
+
+        page.route("**/*", route)
+        page.goto("http://localhost/progress")
+        page.locator('[data-execution-view="logs"]').click()
+        page.locator("#execution-logs-rows .execution-log-view").click()
+        page.locator("#execution-detail-tab-activity").click()
+        playwright.expect(page.locator(".execution-agent-current")).to_contain_text("Agents are working")
+        playwright.expect(page.locator(".execution-agent-timeline .running")).to_have_count(2)
+        finished = True
+        playwright.expect(page.locator(".execution-agent-current")).to_contain_text(
+            f"Run {terminal_status}", timeout=10000
+        )
+        playwright.expect(page.locator("#execution-detail-tab-activity")).to_have_attribute(
+            "aria-selected", "true"
+        )
+        playwright.expect(page.locator("#execution-log-detail")).to_be_visible()
+        playwright.expect(page.locator(".execution-agent-timeline .running")).to_have_count(0)
+        playwright.expect(page.locator(".execution-agent-timeline")).to_contain_text("Progress recorded")
+        playwright.expect(page.locator(".execution-agent-timeline")).to_contain_text("Runner started")
+        assert not errors
+        page.keyboard.press("Escape")
+        playwright.expect(page.locator("#execution-log-detail")).not_to_be_visible()
+        browser.close()

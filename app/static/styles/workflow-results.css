@@ -1,0 +1,190 @@
+/* Workflow outputs share the application's semantic light/dark theme tokens. */
+.stage-workspace .stage-panel:not(#stage-panel-1) {
+  padding: clamp(18px, 2.4vw, 30px);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.stage-workspace [hidden] { display: none !important; }
+.stage-panel .stage-heading {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  gap: 18px 24px;
+}
+.stage-panel .stage-heading h2 {
+  margin: 7px 0 8px;
+  font-size: clamp(18px, 1.5vw, 22px);
+  letter-spacing: -0.025em;
+}
+.stage-panel .stage-heading p { font-size: 13px; max-width: 65ch; }
+.stage-panel .stage-actions { flex-wrap: wrap; white-space: normal; }
+.stage-panel .stage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(28px, 5vw, 56px) 22px;
+  margin: 18px 0;
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  text-align: center;
+}
+.stage-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 26px;
+}
+.stage-panel .stage-empty h3 { margin: 4px 0 0; font-size: 17px; color: var(--ink); }
+.stage-panel .stage-empty p { max-width: 48ch; margin: 0; font-size: 13px; }
+.stage-empty button { margin-top: 6px; }
+.stage-panel .result-actions {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  flex-wrap: wrap;
+}
+.stage-panel .suite-output-actions,
+.stage-panel .suite-approval { flex-wrap: wrap; min-width: 0; }
+.stage-panel .reviewer-field { min-width: 0; }
+.stage-panel .suite-approval input { background: var(--surface); color: var(--ink); }
+.stage-panel .stage-cards { gap: 18px; }
+.stage-panel .stage-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: clamp(18px, 2vw, 24px);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.stage-panel .story-review-heading {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.stage-panel .story-review-heading label { display: inline-flex; align-items: center; gap: 8px; }
+.stage-panel .chip {
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.stage-panel .story-review-state,
+.stage-panel .scenario-review-state {
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+.stage-panel .stage-card h3 { margin: 18px 0 10px; font-size: 17px; line-height: 1.5; }
+.stage-panel .stage-card p,
+.stage-panel .stage-card li { font-size: 13px; line-height: 1.7; }
+.stage-panel .stage-card ul { padding-left: 20px; }
+.stage-panel .stage-card li::marker { color: var(--primary); }
+.stage-panel .stage-card blockquote {
+  margin: 18px 0;
+  padding: 14px 18px;
+  background: var(--surface-soft);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 10px 10px 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.output-field-label,
+.scenario-facts dt {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scenario-facts { display: grid; gap: 1px; margin: 18px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.scenario-facts > div { padding: 14px 16px; background: var(--surface-soft); }
+.scenario-facts > div + div { border-top: 1px solid var(--line); }
+.scenario-facts dd { margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink); }
+.scenario-facts .scenario-expected { background: var(--primary-soft); }
+.stage-panel .story-edit-status:empty { display: none; }
+.stage-panel .story-accept { margin-left: 8px; }
+#story-review-progress,
+#stage-execution-reason {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#stage-panel-4 #results { margin: 20px 0 0; padding: 0; border: 0; box-shadow: none; background: transparent; }
+#stage-panel-4 .results-header { flex-wrap: wrap; gap: 12px; }
+#stage-panel-4 .results-header h2 { font-size: 20px; overflow-wrap: anywhere; }
+#stage-panel-4 .case { border-color: var(--line); border-radius: 12px; box-shadow: none; }
+#stage-panel-4 .case:hover { border-color: var(--line-strong); transform: none; }
+#stage-panel-4 .scenario-group-heading { padding: 14px 16px; background: var(--surface-soft); border-radius: 10px; }
+#stage-panel-4 .stage-next { display: block; margin-left: auto; }
+#stage-manual:not(:empty) { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.stage-panel .stage-manual-row { background: var(--surface-soft); align-items: center; }
+.stage-manual-row strong { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.stage-panel .stage-manual-row textarea { min-height: 90px; margin: 0; background: var(--surface); }
+.stage-panel .stage-execution-head { margin-bottom: 12px; }
+.stage-execution-head h3 { font-size: 16px; margin: 0; }
+#stage-execution-results:not(:empty) { padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-soft); }
+.run-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.run-result-heading h3 { margin: 6px 0 0; font-size: 18px; }
+.run-result-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+.run-result-metrics > div { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.run-result-metrics dt { color: var(--muted); font-size: 11px; }
+.run-result-metrics dd { margin: 6px 0 0; color: var(--ink); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stage-panel .stage-result { align-items: flex-start; gap: 16px; font-size: 13px; }
+.stage-result > div { min-width: 0; }
+.outcome-badge { display: inline-flex; flex-shrink: 0; padding: 5px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 11px; text-transform: capitalize; color: var(--muted); background: var(--surface); }
+.outcome-badge.passed { color: var(--success); background: var(--success-soft); }
+.outcome-badge.failed { color: var(--danger); }
+.outcome-badge.blocked { color: var(--warning); background: var(--warning-soft); }
+.run-result-error { padding: 14px; border-left: 3px solid var(--danger); background: var(--surface); font-size: 13px; overflow-wrap: anywhere; }
+.result-failure pre,
+.stage-run-output { padding: 16px; border-radius: 10px; background: var(--surface); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; }
+.stage-panel details > summary { cursor: pointer; }
+@media (max-width: 1100px) {
+  .stage-panel .stage-heading { grid-template-columns: 1fr; }
+  .stage-panel .stage-actions { justify-content: flex-start; }
+}
+@media (max-width: 700px) {
+  .stage-panel .result-actions { padding: 12px; }
+  .stage-panel .suite-output-actions,
+  .stage-panel .suite-approval,
+  .stage-panel .reviewer-field { width: 100%; }
+  .stage-panel .suite-approval input { width: 100%; }
+  .stage-panel .stage-execution-head { grid-template-columns: 1fr; gap: 12px; }
+  #stage-execution-results:not(:empty) { padding: 14px; }
+  .run-result-metrics > div { padding: 10px; }
+  .run-result-metrics dd { font-size: 22px; }
+  .stage-panel .stage-result { flex-wrap: wrap; gap: 8px; }
+  .stage-panel .stage-empty { padding: 30px 16px; }
+  .stage-panel .story-accept { margin: 8px 0 0; }
+}
+:root[data-theme="dark"] .stage-panel button.secondary {
+  color: var(--ink-soft);
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+:root[data-theme="dark"] .stage-panel button.secondary:hover:not(:disabled) {
+  color: var(--primary);
+  background: var(--surface-soft);
+}
+@media (max-width: 700px) {
+  #stage-panel-4 .scenario-case-group { padding: 10px; }
+}

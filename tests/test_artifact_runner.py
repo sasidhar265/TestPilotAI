@@ -111,6 +111,7 @@ async def test_codex_uses_read_only_structured_artifact_output(monkeypatch) -> N
     assert result == artifact()
     args = spawn.call_args.args
     assert args[args.index("--sandbox") + 1] == "read-only"
+    assert args[args.index("--model") + 1] == "gpt-6-astra"
     assert "--output-schema" in args
     assert "--ephemeral" in args
 

@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 
 from app.config import Settings
-from app.models import LlmModel
+from app.model_policy import CODEX_MODEL, COPILOT_MODEL, COPILOT_ROUTES
 
 # Providers that recently reported a hard quota/usage limit. Access probes can validate
 # credentials and model policy, but they cannot reliably predict provider generation quota.
@@ -209,7 +209,7 @@ async def _inspect_gemini(settings: Settings) -> dict[str, Any]:
 
 async def _inspect_codex(settings: Settings) -> dict[str, Any]:
     executable = shutil.which(settings.codex_executable)
-    model = settings.codex_model or "account default"
+    model = CODEX_MODEL
     if executable is None:
         return _access_result(
             "codex", "Codex CLI", False, "not-installed", "Codex CLI is not on the server PATH."
@@ -231,7 +231,8 @@ async def _inspect_codex(settings: Settings) -> dict[str, Any]:
     detail = (stdout + stderr).decode("utf-8", errors="replace").strip()
     signed_in = process.returncode == 0 and "logged in" in detail.casefold()
     reason = (
-        "Codex CLI is signed in. Exact remaining ChatGPT/Codex usage is not exposed by the CLI."
+        "Codex CLI is signed in. GPT-6 Astra access and generation quota "
+        "are not verified by login status."
         if signed_in
         else (
             f"Codex login status failed (exit {process.returncode}): "
@@ -248,8 +249,17 @@ async def _inspect_codex(settings: Settings) -> dict[str, Any]:
 
 
 async def _inspect_copilot(settings: Settings, requested_model: str) -> dict[str, Any]:
+    if requested_model not in COPILOT_ROUTES:
+        return _access_result(
+            requested_model,
+            "GitHub Copilot",
+            False,
+            "policy-denied",
+            "Copilot requires claude-haiku-4.5 by application policy.",
+        )
     inventory = await _inspect_copilot_inventory(settings)
-    return next(item for item in inventory if item["model"] == requested_model)
+    selected = next(item for item in inventory if item["model"] == COPILOT_MODEL)
+    return {**selected, "model": requested_model}
 
 
 async def _inspect_copilot_inventory(settings: Settings) -> list[dict[str, Any]]:
@@ -271,9 +281,8 @@ async def _inspect_copilot_inventory(settings: Settings) -> list[dict[str, Any]]
         )
 
     return [
-        _copilot_access_result(models, quota_result, model.value)
-        for model in LlmModel
-        if model not in {LlmModel.AUTO_FALLBACK, LlmModel.OPENAI, LlmModel.GEMINI, LlmModel.CODEX}
+        _copilot_access_result(models, quota_result, model)
+        for model in ("organization-default", COPILOT_MODEL)
     ]
 
 
@@ -283,17 +292,14 @@ def _copilot_access_result(models: Any, quota_result: Any, requested_model: str)
         for model in models
         if model.policy is None or model.policy.state.casefold() != "disabled"
     ]
-    automatic = requested_model in {"auto", "organization-default"}
-    selected = (
-        None
-        if automatic
-        else next((model for model in models if model.id == requested_model), None)
+    selected = next((model for model in models if model.id == COPILOT_MODEL), None)
+    available = (
+        requested_model in COPILOT_ROUTES and selected is not None and selected in selectable
     )
-    available = bool(selectable) if automatic else selected in selectable
-    policy = "available" if automatic and available else "unavailable"
-    if selected is not None and selected.policy is not None:
+    policy = "available" if available else "unavailable"
+    if available and selected is not None and selected.policy is not None:
         policy = selected.policy.state
-    elif selected is not None:
+    elif available and selected is not None:
         policy = "enabled"
 
     snapshots = quota_result.quota_snapshots
@@ -318,9 +324,7 @@ def _copilot_access_result(models: Any, quota_result: Any, requested_model: str)
         }
 
     multiplier = None
-    display_name = "GitHub Copilot · Organization default"
-    if requested_model == "auto":
-        display_name = "GitHub Copilot · Auto"
+    display_name = "GitHub Copilot · Claude Haiku 4.5"
     if selected is not None:
         display_name = f"GitHub Copilot · {selected.name}"
         if selected.billing is not None:

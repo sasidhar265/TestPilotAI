@@ -20,6 +20,7 @@ from app.agents.runner import (
     json_object,
 )
 from app.config import Settings
+from app.model_policy import CODEX_MODEL, COPILOT_ROUTES
 from app.models import (
     ExecutionMode,
     GenerateRequest,
@@ -185,10 +186,9 @@ class CopilotGenerator:
         phase: str = "initial",
         existing_titles: list[str] | None = None,
     ) -> TestSuite:
-        model = "" if request.llm_model.value == "organization-default" else request.llm_model.value
-        runner = CopilotAgentRunner(
-            self.settings.model_copy(update={"copilot_model": model}), self.client_factory
-        )
+        if request.llm_model.value not in COPILOT_ROUTES:
+            raise CopilotGenerationError("Copilot requires claude-haiku-4.5 by application policy.")
+        runner = CopilotAgentRunner(self.settings, self.client_factory)
         suite = await runner.generate_structured(
             TEST_SUITE_AGENT,
             instructions=system_prompt(request, self.settings.agent_profile),
@@ -403,8 +403,7 @@ class CodexGenerator:
                     "--output-last-message",
                     str(output_path),
                 ]
-                if self.settings.codex_model:
-                    command.extend(["--model", self.settings.codex_model])
+                command.extend(["--model", CODEX_MODEL])
                 command.append("-")
                 process = await asyncio.create_subprocess_exec(
                     *command,

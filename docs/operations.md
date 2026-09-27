@@ -23,7 +23,7 @@ is cancelled and awaited if the coordinator or user stops the request.
 ## Configuration
 
 Copy `.env.example` to `.env`. Secrets must be supplied through the deployment platform's secret
-store and must never be committed. `COPILOT_MODEL` is optional and must be allowed by the
+store and must never be committed. `COPILOT_MODEL` is fixed to `claude-haiku-4.5` and must be allowed by the
 organization’s Copilot policy.
 
 Organizational memory is enabled by default at `.agent-memory/test_suites.db`. The directory is
@@ -96,3 +96,17 @@ repository before approval.
 - Return sanitized errors to clients.
 - Do not automatically retry generation because retries consume Copilot premium requests.
 - Jira publication must remain user initiated and must validate selected case IDs.
+
+## Mandatory Codex and Copilot models
+
+Codex calls always pass `--model gpt-6-astra`; Copilot sessions always select
+`claude-haiku-4.5`. Settings normalize legacy or conflicting environment values to
+these mandatory assignments, and runtime calls enforce them independently of settings.
+Restart the application to load the updated runtime. Legacy Copilot `auto` and
+`organization-default` aliases use Haiku; explicit alternative Copilot models are denied.
+Generation retries and artifact repairs preserve these assignments. Existing multi-provider
+fallback remains available when that workflow is selected; it does not choose alternative
+models within Codex or Copilot. Login status does not establish GPT-6 Astra entitlement.
+
+Identifiers: [OpenAI GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra)
+and [GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-programmatic-reference).
