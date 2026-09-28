@@ -25,7 +25,9 @@ COPY app ./app
 COPY workspace ./workspace
 COPY .github/agents ./.github/agents
 COPY .github/agent-profiles ./.github/agent-profiles
-RUN python -m pip install .
+RUN python -m pip install . \
+    && python -m pip check \
+    && python -c "from cryptography.fernet import Fernet, InvalidToken; import app.protected_memory"
 
 COPY automation ./automation
 # Restore and build during deployment; unchanged runtime tests reuse these binaries.
