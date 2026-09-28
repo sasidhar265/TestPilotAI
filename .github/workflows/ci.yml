@@ -68,6 +68,7 @@ jobs:
       - name: Start container
         run: >-
           docker run --detach --name quality-lifecycle-studio-smoke
+          --env PORT=8000
           --publish 127.0.0.1:8000:8000
           quality-lifecycle-studio:${{ github.sha }}
       - name: Verify container readiness

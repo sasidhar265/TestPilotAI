@@ -1113,7 +1113,10 @@ textarea:focus {
 .pack-file-progress strong,
 .pack-file-progress li {
   overflow-wrap: anywhere;
-  font: 0.76rem "SFMono-Regular", Consolas, monospace;
+  font:
+    0.76rem "SFMono-Regular",
+    Consolas,
+    monospace;
 }
 .pack-file-progress ul {
   max-height: 150px;

@@ -23,19 +23,19 @@ https://www.moneyhelper.org.uk/en/everyday-money/buying-and-running-a-car/financ
 
 ## Select applicable risks, then obtain approved examples
 
-| Risk | Test-design prompts | Required oracle/configuration |
-| --- | --- | --- |
-| Part exchange and settlement | Positive, zero and negative equity; deposit and contribution counted once; no silently discarded settlement | Approved sign convention, permitted financing treatment and reconciled quote |
-| Price and deposit | Configured min/max and nearest permitted values on either side; absent versus zero versus null; deposit exceeding permitted amount | Product limits, numeric scale and rejection code |
-| Payment schedule | Initial versus regular versus final payments; payment count versus term; final rounding adjustment; zero rate if supported | Dated cash-flow schedule, timing convention, component inclusion and rounding rule |
-| Fees and contributions | Financed versus upfront fee; manufacturer/dealer contribution eligibility and stacking; fee counted once | Approved source and allocation rules, campaign version |
-| Rate and APR | CustomerRate meaning and units; nominal rate versus APR; promotion display versus individual quote | Approved rate definition and independent APR/reference output |
-| Vehicle and residual | Registration date/year consistency if required; unsupported CapCode; mileage/term/residual combinations | Approved vehicle mapping, date rules, residual table and version |
-| Mileage and maintenance | Allowed mileage edges; supported maintenance code combinations; unavailable effective rate | Approved limits, units and component prices; never infer S/SM/SMT contents |
-| Tax | QualifyingOrMargin treatment; taxable/exempt components; per-line versus total rounding | Approved tax treatment by component/date, expected net/tax/gross |
-| Effective configuration | Immediately before/at/after activation and expiry; overlapping/missing versions; in-flight configuration changes | Approved timezone, boundary inclusivity and observable resolved versions |
-| Access and isolation | Outlet entitlement and cross-outlet access; confidential pricing omitted from errors/logs | Approved credentials, outlet mapping and permitted evidence queries |
-| Resilience | Rate/residual dependency unavailable; timeout; repeated request under pinned configuration | Approved errors, retry policy and deterministic field list |
+| Risk                         | Test-design prompts                                                                                                                | Required oracle/configuration                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Part exchange and settlement | Positive, zero and negative equity; deposit and contribution counted once; no silently discarded settlement                        | Approved sign convention, permitted financing treatment and reconciled quote       |
+| Price and deposit            | Configured min/max and nearest permitted values on either side; absent versus zero versus null; deposit exceeding permitted amount | Product limits, numeric scale and rejection code                                   |
+| Payment schedule             | Initial versus regular versus final payments; payment count versus term; final rounding adjustment; zero rate if supported         | Dated cash-flow schedule, timing convention, component inclusion and rounding rule |
+| Fees and contributions       | Financed versus upfront fee; manufacturer/dealer contribution eligibility and stacking; fee counted once                           | Approved source and allocation rules, campaign version                             |
+| Rate and APR                 | CustomerRate meaning and units; nominal rate versus APR; promotion display versus individual quote                                 | Approved rate definition and independent APR/reference output                      |
+| Vehicle and residual         | Registration date/year consistency if required; unsupported CapCode; mileage/term/residual combinations                            | Approved vehicle mapping, date rules, residual table and version                   |
+| Mileage and maintenance      | Allowed mileage edges; supported maintenance code combinations; unavailable effective rate                                         | Approved limits, units and component prices; never infer S/SM/SMT contents         |
+| Tax                          | QualifyingOrMargin treatment; taxable/exempt components; per-line versus total rounding                                            | Approved tax treatment by component/date, expected net/tax/gross                   |
+| Effective configuration      | Immediately before/at/after activation and expiry; overlapping/missing versions; in-flight configuration changes                   | Approved timezone, boundary inclusivity and observable resolved versions           |
+| Access and isolation         | Outlet entitlement and cross-outlet access; confidential pricing omitted from errors/logs                                          | Approved credentials, outlet mapping and permitted evidence queries                |
+| Resilience                   | Rate/residual dependency unavailable; timeout; repeated request under pinned configuration                                         | Approved errors, retry policy and deterministic field list                         |
 
 Boundary increments must come from configured precision (money, percentage, months, miles,
 dates); do not assume all inputs have a 0.01 increment. Never assume a lower instalment when

@@ -7,15 +7,15 @@ Requirements are mapped to the [official DORA regulation](https://eur-lex.europa
 Applicable technical standards and supervisory requirements must be assessed by the responsible
 compliance team for the actual entity and deployment.
 
-| Area | Application evidence | Open acceptance evidence / responsible role |
-| --- | --- | --- |
-| Governance and ICT risk (Articles 5–8) | Engineering standards and runtime configuration | Management: scope, accountable owners, asset/dependency inventory, risk assessment, approved policies and review dates |
-| Protection and detection (Articles 9–10) | Production configuration guards, request limits, authentication, security headers, structured logging; lifecycle audit hash chain | Security/operations: deployed SSO/MFA and role/access review, encryption/key management, monitoring alerts, vulnerability remediation evidence, independent audit retention |
-| Response and recovery (Articles 11–12) | Verified SQLite snapshot and isolated restore commands | Operations: business impact analysis, approved RTO/RPO, encrypted isolated/off-site copies, full-system recovery/switchover exercise with measured outcomes |
-| Learning and communication (Articles 13–14) | Operations guidance | Incident owner: exercises, lessons learned, remediation owners, internal/external communication plan |
-| Incident management and reporting (Articles 17–23) | Structured logs and bounded provider failures support investigation | Incident/compliance owners: incident register, detection/classification workflow, contacts, applicable reporting deadlines/templates, authority submission evidence and post-incident reviews |
-| Resilience testing (Articles 24–27) | Repository regression tests; local audit and recovery checks | Security/QA: approved risk-based test programme, production-representative exercises, independent security testing and remediation; determine TLPT applicability |
-| ICT third-party risk (Articles 28–30) | Copilot and optional Jira dependencies documented | Procurement/risk: complete supplier register including hosting/identity, contract review, subcontracting/location/concentration assessment, exit and substitution exercises |
+| Area                                               | Application evidence                                                                                                              | Open acceptance evidence / responsible role                                                                                                                                                   |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Governance and ICT risk (Articles 5–8)             | Engineering standards and runtime configuration                                                                                   | Management: scope, accountable owners, asset/dependency inventory, risk assessment, approved policies and review dates                                                                        |
+| Protection and detection (Articles 9–10)           | Production configuration guards, request limits, authentication, security headers, structured logging; lifecycle audit hash chain | Security/operations: deployed SSO/MFA and role/access review, encryption/key management, monitoring alerts, vulnerability remediation evidence, independent audit retention                   |
+| Response and recovery (Articles 11–12)             | Verified SQLite snapshot and isolated restore commands                                                                            | Operations: business impact analysis, approved RTO/RPO, encrypted isolated/off-site copies, full-system recovery/switchover exercise with measured outcomes                                   |
+| Learning and communication (Articles 13–14)        | Operations guidance                                                                                                               | Incident owner: exercises, lessons learned, remediation owners, internal/external communication plan                                                                                          |
+| Incident management and reporting (Articles 17–23) | Structured logs and bounded provider failures support investigation                                                               | Incident/compliance owners: incident register, detection/classification workflow, contacts, applicable reporting deadlines/templates, authority submission evidence and post-incident reviews |
+| Resilience testing (Articles 24–27)                | Repository regression tests; local audit and recovery checks                                                                      | Security/QA: approved risk-based test programme, production-representative exercises, independent security testing and remediation; determine TLPT applicability                              |
+| ICT third-party risk (Articles 28–30)              | Copilot and optional Jira dependencies documented                                                                                 | Procurement/risk: complete supplier register including hosting/identity, contract review, subcontracting/location/concentration assessment, exit and substitution exercises                   |
 
 Each open item requires an assigned person, target date, evidence location, reviewer and approval
 date in the organization's controlled register. A successful local command does not close these
@@ -74,7 +74,7 @@ Validation recorded on 21 September 2026:
 
 - Full repository run: 458 passed, 21 skipped. Test-process overrides disabled local login and
   user secrets and selected the expected default model (`APP_PASSWORD='' SESSION_SECRET=''
-  API_AUTH_TOKEN='' USER_SECRETS_ENABLED=false OPENAI_MODEL=gpt-5.4 python3 -m pytest -q -rs`).
+API_AUTH_TOKEN='' USER_SECRETS_ENABLED=false OPENAI_MODEL=gpt-5.4 python3 -m pytest -q -rs`).
   No deployment configuration was changed. Skips cover opt-in browser checks and unavailable or
   opt-in .NET, Behave and JMeter execution.
 - After adding rejection of a JSON-null checkpoint file, the focused resilience run passed all

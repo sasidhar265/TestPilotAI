@@ -11,7 +11,8 @@ public static class GenerationRequestBuilder
         {
             Content = JsonContent.Create(new GenerationRequestModel(description))
         };
-        if (authenticated) AuthenticationUtility.Apply(request);
+        if (authenticated)
+            AuthenticationUtility.Apply(request);
         return request;
     }
 }

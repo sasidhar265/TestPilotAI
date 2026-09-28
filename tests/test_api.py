@@ -75,8 +75,8 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
 
     assert response.status_code == 200
     assert 'id="login-form"' in response.text
-    assert "AI-assisted quality engineering" in response.text
-    assert "manual and automated tests" in " ".join(response.text.split())
+    assert "Every journey starts with a confident quote." in response.text
+    assert "automobile finance testing workspace" in " ".join(response.text.split())
     assert 'src="/static/scripts/login.js?v=20260902-login-feedback"' in response.text
     assert 'id="auth-overlay"' in response.text
     assert 'id="dismiss-auth-error"' in response.text
@@ -89,7 +89,7 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert 'data-theme-option="dark"' in response.text
     assert 'data-theme-option="system"' in response.text
     assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
-    assert "styles/login-feedback.css?v=20260902" in response.text
+    assert "styles/login-feedback.css?v=20260923-guest-entry" in response.text
 
 
 def test_home_has_format_radios_and_generation_timer() -> None:
@@ -101,11 +101,11 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Sole AI runtime" not in response.text
     assert "Execution topology" not in response.text
     assert 'id="output-target"' in response.text
-    assert '<option value="manual">Manual</option>' in response.text
+    assert '<option value="manual">Functional</option>' in response.text
     assert "Normal steps" not in response.text
     automation_option = '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
     assert automation_option in response.text
-    assert '<option value="both">Both manual and automation</option>' in response.text
+    assert '<option value="both">Both (Automation + Functional)</option>' in response.text
     assert 'id="timer" role="timer"' in response.text
     assert 'id="download-feature"' in response.text
     assert 'id="generate-step-definitions"' in response.text
@@ -284,12 +284,12 @@ def test_health_reports_configuration() -> None:
     assert response.json()["execution_host"] == "local-fastapi-uvicorn"
     assert response.json()["active_agent"] == "Resilient AI Test Designer"
     assert response.json()["agent_runtime_id"] == "automatic-fallback"
-    assert response.json()["copilot_model"] == "organization-default"
+    assert response.json()["copilot_model"] == "claude-haiku-4.5"
     assert response.json()["openai_model"] == "gpt-5.4"
     assert "gemini_model" in response.json()
     assert isinstance(response.json()["gemini_configured"], bool)
     assert "gemini_api_key" not in response.json()
-    assert response.json()["codex_model"] == "account-default"
+    assert response.json()["codex_model"] == "gpt-6-astra"
     assert response.json()["agent_profile"] == "auto-finance-quotation"
     assert response.json()["organizational_memory"] == "enabled"
     assert isinstance(response.json()["organizational_memory_entries"], int)
@@ -388,6 +388,7 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     assert [agent["kind"] for agent in agents] == [
         "input",
         "business-rules",
+        "validator",
         "story-generator",
         "scenario-generator",
         "knowledge",
@@ -407,14 +408,14 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "bug-reporter",
         "metrics",
     ]
-    assert agents[15]["id"] == "execution-agent"
-    assert agents[16]["id"] == "automation-execution-agent"
-    assert agents[5]["runtime"] == "local-orchestrator"
-    assert agents[6]["runtime"] == "local-router"
-    assert agents[5]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
-    assert agents[6]["instruction_file"] == ".github/agents/reqforge.agent.md"
-    assert agents[11]["instruction_file"] == ".github/agents/context-converter.agent.md"
-    assert agents[12]["runtime"] == "local-sqlite"
+    assert agents[16]["id"] == "execution-agent"
+    assert agents[17]["id"] == "automation-execution-agent"
+    assert agents[6]["runtime"] == "local-orchestrator"
+    assert agents[7]["runtime"] == "local-router"
+    assert agents[6]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
+    assert agents[7]["instruction_file"] == ".github/agents/reqforge.agent.md"
+    assert agents[12]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[13]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:

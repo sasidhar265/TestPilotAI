@@ -87,8 +87,11 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
             )
         except DocumentIngestionError as error:
             raise HTTPException(422, str(error)) from error
-        return {"description": document.text, "filename": document.filename,
-                "uploaded_brd_receipt": issue_brd_receipt(document.text, settings)}
+        return {
+            "description": document.text,
+            "filename": document.filename,
+            "uploaded_brd_receipt": issue_brd_receipt(document.text, settings),
+        }
 
 
 @router.post("/validate-requirements", response_model=RequirementsReport)
@@ -98,7 +101,9 @@ async def validate_requirements(request: GenerateRequest, settings: Config) -> R
 
 
 @router.post("/brd/pdf")
-async def download_brd_draft(text: Annotated[str, Form(min_length=1, max_length=50000)]) -> Response:
+async def download_brd_draft(
+    text: Annotated[str, Form(min_length=1, max_length=50000)],
+) -> Response:
     return Response(
         content=brd_draft_to_pdf(text),
         media_type="application/pdf",

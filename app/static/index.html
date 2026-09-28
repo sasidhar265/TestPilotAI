@@ -125,7 +125,10 @@
       <main class="workspace">
         <aside class="guest-banner" role="status">
           <strong>Guest access · View only</strong>
-          <span>You can preview the Quality workspace. Sign in to access workspace data, execution history and reports.</span>
+          <span
+            >You can preview the Quality workspace. Sign in to access workspace data, execution
+            history and reports.</span
+          >
           <a href="/login">Sign in</a>
         </aside>
         <header class="topbar">
@@ -304,7 +307,10 @@
 
           <section class="stage-workspace" aria-label="Requirements to execution" hidden>
             <div class="stage-navigation-heading">
-              <div><span class="stage-eyebrow">YOUR WORKSPACE</span><h2>Workflow outputs</h2></div>
+              <div>
+                <span class="stage-eyebrow">YOUR WORKSPACE</span>
+                <h2>Workflow outputs</h2>
+              </div>
               <p>Review, refine and move to the next stage.</p>
             </div>
             <div class="stage-tabs" role="tablist" aria-label="Quality workflow stages">
@@ -319,7 +325,9 @@
               >
                 <span class="stage-number" aria-hidden="true">01</span>
                 <span class="stage-tab-copy">
-                  <span class="stage-tab-title"><strong>Requirements</strong><span class="stage-count" hidden></span></span>
+                  <span class="stage-tab-title"
+                    ><strong>Requirements</strong><span class="stage-count" hidden></span
+                  ></span>
                   <small>Source & context</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
@@ -335,7 +343,9 @@
               >
                 <span class="stage-number" aria-hidden="true">02</span>
                 <span class="stage-tab-copy">
-                  <span class="stage-tab-title"><strong>Stories</strong><span class="stage-count" hidden></span></span>
+                  <span class="stage-tab-title"
+                    ><strong>Stories</strong><span class="stage-count" hidden></span
+                  ></span>
                   <small>Review & approve</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
@@ -351,7 +361,9 @@
               >
                 <span class="stage-number" aria-hidden="true">03</span>
                 <span class="stage-tab-copy">
-                  <span class="stage-tab-title"><strong>Scenarios</strong><span class="stage-count" hidden></span></span>
+                  <span class="stage-tab-title"
+                    ><strong>Scenarios</strong><span class="stage-count" hidden></span
+                  ></span>
                   <small>Coverage & risks</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
@@ -367,7 +379,9 @@
               >
                 <span class="stage-number" aria-hidden="true">04</span>
                 <span class="stage-tab-copy">
-                  <span class="stage-tab-title"><strong>Test cases</strong><span class="stage-count" hidden></span></span>
+                  <span class="stage-tab-title"
+                    ><strong>Test cases</strong><span class="stage-count" hidden></span
+                  ></span>
                   <small>Steps & expectations</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
@@ -383,7 +397,9 @@
               >
                 <span class="stage-number" aria-hidden="true">05</span>
                 <span class="stage-tab-copy">
-                  <span class="stage-tab-title"><strong>Execution</strong><span class="stage-count" hidden></span></span>
+                  <span class="stage-tab-title"
+                    ><strong>Execution</strong><span class="stage-count" hidden></span
+                  ></span>
                   <small>Runs & results</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
@@ -465,7 +481,14 @@
                 </div>
               </div>
               <div id="story-cards" class="stage-cards">
-                <div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Your stories will appear here</h3><p>Start with your requirements, then generate stories to review and approve.</p><button class="secondary" type="button" data-open-stage="1">Review requirements →</button></div>
+                <div class="stage-empty">
+                  <span class="stage-empty-icon" aria-hidden="true">◇</span>
+                  <h3>Your stories will appear here</h3>
+                  <p>Start with your requirements, then generate stories to review and approve.</p>
+                  <button class="secondary" type="button" data-open-stage="1">
+                    Review requirements →
+                  </button>
+                </div>
               </div>
               <p id="story-review-progress" role="status">
                 Review and accept each story to continue.
@@ -517,7 +540,14 @@
                 </div>
               </div>
               <div id="scenario-cards" class="stage-cards">
-                <div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Build coverage from approved stories</h3><p>Review and approve your stories before creating scenarios.</p><button class="secondary" type="button" data-open-stage="2">Review stories →</button></div>
+                <div class="stage-empty">
+                  <span class="stage-empty-icon" aria-hidden="true">◇</span>
+                  <h3>Build coverage from approved stories</h3>
+                  <p>Review and approve your stories before creating scenarios.</p>
+                  <button class="secondary" type="button" data-open-stage="2">
+                    Review stories →
+                  </button>
+                </div>
               </div>
             </div>
             <div
@@ -543,7 +573,16 @@
                 Your test-case type, testing type and LLM choices come from Requirements. Return to
                 stage 1 to change them.
               </p>
-              <div id="stage-case-empty" class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Turn scenarios into test cases</h3><p>Approve your scenario coverage, then create cases with steps and expected results.</p><button class="secondary" type="button" data-open-stage="3">Review scenarios →</button></div>
+              <div id="stage-case-empty" class="stage-empty">
+                <span class="stage-empty-icon" aria-hidden="true">◇</span>
+                <h3>Turn scenarios into test cases</h3>
+                <p>
+                  Approve your scenario coverage, then create cases with steps and expected results.
+                </p>
+                <button class="secondary" type="button" data-open-stage="3">
+                  Review scenarios →
+                </button>
+              </div>
               <button class="primary stage-next" id="review-cases" type="button" disabled>
                 Continue to execution →
               </button>
@@ -573,7 +612,18 @@
                 </button>
               </div>
               <p id="stage-execution-reason">Create test cases in stage 4 first.</p>
-              <div id="stage-execution-list" class="stage-cards"><div class="stage-empty"><span class="stage-empty-icon" aria-hidden="true">◇</span><h3>Prepare your first test run</h3><p>Create and review test cases to see the execution plan and available actions.</p><button class="secondary" type="button" data-open-stage="4">Review test cases →</button></div></div>
+              <div id="stage-execution-list" class="stage-cards">
+                <div class="stage-empty">
+                  <span class="stage-empty-icon" aria-hidden="true">◇</span>
+                  <h3>Prepare your first test run</h3>
+                  <p>
+                    Create and review test cases to see the execution plan and available actions.
+                  </p>
+                  <button class="secondary" type="button" data-open-stage="4">
+                    Review test cases →
+                  </button>
+                </div>
+              </div>
               <div id="stage-execution-results" aria-live="polite"></div>
             </div>
           </section>
@@ -782,9 +832,22 @@
                 </p>
 
                 <section class="requirements-check" aria-labelledby="requirements-check-title">
-                  <div><h3 id="requirements-check-title">Business alignment gate</h3><p>Requirements must align with approved business sources before stories, test cases or generated-suite execution can proceed.</p></div>
-                  <button class="secondary" id="validate-requirements" type="button">Validate requirements</button>
-                  <div id="requirements-validation-report" role="status" aria-live="polite" hidden></div>
+                  <div>
+                    <h3 id="requirements-check-title">Business alignment gate</h3>
+                    <p>
+                      Requirements must align with approved business sources before stories, test
+                      cases or generated-suite execution can proceed.
+                    </p>
+                  </div>
+                  <button class="secondary" id="validate-requirements" type="button">
+                    Validate requirements
+                  </button>
+                  <div
+                    id="requirements-validation-report"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                  ></div>
                 </section>
 
                 <details class="rule-control" id="rule-control">
@@ -862,7 +925,11 @@
                   <div class="generation-options">
                     <fieldset class="generation-select-control">
                       <legend>Type of test cases</legend>
-                      <select id="output-target" name="output_target" aria-label="Type of test cases">
+                      <select
+                        id="output-target"
+                        name="output_target"
+                        aria-label="Type of test cases"
+                      >
                         <option value="manual">Functional</option>
                         <option value="automation" selected>Automation (BDD / Gherkin)</option>
                         <option value="non_functional">Non-Functional</option>
@@ -1285,121 +1352,234 @@
         </div>
         <div data-workspace-page="/progress" hidden>
           <nav class="execution-subnav" aria-label="Progress and execution views">
-            <button type="button" class="active" data-execution-view="dashboard" aria-current="page">Dashboard</button>
+            <button
+              type="button"
+              class="active"
+              data-execution-view="dashboard"
+              aria-current="page"
+            >
+              Dashboard
+            </button>
             <button type="button" data-execution-view="logs">Execution logs</button>
           </nav>
           <div id="progress-dashboard-view">
-          <section
-            class="panel workspace-page-panel"
-            id="work-dashboard"
-            aria-labelledby="work-dashboard-title"
-          >
-            <div class="bdd-heading">
-              <div>
-                <span class="section-kicker">QUALITY / EXECUTION</span>
-                <h2 id="work-dashboard-title">Execution intelligence</h2>
-                <p>Track quality trends, investigate failures, and share execution evidence.</p>
-              </div>
-              <div class="bdd-heading-actions">
-                <button id="export-run-history" class="secondary" type="button" disabled>
-                  Export history · CSV
-                </button>
-                <button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button
-                ><button id="run-repository-bdd" class="primary" type="button">
-                  <span aria-hidden="true">▶</span> Run BDD tests
-                </button>
-                <button id="cancel-repository-bdd" class="secondary" type="button" hidden>
-                  Stop run
-                </button>
-              </div>
-            </div>
-            <div class="bdd-context">
-              <span class="bdd-context-label">C# · ReqnRoll</span><span>Repository suite</span>
-              <div id="dashboard-progress" aria-live="polite"></div>
-            </div>
-            <p id="bdd-run-status" role="status"></p>
-            <div id="bdd-insight" class="bdd-insight" role="status"></div>
-            <div
-              id="dashboard-totals"
-              class="dashboard-numbers"
-              aria-label="Execution metrics"
-            ></div>
-            <div class="bdd-overview">
-              <section id="bdd-result-summary" aria-label="Selected run results"></section>
-              <section class="bdd-trend-card">
-                <div class="bdd-card-heading">
-                  <div>
-                    <span class="section-kicker">RUN ACTIVITY</span>
-                    <h3>Recent outcomes</h3>
-                  </div>
-                  <span class="bdd-subtle">Last 12 runs</span>
-                </div>
-                <div id="bdd-run-trend" aria-label="Recent run results"></div>
-                <p class="bdd-trend-caption">Select a run to explore its results.</p>
-              </section>
-            </div>
-            <section class="bdd-history-card bdd-test-card" aria-labelledby="bdd-test-title">
-              <div class="bdd-history-heading">
+            <section
+              class="panel workspace-page-panel"
+              id="work-dashboard"
+              aria-labelledby="work-dashboard-title"
+            >
+              <div class="bdd-heading">
                 <div>
-                  <span class="section-kicker">SELECTED RUN / EVIDENCE</span>
-                  <h3 id="bdd-test-title">Test-level results</h3>
+                  <span class="section-kicker">QUALITY / EXECUTION</span>
+                  <h2 id="work-dashboard-title">Execution intelligence</h2>
+                  <p>Track quality trends, investigate failures, and share execution evidence.</p>
                 </div>
-                <span id="bdd-test-count" class="bdd-subtle"></span>
-              </div>
-              <div id="bdd-test-results" class="bdd-table-scroll"></div>
-            </section>
-            <section class="bdd-history-card" aria-labelledby="bdd-history-title">
-              <div class="bdd-history-heading">
-                <div>
-                  <h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3>
-                </div>
-                <div class="bdd-history-controls">
-                  <label class="bdd-search"
-                    ><span aria-hidden="true">⌕</span
-                    ><input
-                      id="bdd-history-search"
-                      type="search"
-                      placeholder="Search runs or project…"
-                      aria-label="Search run history" /></label
-                  ><select id="bdd-status-filter" aria-label="Filter runs by status">
-                    <option value="all">All statuses</option>
-                    <option value="passed">Passed</option>
-                    <option value="failed">Failed</option>
-                    <option value="error">Error</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                <div class="bdd-heading-actions">
+                  <button id="export-run-history" class="secondary" type="button" disabled>
+                    Export history · CSV
+                  </button>
+                  <button id="refresh-dashboard" class="secondary" type="button">↻ Refresh</button
+                  ><button id="run-repository-bdd" class="primary" type="button">
+                    <span aria-hidden="true">▶</span> Run BDD tests
+                  </button>
+                  <button id="cancel-repository-bdd" class="secondary" type="button" hidden>
+                    Stop run
+                  </button>
                 </div>
               </div>
+              <div class="bdd-context">
+                <span class="bdd-context-label">C# · ReqnRoll</span><span>Repository suite</span>
+                <div id="dashboard-progress" aria-live="polite"></div>
+              </div>
+              <p id="bdd-run-status" role="status"></p>
+              <div id="bdd-insight" class="bdd-insight" role="status"></div>
               <div
-                id="dashboard-history"
-                role="region"
-                tabindex="0"
-                aria-label="Execution history"
+                id="dashboard-totals"
+                class="dashboard-numbers"
+                aria-label="Execution metrics"
               ></div>
+              <div class="bdd-overview">
+                <section id="bdd-result-summary" aria-label="Selected run results"></section>
+                <section class="bdd-trend-card">
+                  <div class="bdd-card-heading">
+                    <div>
+                      <span class="section-kicker">RUN ACTIVITY</span>
+                      <h3>Recent outcomes</h3>
+                    </div>
+                    <span class="bdd-subtle">Last 12 runs</span>
+                  </div>
+                  <div id="bdd-run-trend" aria-label="Recent run results"></div>
+                  <p class="bdd-trend-caption">Select a run to explore its results.</p>
+                </section>
+              </div>
+              <section class="bdd-history-card bdd-test-card" aria-labelledby="bdd-test-title">
+                <div class="bdd-history-heading">
+                  <div>
+                    <span class="section-kicker">SELECTED RUN / EVIDENCE</span>
+                    <h3 id="bdd-test-title">Test-level results</h3>
+                  </div>
+                  <span id="bdd-test-count" class="bdd-subtle"></span>
+                </div>
+                <div id="bdd-test-results" class="bdd-table-scroll"></div>
+              </section>
+              <section class="bdd-history-card" aria-labelledby="bdd-history-title">
+                <div class="bdd-history-heading">
+                  <div>
+                    <h3 id="bdd-history-title">Run history <span id="bdd-history-count"></span></h3>
+                  </div>
+                  <div class="bdd-history-controls">
+                    <label class="bdd-search"
+                      ><span aria-hidden="true">⌕</span
+                      ><input
+                        id="bdd-history-search"
+                        type="search"
+                        placeholder="Search runs or project…"
+                        aria-label="Search run history" /></label
+                    ><select id="bdd-status-filter" aria-label="Filter runs by status">
+                      <option value="all">All statuses</option>
+                      <option value="passed">Passed</option>
+                      <option value="failed">Failed</option>
+                      <option value="error">Error</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="dashboard-history"
+                  role="region"
+                  tabindex="0"
+                  aria-label="Execution history"
+                ></div>
+              </section>
+              <p id="dashboard-scope">Loading BDD execution history…</p>
             </section>
-            <p id="dashboard-scope">Loading BDD execution history…</p>
-          </section>
           </div>
-          <section id="execution-logs-view" class="execution-logs-view" aria-labelledby="execution-logs-title" hidden>
+          <section
+            id="execution-logs-view"
+            class="execution-logs-view"
+            aria-labelledby="execution-logs-title"
+            hidden
+          >
             <div class="execution-logs-heading">
-              <div><span class="section-kicker">QUALITY / EXECUTION LOGS</span><h2 id="execution-logs-title">Execution history</h2><p>Review recorded BDD runs and case execution evidence.</p></div>
-              <button class="secondary" id="execution-logs-refresh" type="button">↻ Refresh logs</button>
+              <div>
+                <span class="section-kicker">QUALITY / EXECUTION LOGS</span>
+                <h2 id="execution-logs-title">Execution history</h2>
+                <p>Review recorded BDD runs and case execution evidence.</p>
+              </div>
+              <button class="secondary" id="execution-logs-refresh" type="button">
+                ↻ Refresh logs
+              </button>
             </div>
-            <div class="execution-logs-metrics" id="execution-logs-metrics" aria-label="Execution log summary"></div>
-            <div class="execution-logs-overview" id="execution-logs-overview" aria-label="Overall run outcomes"></div>
+            <div
+              class="execution-logs-metrics"
+              id="execution-logs-metrics"
+              aria-label="Execution log summary"
+            ></div>
+            <div
+              class="execution-logs-overview"
+              id="execution-logs-overview"
+              aria-label="Overall run outcomes"
+            ></div>
             <div class="execution-logs-controls">
-              <label>Search <input id="execution-logs-search" type="search" placeholder="Run ID, project, case, status…" /></label>
-              <label>Type <select id="execution-logs-type"><option value="all">All executions</option><option value="repository_checks">Repository BDD</option><option value="case_execution">Case execution</option></select></label>
-              <label>Status <select id="execution-logs-status"><option value="all">All statuses</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option><option value="completed">Completed</option><option value="error">Error</option><option value="cancelled">Cancelled</option></select></label>
-              <label>Period <select id="execution-logs-period"><option value="0">All retained</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+              <label
+                >Search
+                <input
+                  id="execution-logs-search"
+                  type="search"
+                  placeholder="Run ID, project, case, status…"
+              /></label>
+              <label
+                >Type
+                <select id="execution-logs-type">
+                  <option value="all">All executions</option>
+                  <option value="repository_checks">Repository BDD</option>
+                  <option value="case_execution">Case execution</option>
+                </select></label
+              >
+              <label
+                >Status
+                <select id="execution-logs-status">
+                  <option value="all">All statuses</option>
+                  <option value="passed">Passed</option>
+                  <option value="failed">Failed</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="completed">Completed</option>
+                  <option value="error">Error</option>
+                  <option value="cancelled">Cancelled</option>
+                </select></label
+              >
+              <label
+                >Period
+                <select id="execution-logs-period">
+                  <option value="0">All retained</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select></label
+              >
             </div>
-            <p id="execution-logs-status-text" role="status">Open Execution logs to load history.</p>
-            <div class="execution-logs-table-wrap"><table class="execution-logs-table"><thead><tr><th scope="col">Execution</th><th scope="col">Started</th><th scope="col">Status</th><th scope="col">Results</th><th scope="col">Duration</th><th scope="col">View</th></tr></thead><tbody id="execution-logs-rows"></tbody></table></div>
-            <nav class="execution-logs-pagination" aria-label="Execution log pages"><span id="execution-logs-page-summary"></span><div><button type="button" class="secondary" id="execution-logs-previous">Previous</button><span id="execution-logs-page-number"></span><button type="button" class="secondary" id="execution-logs-next">Next</button></div></nav>
+            <p id="execution-logs-status-text" role="status">
+              Open Execution logs to load history.
+            </p>
+            <div class="execution-logs-table-wrap">
+              <table class="execution-logs-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Execution</th>
+                    <th scope="col">Started</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Results</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">View</th>
+                  </tr>
+                </thead>
+                <tbody id="execution-logs-rows"></tbody>
+              </table>
+            </div>
+            <nav class="execution-logs-pagination" aria-label="Execution log pages">
+              <span id="execution-logs-page-summary"></span>
+              <div>
+                <button type="button" class="secondary" id="execution-logs-previous">
+                  Previous</button
+                ><span id="execution-logs-page-number"></span
+                ><button type="button" class="secondary" id="execution-logs-next">Next</button>
+              </div>
+            </nav>
             <p class="execution-logs-scope" id="execution-logs-scope"></p>
-            <dialog class="execution-log-detail" id="execution-log-detail" aria-labelledby="execution-log-detail-title">
-              <div class="execution-log-detail-head"><div><span class="section-kicker">EXECUTION RECORD</span><h3 id="execution-log-detail-title">Run details</h3></div><div class="execution-log-detail-actions"><a class="secondary execution-allure-download" id="execution-log-allure-download" href="#" download hidden>Download Allure report</a><button type="button" class="secondary" id="execution-log-detail-close" aria-label="Close execution details">Close</button></div></div>
-              <nav class="execution-detail-tabs" id="execution-detail-tabs" role="tablist" aria-label="Execution detail sections"></nav>
+            <dialog
+              class="execution-log-detail"
+              id="execution-log-detail"
+              aria-labelledby="execution-log-detail-title"
+            >
+              <div class="execution-log-detail-head">
+                <div>
+                  <span class="section-kicker">EXECUTION RECORD</span>
+                  <h3 id="execution-log-detail-title">Run details</h3>
+                </div>
+                <div class="execution-log-detail-actions">
+                  <a
+                    class="secondary execution-allure-download"
+                    id="execution-log-allure-download"
+                    href="#"
+                    download
+                    hidden
+                    >Download Allure report</a
+                  ><button
+                    type="button"
+                    class="secondary"
+                    id="execution-log-detail-close"
+                    aria-label="Close execution details"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <nav
+                class="execution-detail-tabs"
+                id="execution-detail-tabs"
+                role="tablist"
+                aria-label="Execution detail sections"
+              ></nav>
               <div id="execution-log-detail-content"></div>
             </dialog>
           </section>

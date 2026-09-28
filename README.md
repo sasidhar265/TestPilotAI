@@ -831,6 +831,7 @@ must not invent contracts, fixtures or execution results.
 If providers cannot complete all bindings, the user receives a short error with a reference ID.
 Runtime logs retain implementation findings and provider notes for investigation. Provider notes
 are diagnostic statements, not a replacement Quality Gate decision.
+
 # Reusing repeated requirements
 
 With organizational memory enabled, the workflow stores validated stories and scenarios

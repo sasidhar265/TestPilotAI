@@ -12,7 +12,7 @@ let guestWarningDismissTimer = null;
 const isGuest = document.body.dataset.guest === "true";
 
 fetch("/api/auth/profile")
-  .then((response) => response.ok ? response.json() : null)
+  .then((response) => (response.ok ? response.json() : null))
   .then((profile) => {
     guestAccessUntil = Date.parse(profile?.guest_access_until || "") || 0;
   })
@@ -97,9 +97,10 @@ function continueSession() {
 function showGuestWarning(stage, remainingSeconds) {
   guestWarningStage = stage;
   sessionTitle.textContent = "Guest session ending soon";
-  sessionMessage.textContent = stage === 3
-    ? "Your guest session will close in a few seconds."
-    : `Your guest session will close in ${stage === 2 ? "about one minute" : "about two minutes"}.`;
+  sessionMessage.textContent =
+    stage === 3
+      ? "Your guest session will close in a few seconds."
+      : `Your guest session will close in ${stage === 2 ? "about one minute" : "about two minutes"}.`;
   seconds.textContent = stage === 3 ? `${remainingSeconds}s` : stage === 2 ? "1 min" : "2 min";
   continueButton.hidden = true;
   closeButton.hidden = true;

@@ -83,7 +83,9 @@ async function responseError(response) {
   try {
     const detail = (await response.json()).detail;
     if (detail?.requirements_validation) {
-      window.dispatchEvent(new CustomEvent("requirements-validation", { detail: detail.requirements_validation }));
+      window.dispatchEvent(
+        new CustomEvent("requirements-validation", { detail: detail.requirements_validation }),
+      );
       message = detail.message;
     }
     message = Array.isArray(detail)
@@ -304,7 +306,9 @@ function showGenerationOverlay(target) {
       : both
         ? "Generating combined test coverage"
         : manual
-          ? target === "non_functional" ? "Generating non-functional test cases" : "Generating functional test cases"
+          ? target === "non_functional"
+            ? "Generating non-functional test cases"
+            : "Generating functional test cases"
           : "Generating automation test cases";
   $("generation-overlay-message").textContent = stories
     ? "Reading your BRD and creating source-grounded stories with acceptance criteria. You can run this in the background while keeping this page open."
@@ -609,30 +613,30 @@ async function pollLifecycle(requestId) {
   if (requestId !== activeLifecycleRequestId) return;
   if (lifecyclePollPromise) return lifecyclePollPromise;
   const poll = (async () => {
-  try {
-    const response = await fetch(
-      `/api/generation/${encodeURIComponent(requestId)}/events?after=${lifecycleSequence}`,
-    );
-    if (!response.ok) return;
-    const data = await response.json();
-    if (requestId !== activeLifecycleRequestId) return;
-    renderLifecycleEvents(data.events || []);
-    if (data.complete) {
-      $("live-agent-feed-state").textContent = "COMPLETE";
-      $("generation-background-state").textContent = "COMPLETE";
-      if (!runCompletionNotified) {
-        const stage = generationStages[activeGeneration?.kind];
-        addNotification(
-          runFailed ? "Operation failed" : `${stage?.label || "Generation"} completed`,
-          runFailed
-            ? "The operation stopped with an error. Review its status for details."
-            : "The operation finished. Review its output in the workspace.",
-          runFailed ? "error" : "success",
-        );
-        runCompletionNotified = true;
+    try {
+      const response = await fetch(
+        `/api/generation/${encodeURIComponent(requestId)}/events?after=${lifecycleSequence}`,
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      if (requestId !== activeLifecycleRequestId) return;
+      renderLifecycleEvents(data.events || []);
+      if (data.complete) {
+        $("live-agent-feed-state").textContent = "COMPLETE";
+        $("generation-background-state").textContent = "COMPLETE";
+        if (!runCompletionNotified) {
+          const stage = generationStages[activeGeneration?.kind];
+          addNotification(
+            runFailed ? "Operation failed" : `${stage?.label || "Generation"} completed`,
+            runFailed
+              ? "The operation stopped with an error. Review its status for details."
+              : "The operation finished. Review its output in the workspace.",
+            runFailed ? "error" : "success",
+          );
+          runCompletionNotified = true;
+        }
       }
-    }
-  } catch {}
+    } catch {}
   })();
   lifecyclePollPromise = poll;
   try {
@@ -1220,8 +1224,14 @@ function syncAgentWorkflow() {
     performance: "Review workload, response time and throughput criteria.",
     database: "Review data integrity, queries and persistence rules.",
   };
-  const manual = ["ManualTestCaseGeneratorAgent", `${discipline}: ${descriptions[$("manual-testing-type").value]}`];
-  const automation = ["AutomationTestCaseGeneratorAgent", "Generate BDD / Gherkin scenarios from approved coverage."];
+  const manual = [
+    "ManualTestCaseGeneratorAgent",
+    `${discipline}: ${descriptions[$("manual-testing-type").value]}`,
+  ];
+  const automation = [
+    "AutomationTestCaseGeneratorAgent",
+    "Generate BDD / Gherkin scenarios from approved coverage.",
+  ];
   const steps = [
     ["InputAgent + BusinessRulesAgent", "Prepare requirements and supplied business rules."],
     ["StoryGeneratorAgent", "Create user stories for review and acceptance."],
@@ -1234,18 +1244,20 @@ function syncAgentWorkflow() {
     ["TestCaseValidatorAgent", "Check completeness, traceability and quality rules."],
     ["ContextConverterAgent + OutputAgent", "Format exports and retain approved artifacts."],
   );
-  if (target === "automation" || target === "both") steps.push(
-    ["AutomationExecutionAgent", "Check readiness and run configured BDD tests."],
-  );
+  if (target === "automation" || target === "both")
+    steps.push(["AutomationExecutionAgent", "Check readiness and run configured BDD tests."]);
   $("agent-workflow-summary").textContent = {
     manual: `Functional · ${discipline}`,
     non_functional: `Non-Functional · ${discipline}`,
     automation: `Automation · BDD / Gherkin · ${discipline}`,
     both: `Functional · ${discipline} + Automation · BDD / Gherkin`,
   }[target];
-  $("agent-workflow-steps").innerHTML = steps.map(([title, description], index) =>
-    `<li class="agent-route-step"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(title)}</strong><small>${esc(description)}</small></div></li>`,
-  ).join("");
+  $("agent-workflow-steps").innerHTML = steps
+    .map(
+      ([title, description], index) =>
+        `<li class="agent-route-step"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(title)}</strong><small>${esc(description)}</small></div></li>`,
+    )
+    .join("");
 }
 function selectedGenerationTarget() {
   return $("output-target").value === "non_functional" ? "manual" : $("output-target").value;
@@ -1254,8 +1266,14 @@ function syncManualTestingType() {
   const nonFunctional = $("output-target").value === "non_functional";
   const select = $("manual-testing-type");
   const choices = nonFunctional
-    ? [["performance", "Performance testing"], ["database", "Database testing"]]
-    : [["api", "API testing"], ["ui", "UI testing"]];
+    ? [
+        ["performance", "Performance testing"],
+        ["database", "Database testing"],
+      ]
+    : [
+        ["api", "API testing"],
+        ["ui", "UI testing"],
+      ];
   const previous = select.value;
   select.replaceChildren(...choices.map(([value, label]) => new Option(label, value)));
   select.value = choices.some(([value]) => value === previous) ? previous : choices[0][0];
@@ -1337,7 +1355,11 @@ async function loadUserProfile() {
     }
     $("manage-users").classList.toggle("hidden", !profile.is_admin);
     $("profile-name").textContent = profile.display_name;
-    $("profile-role").textContent = profile.is_guest ? "Guest · View only" : profile.is_admin ? "Administrator" : "Workspace account";
+    $("profile-role").textContent = profile.is_guest
+      ? "Guest · View only"
+      : profile.is_admin
+        ? "Administrator"
+        : "Workspace account";
     $("profile-toggle").setAttribute(
       "aria-label",
       `Open profile menu for ${profile.display_name}${profile.is_admin ? " (Administrator)" : ""}`,

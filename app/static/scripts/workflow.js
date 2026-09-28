@@ -67,16 +67,28 @@
     if (action) show(Number(action.dataset.openStage));
   });
   function outcomeClass(value) {
-    return ({ passed: "passed", failed: "failed", error: "failed", blocked: "blocked",
-      skipped: "skipped", notexecuted: "skipped", "not-run": "skipped" })[
-      String(value).toLowerCase()] || "unknown";
+    return (
+      {
+        passed: "passed",
+        failed: "failed",
+        error: "failed",
+        blocked: "blocked",
+        skipped: "skipped",
+        notexecuted: "skipped",
+        "not-run": "skipped",
+      }[String(value).toLowerCase()] || "unknown"
+    );
   }
   function sync() {
     document.querySelector(".story-approval-toolbar").hidden = !state.stories;
     document.querySelector(".scenario-approval-toolbar").hidden = !state.scenarios;
     if (!suite && !$("stage-execution-list").children.length) {
-      $("stage-execution-list").innerHTML = emptyOutput("Prepare your first test run",
-        "Create and review test cases to see the execution plan and available actions.", 4, "Review test cases");
+      $("stage-execution-list").innerHTML = emptyOutput(
+        "Prepare your first test run",
+        "Create and review test cases to see the execution plan and available actions.",
+        4,
+        "Review test cases",
+      );
     }
     workspace.hidden = !state.stories && !suite;
     syncGenerateAvailability();
@@ -126,7 +138,8 @@
       );
     $("story-jira-open").disabled = state.busy || !selectedApprovedStories().length;
     $("stories-accepted-by").disabled = state.busy;
-    $("stage-scenarios").disabled = state.busy || !state.storiesReviewed || Boolean(state.scenarios);
+    $("stage-scenarios").disabled =
+      state.busy || !state.storiesReviewed || Boolean(state.scenarios);
     $("stage-scenarios").textContent = state.scenarios
       ? "Scenarios created ✓"
       : "Create scenarios →";
@@ -184,8 +197,12 @@
     if (from <= 2) {
       state.stories = null;
       state.storiesReviewed = false;
-      $("story-cards").innerHTML =
-        emptyOutput("Your stories will appear here", "Generate stories from your current requirements.", 1, "Review requirements");
+      $("story-cards").innerHTML = emptyOutput(
+        "Your stories will appear here",
+        "Generate stories from your current requirements.",
+        1,
+        "Review requirements",
+      );
       state.acceptedStories.clear();
       state.jiraStories.clear();
       state.dirtyStories.clear();
@@ -196,8 +213,12 @@
       state.scenariosReviewed = false;
       state.acceptedScenarios.clear();
       state.dirtyScenarios.clear();
-      $("scenario-cards").innerHTML =
-        emptyOutput("Build coverage from approved stories", "Review and approve stories before creating scenarios.", 2, "Review stories");
+      $("scenario-cards").innerHTML = emptyOutput(
+        "Build coverage from approved stories",
+        "Review and approve stories before creating scenarios.",
+        2,
+        "Review stories",
+      );
     }
     suite = null;
     validationReport = null;
@@ -347,23 +368,39 @@
     current();
     await resolveBusinessRules(transportOptions());
     current();
-    return { description, business_rules: parseBusinessRules(), additional_context: "",
-      uploaded_brd_text: uploadedBrdText, uploaded_brd_receipt: uploadedBrdReceipt };
+    return {
+      description,
+      business_rules: parseBusinessRules(),
+      additional_context: "",
+      uploaded_brd_text: uploadedBrdText,
+      uploaded_brd_receipt: uploadedBrdReceipt,
+    };
   }
   function renderRequirementsValidation(report) {
     const panel = $("requirements-validation-report");
     panel.hidden = false;
     panel.dataset.status = report.status;
-    const brdText = latestBrdText || (attachedFile ? Object.values(report.requirements || {}).join("\n") : "");
+    const brdText =
+      latestBrdText || (attachedFile ? Object.values(report.requirements || {}).join("\n") : "");
     const findings = (report.findings || []).filter((finding) => finding.status !== "aligned");
-    const suggestions = findings.map((finding) => `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p><p><strong>Suggested fix:</strong> ${esc(finding.suggested_change || "Review this requirement with the business owner and clarify the expected behavior.")}</p>${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`).join("");
+    const suggestions = findings
+      .map(
+        (finding) =>
+          `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p><p><strong>Suggested fix:</strong> ${esc(finding.suggested_change || "Review this requirement with the business owner and clarify the expected behavior.")}</p>${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`,
+      )
+      .join("");
     const uploadHelp = report.message.includes("verification failed")
       ? "The uploaded document could not be verified. Re-upload the BRD and validate again."
       : "Review the suggested changes with the business owner, update the BRD, then upload it and validate again.";
     const showDraft = report.status === "blocked" && Boolean(brdText);
     panel.innerHTML = `<strong>${esc(report.message)}</strong>${report.status === "blocked" ? `<div class="requirements-fix-guidance"><h4>How to fix the BRD</h4><p>${esc(uploadHelp)}</p>${suggestions ? `<ul>${suggestions}</ul>` : ""}</div>` : ""}${showDraft ? `<div class="requirements-draft-actions"><button type="button" class="secondary" id="preview-brd-draft" aria-expanded="false" aria-controls="brd-draft-preview">Preview proposed BRD</button><button type="button" class="secondary" id="download-brd-draft">Download proposed BRD</button></div><div id="brd-draft-preview" hidden><label for="brd-draft-text">Proposed BRD draft · review and edit before download</label><textarea id="brd-draft-text" spellcheck="true"></textarea><small>Suggestions are review notes. The extracted requirement text is preserved until you edit this draft.</small></div>` : ""}<small>Business alignment assessment · Regulatory compliance not assessed.</small>`;
     if (showDraft) {
-      const notes = findings.map((finding) => `### ${finding.requirement_id} · ${finding.status}\nCurrent requirement: ${report.requirements?.[finding.requirement_id] || "See the original BRD"}\nReason: ${finding.reason}\nSuggested fix: ${finding.suggested_change || "Clarify the expected behavior with the business owner."}`).join("\n\n");
+      const notes = findings
+        .map(
+          (finding) =>
+            `### ${finding.requirement_id} · ${finding.status}\nCurrent requirement: ${report.requirements?.[finding.requirement_id] || "See the original BRD"}\nReason: ${finding.reason}\nSuggested fix: ${finding.suggested_change || "Clarify the expected behavior with the business owner."}`,
+        )
+        .join("\n\n");
       const draft = `# Proposed BRD revision\n\n## Extracted requirements\n\n${brdText}\n\n## Validation review notes\n\n${notes || uploadHelp}\n`;
       const preview = panel.querySelector("#brd-draft-preview");
       panel.querySelector("#brd-draft-text").value = draft;
@@ -393,15 +430,21 @@
       sync();
     }
   }
-  window.addEventListener("requirements-validation", (event) => renderRequirementsValidation(event.detail));
-  $("validate-requirements").onclick = () => work("Validating business alignment…", async (current) => {
-    $("requirements-validation-report").hidden = true;
-    const source = await readRequirementSource(current);
-    const report = await post("validate-requirements", { ...source, generation_target: selectedGenerationTarget() });
-    current();
-    renderRequirementsValidation(report);
-    status(report.message);
-  });
+  window.addEventListener("requirements-validation", (event) =>
+    renderRequirementsValidation(event.detail),
+  );
+  $("validate-requirements").onclick = () =>
+    work("Validating business alignment…", async (current) => {
+      $("requirements-validation-report").hidden = true;
+      const source = await readRequirementSource(current);
+      const report = await post("validate-requirements", {
+        ...source,
+        generation_target: selectedGenerationTarget(),
+      });
+      current();
+      renderRequirementsValidation(report);
+      status(report.message);
+    });
   $("generate-form").addEventListener(
     "submit",
     (event) => {
@@ -904,12 +947,19 @@
       });
   }
   function renderPlan(running = false) {
-    $("stage-execution-list").innerHTML = (state.plan?.cases || [])
-      .map(
-        (item) =>
-          `<article class="stage-card"><span class="chip">${esc(item.feature_file)}</span><h3>${esc(item.scenario)}</h3><p>${running ? "Submitted to runner · individual progress unavailable until results return" : esc(state.plan?.runStatus || (state.plan?.ready ? "Listed in configured project · not run" : "Not run · target configuration required"))}</p></article>`,
-      )
-      .join("") || emptyOutput("No automation cases listed", "Review the execution plan above for configuration or coverage details.", 4, "Review test cases");
+    $("stage-execution-list").innerHTML =
+      (state.plan?.cases || [])
+        .map(
+          (item) =>
+            `<article class="stage-card"><span class="chip">${esc(item.feature_file)}</span><h3>${esc(item.scenario)}</h3><p>${running ? "Submitted to runner · individual progress unavailable until results return" : esc(state.plan?.runStatus || (state.plan?.ready ? "Listed in configured project · not run" : "Not run · target configuration required"))}</p></article>`,
+        )
+        .join("") ||
+      emptyOutput(
+        "No automation cases listed",
+        "Review the execution plan above for configuration or coverage details.",
+        4,
+        "Review test cases",
+      );
   }
   async function refreshExecution(current) {
     state.plan = null;

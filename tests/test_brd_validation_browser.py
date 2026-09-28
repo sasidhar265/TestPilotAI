@@ -19,14 +19,18 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
     source = "The quotation permits a negative deposit."
     report = {
         "status": "blocked",
-        "message": "Requirements blocked: resolve the business-alignment findings before continuing.",
-        "findings": [{
-            "requirement_id": "REQ-001",
-            "status": "conflict",
-            "reason": "Negative deposits conflict with the approved rule.",
-            "suggested_change": "Reject a negative deposit.",
-            "evidence": [],
-        }],
+        "message": (
+            "Requirements blocked: resolve the business-alignment findings before continuing."
+        ),
+        "findings": [
+            {
+                "requirement_id": "REQ-001",
+                "status": "conflict",
+                "reason": "Negative deposits conflict with the approved rule.",
+                "suggested_change": "Reject a negative deposit.",
+                "evidence": [],
+            }
+        ],
         "requirements": {"REQ-001": source},
     }
     endpoint_calls = []
@@ -37,9 +41,18 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
             file = static / ("index.html" if path == "/" else path.removeprefix("/static/"))
             request.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
         elif path == "/api/workflow/requirements/document":
-            request.fulfill(json={"description": source, "filename": "Requirements.pdf", "uploaded_brd_receipt": "receipt"})
+            request.fulfill(
+                json={
+                    "description": source,
+                    "filename": "Requirements.pdf",
+                    "uploaded_brd_receipt": "receipt",
+                }
+            )
         elif path == "/api/workflow/validate-requirements":
-            request.fulfill(status=422, json={"detail": {"message": report["message"], "requirements_validation": report}})
+            request.fulfill(
+                status=422,
+                json={"detail": {"message": report["message"], "requirements_validation": report}},
+            )
         elif path == "/api/workflow/brd/pdf":
             endpoint_calls.append(path)
             request.fulfill(status=404, json={"detail": "Not Found"})
@@ -48,16 +61,18 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         elif path == "/api/auth/profile":
             request.fulfill(json={"display_name": "Reviewer", "is_admin": False})
         else:
-            request.fulfill(json={"models": [], "events": [], "history": [], "active": [], "business_rules": []})
+            request.fulfill(
+                json={"models": [], "events": [], "history": [], "active": [], "business_rules": []}
+            )
 
     with playwright.sync_playwright() as runtime:
         browser = runtime.chromium.launch()
         page = browser.new_page(accept_downloads=True)
         page.route("**/*", route)
         page.goto("http://localhost/")
-        page.locator("#requirement-file").set_input_files({
-            "name": "Requirements.pdf", "mimeType": "application/pdf", "buffer": b"fixture"
-        })
+        page.locator("#requirement-file").set_input_files(
+            {"name": "Requirements.pdf", "mimeType": "application/pdf", "buffer": b"fixture"}
+        )
         page.locator("#validate-requirements").click()
         panel = page.locator("#requirements-validation-report")
         playwright.expect(panel).to_contain_text("Reject a negative deposit.")
@@ -79,20 +94,27 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         extracted = DocumentIngestionService().extract("proposed-brd.pdf", payload)
         assert "Reviewed BRD correction" in extracted.text
         assert not endpoint_calls
-        page.locator("#brd-draft-text").fill("Reviewed requirement with café terms • approved.\n" * 100)
+        page.locator("#brd-draft-text").fill(
+            "Reviewed requirement with café terms • approved.\n" * 100
+        )
         with page.expect_download() as longer_download:
             page.locator("#download-brd-draft").click()
         longer_pdf = PdfReader(longer_download.value.path())
         assert len(longer_pdf.pages) > 1
         assert "café" in longer_pdf.pages[0].extract_text()
         assert "•" in longer_pdf.pages[0].extract_text()
-        assert "café" in DocumentIngestionService().extract(
-            "proposed-brd.pdf", Path(longer_download.value.path()).read_bytes()
-        ).text
+        assert (
+            "café"
+            in DocumentIngestionService()
+            .extract("proposed-brd.pdf", Path(longer_download.value.path()).read_bytes())
+            .text
+        )
         assert urlparse(page.url).path == "/"
         page.locator("#brd-draft-text").fill(" ")
         page.locator("#download-brd-draft").click()
-        playwright.expect(page.locator("#status")).to_contain_text("must contain 1 to 50,000 characters")
+        playwright.expect(page.locator("#status")).to_contain_text(
+            "must contain 1 to 50,000 characters"
+        )
         page.locator("#file-remove").click()
         playwright.expect(panel).to_be_hidden()
         browser.close()

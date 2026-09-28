@@ -63,6 +63,7 @@ async def test_agents_load_markdown_and_validate_provider_output(tmp_path):
     agent = WorkflowAgent(
         Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
     )
+    agent.requirements_validator = SimpleNamespace(require=AsyncMock())
     agent.runner.generate_structured = AsyncMock(return_value=source.stories)
     assert await agent.stories(source.request) == source.stories
     call = agent.runner.generate_structured.call_args
@@ -120,8 +121,15 @@ def test_actual_runner_case_names_redact_target_credentials(tmp_path):
     path.write_text(
         '<TestRun><Results><UnitTestResult testName="case(secret-token)" '
         'outcome="Failed" duration="00:00:01"><Output><ErrorInfo>'
-        '<Message>secret-token failed the assertion</Message></ErrorInfo></Output>'
-        '</UnitTestResult></Results></TestRun>'
+        "<Message>secret-token failed the assertion</Message></ErrorInfo></Output>"
+        "</UnitTestResult></Results></TestRun>"
     )
     result = _test_results(path, ["secret-token"])
-    assert result == [{"name": "case([redacted])", "status": "Failed", "duration": "00:00:01", "error": "[redacted] failed the assertion"}]
+    assert result == [
+        {
+            "name": "case([redacted])",
+            "status": "Failed",
+            "duration": "00:00:01",
+            "error": "[redacted] failed the assertion",
+        }
+    ]

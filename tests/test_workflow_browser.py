@@ -193,15 +193,22 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             pw.expect(page.locator(f"#{control}")).to_be_visible()
         page.screenshot(path="/tmp/workflow-input-mobile.png", full_page=True)
         page.set_viewport_size({"width": 1440, "height": 1000})
-        pw.expect(page.locator("#output-target option")).to_have_text([
-            "Functional", "Automation (BDD / Gherkin)", "Non-Functional",
-            "Both (Automation + Functional)",
-        ])
+        pw.expect(page.locator("#output-target option")).to_have_text(
+            [
+                "Functional",
+                "Automation (BDD / Gherkin)",
+                "Non-Functional",
+                "Both (Automation + Functional)",
+            ]
+        )
         page.locator("#output-target").select_option(mode)
         expected_types = ["performance", "database"] if mode == "non_functional" else ["api", "ui"]
-        assert page.locator("#manual-testing-type option").evaluate_all(
-            "options => options.map(option => option.value)"
-        ) == expected_types
+        assert (
+            page.locator("#manual-testing-type option").evaluate_all(
+                "options => options.map(option => option.value)"
+            )
+            == expected_types
+        )
         if mode == "non_functional":
             page.locator("#manual-testing-type").select_option("database")
         if mode == "automation":

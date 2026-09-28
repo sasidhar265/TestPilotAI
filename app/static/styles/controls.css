@@ -3,9 +3,19 @@
   --primary-button: #7c3aed;
   --primary-button-hover: #6d28d9;
 }
-button, a.button, select { -webkit-tap-highlight-color: transparent; }
-button, a.button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
-button:is(.primary, .secondary, .quiet-button, .stop, .inspect-button), a.button {
+button,
+a.button,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a.button {
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:is(.primary, .secondary, .quiet-button, .stop, .inspect-button),
+a.button {
   box-sizing: border-box;
   min-height: 44px;
   max-width: 100%;
@@ -22,28 +32,37 @@ button:is(.primary, .secondary, .quiet-button, .stop, .inspect-button), a.button
   text-align: center;
   text-decoration: none;
   vertical-align: middle;
-  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
-button.primary, a.button.primary, :root .api-cta .button.primary,
+button.primary,
+a.button.primary,
+:root .api-cta .button.primary,
 :root[data-theme="dark"] .api-cta .button.primary {
   color: #fff;
   border-color: transparent;
   background: var(--primary-button);
   box-shadow: 0 2px 4px rgb(40 20 80 / 12%);
 }
-button.primary:hover:not(:disabled), a.button.primary:hover, :root .api-cta .button.primary:hover {
+button.primary:hover:not(:disabled),
+a.button.primary:hover,
+:root .api-cta .button.primary:hover {
   color: #fff;
   background: var(--primary-button-hover);
   box-shadow: 0 4px 10px rgb(40 20 80 / 18%);
   transform: none;
 }
-button:is(.secondary, .inspect-button), a.button.secondary {
+button:is(.secondary, .inspect-button),
+a.button.secondary {
   color: var(--ink-soft, var(--ink, #34384e));
   border-color: var(--line-strong, var(--line, #d7dae6));
   background: var(--surface, #fff);
   box-shadow: none;
 }
-button:is(.secondary, .inspect-button):hover:not(:disabled), a.button.secondary:hover {
+button:is(.secondary, .inspect-button):hover:not(:disabled),
+a.button.secondary:hover {
   color: var(--ink, #171a2b);
   border-color: var(--muted, #72778c);
   background: var(--surface-soft, #f8f9fc);
@@ -55,40 +74,70 @@ button.quiet-button {
   background: transparent;
   box-shadow: none;
 }
-button.quiet-button:hover:not(:disabled) { background: var(--primary-soft, #ececff); transform: none; }
-button.stop, button.generation-action-button--cancel {
+button.quiet-button:hover:not(:disabled) {
+  background: var(--primary-soft, #ececff);
+  transform: none;
+}
+button.stop,
+button.generation-action-button--cancel {
   color: var(--danger, #c33d55);
   border-color: color-mix(in srgb, var(--danger, #c33d55) 30%, transparent);
   background: color-mix(in srgb, var(--danger, #c33d55) 8%, var(--surface, #fff));
   box-shadow: none;
 }
-button.stop:hover:not(:disabled), button.generation-action-button--cancel:hover:not(:disabled) {
+button.stop:hover:not(:disabled),
+button.generation-action-button--cancel:hover:not(:disabled) {
   color: var(--danger, #c33d55);
   border-color: var(--danger, #c33d55);
   background: color-mix(in srgb, var(--danger, #c33d55) 14%, var(--surface, #fff));
 }
-button:focus-visible, a.button:focus-visible, select:focus-visible,
-button.password-toggle:focus-visible, button.forgot-password:focus-visible {
+button:focus-visible,
+a.button:focus-visible,
+select:focus-visible,
+button.password-toggle:focus-visible,
+button.forgot-password:focus-visible {
   outline: 3px solid var(--primary, #7c3aed);
   outline-offset: 3px;
 }
-button:disabled, button.primary:disabled, button.secondary:disabled {
+button:disabled,
+button.primary:disabled,
+button.secondary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
 }
-button[aria-busy="true"] { cursor: progress; }
-button:is(.primary, .secondary, .quiet-button, .stop):active:not(:disabled), a.button:active {
+button[aria-busy="true"] {
+  cursor: progress;
+}
+button:is(.primary, .secondary, .quiet-button, .stop):active:not(:disabled),
+a.button:active {
   box-shadow: inset 0 2px 4px rgb(0 0 0 / 12%);
 }
 /* Prevent login defaults from leaking into appearance controls. */
-.theme-options button, button.theme-gear { margin: 0; }
-.theme-options button { box-shadow: none; }
-button.password-toggle:hover { transform: translateY(-50%); }
-button.password-toggle { min-height: 38px; padding: 0; }
-button.forgot-password { min-height: 36px; }
-button[hidden], a.button[hidden], button.hidden, a.button.hidden { display: none; }
+.theme-options button,
+button.theme-gear {
+  margin: 0;
+}
+.theme-options button {
+  box-shadow: none;
+}
+button.password-toggle:hover {
+  transform: translateY(-50%);
+}
+button.password-toggle {
+  min-height: 38px;
+  padding: 0;
+}
+button.forgot-password {
+  min-height: 36px;
+}
+button[hidden],
+a.button[hidden],
+button.hidden,
+a.button.hidden {
+  display: none;
+}
 
 select {
   min-height: 44px;
@@ -100,10 +149,15 @@ select {
   font-size: 0.75rem;
   font-weight: 700;
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
     linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 17px) 19px, calc(100% - 12px) 19px;
-  background-size: 5px 5px, 5px 5px;
+  background-position:
+    calc(100% - 17px) 19px,
+    calc(100% - 12px) 19px;
+  background-size:
+    5px 5px,
+    5px 5px;
   background-repeat: no-repeat;
 }
 
@@ -113,5 +167,9 @@ select:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  button, a.button { transition: none !important; animation: none !important; }
+  button,
+  a.button {
+    transition: none !important;
+    animation: none !important;
+  }
 }

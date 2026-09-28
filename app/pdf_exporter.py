@@ -95,15 +95,29 @@ def brd_draft_to_pdf(text: str) -> bytes:
         if not stripped:
             story.append(Spacer(1, 7))
             continue
-        heading = stripped.startswith("# ") or stripped.startswith("## ") or stripped.startswith("### ")
-        style = styles["Title"] if stripped.startswith("# ") else (
-            styles["Heading2"] if stripped.startswith("## ") else
-            styles["Heading3"] if stripped.startswith("### ") else body
+        heading = (
+            stripped.startswith("# ") or stripped.startswith("## ") or stripped.startswith("### ")
+        )
+        style = (
+            styles["Title"]
+            if stripped.startswith("# ")
+            else (
+                styles["Heading2"]
+                if stripped.startswith("## ")
+                else styles["Heading3"]
+                if stripped.startswith("### ")
+                else body
+            )
         )
         story.append(Paragraph(escape(stripped.lstrip("# ") if heading else stripped), style))
     document = SimpleDocTemplate(
-        output, pagesize=A4, leftMargin=42, rightMargin=42,
-        topMargin=42, bottomMargin=42, title="Proposed BRD revision",
+        output,
+        pagesize=A4,
+        leftMargin=42,
+        rightMargin=42,
+        topMargin=42,
+        bottomMargin=42,
+        title="Proposed BRD revision",
     )
     document.build(story)
     return output.getvalue()

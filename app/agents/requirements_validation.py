@@ -174,18 +174,25 @@ class RequirementsValidationAgent:
             if not sources:
                 if request.uploaded_brd_receipt or request.uploaded_brd_text:
                     document = request.uploaded_brd_text or ""
-                    if (not request.uploaded_brd_receipt
-                            or document not in request.description
-                            or not verify_brd_receipt(document, request.uploaded_brd_receipt, self.settings)):
-                        return report(
-                            "Requirements blocked: uploaded BRD verification failed. Upload the document again."
+                    if (
+                        not request.uploaded_brd_receipt
+                        or document not in request.description
+                        or not verify_brd_receipt(
+                            document, request.uploaded_brd_receipt, self.settings
                         )
-                    source_metadata = [{
-                        "id": "UPLOADED-BRD",
-                        "title": "Uploaded BRD for this workflow",
-                        "status": "user_provided",
-                        "fingerprint": hashlib.sha256(document.encode()).hexdigest(),
-                    }]
+                    ):
+                        return report(
+                            "Requirements blocked: uploaded BRD verification failed. "
+                            "Upload the document again."
+                        )
+                    source_metadata = [
+                        {
+                            "id": "UPLOADED-BRD",
+                            "title": "Uploaded BRD for this workflow",
+                            "status": "user_provided",
+                            "fingerprint": hashlib.sha256(document.encode()).hexdigest(),
+                        }
+                    ]
                     result = report(
                         "Uploaded BRD verified as this workflow's source. Business approval and "
                         "regulatory compliance were not assessed."

@@ -284,10 +284,14 @@
     padding-bottom: max(20px, env(safe-area-inset-bottom));
     -webkit-overflow-scrolling: touch;
   }
-  html.navigation-open { overflow: hidden; }
+  html.navigation-open {
+    overflow: hidden;
+  }
 }
 
-.navigation-placeholder { display: none; }
+.navigation-placeholder {
+  display: none;
+}
 @media (max-width: 1080px) {
   body.navigation-open {
     position: fixed;
@@ -302,5 +306,7 @@
     left: 0;
     right: 0;
   }
-  body.navigation-open .navigation-placeholder { display: block; }
+  body.navigation-open .navigation-placeholder {
+    display: block;
+  }
 }

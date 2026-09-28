@@ -39,7 +39,8 @@ body {
   overflow: hidden;
   padding: clamp(30px, 4vw, 58px);
   color: #f5fcff;
-  background: radial-gradient(ellipse at 95% 0%, #17575a 0%, transparent 55%),
+  background:
+    radial-gradient(ellipse at 95% 0%, #17575a 0%, transparent 55%),
     linear-gradient(120deg, #10263e, #0a1c2b);
 }
 .product-story::after {
@@ -51,7 +52,9 @@ body {
   height: 350px;
   border: 1px solid #8fe4dc24;
   border-radius: 50%;
-  box-shadow: 0 0 0 45px #8fe4dc08, 0 0 0 90px #8fe4dc05;
+  box-shadow:
+    0 0 0 45px #8fe4dc08,
+    0 0 0 90px #8fe4dc05;
   content: "";
 }
 .product-story .brand-mark {

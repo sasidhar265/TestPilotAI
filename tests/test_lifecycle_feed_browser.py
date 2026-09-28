@@ -29,7 +29,9 @@ def test_lifecycle_feed_deduplicates_slow_polls_and_ignores_previous_run():
         elif path == "/api/auth/profile":
             request.fulfill(json={"display_name": "Reviewer", "is_admin": False})
         else:
-            request.fulfill(json={"models": [], "events": [], "history": [], "active": [], "business_rules": []})
+            request.fulfill(
+                json={"models": [], "events": [], "history": [], "active": [], "business_rules": []}
+            )
 
     def event(agent):
         return {"sequence": 1, "agent": agent, "summary": "One step completed", "status": "success"}
@@ -42,7 +44,9 @@ def test_lifecycle_feed_deduplicates_slow_polls_and_ignores_previous_run():
         page.evaluate("startLifecycleFeed('slow-run')")
         page.wait_for_timeout(800)
         assert len(pending["slow-run"]) == 1
-        pending["slow-run"].pop().fulfill(json={"events": [event("Input Agent")], "complete": False})
+        pending["slow-run"].pop().fulfill(
+            json={"events": [event("Input Agent")], "complete": False}
+        )
         playwright.expect(page.locator("#live-agent-events li")).to_have_count(1)
         playwright.expect(page.locator("#generation-background-events li")).to_have_count(1)
         page.evaluate("stopLifecycleFeed('slow-run')")
@@ -85,7 +89,9 @@ def test_generation_submit_starts_only_one_request_while_rules_are_saving():
         elif path == "/api/auth/profile":
             request.fulfill(json={"display_name": "Reviewer", "is_admin": False})
         else:
-            request.fulfill(json={"models": [], "events": [], "history": [], "active": [], "business_rules": []})
+            request.fulfill(
+                json={"models": [], "events": [], "history": [], "active": [], "business_rules": []}
+            )
 
     with playwright.sync_playwright() as runtime:
         browser = runtime.chromium.launch()

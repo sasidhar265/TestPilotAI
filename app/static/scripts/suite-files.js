@@ -141,7 +141,8 @@ function syncSuiteFileActions() {
     suite?.test_cases.some((c) => c.execution_mode === "automation"),
   );
   const automation =
-    approved && suite.test_cases.some((c) => c.execution_mode === "automation" && c.gherkin) &&
+    approved &&
+    suite.test_cases.some((c) => c.execution_mode === "automation" && c.gherkin) &&
     !automationControlsRestricted();
   [
     "view-feature",
@@ -304,8 +305,7 @@ async function cancelFullPackGeneration() {
   if (!generation || generation.cancelled) return;
   generation.cancelled = true;
   $("cancel-cs-generation").disabled = true;
-  $("cancel-cs-generation").querySelector(".generation-action-label").textContent =
-    "Cancelling…";
+  $("cancel-cs-generation").querySelector(".generation-action-label").textContent = "Cancelling…";
   try {
     const response = await fetch(
       `/api/generation/${encodeURIComponent(generation.requestId)}/cancel`,

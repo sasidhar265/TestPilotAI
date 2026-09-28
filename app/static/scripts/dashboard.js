@@ -11,7 +11,8 @@
     timeoutSeconds = 900;
   const duration = (ms) => `${(Math.max(0, Number(ms) || 0) / 1000).toFixed(1)} s`;
   const date = (value) => (value ? new Date(value).toLocaleString() : "Not recorded");
-  const state = (value) => (["passed", "failed", "error", "cancelled"].includes(value) ? value : "unknown");
+  const state = (value) =>
+    ["passed", "failed", "error", "cancelled"].includes(value) ? value : "unknown";
   const badge = (value) =>
     `<span class="bdd-status ${state(value)}">${esc(value || "Unknown")}</span>`;
   const field = (label, value) =>
@@ -179,14 +180,20 @@
     if (loading || document.hidden) return;
     loading = true;
     try {
-      const response = await fetch("/api/automation/history", {signal: AbortSignal.timeout(10000)});
+      const response = await fetch("/api/automation/history", {
+        signal: AbortSignal.timeout(10000),
+      });
       if (!response.ok) throw await responseError(response);
       const data = await response.json();
       runs = data.history.filter((item) => item.operation === "repository_checks");
       const active = data.active.filter((item) => item.operation === "repository_checks");
-      timeoutSeconds = Number(data.timeout_seconds) > 0 ? Number(data.timeout_seconds) : timeoutSeconds;
+      timeoutSeconds =
+        Number(data.timeout_seconds) > 0 ? Number(data.timeout_seconds) : timeoutSeconds;
       activeRequestId = active[0]?.request_id || null;
-      $("cancel-repository-bdd").hidden = !(localRequestId || (activeRequestId && activeRequestId !== "-"));
+      $("cancel-repository-bdd").hidden = !(
+        localRequestId ||
+        (activeRequestId && activeRequestId !== "-")
+      );
       $("cancel-repository-bdd").disabled = cancelling;
       $("dashboard-scope").textContent = `${data.scope} Times are shown in your local timezone.`;
       $("dashboard-progress").innerHTML =
@@ -196,7 +203,9 @@
       drawHistory();
       $("run-repository-bdd").disabled = running || active.length > 0;
       if (active.length) {
-        $("bdd-run-status").textContent = cancelling ? "Stopping BDD execution and cleaning up runner processes…" : `${active[0].progress || "BDD runner is starting"} Elapsed: ${duration(active[0].duration_ms)}. Limit: ${timeoutSeconds}s.`;
+        $("bdd-run-status").textContent = cancelling
+          ? "Stopping BDD execution and cleaning up runner processes…"
+          : `${active[0].progress || "BDD runner is starting"} Elapsed: ${duration(active[0].duration_ms)}. Limit: ${timeoutSeconds}s.`;
       }
       drawSummary();
       drawOverview(active);
@@ -222,7 +231,11 @@
     const progressLink = document.querySelector('.primary-nav a[href="/progress"]');
     if (progressLink) progressLink.click();
     try {
-      const response = await api("/api/automation/run", {}, {requestId: localRequestId, signal: controller.signal});
+      const response = await api(
+        "/api/automation/run",
+        {},
+        { requestId: localRequestId, signal: controller.signal },
+      );
       const report = await response.json();
       $("bdd-run-status").textContent =
         `BDD execution ${report.status}. ${report.error || ""} ${report.report_error || (report.report_id ? "Allure report ready to download." : "Results recorded; no Allure report available.")}`;
@@ -248,13 +261,21 @@
     $("cancel-repository-bdd").disabled = true;
     $("bdd-run-status").textContent = "Stopping BDD execution and cleaning up runner processes…";
     try {
-      const response = await api(`/api/generation/${encodeURIComponent(requestId)}/cancel`, {}, {
-        requestId: crypto.randomUUID(), signal: AbortSignal.timeout(10000),
-      });
+      const response = await api(
+        `/api/generation/${encodeURIComponent(requestId)}/cancel`,
+        {},
+        {
+          requestId: crypto.randomUUID(),
+          signal: AbortSignal.timeout(10000),
+        },
+      );
       const result = await response.json();
-      if (!result.cancelled) $("bdd-run-status").textContent = "This run is no longer active on the server. Refreshing its results…";
+      if (!result.cancelled)
+        $("bdd-run-status").textContent =
+          "This run is no longer active on the server. Refreshing its results…";
     } catch (error) {
-      $("bdd-run-status").textContent = `Could not confirm cancellation: ${error.message}. The server time limit still applies.`;
+      $("bdd-run-status").textContent =
+        `Could not confirm cancellation: ${error.message}. The server time limit still applies.`;
     } finally {
       cancelling = false;
       await refresh();

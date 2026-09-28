@@ -46,7 +46,8 @@ public sealed class ApiService : IDisposable
         foreach (var name in new[] { "API_AUTH_TOKEN", "API_SESSION_COOKIE", "APP_PASSWORD", "OPENAI_API_KEY", "GEMINI_API_KEY", "COPILOT_GITHUB_TOKEN" })
         {
             var secret = ConfigurationUtility.GetValue(name);
-            if (!string.IsNullOrWhiteSpace(secret)) value = value.Replace(secret, "[REDACTED]", StringComparison.Ordinal);
+            if (!string.IsNullOrWhiteSpace(secret))
+                value = value.Replace(secret, "[REDACTED]", StringComparison.Ordinal);
         }
         return value;
     }

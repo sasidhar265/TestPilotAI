@@ -24,19 +24,22 @@ def test_runner_results_show_case_ids_and_readable_titles(tmp_path):
 
     results = tmp_path / "results.trx"
     results.write_text(
-        '<TestRun><Results>'
+        "<TestRun><Results>"
         '<UnitTestResult testName="TC_UI_001_DisplayTheGenerationForm" outcome="Passed"/>'
-        '<UnitTestResult testName=\'CaseId_RejectJiraPublicationWhenCondition('
+        "<UnitTestResult testName='CaseId_RejectJiraPublicationWhenCondition("
         '"TC-JIRA-002","jira-unknown",null)\' outcome="Failed"/>'
         '<UnitTestResult testName="CustomScenario secret" outcome="Passed"/>'
-        '</Results></TestRun>'
+        "</Results></TestRun>"
     )
 
     cases = _test_results(results, ["secret"])
     assert cases[0]["name"] == (
-        "TC-UI-001 - Display the generation form and disable Generate until requirements are entered"
+        "TC-UI-001 - Display the generation form and disable Generate "
+        "until requirements are entered"
     )
-    assert cases[1]["name"] == "TC-JIRA-002 - Reject Jira publication when a selected story is unknown"
+    assert (
+        cases[1]["name"] == "TC-JIRA-002 - Reject Jira publication when a selected story is unknown"
+    )
     assert cases[1]["status"] == "Failed"
     assert cases[2]["name"] == "CustomScenario [redacted]"
 

@@ -1,4 +1,6 @@
 import asyncio
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -60,7 +62,9 @@ class RequirementAgent:
 def test_convert_uses_agent_then_organizational_memory(tmp_path) -> None:
     agent = RequirementAgent()
     service = RequirementToTestCaseService(
-        AgentRegistry(agent), OrganizationalMemory(tmp_path / "memory.db")
+        AgentRegistry(agent),
+        OrganizationalMemory(tmp_path / "memory.db"),
+        requirements_validator=SimpleNamespace(require=AsyncMock()),
     )
     request = GenerateRequest(description="A user can sign in with valid credentials")
 
@@ -75,7 +79,9 @@ def test_convert_uses_agent_then_organizational_memory(tmp_path) -> None:
 def test_expand_forwards_existing_titles_without_caching(tmp_path) -> None:
     agent = RequirementAgent()
     service = RequirementToTestCaseService(
-        AgentRegistry(agent), OrganizationalMemory(tmp_path / "memory.db")
+        AgentRegistry(agent),
+        OrganizationalMemory(tmp_path / "memory.db"),
+        requirements_validator=SimpleNamespace(require=AsyncMock()),
     )
     expansion = ExpandRequest(
         request=GenerateRequest(description="A user can sign in with valid credentials"),

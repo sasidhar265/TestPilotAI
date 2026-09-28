@@ -8,9 +8,11 @@ from app.pdf_exporter import brd_draft_to_pdf
 
 
 def test_brd_draft_pdf_contains_preview_edits_and_paginates():
-    text = "# Proposed BRD revision\n\n## Extracted requirements\n" + (
-        "The quotation must reject a negative deposit.\n" * 120
-    ) + "## Validation review notes\nReviewed correction approved for discussion."
+    text = (
+        "# Proposed BRD revision\n\n## Extracted requirements\n"
+        + ("The quotation must reject a negative deposit.\n" * 120)
+        + "## Validation review notes\nReviewed correction approved for discussion."
+    )
     payload = brd_draft_to_pdf(text)
 
     assert payload.startswith(b"%PDF-")

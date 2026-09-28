@@ -11,7 +11,10 @@ public sealed class GuestAccessService : IDisposable
         AllowAutoRedirect = false,
         UseCookies = true,
         CookieContainer = new CookieContainer()
-    }) { BaseAddress = new Uri(ConfigurationUtility.BaseUrl) };
+    })
+    {
+        BaseAddress = new Uri(ConfigurationUtility.BaseUrl)
+    };
     private HttpStatusCode status;
 
     public async Task EnterAsync()

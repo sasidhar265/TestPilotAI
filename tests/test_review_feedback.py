@@ -63,7 +63,15 @@ def pipeline_for(memory, candidate, passed=True):
     generate = AsyncMock(return_value=candidate)
     generator = SimpleNamespace(generate=generate, generate_revision=generate)
     validator = SimpleNamespace(validate=lambda request, suite: report(passed))
-    return MultiAgentTestPipeline(InputAgent(), generator, validator, StorageAgent(memory))
+    return MultiAgentTestPipeline(
+        InputAgent(),
+        generator,
+        validator,
+        StorageAgent(memory),
+        requirements_validator=SimpleNamespace(
+            require=AsyncMock(), settings=Settings(_env_file=None)
+        ),
+    )
 
 
 @pytest.mark.parametrize("mode", ["manual", "automation", "both"])
