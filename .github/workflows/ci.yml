@@ -46,10 +46,8 @@ jobs:
         run: pytest --cov=app --cov-report=term-missing --cov-report=xml
       - name: Compile
         run: python -m compileall -q app tests
-      - name: Verify sole AI runtime policy
-        run: >-
-          ! grep -RniE 'OpenAIGenerator|OllamaGenerator|AnthropicGenerator|BedrockGenerator'
-          app
+      - name: Verify mandatory provider model policy
+        run: pytest -q tests/test_model_policy.py
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
