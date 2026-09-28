@@ -53,6 +53,4 @@ services:
       - key: CODEX_MODEL
         value: "gpt-6-astra"
       - key: ORGANIZATIONAL_MEMORY_ENABLED
-        value: "true"
-      - key: ORGANIZATIONAL_MEMORY_ENCRYPTION_KEY
-        sync: false
+        value: "false"
