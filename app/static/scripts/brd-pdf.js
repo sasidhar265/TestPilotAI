@@ -166,6 +166,7 @@ window.BrdPdf = (() => {
   }
 
   function download(text, filename) {
+    if (window.MobileApp?.native) return window.MobileApp.saveFile(pdfFor(text), filename);
     const url = URL.createObjectURL(pdfFor(text));
     const link = document.createElement("a");
     link.href = url;

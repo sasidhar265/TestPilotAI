@@ -268,6 +268,56 @@ class RequirementsValidationAgent:
 
     async def require(self, request: GenerateRequest) -> RequirementsReport:
         report = await self.assess(request)
+        uploaded = any(s.get("id") == "UPLOADED-BRD" for s in report.sources)
+        aligned = report.status == "aligned"
+        basis = report.message
+        if aligned and not uploaded:
+            basis += (
+                f" Assessed {len(report.requirements)} requirement units; every unit was aligned. "
+                "Checked source approval and effective dates, complete requirement coverage, "
+                "exact source quotations, and that the baseline did not change during assessment."
+            )
+        elif aligned:
+            basis += (
+                " Checked the server-issued document receipt and that the uploaded text is "
+                "included in this request. This verifies the source, not business-rule alignment."
+            )
+        publish_lifecycle_event(
+            "Requirements Validation Agent",
+            "validation_basis",
+            "passed" if aligned else "failed",
+            basis,
+        )
+        cited = {e.source_id for f in report.findings for e in f.evidence}
+        for source in report.sources:
+            if uploaded:
+                reference = (
+                    f"{source['title']} · User-provided BRD · SHA-256 "
+                    f"{source.get('fingerprint', 'unavailable')} · Business approval not assessed."
+                )
+            else:
+                reference = (
+                    f"{source['id']} · {source['title']} · Version {source['version']} · "
+                    f"Approved by {source['approved_by']} · "
+                    + (
+                        "Cited in assessment."
+                        if source["id"] in cited
+                        else "Available baseline source; not cited."
+                    )
+                )
+            publish_lifecycle_event(
+                "Requirements Validation Agent",
+                "validation_source",
+                "info",
+                reference,
+            )
+        if not report.sources:
+            publish_lifecycle_event(
+                "Requirements Validation Agent",
+                "validation_source",
+                "info",
+                "No effective approved source or verified uploaded BRD was available.",
+            )
         publish_lifecycle_event(
             "Requirements Validation Agent",
             "business_alignment",

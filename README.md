@@ -2,6 +2,11 @@
 
 Automobile finance test design from quotation requirements to reviewed execution evidence.
 
+Android and iOS projects are available in [`mobile/`](mobile/README.md), including
+a local browser preview, emulator/simulator instructions and automated mobile UI
+checks. The mobile apps connect to this FastAPI backend; AI and automation execution
+remain server-side. See the mobile guide for native testing and store-release steps.
+
 The workspace is tailored to vehicle finance quotation testing, with guidance for PCP, HP, LP,
 PCH, BCH, PFL and BFL. Its existing `auto-finance-quotation` profile supplies the domain baseline;
 current requirements and approved contracts remain authoritative. The product guide is reference

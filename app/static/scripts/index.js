@@ -151,7 +151,7 @@ function showRuntimeDetails(health) {
   }
 }
 async function loadRuntimeStatus() {
-  const origin = window.location.origin;
+  const origin = window.MobileApp?.backend || window.location.origin;
   $("server-location").textContent = origin;
   $("flow-server").textContent = "Copilot + OpenAI + Gemini + Codex · local API";
   try {
@@ -581,7 +581,35 @@ document.addEventListener("click", (event) => {
   )
     setSourceMenu(false);
 });
+const validationEvidence = new Map();
+function renderValidationEvidence(event) {
+  if (!["validation_basis", "validation_source"].includes(event.action)) return;
+  if (event.action === "validation_basis") {
+    validationEvidence.set(event.agent, {
+      basis: event.summary,
+      status: event.status,
+      sources: [],
+    });
+  } else {
+    if (!validationEvidence.has(event.agent))
+      validationEvidence.set(event.agent, {
+        basis: "Validation result not reported.",
+        status: "pending",
+        sources: [],
+      });
+    validationEvidence.get(event.agent).sources.push(event.summary);
+  }
+  $("generation-validation-evidence").innerHTML = [...validationEvidence.entries()]
+    .map(
+      ([agent, evidence]) =>
+        `<article><h4>${esc(agent)} · ${esc(evidence.status)}</h4><p>${esc(evidence.basis)}</p><strong>Reference knowledge sources</strong>${evidence.sources.length ? `<ul>${evidence.sources.map((source) => `<li>${esc(source)}</li>`).join("")}</ul>` : "<p>Waiting for source references…</p>"}</article>`,
+    )
+    .join("");
+}
 function resetLifecycleFeed() {
+  validationEvidence.clear();
+  $("generation-validation-evidence").innerHTML =
+    "<p>Waiting for validation evidence. No checks have been reported yet.</p>";
   $("live-agent-events").innerHTML = "";
   $("generation-background-events").innerHTML =
     '<li class="empty-event">Waiting for the first agent update…</li>';
@@ -603,6 +631,7 @@ function renderLifecycleEvents(events) {
     if (event.sequence <= lifecycleSequence) return;
     $("generation-background-events").querySelector(".empty-event")?.remove();
     lifecycleSequence = event.sequence;
+    renderValidationEvidence(event);
     $("live-agent-events").append(lifecycleItem(event));
     $("generation-background-events").append(lifecycleItem(event));
   });
@@ -998,6 +1027,7 @@ $("stop-generation").onclick = async () => {
   }
 };
 function download(blob, name) {
+  if (window.MobileApp?.native) return window.MobileApp.saveFile(blob, name);
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name;

@@ -245,3 +245,43 @@ async def test_legacy_generation_and_expansion_cannot_bypass(tmp_path, service_t
         await service.expand(ExpandRequest(request=REQUEST, existing_titles=["Existing case"]))
     registry.get_test_design_agent.assert_not_called()
     registry.get_requirement_to_test_case_agent.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_alignment_events_explain_checks_and_cite_source_metadata(tmp_path, monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.requirements_validation.publish_lifecycle_event",
+        lambda *event: events.append(event),
+    )
+    await agent(tmp_path).require(REQUEST)
+    basis = next(e for e in events if e[1] == "validation_basis")
+    assert basis[2] == "passed"
+    assert "every unit was aligned" in basis[3]
+    reference = next(e[3] for e in events if e[1] == "validation_source")
+    assert "BR-TEST-001" in reference and "Version 1" in reference
+    assert "Test fixture owner" in reference and "Cited in assessment" in reference
+    assert SOURCE not in reference
+
+
+@pytest.mark.asyncio
+async def test_brd_events_do_not_claim_business_approval(tmp_path, monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.requirements_validation.publish_lifecycle_event",
+        lambda *event: events.append(event),
+    )
+    instance = agent(tmp_path)
+    instance.settings.requirements_baseline_path.write_text('{"sources": []}')
+    await instance.require(
+        GenerateRequest(
+            description=SOURCE,
+            uploaded_brd_text=SOURCE,
+            uploaded_brd_receipt=issue_brd_receipt(SOURCE, instance.settings),
+        )
+    )
+    basis = next(e[3] for e in events if e[1] == "validation_basis")
+    assert "not business-rule alignment" in basis
+    reference = next(e[3] for e in events if e[1] == "validation_source")
+    assert "User-provided BRD" in reference
+    assert "Business approval not assessed" in reference

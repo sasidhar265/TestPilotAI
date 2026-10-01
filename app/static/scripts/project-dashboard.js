@@ -1,163 +1,167 @@
-/* Management reporting uses recorded suite versions, never inferred project outcomes. */
+/* Project information comes from saved lifecycle records. */
 (() => {
   if (document.body.dataset.guest === "true") return;
   const get = (id) => document.getElementById(id);
-  let snapshot = null;
+  let snapshot;
   let loading = false;
-  const date = (value) => (value ? new Date(value).toLocaleString() : "Unavailable");
+  const date = (value) => (value ? new Date(value).toLocaleString() : "Not recorded");
+  const badge = (status) => `<span class="pm-badge">${esc(status || "Not recorded")}</span>`;
+  const empty = (columns, message) =>
+    `<tr><td colspan="${columns}" class="pm-empty">${esc(message)}</td></tr>`;
   function render() {
     if (!snapshot) return;
-    const days = Number(get("pm-period").value);
-    const cutoff = days ? Date.now() - days * 86400000 : -Infinity;
-    const query = get("pm-search").value.trim().toLowerCase();
-    const history = snapshot.history.filter(
-      (item) =>
-        Date.parse(item.finished_at || item.started_at) >= cutoff &&
-        (!query || (item.details?.feature || "").toLowerCase().includes(query)),
-    );
-    const versions = new Map();
-    const ordered = [...history].sort(
-      (a, b) =>
-        Date.parse(b.finished_at || b.started_at) - Date.parse(a.finished_at || a.started_at),
-    );
-    for (const item of ordered) {
-      if (
-        !["test_generation", "case_execution"].includes(item.operation) ||
-        !item.details?.suite_key
-      )
-        continue;
-      const key = item.details.suite_key;
-      if (!versions.has(key))
-        versions.set(key, {
-          key,
-          feature: item.details.feature || "Unnamed feature",
-          updated: item.finished_at || item.started_at,
-        });
-      const entry = versions.get(key);
-      if (!entry[item.operation]) entry[item.operation] = item.details;
+    const project = get("pm-project").value;
+    const scoped = (kind) => snapshot[kind].filter((item) => item.project === project);
+    const versions = scoped("requirements");
+    const latest = new Map();
+    for (const item of versions) {
+      if (!latest.has(item.key) || item.version > latest.get(item.key).version)
+        latest.set(item.key, item);
     }
-    const suites = [...versions.values()];
-    const counts = { passed: 0, failed: 0, blocked: 0, not_run: 0, unknown: 0 };
-    let cases = 0,
-      valid = 0,
-      missingExecution = 0;
-    for (const entry of suites) {
-      const records = entry.test_generation?.cases || entry.case_execution?.cases || [];
-      cases += records.length;
-      if (entry.test_generation?.validated === true) valid++;
-      if (!entry.case_execution) missingExecution++;
-      for (const item of entry.case_execution?.cases || []) {
-        const normalized = item.execution === "not-run" ? "not_run" : item.execution;
-        const status = Object.hasOwn(counts, normalized) ? normalized : "unknown";
-        counts[status]++;
-      }
-    }
-    const generationProblems = history.filter(
-      (item) =>
-        item.operation === "test_generation" &&
-        ["failed", "error", "cancelled", "validation_failed"].includes(item.status),
-    ).length;
-    const active = snapshot.active.length;
+    const requirements = [...latest.values()].sort((a, b) => a.key.localeCompare(b.key));
+    const baselines = scoped("baselines");
+    const suites = scoped("suites");
+    const cycles = scoped("cycles");
+    const cycleIds = new Set(cycles.map((item) => item.id));
+    const defects = snapshot.defects.filter((item) => cycleIds.has(item.cycle_id));
+    const attempts = snapshot.attempts.filter((item) => cycleIds.has(item.cycle_id));
+    const openDefects = defects.filter((item) => !["resolved", "closed"].includes(item.status));
+    const suiteIds = new Set(suites.map((item) => item.id));
+    const impacts = snapshot.impacts.filter((item) => suiteIds.has(item.suite_id));
+    const records = [...versions, ...baselines, ...suites, ...cycles, ...defects, ...attempts];
+    const ids = new Set(records.map((item) => item.id));
+    const activity = snapshot.audit.filter((item) => ids.has(item.record_id));
+    const timestamps = [...records, ...activity]
+      .map((item) => item.created_at)
+      .filter(Boolean)
+      .sort();
+    const owners = [...new Set(requirements.map((item) => item.owner).filter(Boolean))];
+    get("pm-project-title").textContent = project || "Your project at a glance";
+    get("pm-project-summary").textContent = project
+      ? "Requirements, ownership and delivery records for this project."
+      : "Save your first project requirement in Quality lifecycle to build this overview.";
+    get("pm-project-details").innerHTML = [
+      ["Project ID", project || "No projects yet"],
+      ["Requirement owners", owners.join(", ") || "Not recorded"],
+      ["First recorded", date(timestamps[0])],
+      ["Last activity", date(timestamps.at(-1))],
+    ]
+      .map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`)
+      .join("");
     const metric = (label, value, hint) =>
       `<article class="pm-card"><span>${esc(label)}</span><strong>${value}</strong><small>${esc(hint)}</small></article>`;
     get("pm-metrics").innerHTML =
-      metric("Suite versions", suites.length, `${cases} cases across retained versions`) +
+      metric("Requirements", requirements.length, "Latest version of each requirement") +
       metric(
-        "Design validation passed",
-        valid,
-        `Of ${suites.length} suite versions; not execution approval`,
+        "Approved requirements",
+        requirements.filter((r) => r.status === "approved").length,
+        "Reviewed project scope",
       ) +
-      metric(
-        "Failed / blocked cases",
-        counts.failed + counts.blocked,
-        "Latest recorded case results per version",
-      ) +
-      metric(
-        "Active workspace actions",
-        active,
-        "All features; current server activity, independent of filters",
-      );
-    const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-    get("pm-outcomes").innerHTML = total
-      ? Object.entries(counts)
+      metric("Delivery cycles", cycles.length, "Saved build and environment assignments") +
+      metric("Open defects", openDefects.length, "Open, in progress or reopened");
+    get("pm-baselines").innerHTML = baselines.length
+      ? baselines
           .map(
-            ([status, count]) =>
-              `<div class="pm-outcome" data-outcome="${status}"><span>${esc(status.replaceAll("_", " "))}</span><meter min="0" max="${total}" value="${count}" aria-label="${status}"></meter><strong>${count}</strong></div>`,
+            (item) =>
+              `<li><strong>${esc(item.name)}</strong> ${badge(item.status)}<small>${item.requirements.length} requirements · ${esc(date(item.created_at))}</small></li>`,
           )
           .join("")
-      : '<p class="pm-empty">No case execution evidence in this selection.</p>';
+      : '<li class="pm-empty">No baselines saved. Group reviewed requirements in Quality lifecycle.</li>';
     const attention = [];
-    if (missingExecution)
+    const pending = requirements.filter((r) => r.status !== "approved").length;
+    if (pending) attention.push(`${pending} requirements need review or approval.`);
+    const flagged = requirements.filter((r) => r.quality_flags?.length).length;
+    if (flagged) attention.push(`${flagged} requirements have quality flags to resolve.`);
+    if (impacts.length)
       attention.push(
-        `${missingExecution} suite versions have no recorded case execution in this selection.`,
+        `${impacts.length} requirement changes affect saved test suites. Review change impact in Quality lifecycle.`,
       );
-    if (counts.failed || counts.blocked)
-      attention.push(
-        `${counts.failed} failed and ${counts.blocked} blocked cases need investigation.`,
-      );
-    if (counts.not_run || counts.unknown)
-      attention.push(
-        `${counts.not_run} cases not run and ${counts.unknown} cases with unknown outcomes need follow-up.`,
-      );
-    if (suites.length - valid)
-      attention.push(
-        `${suites.length - valid} suite versions lack a recorded passing design validation in this selection.`,
-      );
-    if (generationProblems)
-      attention.push(
-        `${generationProblems} generation attempts failed, were cancelled, or did not pass validation.`,
-      );
+    if (openDefects.length)
+      attention.push(`${openDefects.length} unresolved defects need follow-up.`);
+    if (requirements.length && !baselines.length)
+      attention.push("Create a baseline to capture the agreed project scope.");
     if (!attention.length)
       attention.push(
-        suites.length
-          ? "No issues identified by these recorded indicators. Confirm approval and release decisions with your team."
-          : "No suite activity matches this selection. Broaden the period or generate a suite.",
+        project
+          ? "No outstanding items in the recorded project indicators."
+          : "Add a requirement with a project ID, owner and source to get started.",
       );
-    get("pm-attention").innerHTML = attention.map((item) => `<li>${esc(item)}</li>`).join("");
-    get("pm-suite-count").textContent = `${suites.length} versions`;
-    get("pm-suites").innerHTML = suites.length
-      ? suites
-          .map((entry) => {
-            const outcomes = entry.case_execution?.cases || [];
-            const summary = entry.case_execution
-              ? `${outcomes.filter((c) => c.execution === "passed").length} passed / ${outcomes.length} recorded`
-              : "No evidence";
-            const validation =
-              entry.test_generation?.validated === true
-                ? "Passed"
-                : entry.test_generation?.validated === false
-                  ? "Not passed"
-                  : "Unavailable";
-            return `<tr><th scope="row">${esc(entry.feature)}<small>${esc(entry.key.slice(0, 12))}</small></th><td>${(entry.test_generation?.cases || outcomes).length}</td><td>${validation}</td><td>${summary}</td><td>${esc(date(entry.updated))}</td></tr>`;
-          })
+    get("pm-attention").innerHTML = attention.map((value) => `<li>${esc(value)}</li>`).join("");
+    const query = get("pm-search").value.trim().toLowerCase();
+    const filtered = requirements.filter((r) =>
+      [r.key, r.title, r.owner, r.source].join(" ").toLowerCase().includes(query),
+    );
+    get("pm-requirement-count").textContent =
+      `${filtered.length} of ${requirements.length} requirements`;
+    get("pm-requirements").innerHTML = filtered.length
+      ? filtered
+          .map(
+            (r) =>
+              `<tr><th scope="row">${esc(r.key)}<small>Version ${r.version}</small></th><td><strong>${esc(r.title)}</strong><details><summary>Scope and acceptance criteria</summary><p>${esc(r.description)}</p><ul>${(r.acceptance_criteria || []).map((value) => `<li>${esc(value)}</li>`).join("") || "<li>No acceptance criteria recorded.</li>"}</ul></details></td><td>${esc(r.owner)}</td><td>${esc(r.source)}</td><td>${badge(r.status)}</td></tr>`,
+          )
           .join("")
-      : '<tr><td colspan="5" class="pm-empty">No suite versions match the current filters.</td></tr>';
-    get("pm-scope").textContent =
-      snapshot.scope || "Retained workspace history; not a complete project inventory.";
+      : empty(
+          5,
+          query ? "No requirements match your search." : "No requirements saved for this project.",
+        );
+    get("pm-cycles").innerHTML = cycles.length
+      ? cycles
+          .map(
+            (c) =>
+              `<tr><th scope="row">${esc(c.name)}</th><td>${esc(c.build)}</td><td>${esc(c.environment)}</td><td>${esc([...new Set(Object.values(c.assignments))].join(", "))}</td><td>${esc(date(c.created_at))}</td></tr>`,
+          )
+          .join("")
+      : empty(5, "No delivery cycles saved for this project.");
   }
   async function refresh() {
     if (loading) return;
     loading = true;
     get("pm-refresh").disabled = true;
     get("pm-content").hidden = true;
-    get("pm-status").textContent = "Loading workspace evidence…";
+    get("pm-status").textContent = "Loading project information…";
     try {
-      const response = await fetch("/api/dashboard", { signal: AbortSignal.timeout(15000) });
+      const response = await fetch("/api/stlc", { signal: AbortSignal.timeout(15000) });
       if (!response.ok)
-        throw new Error("Dashboard data could not be loaded. Use Refresh dashboard to retry.");
+        throw new Error("Project information could not be loaded. Refresh to retry.");
       const data = await response.json();
-      if (!Array.isArray(data.history) || !Array.isArray(data.active))
-        throw new Error("Dashboard history is unavailable. Use Refresh dashboard to retry.");
+      if (
+        ![
+          "requirements",
+          "baselines",
+          "suites",
+          "cycles",
+          "defects",
+          "attempts",
+          "audit",
+          "impacts",
+        ].every((key) => Array.isArray(data[key]))
+      )
+        throw new Error("Project information is unavailable. Refresh to retry.");
       snapshot = data;
+      const selection = get("pm-project").value;
+      const projects = [
+        ...new Set(
+          [...data.requirements, ...data.baselines, ...data.suites, ...data.cycles].map(
+            (r) => r.project,
+          ),
+        ),
+      ].sort();
+      get("pm-project").replaceChildren(
+        ...(projects.length
+          ? projects.map((p) => new Option(p, p))
+          : [new Option("No projects yet", "")]),
+      );
+      get("pm-project").disabled = !projects.length;
+      if (projects.includes(selection)) get("pm-project").value = selection;
       render();
       get("pm-content").hidden = false;
       get("pm-status").textContent =
-        `Updated ${new Date().toLocaleTimeString()} · Retained workspace history`;
+        `Updated ${new Date().toLocaleTimeString()} · Saved project records`;
     } catch (error) {
       snapshot = null;
       get("pm-status").textContent =
         error.name === "TimeoutError"
-          ? "Dashboard request timed out. Refresh to retry."
+          ? "Project request timed out. Refresh to retry."
           : error.message;
     } finally {
       loading = false;
@@ -165,7 +169,10 @@
     }
   }
   get("pm-refresh").addEventListener("click", refresh);
-  get("pm-period").addEventListener("change", render);
+  get("pm-project").addEventListener("change", () => {
+    get("pm-search").value = "";
+    render();
+  });
   get("pm-search").addEventListener("input", render);
   window.addEventListener("workspace-page-changed", (event) => {
     if (event.detail.path === "/project-dashboard") refresh();

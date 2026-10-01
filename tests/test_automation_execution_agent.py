@@ -19,6 +19,59 @@ from app.models import (
 )
 
 
+@pytest.mark.parametrize("configured", ["", "http://127.0.0.1:10000", "http://localhost:8000"])
+def test_render_production_runner_uses_https_for_secure_sessions(monkeypatch, configured):
+    from app.agents.automation_execution_agent import _runner_base_url
+
+    monkeypatch.setenv("PORT", "10000")
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://workspace.onrender.com/")
+    settings = Settings(_env_file=None, environment="production", api_auth_token="x" * 32)
+    environment = {"QUALITY_LIFECYCLE_BASE_URL": configured} if configured else {}
+    assert _runner_base_url(settings, environment) == "https://workspace.onrender.com"
+
+
+@pytest.mark.parametrize(
+    "environment,configured,external,expected",
+    [
+        (
+            "development",
+            "http://localhost:8000",
+            "https://app.onrender.com",
+            "http://localhost:8000",
+        ),
+        ("production", "https://test.example", "https://app.onrender.com", "https://test.example"),
+        ("production", "http://test.internal", "https://app.onrender.com", "http://test.internal"),
+        ("production", "http://localhost:8000", "", "http://localhost:8000"),
+        ("production", "http://localhost:8000", "http://app.onrender.com", "http://localhost:8000"),
+        (
+            "production",
+            "http://localhost:8000",
+            "https://user:pass@app.onrender.com",
+            "http://localhost:8000",
+        ),
+        (
+            "production",
+            "http://localhost:8000",
+            "https://app.onrender.com/path",
+            "http://localhost:8000",
+        ),
+    ],
+)
+def test_runner_preserves_explicit_targets_and_rejects_unsafe_fallbacks(
+    monkeypatch, environment, configured, external, expected
+):
+    from app.agents.automation_execution_agent import _runner_base_url
+
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", external)
+    settings = Settings(
+        _env_file=None,
+        environment=environment,
+        api_auth_token="x" * 32,
+        quality_lifecycle_base_url=configured,
+    )
+    assert _runner_base_url(settings, {}) == expected
+
+
 def test_runner_results_show_case_ids_and_readable_titles(tmp_path):
     from app.agents.automation_execution_agent import _test_results
 

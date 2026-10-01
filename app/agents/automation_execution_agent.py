@@ -10,6 +10,7 @@ import time
 import xml.etree.ElementTree as ET
 from contextlib import suppress
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.auth import SESSION_COOKIE, issue_browser_session
@@ -37,6 +38,33 @@ _SAFE_ENVIRONMENT = (
     "APP_USERNAME",
     "APP_PASSWORD",
 )
+
+
+def _runner_base_url(settings: Settings, environment: dict[str, str]) -> str:
+    configured = (
+        environment.get("QUALITY_LIFECYCLE_BASE_URL")
+        or settings.quality_lifecycle_base_url
+        or f"http://127.0.0.1:{os.environ.get('PORT', '8000')}"
+    )
+    target = urlsplit(configured)
+    external = os.environ.get("RENDER_EXTERNAL_URL", "")
+    public = urlsplit(external)
+    # Older Blueprints explicitly configured internal HTTP. Production session
+    # cookies are Secure, so HttpClient cannot retain a guest session there.
+    if (
+        settings.is_production
+        and target.scheme == "http"
+        and target.hostname in {"localhost", "127.0.0.1", "::1"}
+        and public.scheme == "https"
+        and public.hostname
+        and not public.username
+        and not public.password
+        and public.path in {"", "/"}
+        and not public.query
+        and not public.fragment
+    ):
+        return external.rstrip("/")
+    return configured
 
 
 class AutomationExecutionError(RuntimeError):
@@ -135,13 +163,7 @@ class AutomationExecutionAgent:
             environment["API_SESSION_COOKIE"] = f"{SESSION_COOKIE}=" + issue_browser_session(
                 str(user["username"]), self.settings
             )
-        # Existing Render services may not have reapplied the Blueprint environment.
-        # Derive the local app port rather than silently testing localhost:8000 there.
-        environment.setdefault(
-            "QUALITY_LIFECYCLE_BASE_URL",
-            self.settings.quality_lifecycle_base_url
-            or f"http://127.0.0.1:{os.environ.get('PORT', '8000')}",
-        )
+        environment["QUALITY_LIFECYCLE_BASE_URL"] = _runner_base_url(self.settings, environment)
         target_configuration = {
             "API_BASE_URL": self.settings.api_base_url,
             "API_BEARER_TOKEN": self.settings.api_bearer_token.get_secret_value(),

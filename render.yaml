@@ -15,7 +15,7 @@ services:
       - key: ALLOWED_HOSTS
         value: quality-lifecycle-studio.onrender.com,localhost,127.0.0.1
       - key: QUALITY_LIFECYCLE_BASE_URL
-        value: http://127.0.0.1:10000
+        value: https://quality-lifecycle-studio.onrender.com
       - key: AUTOMATION_SKIP_BUILD
         value: "true"
       - key: AUTOMATION_TIMEOUT_SECONDS

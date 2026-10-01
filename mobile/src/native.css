@@ -1,0 +1,38 @@
+body:not(.mobile-ready) > :not(.native-notice) {
+  visibility: hidden;
+}
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.native-notice {
+  position: fixed;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  right: 12px;
+  z-index: 10000;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #17243b;
+  color: #fff;
+  font: 15px/1.5 system-ui;
+  box-shadow: 0 4px 20px #0003;
+}
+.native-notice[hidden] {
+  display: none;
+}
+.native-notice button {
+  margin-top: 8px;
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+  dialog {
+    max-width: calc(100vw - 24px);
+    max-height: 85dvh;
+  }
+}

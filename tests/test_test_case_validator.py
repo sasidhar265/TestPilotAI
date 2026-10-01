@@ -243,3 +243,26 @@ def test_validator_rejects_overlong_gherkin_step_text() -> None:
 
     assert not report.passed
     assert any("100 characters" in finding.message for finding in report.findings)
+
+
+def test_validation_basis_does_not_invent_coverage_or_execution(monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.test_case_validator.publish_lifecycle_event",
+        lambda *event: events.append(event),
+    )
+    report = Validator().validate(
+        GenerateRequest(description="Verify quotation creation behavior"),
+        Suite(
+            feature_name="Quotation",
+            test_cases=[
+                case("TC-001", "Create quote", "Verify quote creation", "", "A quote is returned")
+            ],
+        ),
+    )
+    assert report.passed
+    basis = next(e[3] for e in events if e[1] == "validation_basis")
+    assert "1 warnings remain" in basis
+    assert "coverage is not established" in basis
+    assert "not a test execution" in basis
+    assert "Gherkin structure check not applicable" in basis

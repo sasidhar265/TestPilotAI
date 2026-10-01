@@ -60,7 +60,7 @@ failures, so a missing Allure CLI never changes a pass/fail result.
 `ALLURE_CONFIG` for each execution, so concurrent result files and older results are never mixed.
 The runtime needs .NET 8, restored packages, Playwright Chromium, Java, Allure 2, and write access to
 the organizational-memory directory. The application Docker image bundles this toolchain and builds the project during deployment.
-Render runs target `http://127.0.0.1:10000`; `ALLOWED_HOSTS` must include `127.0.0.1`
+Render runs target the service's public HTTPS URL; `ALLOWED_HOSTS` must include `127.0.0.1`
 and `localhost` as well as the public hostname. Existing Render services must apply the
 updated environment values from `render.yaml` and redeploy the image. Local build
 outputs are excluded from the Docker context to keep restored paths platform-correct.
@@ -156,9 +156,17 @@ silently fall back to the previous assembly. Existing feature files are retained
 
 If a Render run fails, open its saved runner output in Progress & execution. A build/restore
 failure, failed scenario, and Allure report failure are separate outcomes. Check that
-`QUALITY_LIFECYCLE_BASE_URL` points to `http://127.0.0.1:10000` and that the deployed Docker
+`QUALITY_LIFECYCLE_BASE_URL` points to your service's public HTTPS URL and that the deployed Docker
 image contains the .NET SDK, browser dependencies, and Allure. Changes to the Docker image
 or application source require a deployment before they affect the hosted runner.
+
+Production login and guest cookies have the Secure flag. Running the guest scenarios
+against internal HTTP loses the guest session: protected requests return 401/303 instead
+of the expected 403. Keep production security enabled and use HTTPS for BDD execution.
+For older Render configurations that still specify loopback HTTP, the runner uses Render's
+`RENDER_EXTERNAL_URL` automatically when it is a valid HTTPS origin. Explicit remote test
+targets and local development URLs are preserved. If you renamed the Render service,
+update the configured public URL and `ALLOWED_HOSTS` to match.
 
 ## Microsoft User Secrets in local development
 

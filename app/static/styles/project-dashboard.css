@@ -194,3 +194,47 @@
 .pm-outcome[data-outcome="blocked"] meter::-moz-meter-bar {
   background: var(--warning);
 }
+
+.pm-project-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.pm-project-details dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.pm-project-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pm-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: 12px;
+}
+.pm-baselines small {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.pm-table-wrap td {
+  overflow-wrap: anywhere;
+  max-width: 380px;
+}
+.pm-table-wrap details {
+  margin-top: 8px;
+  min-width: 180px;
+}
+#pm-project-title {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .pm-project-details {
+    grid-template-columns: 1fr;
+  }
+}

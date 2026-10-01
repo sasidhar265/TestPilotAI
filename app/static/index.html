@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f7fb" />
     <title>Auto Finance Quality — Governed quality engineering</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
-    <link rel="stylesheet" href="/static/styles/index.css?v=20260916-final-ui" />
+    <link rel="stylesheet" href="/static/styles/index.css?v=20261001-validation" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20260927-mobile-drawer" />
@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="/static/styles/workflow.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
-    <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20261001-project" />
     <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260927-live-activity" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/workflow-results.css?v=20260927" />
@@ -1272,82 +1272,97 @@
         <div data-workspace-page="/project-dashboard" hidden>
           <section class="pm-heading">
             <div>
-              <span class="section-kicker">MANAGEMENT OVERVIEW</span>
-              <h2>See progress. Focus the next conversation.</h2>
-              <p>Workspace quality delivery, based on recorded suite activity.</p>
+              <span class="section-kicker">PROJECT OVERVIEW</span>
+              <h2 id="pm-project-title">Your project at a glance</h2>
+              <p id="pm-project-summary">Explore project scope, ownership and delivery status.</p>
             </div>
-            <a class="secondary button" href="/">Open quality workspace ↗</a>
+            <a class="secondary button" href="/quality-lifecycle">Manage project records ↗</a>
           </section>
-          <section class="pm-toolbar" aria-label="Dashboard filters">
+          <section class="pm-toolbar" aria-label="Project selection">
             <label
-              >Activity period<select id="pm-period">
-                <option value="7">Last 7 days</option>
-                <option value="30" selected>Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="0">All retained history</option>
+              >Project<select id="pm-project">
+                <option value="">Select a project</option>
               </select></label
-            ><label
-              >Feature<input
-                type="search"
-                id="pm-search"
-                placeholder="Filter by feature name" /></label
-            ><button class="secondary" id="pm-refresh" type="button">Refresh dashboard</button>
+            >
+            <button class="secondary" id="pm-refresh" type="button">Refresh dashboard</button>
           </section>
           <p id="pm-status" role="status" aria-live="polite">
-            Open this dashboard to load saved activity.
+            Open this dashboard to load project information.
           </p>
           <div id="pm-content" hidden>
+            <section class="pm-card">
+              <span class="section-kicker">PROJECT INFORMATION</span>
+              <h3>Scope and ownership</h3>
+              <dl id="pm-project-details" class="pm-project-details"></dl>
+            </section>
             <div id="pm-metrics" class="pm-metrics"></div>
             <div class="pm-columns">
               <section class="pm-card">
-                <span class="section-kicker">RECORDED CASE OUTCOMES</span>
-                <h3>Execution evidence</h3>
-                <div id="pm-outcomes"></div>
-                <p class="pm-note">
-                  Latest recorded case execution per suite version. These results do not include
-                  repository BDD checks or infer outcomes from design validation.
-                </p>
+                <span class="section-kicker">AGREED SCOPE</span>
+                <h3>Requirement baselines</h3>
+                <ul id="pm-baselines" class="pm-baselines"></ul>
               </section>
               <section class="pm-card">
-                <span class="section-kicker">NEXT CONVERSATION</span>
+                <span class="section-kicker">PROJECT FOLLOW-UP</span>
                 <h3>Needs attention</h3>
                 <ul id="pm-attention"></ul>
+                <a href="/quality-lifecycle">Review requirements and change impact ↗</a>
               </section>
             </div>
             <section class="pm-card">
               <div class="pm-table-heading">
                 <div>
-                  <span class="section-kicker">DELIVERY INVENTORY</span>
-                  <h3>Suite progress</h3>
+                  <span class="section-kicker">PROJECT SCOPE</span>
+                  <h3>Requirements</h3>
                 </div>
-                <span id="pm-suite-count"></span>
+                <span id="pm-requirement-count"></span>
+              </div>
+              <div class="pm-toolbar">
+                <label
+                  >Search requirements<input
+                    type="search"
+                    id="pm-search"
+                    placeholder="ID, title, owner or source"
+                /></label>
               </div>
               <div class="pm-table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th scope="col">Feature / version</th>
-                      <th scope="col">Cases</th>
-                      <th scope="col">Design validation</th>
-                      <th scope="col">Recorded execution</th>
-                      <th scope="col">Last activity</th>
+                      <th scope="col">Requirement</th>
+                      <th scope="col">Scope</th>
+                      <th scope="col">Owner</th>
+                      <th scope="col">Source</th>
+                      <th scope="col">Review status</th>
                     </tr>
                   </thead>
-                  <tbody id="pm-suites"></tbody>
+                  <tbody id="pm-requirements"></tbody>
                 </table>
               </div>
             </section>
             <section class="pm-card">
-              <h3>Reporting scope</h3>
-              <p id="pm-scope"></p>
-              <p class="pm-note">
-                This is a workspace overview, not a release-readiness decision. Approvals, delivery
-                owners, sprint commitments and deadlines are not available in this reporting source.
-                Different suite versions are listed separately; filtered history may omit earlier
-                evidence.
-              </p>
-              <a href="/progress">View repository BDD checks separately ↗</a>
+              <span class="section-kicker">DELIVERY CONTEXT</span>
+              <h3>Builds and test cycles</h3>
+              <div class="pm-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Cycle</th>
+                      <th scope="col">Build</th>
+                      <th scope="col">Environment</th>
+                      <th scope="col">Assigned to</th>
+                      <th scope="col">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pm-cycles"></tbody>
+                </table>
+              </div>
             </section>
+            <p class="pm-note">
+              Based on saved Quality lifecycle records for the selected project. Requirement owners
+              are shown; project managers and delivery deadlines are not yet recorded.
+            </p>
+            <a href="/progress">View repository BDD execution results ↗</a>
           </div>
         </div>
         <div data-workspace-page="/progress" hidden>
@@ -1842,6 +1857,12 @@
             <li class="empty-event">Waiting for the first agent update…</li>
           </ol>
         </section>
+        <section class="generation-validation" aria-labelledby="generation-validation-title">
+          <h3 id="generation-validation-title">Validation basis &amp; reference sources</h3>
+          <div id="generation-validation-evidence" aria-live="polite">
+            <p>Waiting for validation evidence. No checks have been reported yet.</p>
+          </div>
+        </section>
         <div class="generation-progress"><span class="generation-progress-bar"></span></div>
         <div class="generation-dialog-footer">
           <span id="generation-overlay-time">00:00 elapsed</span
@@ -2006,7 +2027,7 @@
     <script src="/static/scripts/navigation.js?v=20260927-mobile-drawer" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260923-guest-expiry-warnings" defer></script>
-    <script src="/static/scripts/index.js?v=20260927-privacy" defer></script>
+    <script src="/static/scripts/index.js?v=20261001-validation" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
@@ -2018,6 +2039,6 @@
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/workflow.js?v=20260927-output-panels" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20260921" defer></script>
-    <script src="/static/scripts/project-dashboard.js?v=20260927-privacy" defer></script>
+    <script src="/static/scripts/project-dashboard.js?v=20261001-project" defer></script>
   </body>
 </html>

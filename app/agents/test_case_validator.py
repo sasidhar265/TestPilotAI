@@ -268,6 +268,45 @@ class TestCaseValidatorAgent:
         )
         publish_lifecycle_event(
             "Quality Gate",
+            "validation_basis",
+            "passed" if report.passed else "failed",
+            f"Design validation {'passed' if report.passed else 'failed'} because {errors} "
+            f"blocking errors were found; {warnings} warnings remain. "
+            f"Criterion mappings: {covered}/{len(criteria)} recognized criteria covered. "
+            "Checks include duplicate scenarios, criterion mappings, vague titles/objectives, "
+            "and observable expected results. "
+            + (
+                "Specialist execution-mode matching checked. "
+                if expected_mode
+                else "Specialist execution-mode matching not requested. "
+            )
+            + (
+                "Given/When/Then structure and step limits checked for automation Gherkin. "
+                if any(
+                    c.execution_mode == ExecutionMode.AUTOMATION and c.gherkin
+                    for c in suite.test_cases
+                )
+                else "Gherkin structure check not applicable: no automation Gherkin supplied. "
+            )
+            + (
+                "No labelled AC/BR criteria were recognized; coverage is not established. "
+                if not criteria
+                else ""
+            )
+            + "This is a design check, not a test execution or business approval.",
+        )
+        publish_lifecycle_event(
+            "Quality Gate",
+            "validation_source",
+            "info",
+            "Reference: the current generation request and its labelled AC/BR criteria, "
+            "compared with generated case mappings and steps. Rules: the deterministic "
+            "Test Case Validator (coverage, traceability, duplicates, clarity, expected results, "
+            "execution mode and BDD structure). "
+            "No external knowledge source is consulted by this check.",
+        )
+        publish_lifecycle_event(
+            "Quality Gate",
             "validate_suite",
             "passed" if report.passed else "failed",
             f"Validated {len(suite.test_cases)} cases: score {score}/100, "
