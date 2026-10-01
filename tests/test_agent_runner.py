@@ -119,3 +119,45 @@ def test_provider_quota_failure_has_actionable_message() -> None:
 
     assert "quota is exhausted" in message
     assert "eligible model/account" in message
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure_point", ["construct", "enter", "session", "send", "exit"])
+async def test_sdk_runtime_failures_are_safe_provider_errors(failure_point):
+    from unittest.mock import AsyncMock, Mock
+
+    raw = RuntimeError("runtime unavailable: secret-token")
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    session = AsyncMock()
+    session.__aenter__.return_value = session
+    session.on = Mock()
+    client.create_session.return_value = session
+    factory = Mock(return_value=client)
+    failures = {
+        "construct": factory,
+        "enter": client.__aenter__,
+        "session": client.create_session,
+        "send": session.send,
+        "exit": session.__aexit__,
+    }
+    failures[failure_point].side_effect = raw
+    runner = CopilotAgentRunner(Settings(_env_file=None), factory)
+    # Exit failure occurs after the response wait; avoid waiting on an SDK event.
+    if failure_point == "exit":
+        session.send.side_effect = CopilotGenerationError("empty")
+    with pytest.raises(CopilotGenerationError, match="runtime could not start") as error:
+        await runner.invoke(instructions="policy", prompt="source", timeout_error="timeout")
+    assert "secret-token" not in str(error.value)
+    assert error.value.__cause__ is raw
+
+
+@pytest.mark.asyncio
+async def test_sdk_cancellation_remains_cancellable():
+    import asyncio
+    from unittest.mock import Mock
+
+    factory = Mock(side_effect=asyncio.CancelledError())
+    runner = CopilotAgentRunner(Settings(_env_file=None), factory)
+    with pytest.raises(asyncio.CancelledError):
+        await runner.invoke(instructions="policy", prompt="source", timeout_error="timeout")

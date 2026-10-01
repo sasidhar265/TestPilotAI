@@ -7,9 +7,11 @@ from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.requirements_validation import RequirementsValidationAgent
 from app.agents.runner import StructuredAgentDefinition
+from app.agents.validation_evidence import fingerprint, functionality, labels
 from app.agents.workflow_knowledge_agent import WorkflowKnowledgeAgent
 from app.config import Settings
 from app.models import GenerateRequest
+from app.observability import publish_lifecycle_event
 from app.workflow_models import ScenarioHandoff, Scenarios, Stories, StoryHandoff
 
 
@@ -23,7 +25,12 @@ class WorkflowAgent:
         await self.requirements_validator.require(request)
 
         def validate(result: Stories) -> Stories:
-            StoryHandoff(request=request, stories=result)
+            try:
+                StoryHandoff(request=request, stories=result)
+            except ValueError:
+                self._story_evidence(request, result, passed=False)
+                raise
+            self._story_evidence(request, result, passed=True)
             return result
 
         key = self.knowledge.key("stories", request)
@@ -58,7 +65,12 @@ class WorkflowAgent:
         )
 
         def validate(result: Scenarios) -> Scenarios:
-            ScenarioHandoff(request=handoff.request, stories=handoff.stories, scenarios=result)
+            try:
+                ScenarioHandoff(request=handoff.request, stories=handoff.stories, scenarios=result)
+            except ValueError:
+                self._scenario_evidence(handoff, result, passed=False)
+                raise
+            self._scenario_evidence(handoff, result, passed=True)
             return result
 
         source = StoryHandoff(request=handoff.request, stories=handoff.stories)
@@ -81,6 +93,54 @@ class WorkflowAgent:
         )
         self.knowledge.remember(key, validate(result))
         return result
+
+    @staticmethod
+    def _story_evidence(request: GenerateRequest, stories: Stories, *, passed: bool) -> None:
+        outcome = "passed" if passed else "failed"
+        publish_lifecycle_event(
+            "Story Agent",
+            "validation_basis",
+            outcome,
+            functionality(request) + f" Story grounding {outcome} for {len(stories.stories)} "
+            f"stories and {sum(len(s.acceptance_criteria) for s in stories.stories)} criteria. "
+            "Checked unique story IDs and exact source excerpts against this requirement text. "
+            f"Open questions: {len(stories.open_questions)}. "
+            "This check does not establish complete requirements coverage or business approval.",
+        )
+        publish_lifecycle_event(
+            "Story Agent",
+            "validation_source",
+            "info",
+            f"Requirement text in request {fingerprint(request)}; stories {fingerprint(stories)}. "
+            "Artifacts: " + labels([f"{s.id}: {s.title}" for s in stories.stories]) + ". "
+            "Validation rules: StoryHandoff source grounding and unique IDs.",
+        )
+
+    @staticmethod
+    def _scenario_evidence(handoff: StoryHandoff, scenarios: Scenarios, *, passed: bool) -> None:
+        outcome = "passed" if passed else "failed"
+        publish_lifecycle_event(
+            "Scenario Agent",
+            "validation_basis",
+            outcome,
+            functionality(handoff.request) + f" Scenario traceability {outcome} for "
+            f"{len(scenarios.scenarios)} scenarios across {len(handoff.stories.stories)} stories. "
+            "Checked unique scenario IDs, known story ownership, criteria drawn from the owning "
+            "story, and coverage of every story and its acceptance criteria. "
+            f"Open questions: {len(scenarios.open_questions)}. This is a design check.",
+        )
+        publish_lifecycle_event(
+            "Scenario Agent",
+            "validation_source",
+            "info",
+            f"Reviewed stories {fingerprint(handoff.stories)} from request "
+            f"{fingerprint(handoff.request)}. "
+            "Stories: " + labels([f"{s.id}: {s.title}" for s in handoff.stories.stories]) + ". "
+            "Scenario ownership: "
+            + labels([f"{s.id} → {s.story_id}: {s.title}" for s in scenarios.scenarios])
+            + ". "
+            "Validation rules: StoryHandoff and ScenarioHandoff traceability.",
+        )
 
 
 def test_case_request(handoff: ScenarioHandoff) -> GenerateRequest:

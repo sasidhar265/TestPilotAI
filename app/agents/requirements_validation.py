@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.agent_instructions import load_agent_instructions, load_profile_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.runner import StructuredAgentDefinition
+from app.agents.validation_evidence import functionality, labels
 from app.config import Settings, get_settings
 from app.models import GenerateRequest
 from app.observability import publish_lifecycle_event
@@ -270,7 +271,22 @@ class RequirementsValidationAgent:
         report = await self.assess(request)
         uploaded = any(s.get("id") == "UPLOADED-BRD" for s in report.sources)
         aligned = report.status == "aligned"
-        basis = report.message
+        outcomes = {
+            status: sum(f.status == status for f in report.findings)
+            for status in ("aligned", "conflict", "needs_clarification", "out_of_scope")
+        }
+        basis = functionality(request) + " " + report.message
+        if report.findings:
+            basis += (
+                " Assessment outcomes: "
+                + ", ".join(f"{status}: {count}" for status, count in outcomes.items() if count)
+                + "."
+            )
+            unresolved = [
+                f"{f.requirement_id}: {f.reason}" for f in report.findings if f.status != "aligned"
+            ]
+            if unresolved:
+                basis += " Findings: " + labels(unresolved) + "."
         if aligned and not uploaded:
             basis += (
                 f" Assessed {len(report.requirements)} requirement units; every unit was aligned. "
@@ -305,6 +321,19 @@ class RequirementsValidationAgent:
                         else "Available baseline source; not cited."
                     )
                 )
+            linked = [
+                f.requirement_id
+                for f in report.findings
+                if any(e.source_id == source["id"] for e in f.evidence)
+            ]
+            reference += (
+                f" Request {report.request_fingerprint[:12]}; "
+                f"baseline {report.baseline_fingerprint[:12]}."
+            )
+            if linked:
+                reference += " Supports: " + labels(linked) + "."
+            elif uploaded:
+                reference += f" Source for {len(report.requirements)} requirement units."
             publish_lifecycle_event(
                 "Requirements Validation Agent",
                 "validation_source",

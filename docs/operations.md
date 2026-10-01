@@ -114,3 +114,17 @@ models within Codex or Copilot. Login status does not establish GPT-6 Astra enti
 
 Identifiers: [OpenAI GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra)
 and [GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-programmatic-reference).
+
+## Copilot runtime download and local Python certificates
+
+The Copilot SDK may download its compatible runtime from GitHub before the first
+model call. On Python installations without a default CA file or directory, the
+application uses certifi's verified root bundle. Existing system roots and explicit
+`SSL_CERT_FILE` / `SSL_CERT_DIR` settings are preserved; TLS verification stays enabled.
+For corporate certificate authorities, configure your organisation's trusted bundle.
+
+Runtime startup or connection failures return a controlled provider error. The
+configured automatic fallback can proceed to another provider; explicit Copilot
+requests retain their provider selection. If downloads are unavailable, point
+`COPILOT_CLI_PATH` at a compatible installed runtime. Restart the local server after
+updating application code or certificate settings.

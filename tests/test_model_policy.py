@@ -28,7 +28,7 @@ async def test_copilot_session_pins_model_even_after_unvalidated_settings_copy()
     client.__aenter__.return_value = client
     client.create_session.side_effect = RuntimeError("stop before generation")
     runner = CopilotAgentRunner(settings, lambda **kwargs: client)
-    with pytest.raises(RuntimeError, match="stop before generation"):
+    with pytest.raises(CopilotGenerationError, match="runtime could not start"):
         await runner.invoke(instructions="test", prompt="test", timeout_error="timeout")
     assert client.create_session.call_args.kwargs["model"] == COPILOT_MODEL
 

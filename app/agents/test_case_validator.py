@@ -4,6 +4,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from app.agents import AgentKind, FunctionalAgentDescriptor
+from app.agents.validation_evidence import fingerprint, functionality, labels
 from app.models import ExecutionMode, GenerateRequest, TestCase, TestSuite
 from app.observability import publish_lifecycle_event
 
@@ -266,10 +267,18 @@ class TestCaseValidatorAgent:
             acceptance_criteria_covered=covered,
             findings=findings,
         )
+        agent = "Quality Gate" if expected_mode is None else f"Quality Gate · {expected_mode.value}"
+        dimensions = sorted({item.dimension.value for item in findings})
+        detail = (" Findings in: " + ", ".join(dimensions) + ".") if dimensions else ""
+        affected = sorted({identifier for item in findings for identifier in item.test_case_ids})
+        if affected:
+            detail += " Affected cases: " + labels(affected) + "."
         publish_lifecycle_event(
-            "Quality Gate",
+            agent,
             "validation_basis",
             "passed" if report.passed else "failed",
+            functionality(request) + f" Suite: {suite.feature_name}. "
+            f"Validated {len(suite.test_cases)} cases; "
             f"Design validation {'passed' if report.passed else 'failed'} because {errors} "
             f"blocking errors were found; {warnings} warnings remain. "
             f"Criterion mappings: {covered}/{len(criteria)} recognized criteria covered. "
@@ -293,13 +302,19 @@ class TestCaseValidatorAgent:
                 if not criteria
                 else ""
             )
-            + "This is a design check, not a test execution or business approval.",
+            + "This is a design check, not a test execution or business approval."
+            + detail,
         )
         publish_lifecycle_event(
-            "Quality Gate",
+            agent,
             "validation_source",
             "info",
-            "Reference: the current generation request and its labelled AC/BR criteria, "
+            f"Reference: request {fingerprint(request)}; suite {fingerprint(suite)} "
+            f"({suite.feature_name}). Cases: "
+            + labels([f"{case.id}: {case.title}" for case in suite.test_cases])
+            + ". "
+            + f"Labelled criteria: {labels(criteria) or 'none recognized'}. "
+            + "The current generation request and its labelled AC/BR criteria, "
             "compared with generated case mappings and steps. Rules: the deterministic "
             "Test Case Validator (coverage, traceability, duplicates, clarity, expected results, "
             "execution mode and BDD structure). "

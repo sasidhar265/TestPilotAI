@@ -266,3 +266,56 @@ def test_validation_basis_does_not_invent_coverage_or_execution(monkeypatch):
     assert "coverage is not established" in basis
     assert "not a test execution" in basis
     assert "Gherkin structure check not applicable" in basis
+
+
+def test_quality_evidence_changes_with_functionality_and_keeps_specialists_separate(monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.test_case_validator.publish_lifecycle_event",
+        lambda *event: events.append(event),
+    )
+    validator = Validator()
+    first = Suite(
+        feature_name="Password reset",
+        test_cases=[
+            case(
+                "TC-001",
+                "Expired reset link",
+                "Reject expired link",
+                "AC-1",
+                "HTTP 410 is returned",
+            )
+        ],
+    )
+    validator.validate(
+        GenerateRequest(description="Password reset\nAC-1: Reject expired links"),
+        first,
+        ExecutionMode.AUTOMATION,
+    )
+    first_basis = next(e for e in events if e[1] == "validation_basis")
+    assert first_basis[0] == "Quality Gate · automation"
+    assert "Password reset" in first_basis[3]
+    assert "TC-001: Expired reset link" in next(e[3] for e in events if e[1] == "validation_source")
+    events.clear()
+    second = Suite(
+        feature_name="Invoice export",
+        test_cases=[
+            case(
+                "TC-002",
+                "Export invoice",
+                "Export invoice rows",
+                "AC-2",
+                "CSV contains invoice rows",
+            ).model_copy(update={"execution_mode": ExecutionMode.MANUAL})
+        ],
+    )
+    validator.validate(
+        GenerateRequest(description="Invoice export\nAC-2: Export invoice rows"),
+        second,
+        ExecutionMode.MANUAL,
+    )
+    second_basis = next(e for e in events if e[1] == "validation_basis")
+    assert second_basis[0] == "Quality Gate · manual"
+    assert "Invoice export" in second_basis[3]
+    assert "Password reset" not in second_basis[3]
+    assert first_basis[3] != second_basis[3]

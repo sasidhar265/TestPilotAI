@@ -12,6 +12,7 @@ from pydantic import BaseModel, ValidationError
 from app.agent_instructions import load_agent_section
 from app.config import Settings
 from app.model_policy import COPILOT_MODEL
+from app.tls import configure_default_ca_bundle
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
 logger = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ class CopilotAgentRunner:
                 "GitHub Copilot SDK is not installed. Run 'pip install -e .' and restart."
             ) from error
 
+        configure_default_ca_bundle()
         factory = self.client_factory or CopilotClient
         client_options: dict[str, Any] = {
             "working_directory": str(self.settings.copilot_working_directory),
@@ -116,52 +118,65 @@ class CopilotAgentRunner:
         content: str | None = None
         provider_failure: dict[str, str | int | None] | None = None
         idle = asyncio.Event()
-        async with factory(**client_options) as client:
-            async with await client.create_session(**session_options) as session:
+        try:
+            async with factory(**client_options) as client:
+                async with await client.create_session(**session_options) as session:
 
-                def on_event(event: Any) -> None:
-                    nonlocal content, provider_failure
-                    data = getattr(event, "data", None)
-                    if isinstance(data, AssistantUsageData):
-                        from app.services.usage import record_provider_usage
+                    def on_event(event: Any) -> None:
+                        nonlocal content, provider_failure
+                        data = getattr(event, "data", None)
+                        if isinstance(data, AssistantUsageData):
+                            from app.services.usage import record_provider_usage
 
-                        record_provider_usage(
-                            self.settings,
-                            "github-copilot",
-                            {
-                                "model": data.model,
-                                "input_tokens": data.input_tokens,
-                                "output_tokens": data.output_tokens,
-                                "cached_input_tokens": data.cache_read_tokens,
-                                "id": data.api_call_id,
-                            },
+                            record_provider_usage(
+                                self.settings,
+                                "github-copilot",
+                                {
+                                    "model": data.model,
+                                    "input_tokens": data.input_tokens,
+                                    "output_tokens": data.output_tokens,
+                                    "cached_input_tokens": data.cache_read_tokens,
+                                    "id": data.api_call_id,
+                                },
+                            )
+                        if capture_response and isinstance(data, AssistantMessageData):
+                            content = data.content
+                        elif isinstance(data, SessionErrorData):
+                            provider_failure = {
+                                "status": data.status_code,
+                                "code": data.error_code,
+                                "type": data.error_type,
+                            }
+                        elif isinstance(data, ModelCallFailureData):
+                            provider_failure = {
+                                "status": data.status_code,
+                                "code": data.error_code,
+                                "type": str(data.failure_kind or data.error_type or "model-call"),
+                            }
+                        elif isinstance(data, SessionIdleData):
+                            idle.set()
+
+                    session.on(on_event)
+                    await session.send(prompt)
+                    try:
+                        await asyncio.wait_for(
+                            idle.wait(),
+                            timeout_seconds or self.settings.copilot_timeout_seconds,
                         )
-                    if capture_response and isinstance(data, AssistantMessageData):
-                        content = data.content
-                    elif isinstance(data, SessionErrorData):
-                        provider_failure = {
-                            "status": data.status_code,
-                            "code": data.error_code,
-                            "type": data.error_type,
-                        }
-                    elif isinstance(data, ModelCallFailureData):
-                        provider_failure = {
-                            "status": data.status_code,
-                            "code": data.error_code,
-                            "type": str(data.failure_kind or data.error_type or "model-call"),
-                        }
-                    elif isinstance(data, SessionIdleData):
-                        idle.set()
-
-                session.on(on_event)
-                await session.send(prompt)
-                try:
-                    await asyncio.wait_for(
-                        idle.wait(),
-                        timeout_seconds or self.settings.copilot_timeout_seconds,
-                    )
-                except TimeoutError as error:
-                    raise CopilotTimeoutError(timeout_error) from error
+                    except TimeoutError as error:
+                        raise CopilotTimeoutError(timeout_error) from error
+        except CopilotGenerationError:
+            raise
+        except Exception as error:
+            # SDK bootstrap, transport and teardown failures belong to this provider.
+            # Keep raw SDK messages out of the response: they may contain credentials.
+            logger.warning("copilot_runtime_failure error_type=%s", type(error).__name__)
+            raise CopilotGenerationError(
+                "GitHub Copilot runtime could not start or complete the request. "
+                "Check network access, trusted TLS certificates and Copilot authentication. "
+                "If automatic runtime download is unavailable, configure COPILOT_CLI_PATH "
+                "with a compatible installed runtime."
+            ) from error
 
         if capture_response and not content and provider_failure:
             logger.warning(

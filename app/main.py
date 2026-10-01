@@ -118,11 +118,13 @@ from app.services.model_access import (
 )
 from app.services.stlc import LifecycleError
 from app.stlc_routes import router as stlc_router
+from app.tls import configure_default_ca_bundle
 from app.user_routes import router as user_router
 from app.users import authenticate
 from app.workflow_routes import router as workflow_router
 from app.workspace_routes import router as workspace_router
 
+configure_default_ca_bundle()
 settings_at_startup = get_settings()
 configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
 

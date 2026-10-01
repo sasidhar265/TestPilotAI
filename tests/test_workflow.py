@@ -133,3 +133,67 @@ def test_actual_runner_case_names_redact_target_credentials(tmp_path):
             "error": "[redacted] failed the assertion",
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_workflow_evidence_describes_current_functionality_and_agent_checks(
+    tmp_path, monkeypatch
+):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.workflow_agent.publish_lifecycle_event", lambda *event: events.append(event)
+    )
+    source = handoff()
+    settings = Settings(_env_file=None, organizational_memory_enabled=False)
+    agent = WorkflowAgent(settings)
+    agent.requirements_validator = SimpleNamespace(require=AsyncMock())
+    agent.runner.generate_structured = AsyncMock(return_value=source.stories)
+    first = source.request.model_copy(
+        update={"description": "Document import\n" + source.request.description}
+    )
+    await agent.stories(first)
+    first_basis = next(e[3] for e in events if e[0] == "Story Agent" and e[1] == "validation_basis")
+    assert "Document import" in first_basis
+    assert "exact source excerpts" in first_basis
+    first_reference = next(e[3] for e in events if e[1] == "validation_source")
+    assert "ST-001" in first_reference
+    events.clear()
+    second = source.request.model_copy(
+        update={"description": "Jira import\n" + source.request.description}
+    )
+    await agent.stories(second)
+    second_basis = next(e[3] for e in events if e[1] == "validation_basis")
+    assert "Jira import" in second_basis
+    assert first_basis != second_basis
+    assert first_reference != next(e[3] for e in events if e[1] == "validation_source")
+    events.clear()
+    agent.runner.generate_structured = AsyncMock(return_value=source.scenarios)
+    await agent.scenarios(source)
+    scenario_basis = next(
+        e[3] for e in events if e[0] == "Scenario Agent" and e[1] == "validation_basis"
+    )
+    assert "known story ownership" in scenario_basis
+    assert "coverage of every story" in scenario_basis
+    reference = next(e[3] for e in events if e[1] == "validation_source")
+    assert "SC-001 → ST-001" in reference
+
+
+@pytest.mark.asyncio
+async def test_rejected_story_grounding_reports_failed_evidence(monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.workflow_agent.publish_lifecycle_event", lambda *event: events.append(event)
+    )
+    source = handoff()
+    agent = WorkflowAgent(Settings(_env_file=None, organizational_memory_enabled=False))
+    agent.requirements_validator = SimpleNamespace(require=AsyncMock())
+
+    async def generate(*args, **kwargs):
+        return kwargs["validate"](source.stories)
+
+    agent.runner.generate_structured = generate
+    with pytest.raises(ValidationError):
+        await agent.stories(
+            GenerateRequest(description="A different functionality without the original source")
+        )
+    assert next(e[2] for e in events if e[1] == "validation_basis") == "failed"

@@ -49,7 +49,25 @@ def test_validation_overlay_sources_retries_and_reset():
                  summary: 'Zero blocking errors; one warning. Not test execution.'},
                 {sequence: 4, agent: 'Quality Gate',
                  action: 'validation_source', status: 'info',
-                 summary: 'Current request <reference>'}
+                 summary: 'Current request <reference>'},
+                {sequence: 5, agent: 'Story Agent',
+                 action: 'validation_basis', status: 'passed',
+                 summary: 'Password reset: checked 2 stories against exact source excerpts.'},
+                {sequence: 6, agent: 'Story Agent',
+                 action: 'validation_source', status: 'info',
+                 summary: 'Request abc123; ST-001: Expired link'},
+                {sequence: 7, agent: 'Scenario Agent',
+                 action: 'validation_basis', status: 'passed',
+                 summary: 'Password reset: checked 3 scenarios and story ownership.'},
+                {sequence: 8, agent: 'Scenario Agent',
+                 action: 'validation_source', status: 'info',
+                 summary: 'Reviewed stories abc456; SC-001 → ST-001'},
+                {sequence: 9, agent: 'Quality Gate · manual',
+                 action: 'validation_basis', status: 'passed',
+                 summary: 'Checked 2 manual password reset cases.'},
+                {sequence: 10, agent: 'Quality Gate · automation',
+                 action: 'validation_basis', status: 'failed',
+                 summary: 'Checked 3 automation password reset cases; TC-003 failed.'}
             ]);
         }""")
         panel = page.locator("#generation-validation-evidence")
@@ -57,6 +75,11 @@ def test_validation_overlay_sources_retries_and_reset():
         pw.expect(panel).to_contain_text("Current request <reference>")
         pw.expect(panel).not_to_contain_text("Earlier reference")
         pw.expect(panel.locator("reference")).to_have_count(0)
+        pw.expect(panel).to_contain_text("2 stories against exact source excerpts")
+        pw.expect(panel).to_contain_text("SC-001 → ST-001")
+        pw.expect(panel).to_contain_text("2 manual password reset cases")
+        pw.expect(panel).to_contain_text("3 automation password reset cases")
+        pw.expect(panel.locator("article")).to_have_count(5)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.screenshot(path="/tmp/validation-overlay-mobile.png", full_page=True)
         page.evaluate("resetLifecycleFeed()")
