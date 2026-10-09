@@ -194,7 +194,11 @@ class ReqnRollStepDefinitionAgent:
                 cached = StepDefinitionArtifact.model_validate_json(stored)
             except ValueError:
                 continue
-            if implementation_findings(cached, expected_steps if exact else None):
+            if implementation_findings(
+                cached,
+                expected_steps if exact else None,
+                detailed_diagnostics=self.settings.tree_sitter_diagnostics_enabled,
+            ):
                 continue
             if any(
                 file.path in approved_quotation_sources
@@ -215,7 +219,11 @@ class ReqnRollStepDefinitionAgent:
                 return cached
             if len(stored) <= 80000 and sum(map(len, knowledge)) + len(stored) <= 120000:
                 knowledge.append(stored)
-        baseline_findings = implementation_findings(baseline, expected_steps)
+        baseline_findings = implementation_findings(
+            baseline,
+            expected_steps,
+            detailed_diagnostics=self.settings.tree_sitter_diagnostics_enabled,
+        )
         if not baseline_findings:
             self.memory.put(scope, scenarios, baseline)
             return baseline
@@ -262,7 +270,11 @@ class ReqnRollStepDefinitionAgent:
                 if path not in returned_paths
             )
             validate_layout(artifact.files)
-            findings = implementation_findings(artifact, expected_steps)
+            findings = implementation_findings(
+                artifact,
+                expected_steps,
+                detailed_diagnostics=self.settings.tree_sitter_diagnostics_enabled,
+            )
             if findings:
                 raise IncompleteImplementationError(findings, artifact.notes, len(expected_steps))
             return artifact

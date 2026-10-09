@@ -23,6 +23,10 @@ relevant agent or to the selected project's `.github/agent-profiles/<profile>/kn
 Project-specific conditions belong in the profile's `profile.md` or existing per-agent override.
 These files provide prompt context and examples; editing them does not fine-tune model weights.
 
+Keep operational flags in `workspace/runtime-config.toml`, resolved through `app.config.Settings`.
+Agent and skill instructions define responsibilities and policies, rather than duplicating flag
+values. See the root README's runtime-configuration section for precedence and supported options.
+
 The shared business-rule section uses `- BR-ID: description` bullets. Indent continuation lines
 by two spaces. Put explanations and examples outside the markers so they are not treated as
 approved rules. The UI editor preserves all content outside the markers.

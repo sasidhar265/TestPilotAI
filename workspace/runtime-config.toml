@@ -1,0 +1,16 @@
+# Shared operational options. Restart the application after editing this file.
+# Use lowercase Settings field names. Unknown options are rejected.
+# Explicit settings, process environment, User Secrets and .env override this file.
+# Keep credentials in deployment secrets, User Secrets or .env.
+
+model_directed_runtime_enabled = true
+organizational_memory_enabled = false
+user_secrets_enabled = false
+automation_skip_build = false
+json_logs = true
+
+# Controls diagnostic detail only. Syntax and branching validation always run.
+tree_sitter_diagnostics_enabled = true
+
+# Other non-secret Settings fields (timeouts, paths, limits and profiles) can be
+# added here. Codex/Copilot model assignments remain enforced by model-policy.md.

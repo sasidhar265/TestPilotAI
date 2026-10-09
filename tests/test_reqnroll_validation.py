@@ -143,6 +143,36 @@ api.LoadFixture("https://fixture.example/a");"""
     assert not implementation_findings(value, {"Given the approved request is prepared"})
 
 
+def test_pack_validation_rejects_malformed_binding_syntax() -> None:
+    value = artifact()
+    value.files[0].content = value.files[0].content.rstrip().removesuffix("}")
+    assert any(
+        "invalid step-definition syntax" in finding for finding in implementation_findings(value)
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("detailed", [False, True])
+async def test_csharp_agent_uses_configured_diagnostic_flag(tmp_path, monkeypatch, detailed):
+    from app.agents.artifact_runner import ArtifactGenerationRunner
+    from app.agents.reqnroll_validation import IncompleteImplementationError
+
+    configuration = tmp_path / "runtime.toml"
+    configuration.write_text(f"tree_sitter_diagnostics_enabled = {str(detailed).lower()}\n")
+    settings = Settings(
+        _env_file=None, runtime_config_path=configuration, organizational_memory_enabled=False
+    )
+
+    async def generate(self, definition, **kwargs):
+        return kwargs["validate"](artifact("if (ready) api.Send();"))
+
+    monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", generate)
+    with pytest.raises(IncompleteImplementationError) as error:
+        await ReqnRollStepDefinitionAgent(settings).generate(request())
+    assert ("if_statement" in str(error.value)) is detailed
+    assert "step definitions must" in str(error.value)
+
+
 def test_placeholder_in_supporting_helper_is_rejected() -> None:
     value = artifact()
     value.files.append(

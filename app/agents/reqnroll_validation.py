@@ -53,7 +53,10 @@ _METHOD = re.compile(
 
 
 def implementation_findings(
-    artifact: "StepDefinitionArtifact", expected_steps: set[str] | None = None
+    artifact: "StepDefinitionArtifact",
+    expected_steps: set[str] | None = None,
+    *,
+    detailed_diagnostics: bool = True,
 ) -> list[str]:
     findings: list[str] = []
     methods: dict[str, set[str]] = {}
@@ -64,7 +67,9 @@ def implementation_findings(
         paths.add(file.path)
         if not file.path.endswith(".cs"):
             continue
-        findings.extend(step_style_findings(file.path, file.content))
+        findings.extend(
+            step_style_findings(file.path, file.content, detailed_diagnostics=detailed_diagnostics)
+        )
         if _PLACEHOLDER.search(file.content):
             findings.append(
                 f"{file.path}: replace placeholder or pending implementation with real code."

@@ -14,10 +14,14 @@ DEFAULT_USER_SECRETS_ID = "quality-lifecycle-studio-local"
 
 class UserSecretsSource(PydanticBaseSettingsSource):
     def __init__(
-        self, settings_cls: type[BaseSettings], dotenv: PydanticBaseSettingsSource
+        self,
+        settings_cls: type[BaseSettings],
+        dotenv: PydanticBaseSettingsSource,
+        runtime_config: PydanticBaseSettingsSource | None = None,
     ) -> None:
         super().__init__(settings_cls)
         self.dotenv = dotenv
+        self.runtime_config = runtime_config
 
     def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
         return None, field_name, False
@@ -25,7 +29,8 @@ class UserSecretsSource(PydanticBaseSettingsSource):
     def __call__(self) -> dict[str, Any]:
         # Consult .env for opt-in controls without giving its credential values higher
         # priority than User Secrets. Constructor arguments and process env win.
-        controls = self.dotenv() | self.current_state
+        runtime = self.runtime_config() if self.runtime_config is not None else {}
+        controls = runtime | self.dotenv() | self.current_state
         enabled = str(controls.get("user_secrets_enabled", False)).casefold() in {"true", "1"}
         if (
             not enabled

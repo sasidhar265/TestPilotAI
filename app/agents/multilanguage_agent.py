@@ -59,7 +59,7 @@ class LanguageArtifact(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
-def safe_files(artifact: LanguageArtifact) -> None:
+def safe_files(artifact: LanguageArtifact, *, detailed_diagnostics: bool = True) -> None:
     seen = set()
     allowed = {
         "cs",
@@ -81,7 +81,9 @@ def safe_files(artifact: LanguageArtifact) -> None:
         "properties",
     }
     for file in artifact.files:
-        findings = step_style_findings(file.path, file.content)
+        findings = step_style_findings(
+            file.path, file.content, detailed_diagnostics=detailed_diagnostics
+        )
         if findings:
             raise ValueError(" ".join(findings))
         path = PurePosixPath(file.path)
@@ -234,7 +236,12 @@ class MultiLanguageAgent:
                     },
                 }
             ),
-            validate=lambda artifact: validate_pack(artifact, request, baseline),
+            validate=lambda artifact: validate_pack(
+                artifact,
+                request,
+                baseline,
+                detailed_diagnostics=self.settings.tree_sitter_diagnostics_enabled,
+            ),
         )
 
 
@@ -269,9 +276,13 @@ def _declaration(language: str, keyword: str, pattern: str, name: str, args: lis
 
 
 def validate_pack(
-    artifact: LanguageArtifact, request: LanguageRequest, baseline: LanguageArtifact
+    artifact: LanguageArtifact,
+    request: LanguageRequest,
+    baseline: LanguageArtifact,
+    *,
+    detailed_diagnostics: bool = True,
 ) -> LanguageArtifact:
-    safe_files(artifact)
+    safe_files(artifact, detailed_diagnostics=detailed_diagnostics)
     if artifact.language != request.language or artifact.framework != baseline.framework:
         raise ValueError("Pack language/framework does not match the selected language")
     extension = "." + LANGUAGES[request.language][2]
@@ -374,7 +385,7 @@ def validate_pack(
     artifact.files.extend(
         ArtifactFile(path=path, content=content) for path, content in assets.items()
     )
-    safe_files(artifact)
+    safe_files(artifact, detailed_diagnostics=detailed_diagnostics)
     validate_layout(artifact.files)
     artifact.notes.append("Static checks passed; compilation and live execution have not been run.")
     return artifact

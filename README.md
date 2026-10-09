@@ -95,6 +95,14 @@ This option makes no AI calls and does not retrieve or generate implementation p
 Choose **Automation pack** separately to generate implementations and supporting files, with a ZIP
 download. Both options require a validated suite containing automation Gherkin.
 
+Automation pack validation uses Tree-sitter to parse C#, Java, JavaScript, TypeScript and Ruby
+step-definition code. It rejects malformed syntax and conditional branches with file, line and
+column diagnostics, including branches inside interpolated strings. Literal text and comments do
+not count as branching. Binding attributes, annotations and Given/When/Then calls also identify
+step definitions outside the standard folder. Python retains its built-in AST parser. The parser
+and grammar wheels install with the application dependencies; validation requires no network
+access. These static checks complement target-language compilation and actual BDD execution.
+
 The full C# pack generator includes executable common API bindings for named JSON request
 fixtures, explicit HTTP method/path submission, status checks, JSON field checks, and exact decimal
 comparisons. It supplies a scenario context and an `IHttpClientFactory`-backed client alongside the
@@ -853,6 +861,27 @@ and scenarios that were never stored need one initial generation to populate mem
 
 Local development can use [Microsoft User Secrets](docs/local-user-secrets.md) for the
 Python app and C# BDD runner. This is opt-in; hosted configuration remains environment-based.
+
+## Runtime configuration
+
+Manage operational flags in [workspace/runtime-config.toml](workspace/runtime-config.toml),
+using lowercase fields from `app.config.Settings`. The shared file controls the model-directed
+coordinator, organizational-memory reuse, local User Secrets, BDD build reuse, JSON logging and
+Tree-sitter diagnostic detail. It also accepts non-secret timeout, limit, path and profile options.
+Agents consume resolved Settings values; feature switches do not belong in agent or skill prose.
+
+For example, `model_directed_runtime_enabled = false` disables the resident coordinator while
+retaining the deterministic pipeline. `tree_sitter_diagnostics_enabled = false` returns compact
+pack-validation findings; syntax and branching checks still run. Mandatory Codex/Copilot models,
+implementation approval, approved payloads and required automation checks remain enforced.
+
+Precedence is explicit Settings arguments, process environment, Microsoft User Secrets, `.env`,
+mounted secrets, runtime TOML, then application defaults. Remove duplicate operational flags
+from an existing `.env` to manage them through TOML. Keep credentials outside the shared file;
+credential keys, unknown options and malformed TOML are rejected. Select another file with
+`RUNTIME_CONFIG_PATH`; a missing selected file causes an explicit startup error.
+Restart the application after editing configuration because server Settings are cached.
+The C# BDD runner retains its environment/User Secrets configuration.
 
 ## User guide
 

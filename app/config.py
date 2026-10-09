@@ -10,6 +10,7 @@ from pydantic import AwareDatetime, Field, SecretStr, field_validator, model_val
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from app.model_policy import CODEX_MODEL, COPILOT_MODEL
+from app.runtime_config import DEFAULT_RUNTIME_CONFIG_PATH, RuntimeConfigSource
 from app.user_secrets import DEFAULT_USER_SECRETS_ID, UserSecretsSource
 
 
@@ -25,6 +26,8 @@ class Settings(BaseSettings):
         return CODEX_MODEL
 
     environment: str = "development"
+    runtime_config_path: Path | None = DEFAULT_RUNTIME_CONFIG_PATH
+    tree_sitter_diagnostics_enabled: bool = True
     user_secrets_enabled: bool = False
     user_secrets_id: str = DEFAULT_USER_SECRETS_ID
     quality_lifecycle_base_url: str = ""
@@ -119,12 +122,16 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
+        runtime_config = RuntimeConfigSource(
+            settings_cls, init_settings, env_settings, dotenv_settings
+        )
         return (
             init_settings,
             env_settings,
-            UserSecretsSource(settings_cls, dotenv_settings),
+            UserSecretsSource(settings_cls, dotenv_settings, runtime_config),
             dotenv_settings,
             file_secret_settings,
+            runtime_config,
         )
 
     @property
