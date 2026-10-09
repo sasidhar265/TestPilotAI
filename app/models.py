@@ -148,6 +148,9 @@ class TestSuite(BaseModel):
 
 
 class GenerateRequest(BaseModel):
+    finance_calculation: dict[str, object] | None = None
+    finance_product_id: str | None = Field(default=None, max_length=50)
+    finance_journey_ids: list[str] = Field(default_factory=list, max_length=20)
     description: str = Field(min_length=10, max_length=30_000)
     additional_context: str = Field(default="", max_length=100_000)
     output_format: TestFormat = TestFormat.NORMAL

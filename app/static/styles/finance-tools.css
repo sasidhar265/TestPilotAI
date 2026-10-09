@@ -1,0 +1,126 @@
+.finance-domain-selection {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.finance-domain-selection label,
+.finance-tools label {
+  display: grid;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.finance-domain-selection select,
+.finance-tools select,
+.finance-tools input {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.finance-domain-selection p,
+.finance-domain-selection a {
+  grid-column: 1/-1;
+  font-size: 0.75rem;
+  margin: 0;
+  color: var(--muted);
+}
+.finance-domain-selection a {
+  color: var(--primary);
+}
+.finance-reference-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.finance-tools h3 {
+  font-size: 1rem;
+}
+.finance-reference-grid ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.finance-reference-grid li {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+.finance-reference-grid li span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.finance-rule-view {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 18px 0;
+  font-size: 0.8rem;
+}
+.finance-rule-view summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.finance-calculator {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+#finance-calc-form {
+  display: grid;
+  gap: 14px;
+}
+.finance-input-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+#finance-calculate {
+  justify-self: start;
+}
+#finance-calc-status {
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+#finance-calc-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 20px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+#finance-calc-values dt {
+  text-transform: capitalize;
+  color: var(--muted);
+}
+#finance-calc-values dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+#finance-calc-checks {
+  font-size: 0.8rem;
+}
+@media (max-width: 650px) {
+  .finance-reference-grid,
+  .finance-input-grid,
+  .finance-domain-selection {
+    grid-template-columns: 1fr;
+  }
+}
+.finance-domain-selection [hidden], .finance-tools [hidden] { display:none !important; }

@@ -28,11 +28,20 @@ class Settings(BaseSettings):
     environment: str = "development"
     runtime_config_path: Path | None = DEFAULT_RUNTIME_CONFIG_PATH
     tree_sitter_diagnostics_enabled: bool = True
+    auto_finance_domain_enabled: bool = True
+    auto_finance_domain_path: Path = (
+        Path(__file__).resolve().parent.parent / "workspace/auto-finance-domain.toml"
+    )
     user_secrets_enabled: bool = False
     user_secrets_id: str = DEFAULT_USER_SECRETS_ID
     quality_lifecycle_base_url: str = ""
     log_level: str = "INFO"
     json_logs: bool = True
+    detailed_logs_enabled: bool = True
+    log_file_path: Path | None = Path(".agent-memory/logs/application.jsonl")
+    log_file_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
+    log_file_backup_count: int = Field(default=5, ge=0, le=100)
+    log_ui_capacity: int = Field(default=5000, ge=200, le=100000)
     api_auth_token: SecretStr = SecretStr("")
     app_username: str = "admin"
     app_display_name: str = ""

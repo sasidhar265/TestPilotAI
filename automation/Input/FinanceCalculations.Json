@@ -1,0 +1,13 @@
+{
+  "zero_interest": {"request":{"kind":"annuity","principal":"12000","annual_nominal_rate":"0","payments":12,"observed":{"regular_payment":"1000.00"}},"expected":{"regular_payment":"1000.00","total_repayments":"12000.00"},"status":200,"matches":true},
+  "balloon": {"request":{"kind":"annuity","principal":"12000","annual_nominal_rate":"0","payments":12,"balloon":"6000"},"expected":{"regular_payment":"500.00","balloon":"6000.00","total_repayments":"12000.00"},"status":200},
+  "nominal_interest": {"request":{"kind":"annuity","principal":"1000","annual_nominal_rate":"12","payments":1,"balloon":"200"},"expected":{"regular_payment":"810.00","total_interest":"10.00","total_repayments":"1010.00"},"status":200},
+  "rounding": {"request":{"kind":"annuity","principal":"1","annual_nominal_rate":"0","payments":3},"expected":{"regular_payment":"0.33","final_regular_payment":"0.34","total_repayments":"1.00"},"status":200},
+  "mismatch": {"request":{"kind":"annuity","principal":"12000","annual_nominal_rate":"0","payments":12,"observed":{"regular_payment":"999.99"}},"expected":{"regular_payment":"1000.00"},"status":200,"matches":false},
+  "principal": {"request":{"kind":"principal","cash_price":"15000","deposit":"3000","financed_fees":"100"},"expected":{"amount_financed":"12100.00"},"status":200},
+  "vat": {"request":{"kind":"vat","net":"100","vat_rate":"20","observed":{"gross":"120.00"}},"expected":{"vat":"20.00","gross":"120.00"},"status":200,"matches":true},
+  "invalid_deposit": {"request":{"kind":"principal","cash_price":"100","deposit":"101"},"status":422},
+  "invalid_term": {"request":{"kind":"annuity","principal":"100","annual_nominal_rate":"0","payments":0},"status":422},
+  "unsupported_apr": {"request":{"kind":"annuity","principal":"100","annual_nominal_rate":"0","payments":1,"observed":{"apr":"0"}},"status":422},
+  "extra_contract_fields": {"request":{"kind":"vat","net":"100","vat_rate":"20","customerEligibility":true},"status":422}
+}

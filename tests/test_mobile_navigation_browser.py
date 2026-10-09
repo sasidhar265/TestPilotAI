@@ -9,6 +9,10 @@ import pytest
 
 PAGES = {
     "/": "index.html",
+    "/?view=stories": "index.html",
+    "/?view=scenarios": "index.html",
+    "/?view=test-cases": "index.html",
+    "/?view=automation": "index.html",
     "/documentation": "documentation.html",
     "/static/user-guide.html": "user-guide.html",
     "/knowledge": "knowledge.html",
@@ -17,6 +21,8 @@ PAGES = {
     "/docs": "api-docs.html",
     "/project-dashboard": "index.html",
     "/progress": "index.html",
+    "/products": "index.html",
+    "/usage": "index.html",
     "/quality-lifecycle": "index.html",
 }
 
@@ -121,6 +127,9 @@ def test_mobile_navigation_and_page_layout(path, engine, width, height):
         page.touchscreen.tap(width - 12, 160)
         pw.expect(toggle).to_have_attribute("aria-expanded", "false")
         toggle.tap()
+        parent = page.locator(".nav-parent", has_text="Knowledge")
+        if parent.get_attribute("aria-expanded") == "false":
+            parent.tap()
         page.locator('.primary-nav a[href="/knowledge"]').tap()
         pw.expect(page).to_have_url("http://localhost/knowledge")
         pw.expect(toggle).to_have_attribute("aria-expanded", "false")

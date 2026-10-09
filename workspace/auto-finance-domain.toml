@@ -1,0 +1,83 @@
+# Reference catalogue only. Supply approved rules and explicit mappings before using them.
+# Reloaded on each request. No eligibility limits, pricing rates or statutory rules are inferred.
+version = "1"
+market = "unspecified"
+currency = "GBP"
+minor_units = 2
+rounding = "half_up"
+
+[[products]]
+id = "HP"
+name = "Hire Purchase"
+focus = ["Amount financed", "Instalments", "Ownership and fees from the approved agreement"]
+[[products]]
+id = "PCP"
+name = "Personal Contract Purchase"
+focus = ["Deposit and term", "Optional final payment", "Approved mileage and end-of-term conditions"]
+[[products]]
+id = "LP"
+name = "Lease Purchase"
+focus = ["Amount financed", "Balloon payment", "Approved agreement conditions"]
+[[products]]
+id = "PCH"
+name = "Personal Contract Hire"
+focus = ["Initial and regular rentals", "Approved mileage", "Approved VAT treatment"]
+[[products]]
+id = "BCH"
+name = "Business Contract Hire"
+focus = ["Business eligibility supplied by the owner", "Rentals", "Approved VAT treatment"]
+[[products]]
+id = "PFL"
+name = "Personal Finance Lease"
+focus = ["Approved product definition", "Rentals", "Residual assumptions"]
+[[products]]
+id = "BFL"
+name = "Business Finance Lease"
+focus = ["Approved product definition", "Rentals", "Residual or final payment"]
+
+[[journeys]]
+id = "quotation"
+name = "Quotation"
+focus = ["Approved request contract", "Input boundaries", "Calculation reconciliation"]
+[[journeys]]
+id = "application"
+name = "Application and identity"
+focus = ["Required application information", "Identity integration outcomes", "Consent supplied in requirements"]
+[[journeys]]
+id = "underwriting"
+name = "Underwriting"
+focus = ["Explicit decision rules", "Credit and affordability integration outcomes", "Manual review paths"]
+[[journeys]]
+id = "agreement"
+name = "Agreement and activation"
+focus = ["Approved agreement terms", "Acceptance evidence", "Activation prerequisites"]
+[[journeys]]
+id = "servicing"
+name = "Payments and servicing"
+focus = ["Payment allocation supplied in requirements", "Failed and duplicate payments", "Account reconciliation"]
+[[journeys]]
+id = "arrears"
+name = "Arrears"
+focus = ["Approved arrears states", "Customer communication rules", "Recovery and cure paths"]
+[[journeys]]
+id = "settlement"
+name = "Settlement and closure"
+focus = ["Approved settlement method", "Fees and rebates supplied by the owner", "Closure evidence"]
+
+# [[rules]]
+# id = "BR-your-approved-id"
+# description = "Exact approved business rule wording"
+# status = "approved" # draft rules remain reference-only
+# version = "1"
+# owner = "Policy owner"
+# source = "Approved document/version or authoritative source URL"
+# product_ids = ["HP"]
+# journey_ids = ["quotation"]
+
+# [[mappings]]
+# project = "your-project"
+# requirement_key = "REQ-001"
+# requirement_version = 1
+# product_id = "HP"
+# journey_ids = ["quotation"]
+# rule_ids = ["BR-your-approved-id"]

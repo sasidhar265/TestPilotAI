@@ -61,6 +61,7 @@ from app.dependencies import (
     get_test_generation_service,
 )
 from app.exporter import suite_to_csv
+from app.finance_routes import router as finance_router
 from app.generator import FallbackGenerator, copilot_error_message
 from app.jira import JiraClient
 from app.memory import OrganizationalMemory
@@ -126,7 +127,11 @@ from app.workspace_routes import router as workspace_router
 
 configure_default_ca_bundle()
 settings_at_startup = get_settings()
-configure_logging(settings_at_startup.log_level, settings_at_startup.json_logs)
+configure_logging(
+    settings_at_startup.log_level,
+    settings_at_startup.json_logs,
+    settings=settings_at_startup,
+)
 
 app = FastAPI(
     lifespan=memory_lifespan,
@@ -150,6 +155,7 @@ app.include_router(workspace_router)
 app.include_router(stlc_router)
 app.include_router(workflow_router)
 app.include_router(script_pack_router)
+app.include_router(finance_router)
 
 
 @app.exception_handler(LifecycleError)
@@ -361,6 +367,8 @@ async def logout() -> Response:
 @app.get("/project-dashboard", include_in_schema=False)
 @app.get("/progress", include_in_schema=False)
 @app.get("/quality-lifecycle", include_in_schema=False)
+@app.get("/products", include_in_schema=False)
+@app.get("/usage", include_in_schema=False)
 @app.get("/", include_in_schema=False)
 async def index(request: Request) -> Response:
     if not valid_session(
@@ -787,6 +795,9 @@ async def generate_from_document(
     llm_model: LlmModel = Form(LlmModel.AUTO_FALLBACK),
     additional_context: str = Form(""),
     business_rules: str = Form(""),
+    finance_product_id: str = Form(""),
+    finance_journey_ids: str = Form(""),
+    finance_calculation: str = Form(""),
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
 ) -> DocumentGenerationResult:
     """Extract requirements, generate test cases, then independently validate them."""
@@ -807,6 +818,22 @@ async def generate_from_document(
                 f"{settings_at_startup.max_upload_bytes}-byte limit."
             )
         rules = parse_business_rule_lines(business_rules)
+        calculation_context = None
+        if finance_calculation:
+            from pydantic import TypeAdapter
+
+            from app.finance_calculations import CalculationInput
+
+            try:
+                calculation_context = (
+                    TypeAdapter(CalculationInput)
+                    .validate_json(finance_calculation)
+                    .model_dump(mode="json")
+                )
+            except ValueError:
+                raise DocumentIngestionError(
+                    "Invalid finance reference calculation context"
+                ) from None
         result = await pipeline.run_document(
             filename,
             await file.read(),
@@ -816,6 +843,17 @@ async def generate_from_document(
             manual_testing_type,
             generation_target,
             llm_model,
+            **(
+                {
+                    "finance_product_id": finance_product_id or None,
+                    "finance_journey_ids": [
+                        item.strip() for item in finance_journey_ids.split(",") if item.strip()
+                    ],
+                    "finance_calculation": calculation_context,
+                }
+                if finance_product_id or finance_journey_ids or finance_calculation
+                else {}
+            ),
         )
         document = result.document
         assert document is not None

@@ -128,4 +128,4 @@ const refreshKnowledge = () =>
   });
 
 document.getElementById("refresh-knowledge").addEventListener("click", refreshKnowledge);
-refreshKnowledge();
+if (!document.body.dataset.knowledgeView || document.body.dataset.knowledgeView === "saved") refreshKnowledge();

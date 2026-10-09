@@ -8,9 +8,16 @@ organizational_memory_enabled = false
 user_secrets_enabled = false
 automation_skip_build = false
 json_logs = true
+detailed_logs_enabled = true
+log_file_path = ".agent-memory/logs/application.jsonl"
+log_file_max_bytes = 10485760
+log_file_backup_count = 5
+log_ui_capacity = 5000
 
 # Controls diagnostic detail only. Syntax and branching validation always run.
 tree_sitter_diagnostics_enabled = true
+auto_finance_domain_enabled = true
+auto_finance_domain_path = "workspace/auto-finance-domain.toml"
 
 # Other non-secret Settings fields (timeouts, paths, limits and profiles) can be
 # added here. Codex/Copilot model assignments remain enforced by model-policy.md.

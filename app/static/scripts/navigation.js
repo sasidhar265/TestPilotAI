@@ -3,6 +3,33 @@
   const toggle = document.getElementById("sidebar-toggle");
   const content = document.getElementById("sidebar-content");
   if (!sidebar || !toggle || !content) return;
+  sidebar.querySelectorAll(".nav-parent").forEach((parent) => {
+    const children = document.getElementById(parent.getAttribute("aria-controls"));
+    let current = false;
+    children.querySelectorAll("a").forEach((link) => {
+      const target = new URL(link.href);
+      const defaultView = target.pathname === "/" ? "requirements" : "saved";
+      const view = target.searchParams.get("view") || defaultView;
+      const active = location.pathname === target.pathname &&
+        (target.pathname === "/knowledge" ? document.body.dataset.knowledgeView || "saved" : new URLSearchParams(location.search).get("view") || defaultView) === view;
+      link.classList.toggle("active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      current ||= active;
+    });
+    children.hidden = !current;
+    parent.classList.toggle("active", current);
+    parent.setAttribute("aria-expanded", String(current));
+    parent.title = parent.querySelector("span:nth-child(2)").textContent;
+    parent.addEventListener("click", () => {
+      if (!mobile.matches && sidebar.dataset.collapsed === "true") {
+        desktopCollapsed = false;
+        setCollapsed(false);
+        try { localStorage.setItem(storageKey, "false"); } catch {}
+        children.hidden = false;
+      } else children.hidden = !children.hidden;
+      parent.setAttribute("aria-expanded", String(!children.hidden));
+    });
+  });
   const mobile = matchMedia("(max-width: 1080px)");
   const storageKey = "quality-lifecycle-navigation-collapsed";
   const backdrop = document.createElement("button");

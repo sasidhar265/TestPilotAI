@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="/static/styles/index.css?v=20261001-validation" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260927-mobile-drawer" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
     <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20260927-output-tabs" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20261009-control-alignment-20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20261001-project" />
@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="/static/styles/workflow-results.css?v=20260927" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/guest.css?v=20260927-privacy" />
+    <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
   </head>
   <body>
     <div class="app-shell">
@@ -55,15 +56,24 @@
             <a class="nav-item" href="/project-dashboard"
               ><span class="nav-icon">▥</span><span>Project dashboard</span></a
             >
-            <a class="nav-item active" href="/" aria-current="page"
-              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="quality-navigation" hidden>
+                <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
+                <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/progress"
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
               ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
             >
+            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -71,9 +81,21 @@
             <a class="nav-item" href="/documentation"
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
-            <a class="nav-item" href="/knowledge"
-              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="knowledge-navigation"><span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="knowledge-navigation" hidden>
+                <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
+                <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
+              </div>
+            </div>
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="finance-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="finance-navigation" hidden>
+                <a class="nav-item" href="/products"><span>Products</span></a>
+                <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"><span>Calculation validators</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/logs"
               ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
             >
@@ -205,7 +227,7 @@
         </header>
 
         <div data-workspace-page="/">
-          <section class="finance-hero" aria-labelledby="finance-hero-title">
+          <section data-quality-view="requirements" class="finance-hero" aria-labelledby="finance-hero-title">
             <div class="finance-hero-copy">
               <span class="finance-eyebrow"
                 ><span aria-hidden="true">✦</span> AUTOMOBILE FINANCE INTELLIGENCE</span
@@ -264,7 +286,7 @@
               </div>
             </div>
           </section>
-          <section class="finance-explorer" aria-labelledby="finance-explorer-title">
+          <section data-quality-view="products" class="finance-explorer" aria-labelledby="finance-explorer-title">
             <div class="finance-explorer-heading">
               <div>
                 <span class="section-kicker">PRODUCT SPOTLIGHT</span>
@@ -303,6 +325,78 @@
               Use approved configuration and calculation examples. Exploring a product leaves your
               requirements unchanged.
             </p>
+              <details class="finance-guide">
+                <summary>Automobile finance coverage guide</summary>
+                <p>
+                  Use the quotation catalogue below to scope your requirements. Product availability
+                  and eligible combinations depend on your approved configuration.
+                </p>
+                <dl class="finance-products">
+                  <div>
+                    <dt>PCP · Personal Contract Purchase</dt>
+                    <dd>Instalments, guaranteed future value and optional final payment.</dd>
+                  </div>
+                  <div>
+                    <dt>HP · Hire Purchase</dt>
+                    <dd>Amount financed, instalments, applicable fees and total payable.</dd>
+                  </div>
+                  <div>
+                    <dt>LP · Lease Purchase</dt>
+                    <dd>Instalments, balloon payment and financial reconciliation.</dd>
+                  </div>
+                  <div>
+                    <dt>PCH · Personal Contract Hire</dt>
+                    <dd>Initial and regular rentals, mileage, maintenance and VAT.</dd>
+                  </div>
+                  <div>
+                    <dt>BCH · Business Contract Hire</dt>
+                    <dd>Rental net, VAT and gross values with approved business eligibility.</dd>
+                  </div>
+                  <div>
+                    <dt>PFL · Personal Finance Lease</dt>
+                    <dd>Approved rental structure, maintenance and applicable final rental.</dd>
+                  </div>
+                  <div>
+                    <dt>BFL · Business Finance Lease</dt>
+                    <dd>Finance amount, rentals, residual or balloon and applicable VAT.</dd>
+                  </div>
+                </dl>
+                <p>
+                  <strong>Review coverage:</strong> vehicle and product eligibility; deposit, term
+                  and mileage boundaries; effective-dated rates and campaigns; residual values;
+                  maintenance; fees; decimal precision; safe errors and audit evidence.
+                </p>
+                <p>
+                  <strong>Supply approved expectations:</strong> calculation examples, rounding
+                  rules, response mappings and permitted combinations. Product codes alone do not
+                  establish regulatory treatment. This reference does not add rules to your
+                  requirement.
+                </p>
+              </details>
+            <details class="finance-context-settings">
+              <summary>Configure product and calculation context</summary>
+                <div class="finance-domain-selection">
+                  <label for="finance-domain-product"
+                    >Product context<select id="finance-domain-product">
+                      <option value="">No product selected</option>
+                    </select></label
+                  >
+                  <label for="finance-domain-journey"
+                    >Journey context<select id="finance-domain-journey">
+                      <option value="">No journey selected</option>
+                    </select></label
+                  >
+                  <p id="finance-reference-status" hidden></p>
+                  <button type="button" class="secondary" id="finance-clear-reference" hidden>
+                    Clear calculation context
+                  </button>
+                  <p id="finance-domain-selection-status">Loading configured domain references…</p>
+                  <a href="/knowledge?view=domain"
+                    >View domain pack →</a
+                  >
+                  <a href="/knowledge?view=calculations">Open calculation validators →</a>
+                </div>
+            </details>
           </section>
 
           <section class="stage-workspace" aria-label="Requirements to execution" hidden>
@@ -403,6 +497,10 @@
                   <small>Runs & results</small>
                 </span>
                 <span class="stage-indicator" aria-hidden="true">✓</span>
+              </button>
+              <button type="button" role="tab" id="stage-tab-6" aria-controls="automation-workspace" aria-selected="false" tabindex="-1" data-stage="6">
+                <span class="stage-number" aria-hidden="true">06</span>
+                <span class="stage-tab-copy"><span class="stage-tab-title"><strong>Automation packs</strong><span class="stage-count" hidden></span></span><small>Build &amp; download</small></span>
               </button>
             </div>
             <p id="stage-status" role="status">
@@ -628,7 +726,7 @@
             </div>
           </section>
 
-          <section class="studio-layout">
+          <section data-quality-view="requirements" class="studio-layout">
             <aside class="context-panel workspace-context-bar" aria-label="Runtime context">
               <div class="workspace-context-intro">
                 <div class="context-head">
@@ -678,54 +776,7 @@
                 <span class="secure">PRIVATE BY DESIGN</span>
               </div>
 
-              <details class="finance-guide">
-                <summary>Automobile finance coverage guide</summary>
-                <p>
-                  Use the quotation catalogue below to scope your requirements. Product availability
-                  and eligible combinations depend on your approved configuration.
-                </p>
-                <dl class="finance-products">
-                  <div>
-                    <dt>PCP · Personal Contract Purchase</dt>
-                    <dd>Instalments, guaranteed future value and optional final payment.</dd>
-                  </div>
-                  <div>
-                    <dt>HP · Hire Purchase</dt>
-                    <dd>Amount financed, instalments, applicable fees and total payable.</dd>
-                  </div>
-                  <div>
-                    <dt>LP · Lease Purchase</dt>
-                    <dd>Instalments, balloon payment and financial reconciliation.</dd>
-                  </div>
-                  <div>
-                    <dt>PCH · Personal Contract Hire</dt>
-                    <dd>Initial and regular rentals, mileage, maintenance and VAT.</dd>
-                  </div>
-                  <div>
-                    <dt>BCH · Business Contract Hire</dt>
-                    <dd>Rental net, VAT and gross values with approved business eligibility.</dd>
-                  </div>
-                  <div>
-                    <dt>PFL · Personal Finance Lease</dt>
-                    <dd>Approved rental structure, maintenance and applicable final rental.</dd>
-                  </div>
-                  <div>
-                    <dt>BFL · Business Finance Lease</dt>
-                    <dd>Finance amount, rentals, residual or balloon and applicable VAT.</dd>
-                  </div>
-                </dl>
-                <p>
-                  <strong>Review coverage:</strong> vehicle and product eligibility; deposit, term
-                  and mileage boundaries; effective-dated rates and campaigns; residual values;
-                  maintenance; fees; decimal precision; safe errors and audit evidence.
-                </p>
-                <p>
-                  <strong>Supply approved expectations:</strong> calculation examples, rounding
-                  rules, response mappings and permitted combinations. Product codes alone do not
-                  establish regulatory treatment. This reference does not add rules to your
-                  requirement.
-                </p>
-              </details>
+
 
               <form id="generate-form">
                 <label class="field-label" for="description"
@@ -1009,7 +1060,7 @@
             </div>
           </section>
 
-          <details class="runtime-disclosure">
+          <details data-quality-view="requirements" class="runtime-disclosure">
             <summary>
               <span
                 ><b>How this run is governed</b
@@ -1267,6 +1318,20 @@
               <summary>Assumptions and coverage intelligence</summary>
               <div id="notes"></div>
             </details>
+          </section>
+        </div>
+        <div data-workspace-page="/automation" hidden>
+          <section class="stage-panel" id="automation-workspace" aria-labelledby="automation-title">
+            <div class="panel-head"><div><span class="section-kicker">Executable coverage</span><h2 id="automation-title">Automation packs</h2></div></div>
+            <p id="automation-workspace-status" role="status">Create test cases to build, inspect and download automation files.</p>
+            <div class="tools" id="automation-workspace-actions">
+              <a class="button secondary" href="/?view=test-cases">Review test cases →</a>
+              <button class="secondary" type="button" data-suite-action="view-feature" disabled>View feature</button>
+              <button class="secondary" type="button" data-suite-action="generate-step-definitions" disabled>Generate bindings</button>
+              <button class="secondary" type="button" data-suite-action="view-csharp-pack" disabled>View automation pack</button>
+              <button class="secondary" type="button" data-suite-action="download-csharp-pack" disabled>Download automation pack</button>
+              <button class="primary" type="button" data-suite-action="open-script-pack" disabled>Build test scripts</button>
+            </div>
           </section>
         </div>
         <div data-workspace-page="/project-dashboard" hidden>
@@ -1599,7 +1664,7 @@
             </dialog>
           </section>
         </div>
-        <div data-workspace-page="/quality-lifecycle" hidden>
+        <div data-workspace-page="/usage" hidden>
           <section class="panel usage-dashboard" id="usage-dashboard" aria-labelledby="usage-title">
             <div class="usage-heading">
               <div>
@@ -1686,6 +1751,8 @@
               </details>
             </div>
           </section>
+        </div>
+        <div data-workspace-page="/quality-lifecycle" hidden>
           <section
             class="panel agent-workspace workspace-page-panel"
             id="agent-workspace"
@@ -2023,13 +2090,13 @@
       </section>
     </dialog>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/navigation.js?v=20260927-mobile-drawer" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261009-execution-separation" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261009-automation-alignment" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20260923-guest-expiry-warnings" defer></script>
-    <script src="/static/scripts/index.js?v=20261001-validation" defer></script>
+    <script src="/static/scripts/index.js?v=20261009-finance-domain" defer></script>
     <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
-    <script src="/static/scripts/usage-dashboard.js?v=20260919" defer></script>
+    <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/execution-logs.js?v=20260927-privacy" defer></script>
@@ -2037,8 +2104,9 @@
     <script src="/static/scripts/suite-files.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
-    <script src="/static/scripts/workflow.js?v=20260927-output-panels" defer></script>
-    <script src="/static/scripts/finance-explorer.js?v=20260921" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261009-execution-separation" defer></script>
+    <script src="/static/scripts/finance-explorer.js?v=20261009-home-hero" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261001-project" defer></script>
+    <script src="/static/scripts/finance-selection.js?v=20261009" defer></script>
   </body>
 </html>

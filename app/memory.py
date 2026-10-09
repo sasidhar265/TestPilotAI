@@ -44,6 +44,16 @@ class OrganizationalMemory:
 
             normalized["feature_standards"] = standards("feature")
             normalized["agent_policy"] = policy_fingerprint()
+        if (
+            request.finance_product_id
+            or request.finance_journey_ids
+            or request.finance_calculation is not None
+        ):
+            normalized["finance_scope"] = {
+                "product": request.finance_product_id,
+                "journeys": sorted(request.finance_journey_ids),
+                "grounded_context": request.additional_context,
+            }
         value = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 

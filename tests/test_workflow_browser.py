@@ -36,8 +36,12 @@ def test_five_stage_workflow_and_source_invalidation(mode):
 
     def route(r):
         path = urlparse(r.request.url).path
-        if path == "/" or path.startswith("/static/"):
-            file = static / ("index.html" if path == "/" else path.removeprefix("/static/"))
+        if path in {"/", "/products", "/progress"} or path.startswith("/static/"):
+            file = static / (
+                "index.html"
+                if path in {"/", "/products", "/progress"}
+                else path.removeprefix("/static/")
+            )
             r.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
             return
         result = {"ok": True, "events": [], "complete": True, "models": []}
@@ -176,10 +180,10 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             "aria-pressed", "true"
         )
         pw.expect(page.locator("#description")).to_have_value("")
+        page.get_by_role("link", name="Requirements", exact=True).click()
         page.locator("#finance-start").click()
         pw.expect(page.locator("#description")).to_be_focused()
-        page.locator('[data-finance-product="PCP"]').click()
-        pw.expect(page.get_by_role("tab")).to_have_count(0)
+        pw.expect(page.get_by_role("tab")).to_have_count(6)
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         page.screenshot(path="/tmp/workflow-input.png", full_page=True)
         pw.expect(
@@ -274,17 +278,15 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.locator("#stage-panel-2")).to_be_visible()
         if mode == "automation":
             pw.expect(page.locator("#description")).to_have_value("")
-            pw.expect(page.locator("#file-preview")).to_be_visible()
+            pw.expect(page.locator("#file-preview")).to_be_hidden()
             pw.expect(page.locator("#file-name")).to_have_text("Requirements.pdf")
             pw.expect(page.locator("#file-type")).to_have_text("PDF")
             pw.expect(page.locator("#character-count")).to_have_text("0 characters")
         else:
             pw.expect(page.locator("#description")).to_have_value(handoff["request"]["description"])
-        pw.expect(page.get_by_role("tab")).to_have_count(5)
-        assert page.locator(".stage-tabs").bounding_box()["y"] >= (
-            page.locator(".studio-layout").bounding_box()["y"]
-            + page.locator(".studio-layout").bounding_box()["height"]
-        )
+        pw.expect(page.get_by_role("tab")).to_have_count(6)
+        pw.expect(page.locator(".studio-layout")).to_be_hidden()
+        pw.expect(page.locator("h1")).to_have_text("Stories")
         page.locator("#stage-tab-1").focus()
         page.keyboard.press("ArrowRight")
         pw.expect(page.locator("#stage-tab-2")).to_be_focused()
@@ -412,7 +414,6 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         stage_popup("#stage-cases", "/api/workflow/test-cases", "Generating test cases")
         pw.expect(page.locator("#results")).to_be_visible()
         for control in (
-            "automation-language",
             "suite-view-menu",
             "accepted-by",
             "accept-selected",
@@ -437,17 +438,19 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 "#review-cases", "/api/workflow/execution-plan", "Preparing the execution plan"
             )
             pw.expect(page.locator("#stage-execution-list")).to_contain_text("generated.feature")
-            page.locator("#stage-tab-4").click()
+            page.locator('.primary-nav a[href="/?view=test-cases"]').click()
             stage_popup(
-                "#stage-tab-5",
+                '.primary-nav a[href="/?view=execution"]',
                 "/api/workflow/execution-plan",
                 "Preparing the execution plan",
                 fail=True,
             )
             pw.expect(page.locator("#stage-run")).to_be_disabled()
-            page.locator("#stage-tab-4").click()
+            page.locator('.primary-nav a[href="/?view=test-cases"]').click()
             stage_popup(
-                "#stage-tab-5", "/api/workflow/execution-plan", "Preparing the execution plan"
+                '.primary-nav a[href="/?view=execution"]',
+                "/api/workflow/execution-plan",
+                "Preparing the execution plan",
             )
             pw.expect(page.locator("#stage-run")).to_be_enabled()
             stage_popup(
@@ -472,7 +475,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             pw.expect(page.locator("#stage-status")).to_contain_text(
                 "Manual results saved: 1 passed"
             )
-        page.locator("#stage-tab-2").click()
+        page.locator('.primary-nav a[href="/?view=stories"]').click()
         page.screenshot(path="/tmp/workflow-desktop.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -494,7 +497,8 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(first_story.get_by_role("dialog")).not_to_be_visible()
         pw.expect(first_story.locator(".story-open-edit")).to_be_focused()
         pw.expect(first_story.locator("h3")).to_have_text("Review the supplied requirements")
-        page.locator("#stage-tab-1").click()
+        page.locator("#sidebar-toggle").click()
+        page.locator('.primary-nav a[href="/"]').click()
         page.locator("#description").fill("Changed requirement: read a different BRD document")
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         pw.expect(page.locator("#generate")).to_be_visible()

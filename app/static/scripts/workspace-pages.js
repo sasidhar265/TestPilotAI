@@ -1,57 +1,90 @@
-/* Keep the active suite and ongoing work alive across workspace pages. */
+/* Switch focused views without replacing the shared workflow or its drafts. */
 (() => {
   const titles = {
     "/project-dashboard": "Project dashboard",
-    "/": "Build confidence in every vehicle finance quote.",
+    "/": "Requirements",
     "/progress": "Progress & execution",
     "/quality-lifecycle": "Quality Lifecycle",
+    "/products": "Products",
+    "/usage": "Usage",
   };
+  const views = { requirements: "Requirements", stories: "Stories", scenarios: "Scenarios", "test-cases": "Test cases", execution: "Execution", automation: "Automation packs" };
+  const stageNavigation = document.createElement("section");
+  stageNavigation.className = "workflow-navigation";
+  stageNavigation.setAttribute("aria-label", "Quality workflow navigation");
+  stageNavigation.append(document.querySelector(".stage-navigation-heading"), document.querySelector(".stage-tabs"));
   function showPage(focus = false) {
-    if (document.body.dataset.guest === "true" && location.pathname !== "/") {
-      history.replaceState(null, "", "/");
-    }
+    if (document.body.dataset.guest === "true" && location.pathname !== "/") history.replaceState(null, "", "/");
     const path = location.pathname;
-    document.querySelectorAll("[data-workspace-page]").forEach((page) => {
-      page.hidden = page.dataset.workspacePage !== path;
+    const requested = new URLSearchParams(location.search).get("view") || "requirements";
+    const view = path === "/products" ? "products" : (requested in views ? requested : "requirements");
+    document.body.dataset.qualityView = view;
+    const pagePath = path === "/products" ? "/" : path === "/" && view === "automation" ? "/automation" : path;
+    document.querySelectorAll("[data-workspace-page]").forEach((page) => { page.hidden = page.dataset.workspacePage !== pagePath; });
+    const navigationHost = document.querySelector(`[data-workspace-page="${pagePath}"]`);
+    stageNavigation.hidden = path !== "/";
+    if (navigationHost) {
+      const hero = navigationHost.querySelector(".finance-hero");
+      if (path === "/" && view === "requirements" && hero) hero.after(stageNavigation);
+      else navigationHost.prepend(stageNavigation);
+    }
+    document.querySelectorAll("[data-quality-view]").forEach((section) => {
+      if (section !== document.body) section.hidden = section.dataset.qualityView !== view;
     });
     document.querySelectorAll(".primary-nav a").forEach((link) => {
-      const active = link.pathname === path;
+      const active = link.pathname === path && (path !== "/" || (new URL(link.href).searchParams.get("view") || "requirements") === view);
       link.classList.toggle("active", active);
       if (active) link.setAttribute("aria-current", "page");
       else link.removeAttribute("aria-current");
     });
+    document.querySelectorAll(".nav-parent").forEach((parent) => {
+      const children = document.getElementById(parent.getAttribute("aria-controls"));
+      const active = Boolean(children.querySelector('[aria-current="page"]'));
+      parent.classList.toggle("active", active);
+      if (active) { children.hidden = false; parent.setAttribute("aria-expanded", "true"); }
+    });
+    const title = path === "/" ? views[view] : titles[path];
     const heading = document.querySelector(".topbar h1");
-    heading.textContent = titles[path];
-    document.title = `${titles[path]} — Auto Finance Quality`;
-    document.querySelector(".topbar .eyebrow").textContent =
-      path === "/" ? "Automobile finance · Quality workspace" : "Workspace / " + titles[path];
-    window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path } }));
-    if (focus) {
-      heading.tabIndex = -1;
-      heading.focus();
-      window.scrollTo(0, 0);
-    }
+    heading.textContent = title;
+    document.title = `${title} — Auto Finance Quality`;
+    document.querySelector(".topbar .eyebrow").textContent = path === "/" ? `Quality workspace / ${title}` : `${path === "/products" ? "Auto finance" : "Workspace"} / ${title}`;
+    window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path, view } }));
+    if (focus) { heading.tabIndex = -1; heading.focus(); window.scrollTo(0, 0); }
   }
+  window.navigateWorkspace = (url, focus = true) => {
+    if (location.pathname + location.search !== url) history.pushState(null, "", url);
+    showPage(focus);
+  };
   document.addEventListener("click", (event) => {
     const link = event.target.closest("a");
-    if (
-      !link ||
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      link.target ||
-      link.origin !== location.origin ||
-      !(link.pathname in titles) ||
-      link.hash
-    )
-      return;
+    if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target || link.origin !== location.origin || !(link.pathname in titles) || link.hash) return;
     event.preventDefault();
-    history.pushState(null, "", link.pathname);
-    showPage(true);
+    window.navigateWorkspace(link.pathname + link.search);
   });
   window.addEventListener("popstate", () => showPage(true));
+  document.querySelector(".topbar .top-actions").prepend(document.getElementById("stop-generation"));
+  const automation = document.getElementById("automation-workspace");
+  ["feature-file-view", "step-definitions"].forEach((id) => automation.append(document.getElementById(id)));
+  document.getElementById("automation-workspace-actions").prepend(document.querySelector(".automation-language-control"));
+  const syncAutomation = () => {
+    const available = !document.getElementById("results").classList.contains("hidden");
+    document.getElementById("automation-workspace-status").textContent = available ? `Active suite: ${document.getElementById("feature").textContent}. Review the selected test cases before building or downloading scripts.` : "Create test cases to build, inspect and download automation files.";
+    document.querySelectorAll("[data-suite-action]").forEach((button) => {
+      const original = document.getElementById(button.dataset.suiteAction);
+      button.disabled = !available || original.disabled || original.getAttribute("aria-disabled") === "true";
+    });
+  };
+  document.querySelectorAll("[data-suite-action]").forEach((button) => {
+    button.addEventListener("click", () => document.getElementById(button.dataset.suiteAction).click());
+  });
+  ["view-feature", "generate-step-definitions", "view-csharp-pack"].forEach((id) => {
+    document.getElementById(id).addEventListener("click", () => {
+      if (document.body.dataset.qualityView !== "automation") window.navigateWorkspace("/?view=automation", false);
+    }, { capture: true });
+  });
+  const observer = new MutationObserver(syncAutomation);
+  observer.observe(document.getElementById("results"), { attributes: true, subtree: true, attributeFilter: ["disabled", "aria-disabled", "class"] });
+  window.addEventListener("workspace-suite-rendered", syncAutomation);
+  syncAutomation();
   showPage();
 })();

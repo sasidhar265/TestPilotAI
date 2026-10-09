@@ -88,7 +88,7 @@ async def inspect_model_access(settings: Settings, requested_model: str) -> dict
 
 
 async def available_model_options(settings: Settings) -> list[dict[str, Any]]:
-    """Only expose allowlisted routes whose account access checks pass."""
+    """List usable routes and authenticated Copilot Auto with unverified access."""
 
     async def copilot_options() -> list[dict[str, Any]]:
         try:
@@ -104,8 +104,11 @@ async def available_model_options(settings: Settings) -> list[dict[str, Any]]:
         inspect_model_access(settings, "codex"),
     )
     ready = [result for result in [openai, gemini, codex, *copilot] if result["can_use"]]
+    visible = [
+        result for result in copilot if result.get("visible_in_ui") and not result["can_use"]
+    ]
     if not ready:
-        return []
+        return visible
     automatic = _access_result(
         "auto-fallback",
         "Automatic · available providers",
@@ -113,7 +116,7 @@ async def available_model_options(settings: Settings) -> list[dict[str, Any]]:
         "available",
         "Uses the available provider routes with automatic fallback.",
     )
-    return [automatic, *ready]
+    return [automatic, *ready, *visible]
 
 
 def failure_reason(settings: Settings, error: Exception) -> str:
@@ -258,6 +261,10 @@ async def _inspect_copilot(settings: Settings, requested_model: str) -> dict[str
             "Copilot requires claude-haiku-4.5 by application policy.",
         )
     inventory = await _inspect_copilot_inventory(settings)
+    if requested_model == "auto":
+        auto = next((item for item in inventory if item["model"] == "auto"), None)
+        if auto is not None:
+            return auto
     selected = next(item for item in inventory if item["model"] == COPILOT_MODEL)
     return {**selected, "model": requested_model}
 
@@ -279,11 +286,25 @@ async def _inspect_copilot_inventory(settings: Settings) -> list[dict[str, Any]]
         quota_result = await client.rpc.account.get_quota(
             AccountGetQuotaRequest(git_hub_token=settings.copilot_github_token or None)
         )
+        auto_only = bool(models) and all(model.id == "auto" for model in models)
+        authenticated = (await client.get_auth_status()).isAuthenticated if auto_only else False
 
-    return [
+    inventory = [
         _copilot_access_result(models, quota_result, model)
         for model in ("organization-default", COPILOT_MODEL)
     ]
+    if auto_only and authenticated:
+        option = _access_result(
+            "auto",
+            "GitHub Copilot · Auto",
+            False,
+            "unverified",
+            "Signed in. Copilot reports only Auto; access to the required Claude Haiku 4.5 "
+            "model is unverified. Generation remains blocked until that access is confirmed.",
+        )
+        option["visible_in_ui"] = True
+        inventory.append(option)
+    return inventory
 
 
 def _copilot_access_result(models: Any, quota_result: Any, requested_model: str) -> dict[str, Any]:

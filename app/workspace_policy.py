@@ -79,6 +79,18 @@ def save_business_rules(rules: list[BusinessRule]) -> None:
 
 
 def apply_rules(request: GenerateRequest) -> GenerateRequest:
+    if (
+        request.finance_product_id
+        or request.finance_journey_ids
+        or request.finance_calculation is not None
+    ):
+        from app.config import get_settings
+        from app.finance_domain import ground_request, load_domain_pack
+
+        settings = get_settings()
+        if not settings.auto_finance_domain_enabled:
+            raise ValueError("Auto-finance domain pack is disabled")
+        request = ground_request(request, load_domain_pack(settings.auto_finance_domain_path))
     rules = {rule.id: rule for rule in load_business_rules()}
     # Existing API clients may still supply request-specific rules. Never override shared rules.
     for rule in request.business_rules:

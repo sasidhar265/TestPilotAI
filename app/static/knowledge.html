@@ -7,15 +7,17 @@
     <title>Auto Finance Quality — Knowledge source</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/knowledge.css?v=20260917" />
+    <link rel="stylesheet" href="/static/styles/knowledge-graph.css?v=20261009-finance-graph" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260927-mobile-drawer" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
   </head>
   <body class="explore-page">
     <div class="docs-shell">
@@ -45,15 +47,24 @@
             <a class="nav-item" href="/project-dashboard"
               ><span class="nav-icon">▥</span><span>Project dashboard</span></a
             >
-            <a class="nav-item" href="/"
-              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="quality-navigation" hidden>
+                <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
+                <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/progress"
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
               ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
             >
+            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -61,9 +72,21 @@
             <a class="nav-item" href="/documentation"
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
-            <a class="nav-item active" aria-current="page" href="/knowledge"
-              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="knowledge-navigation"><span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="knowledge-navigation" hidden>
+                <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
+                <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
+              </div>
+            </div>
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="finance-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="finance-navigation" hidden>
+                <a class="nav-item" href="/products"><span>Products</span></a>
+                <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"><span>Calculation validators</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/logs"
               ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
             >
@@ -144,7 +167,7 @@
             </div>
           </div>
         </header>
-        <section class="explore-banner" aria-labelledby="explore-banner-title">
+        <section data-knowledge-view="saved" class="explore-banner" aria-labelledby="explore-banner-title">
           <div>
             <span class="explore-kicker">KNOWLEDGE LIBRARY</span>
             <h2 id="explore-banner-title">Turn reviewed work into reusable knowledge.</h2>
@@ -154,12 +177,145 @@
             </p>
             <nav class="explore-banner-actions" aria-label="Page shortcuts">
               <a href="#suites-title">Browse suites ↗</a
-              ><a href="#outputs-title">Explore artifacts ↓</a>
+              ><a href="/knowledge?view=graph">Explore knowledge graph ↗</a>
+
+              <a href="#outputs-title">Explore artifacts ↓</a>
             </nav>
           </div>
           <span class="explore-banner-symbol" aria-hidden="true">◈</span>
         </section>
-        <section class="knowledge-card" aria-labelledby="reuse-title">
+        <section data-knowledge-view="graph" class="knowledge-card graph-card" aria-labelledby="graph-title">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Connected evidence</span>
+              <h2 id="graph-title">Business model knowledge graph</h2>
+            </div>
+            <button class="secondary" id="graph-refresh" type="button">Refresh graph</button>
+          </div>
+          <p class="section-copy">
+            Follow requirement versions through reviewed baselines, test cases, execution results
+            and defects. Select a node to inspect its direct relationships.
+          </p>
+          <div class="graph-controls">
+            <label
+              >Source<select id="graph-source">
+                <option value="live">Live records</option>
+                <option value="example">Example graph</option>
+              </select></label
+            >
+            <label
+              >Project<select id="graph-project">
+                <option value="">All projects</option>
+              </select></label
+            >
+            <label
+              >Focus on<select id="graph-kind">
+                <option value="">All node types</option>
+              </select></label
+            >
+            <label class="graph-search"
+              >Search<input
+                id="graph-search"
+                type="search"
+                placeholder="Requirement, test, result…"
+            /></label>
+          </div>
+          <p id="graph-status" class="graph-notice" role="status" aria-live="polite">
+            Loading lifecycle records…
+          </p>
+          <div id="graph-legend" class="graph-legend" aria-label="Node types"></div>
+          <div class="graph-tabs" role="tablist" aria-label="Knowledge graph view">
+            <button
+              id="graph-tab"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="graph-panel"
+              tabindex="0"
+            >
+              Graph
+            </button>
+            <button
+              id="tree-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="graph-panel"
+              tabindex="-1"
+            >
+              Tree graph
+            </button>
+            <span id="graph-live-state" role="status">Live view · refreshes every 30 seconds</span>
+          </div>
+          <div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab">
+            <div class="graph-workspace" id="graph-workspace">
+              <div class="graph-view">
+                <div class="graph-toolbar">
+                  <span id="graph-counts"></span>
+                  <div>
+                    <button
+                      type="button"
+                      id="graph-zoom-out"
+                      class="secondary"
+                      aria-label="Zoom out"
+                    >
+                      −</button
+                    ><span id="graph-zoom-level">100%</span
+                    ><button
+                      type="button"
+                      id="graph-zoom-in"
+                      class="secondary"
+                      aria-label="Zoom in"
+                    >
+                      +</button
+                    ><button type="button" id="graph-fit" class="secondary">Fit</button>
+                    <button type="button" id="graph-reset" class="secondary">Reset layout</button>
+                    <button type="button" id="graph-expand" class="secondary" aria-pressed="false">
+                      Expand
+                    </button>
+                  </div>
+                </div>
+                <div
+                  class="graph-canvas"
+                  id="graph-canvas"
+                  aria-label="Interactive knowledge graph"
+                >
+                  <svg
+                    id="knowledge-graph"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-label="Lifecycle relationships"
+                  ></svg>
+                  <p id="graph-empty" hidden></p>
+                </div>
+                <p class="graph-help" id="graph-help">
+                  Search shows matches and their immediate connections. Use Tab and Enter to select
+                  nodes. Zoom in and scroll to explore larger graphs.
+                </p>
+              </div>
+              <aside class="graph-inspector" aria-labelledby="graph-detail-title">
+                <span class="section-kicker">Node details</span>
+                <h3 id="graph-detail-title">Select a node</h3>
+                <p id="graph-detail-description">
+                  Select any node to see its stored information and relationships.
+                </p>
+                <dl id="graph-detail-fields"></dl>
+                <ul id="graph-detail-links"></ul>
+              </aside>
+            </div>
+          </div>
+          <details class="graph-markdown">
+            <summary>Markdown diagram</summary>
+            <p>Mermaid Markdown for the current view and filters.</p>
+            <button id="graph-download" type="button" class="secondary">Download Markdown</button>
+            <pre><code id="graph-markdown-source"></code></pre>
+          </details>
+          <p class="section-copy graph-record-link">
+            Live records come from versioned lifecycle data.
+            <a href="/quality-lifecycle">Manage requirements and execution →</a>
+            · <a id="graph-log-link" href="/logs">View detailed runtime logs →</a>
+          </p>
+        </section>
+        <section data-knowledge-view="saved" class="knowledge-card" aria-labelledby="reuse-title">
           <div class="section-heading">
             <div>
               <span class="section-kicker">Knowledge reuse</span>
@@ -181,7 +337,78 @@
             column counts matching suite lookups. Saved entries are revalidated before reuse.
           </p>
         </section>
-        <section class="knowledge-summary" aria-label="Knowledge summary">
+        <section data-knowledge-view="domain" class="knowledge-card finance-tools" aria-labelledby="finance-tools-title">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Auto-finance domain</span>
+              <h2 id="finance-tools-title">Domain pack</h2>
+            </div>
+          </div>
+          <p id="finance-pack-status" class="section-copy">
+            Loading configured products, journeys and rules…
+          </p>
+          <div class="finance-reference-grid">
+            <div>
+              <h3>Products</h3>
+              <ul id="finance-products"></ul>
+            </div>
+            <div>
+              <h3>Journeys</h3>
+              <ul id="finance-journeys"></ul>
+            </div>
+          </div>
+          <details class="finance-rule-view">
+            <summary>Business rules and traceability configuration</summary>
+            <div id="finance-rules"></div>
+            <p class="section-copy">
+              Configure rules with their exact wording, owner, source, approval status and version
+              in workspace/auto-finance-domain.toml. Map project and requirement versions explicitly
+              to products, journeys and rule IDs. Reference catalogue entries do not establish
+              approval or test coverage.
+            </p>
+          </details>
+          </section>
+        <section data-knowledge-view="calculations" class="knowledge-card finance-tools">
+          <div class="finance-calculator">
+            <h2>Calculation validators</h2>
+            <p class="section-copy">
+              Check supplied values under explicit arithmetic conventions. Use an approved product
+              pricing engine for APR, irregular cashflows, flat-rate lending and early settlement.
+            </p>
+            <form id="finance-calc-form">
+              <label
+                >Calculation<select id="finance-calc-kind">
+                  <option value="annuity">Monthly instalments with optional balloon</option>
+                  <option value="principal">Amount financed</option>
+                  <option value="vat">Net / VAT / gross reconciliation</option>
+                </select></label
+              >
+              <div id="finance-calc-inputs" class="finance-input-grid"></div>
+              <label
+                >Observed value to check (optional)<input
+                  id="finance-observed"
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="Enter the value from your system"
+              /></label>
+              <p id="finance-observed-help" class="section-copy"></p>
+              <button class="primary" id="finance-calculate" type="submit">
+                Calculate &amp; validate
+              </button>
+            </form>
+            <p id="finance-calc-status" role="status" aria-live="polite"></p>
+            <div id="finance-calc-result" hidden>
+              <button class="secondary" id="finance-use-calculation" type="button">
+                Use calculation in generation →
+              </button>
+              <p id="finance-calc-convention" class="section-copy"></p>
+              <dl id="finance-calc-values"></dl>
+              <ul id="finance-calc-checks"></ul>
+              <p id="finance-calc-scope" class="section-copy"></p>
+            </div>
+          </div>
+        </section>
+        <section data-knowledge-view="saved" class="knowledge-summary" aria-label="Knowledge summary">
           <article>
             <span>Validated test suites</span><strong id="suite-count">—</strong
             ><small>Exact-match suites in memory</small>
@@ -195,7 +422,7 @@
             ><small>Reusable approved scenarios</small>
           </article>
         </section>
-        <section class="knowledge-card" aria-labelledby="suites-title">
+        <section data-knowledge-view="saved" class="knowledge-card" aria-labelledby="suites-title">
           <div class="section-heading">
             <div>
               <span class="section-kicker">Organizational memory</span>
@@ -227,7 +454,7 @@
             </table>
           </div>
         </section>
-        <section class="knowledge-card" aria-labelledby="outputs-title">
+        <section data-knowledge-view="saved" class="knowledge-card" aria-labelledby="outputs-title">
           <div class="section-heading">
             <div>
               <span class="section-kicker">Approved artifacts</span>
@@ -260,7 +487,7 @@
         </section>
         <section
           class="knowledge-card detail-card"
-          id="knowledge-detail"
+          data-knowledge-view="saved" id="knowledge-detail"
           aria-labelledby="detail-title"
           hidden
         >
@@ -274,14 +501,18 @@
           <p class="section-copy" id="detail-summary"></p>
           <pre id="detail-content" class="knowledge-json"></pre>
         </section>
-        <p class="page-status" id="knowledge-status" role="status" aria-live="polite"></p>
+        <p data-knowledge-view="saved" class="page-status" id="knowledge-status" role="status" aria-live="polite"></p>
         <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </main>
     </div>
-    <script src="/static/scripts/navigation.js?v=20260927-mobile-drawer" defer></script>
+    <script src="/static/scripts/knowledge-view.js?v=20261009" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
     <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>
-    <script src="/static/scripts/knowledge.js?v=20260923-reuse" defer></script>
+    <script src="/static/scripts/knowledge.js?v=20261009-focused-views" defer></script>
+    <script src="/static/scripts/knowledge-graph-data.js?v=20261009-finance-graph" defer></script>
+    <script src="/static/scripts/knowledge-graph.js?v=20261009-focused-views" defer></script>
+    <script src="/static/scripts/finance-tools.js?v=20261009-focused-views" defer></script>
   </body>
 </html>

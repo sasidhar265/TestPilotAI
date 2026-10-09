@@ -202,3 +202,13 @@ dotnet test automation/QualityLifecycle.Automation.csproj --filter 'FullyQualifi
 ```
 
 These tests do not call AI providers and do not validate generated quotation suites.
+
+## Auto-finance reference calculation APIs
+
+`Features/AutoFinance.feature` adds 12 live cases for the configured domain catalogue,
+zero/positive nominal interest, balloons, last-payment rounding, amount financed, supplied VAT,
+observed-value mismatches and invalid requests. Its typed HttpClientFactory service, request
+builder, model, bindings and `Input/FinanceCalculations.Json` use the shared structure.
+The input vectors are synthetic arithmetic cases, not quotations or approved pricing policy.
+The default project discovers them with the existing features; targeted runs may use
+`--filter FullyQualifiedName~AutoFinance`. See [domain tools](../docs/auto-finance-domain.md).

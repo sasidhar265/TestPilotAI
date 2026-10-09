@@ -1,6 +1,7 @@
 """Safe logging, request correlation, HTTP controls, and generation cancellation."""
 
 import asyncio
+import atexit
 import contextvars
 import hmac
 import json
@@ -12,7 +13,7 @@ from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from http.cookies import SimpleCookie
-from logging.handlers import QueueHandler, QueueListener
+from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
 from queue import Full, Queue
 from threading import Lock
 from types import TracebackType
@@ -62,11 +63,15 @@ class InMemoryLogHandler(logging.Handler):
         self._lock = Lock()
 
     def emit(self, record: logging.LogRecord) -> None:
+        if getattr(record, "log_file_only", False):
+            return
         exception = ""
         if record.exc_info and record.exc_info[2]:
             exception = format_safe_exception(record.exc_info[0], record.exc_info[2])
         entry = LogEntry(
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.fromtimestamp(record.created, UTC).isoformat(
+                timespec="milliseconds"
+            ),
             level=record.levelname,
             logger=record.name,
             message=record.getMessage(),
@@ -84,6 +89,10 @@ class InMemoryLogHandler(logging.Handler):
             entries = [entry for entry in entries if entry.request_id == request_id]
         return [asdict(entry) for entry in reversed(entries[-limit:])]
 
+    def resize(self, capacity: int) -> None:
+        with self._lock:
+            self._entries = deque(self._entries, maxlen=capacity)
+
 
 ui_log_handler = InMemoryLogHandler()
 
@@ -93,7 +102,9 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(
+                timespec="milliseconds"
+            ),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -127,10 +138,36 @@ class NonBlockingConsoleHandler(QueueHandler):
 
 
 _console_handler: NonBlockingConsoleHandler | None = None
+_file_handler: NonBlockingConsoleHandler | None = None
+_detailed_logging_enabled = True
 
 
-def configure_logging(level: str = "INFO", json_logs: bool = True) -> None:
-    global _console_handler
+def configure_file_logging(settings: Settings) -> NonBlockingConsoleHandler | None:
+    """Write the same safe structured events to bounded rotating JSONL files."""
+    if settings.log_file_path is None:
+        return None
+    path = settings.log_file_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    output = RotatingFileHandler(
+        path,
+        maxBytes=settings.log_file_max_bytes,
+        backupCount=settings.log_file_backup_count,
+        encoding="utf-8",
+    )
+    queue: Queue[logging.LogRecord] = Queue(maxsize=10000)
+    handler = NonBlockingConsoleHandler(queue)
+    handler.setFormatter(JsonFormatter())
+    listener = QueueListener(queue, output)
+    listener.start()
+    handler.listener = listener
+    atexit.register(listener.stop)
+    return handler
+
+
+def configure_logging(
+    level: str = "INFO", json_logs: bool = True, *, settings: Settings | None = None
+) -> None:
+    global _console_handler, _file_handler, _detailed_logging_enabled
     if _console_handler is None:
         console = logging.StreamHandler()
         queue: Queue[logging.LogRecord] = Queue(maxsize=1000)
@@ -147,6 +184,13 @@ def configure_logging(level: str = "INFO", json_logs: bool = True) -> None:
     root.handlers.clear()
     root.addHandler(ui_log_handler)
     root.addHandler(_console_handler)
+    if settings is not None:
+        _detailed_logging_enabled = settings.detailed_logs_enabled
+        ui_log_handler.resize(settings.log_ui_capacity)
+        if _file_handler is None:
+            _file_handler = configure_file_logging(settings)
+        if _file_handler is not None:
+            root.addHandler(_file_handler)
     root.setLevel(level.upper())
 
 
@@ -290,6 +334,15 @@ def publish_lifecycle_event(agent: str, action: str, status: str, summary: str) 
     request_id = request_id_context.get()
     if request_id != "-":
         lifecycle_events.publish(request_id, agent, action, status, summary)
+        if not _detailed_logging_enabled:
+            return
+        logger.info(
+            "agent_activity agent=%s action=%s status=%s",
+            agent,
+            action,
+            status,
+            extra={"event_details": {"agent": agent, "action": action, "status": status}},
+        )
 
 
 class OrganizationHttpMiddleware:
@@ -303,6 +356,15 @@ class OrganizationHttpMiddleware:
 
     @staticmethod
     async def _reject(send: Send, status: int, detail: str, request_id: str) -> None:
+        logger.warning(
+            "request_rejected status=%s reason=%s",
+            status,
+            detail,
+            extra={
+                "request_id_override": request_id,
+                "event_details": {"status": str(status), "reason": detail},
+            },
+        )
         body = json.dumps({"detail": detail}, separators=(",", ":")).encode()
         await send(
             {
@@ -373,9 +435,24 @@ class OrganizationHttpMiddleware:
         request_id = supplied if _SAFE_REQUEST_ID.fullmatch(supplied) else str(uuid4())
         token = request_id_context.set(request_id)
         started = time.perf_counter()
+        started_at = datetime.now(UTC).isoformat(timespec="milliseconds")
         status_code = 500
         slot_acquired = False
         generation_slot_acquired = False
+        if self.settings.detailed_logs_enabled and str(scope.get("path", "")).startswith("/api/"):
+            logger.info(
+                "request_started method=%s path=%s",
+                scope.get("method"),
+                scope.get("path"),
+                extra={
+                    "log_file_only": True,
+                    "event_details": {
+                        "method": str(scope.get("method", "")),
+                        "path": str(scope.get("path", "")),
+                        "state": "started",
+                    },
+                },
+            )
 
         content_length = headers.get(b"content-length", b"0")
         try:
@@ -528,6 +605,16 @@ class OrganizationHttpMiddleware:
                 scope.get("path"),
                 status_code,
                 duration_ms,
+                extra={
+                    "event_details": {
+                        "method": str(scope.get("method", "")),
+                        "path": str(scope.get("path", "")),
+                        "status": str(status_code),
+                        "duration_ms": str(duration_ms),
+                        "started_at": started_at,
+                        "received_bytes": str(received_bytes),
+                    }
+                },
             )
             if slot_acquired:
                 self._request_slots.release()

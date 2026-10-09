@@ -1,9 +1,51 @@
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import httpx
 import pytest
 from pydantic import SecretStr
 
 from app.config import Settings
 from app.services import model_access
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("authenticated", [True, False])
+async def test_auto_only_inventory_is_visible_only_after_login(monkeypatch, authenticated):
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.list_models.return_value = [SimpleNamespace(id="auto", policy=None)]
+    client.rpc.account.get_quota.return_value = SimpleNamespace(quota_snapshots={})
+    client.get_auth_status.return_value = SimpleNamespace(isAuthenticated=authenticated)
+    monkeypatch.setattr("copilot.CopilotClient", lambda **kwargs: client)
+
+    async def unavailable(settings, model):
+        return model_access._access_result(model, model, False, "unavailable", "Unavailable")
+
+    monkeypatch.setattr(model_access, "inspect_model_access", unavailable)
+    options = await model_access.available_model_options(Settings(_env_file=None))
+    assert [item["model"] for item in options] == (["auto"] if authenticated else [])
+    if authenticated:
+        assert options[0]["display_name"] == "GitHub Copilot · Auto"
+        assert options[0]["visible_in_ui"]
+        assert not options[0]["can_use"]
+        assert options[0]["policy"] == "unverified"
+
+
+@pytest.mark.asyncio
+async def test_auto_access_status_preserves_unverified_generation_block(monkeypatch):
+    option = model_access._access_result(
+        "auto", "GitHub Copilot · Auto", False, "unverified", "Signed in"
+    )
+    option["visible_in_ui"] = True
+
+    async def inventory(settings):
+        return [option]
+
+    monkeypatch.setattr(model_access, "_inspect_copilot_inventory", inventory)
+    result = await model_access.inspect_model_access(Settings(_env_file=None), "auto")
+    assert result["visible_in_ui"]
+    assert not result["can_use"]
 
 
 @pytest.mark.asyncio

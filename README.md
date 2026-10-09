@@ -883,6 +883,79 @@ credential keys, unknown options and malformed TOML are rejected. Select another
 Restart the application after editing configuration because server Settings are cached.
 The C# BDD runner retains its environment/User Secrets configuration.
 
+## Auto-finance domain tools
+
+Select a configured product and journey in the Quality workspace to ground generation in
+reference templates and owner-approved rules. **Knowledge source → Domain pack & calculation
+validation** provides Decimal validators for amount financed, monthly annuities/balloons and
+net/VAT/gross reconciliation. The graph adds products, journeys and versioned business rules
+with explicit links to requirements and test evidence.
+
+Configure the pack in `workspace/auto-finance-domain.toml`; runtime flags stay in
+`workspace/runtime-config.toml`. No organisational-memory migration or enabling is included.
+The starter catalogue is reference-only, with no approved domain rules or inferred regulatory
+limits. See [configuration, calculation conventions and live API checks](docs/auto-finance-domain.md).
+
+## Detailed runtime logs
+
+Open **Runtime logs** (`/logs`) to see one high-level record per reference ID, showing the
+operation, outcome, latest timestamp, duration and event count. Expand a row to see its
+chronological event timeline, structured fields, raw entries and safe exception call locations.
+**View options → Expand records** opens every loaded record; records start collapsed. Search and severity
+filters apply to records and downloads retain all loaded events for the matching records. Entries include millisecond timestamps, severity,
+logger and correlation ID. **View options** contains UTC/local time, the log window and the
+live-update switch. Use the single search box to filter messages and fields or submit an exact
+reference ID; clearing it returns to recent records. Filter severity, use **Refresh**, or select
+**Export** to download the currently filtered entries as JSONL. Live refresh runs
+every five seconds while the page is visible. The graph links to the logs for its latest
+snapshot request.
+
+Logging records HTTP starts, completions, rejection reasons, response status, duration,
+received byte count and agent-stage transitions alongside existing application events. It
+does not capture request bodies, credentials, model prompts or exception messages. The
+logging level still controls which events are emitted.
+
+Configure retention in `workspace/runtime-config.toml` and restart the server:
+`detailed_logs_enabled` controls extra request-start and agent-stage records;
+`log_file_path`, `log_file_max_bytes` and `log_file_backup_count` control rotating JSONL files;
+`log_ui_capacity` controls the in-process ring buffer. Defaults retain five 10 MiB backups
+plus the active `.agent-memory/logs/application.jsonl` file and 5,000 in-process entries.
+File writing uses a bounded background queue. In extreme queue saturation, file/console
+records may be dropped while the in-process ring continues receiving entries.
+
+The viewer loads up to 200 recent entries per request; it does not browse disk archives.
+In-process history clears on restart; rotating files persist and are excluded from Git.
+
+## Knowledge graph
+
+Open **Knowledge source → Knowledge graph** (`/knowledge#graph-title`) to explore stored
+requirement versions, baselines, suites, test cases, execution cycles, results and defects.
+Connections use explicit lifecycle references and approved suite mappings; test IDs are scoped
+to their suite and coverage points to the requirement version in its baseline. This view reads
+the existing authenticated `/api/stlc` snapshot without introducing a separate graph database.
+
+Use **Graph** for all relationships or **Tree graph** for a hierarchy that shows each record once.
+The network view uses a circular layout with labelled directional connections. Drag nodes to
+rearrange them; connections follow their positions. Drag the background to pan, use the mouse
+wheel or buttons to zoom, and select **Expand** for a larger canvas. **Reset layout** restores
+the original arrangement. Selecting a node highlights its direct relationships; animated
+arrows respect reduced-motion preferences.
+
+Cross-links remain available in Graph and node details. Both views refresh live records every
+30 seconds while the page is visible. Expand **Markdown diagram** to view or download the
+current filtered view as Mermaid Markdown.
+
+Filter by project or node type, search for a record, zoom, and select a node to inspect its direct
+relationships. Search retains immediate connections for context. The canvas displays at most
+300 nodes at once; narrow the project or search to explore larger datasets. Keyboard users can
+select nodes with Tab and Enter. Stories and scenarios are not separate lifecycle records in
+this view. Saved lifecycle data remains available even when reusable organizational memory is
+disabled.
+
+An empty workspace initially displays a clearly labelled example graph. Example records are
+illustrative only and are never stored as requirements, approved tests or execution evidence.
+Select **Live records** to see the actual empty state, or create records in **Test management**.
+
 ## User guide
 
 Open **Explore → User guide** in the application sidebar, or visit `/static/user-guide.html`.
@@ -898,3 +971,7 @@ Guest access exposes a static workspace preview only. Execution history, reports
 and knowledge require authentication. Organisational memory is disabled by default; enabling it
 requires an externally managed encryption key. See [memory protection](docs/memory-protection.md)
 for retention, migration of existing plaintext stores, backups and deletion.
+
+Workspace navigation groups related tools under expandable parents. Knowledge contains [Saved knowledge](http://127.0.0.1:8000/knowledge) and [Knowledge graph](http://127.0.0.1:8000/knowledge?view=graph). Auto finance contains [Domain pack](http://127.0.0.1:8000/knowledge?view=domain) and [Calculation validators](http://127.0.0.1:8000/knowledge?view=calculations). Each child opens a focused view with its own heading, URL and active navigation state.
+
+Quality workspace has focused Requirements (`/`), Stories (`/?view=stories`), Scenarios (`/?view=scenarios`), Test cases (`/?view=test-cases`) and Automation packs (`/?view=automation`) views. Switching these views, including browser back/forward, retains the current in-memory drafts, approvals and suite. The Execution view (`/?view=execution`) shows the active suite execution plan and results. Progress & execution (`/progress`) contains Execution intelligence and execution history; the product explorer lives under Auto finance → Products (`/products`), and application usage has its own Usage page (`/usage`). Reloading the application does not persist in-memory drafts.

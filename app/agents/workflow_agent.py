@@ -22,6 +22,9 @@ class WorkflowAgent:
         self.requirements_validator = RequirementsValidationAgent(settings)
 
     async def stories(self, request: GenerateRequest) -> Stories:
+        from app.workspace_policy import apply_rules
+
+        request = apply_rules(request)
         await self.requirements_validator.require(request)
 
         def validate(result: Stories) -> Stories:
@@ -54,6 +57,9 @@ class WorkflowAgent:
         return result
 
     async def scenarios(self, handoff: StoryHandoff) -> Scenarios:
+        from app.workspace_policy import apply_rules
+
+        handoff = handoff.model_copy(update={"request": apply_rules(handoff.request)})
         await self.requirements_validator.require(
             handoff.request.model_copy(
                 update={

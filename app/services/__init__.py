@@ -195,6 +195,9 @@ class MultiAgentTestPipeline:
         manual_testing_type: ManualTestingType = ManualTestingType.API,
         generation_target: GenerationTarget = GenerationTarget.AUTO,
         llm_model: str = "organization-default",
+        finance_product_id: str | None = None,
+        finance_journey_ids: list[str] | None = None,
+        finance_calculation: dict[str, object] | None = None,
     ) -> PipelineResult:
         document, request = self.input_agent.from_document(
             filename, content, additional_context, output_format
@@ -211,6 +214,9 @@ class MultiAgentTestPipeline:
                 "manual_testing_type": manual_testing_type,
                 "generation_target": generation_target,
                 "llm_model": llm_model,
+                "finance_product_id": finance_product_id,
+                "finance_journey_ids": finance_journey_ids or [],
+                "finance_calculation": finance_calculation,
             }
         )
         result = await self.run(request)

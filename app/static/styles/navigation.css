@@ -310,3 +310,66 @@
     display: block;
   }
 }
+
+/* Parents describe an area; child links each open one focused view. */
+.sidebar .nav-parent {
+  width: 100%;
+  border: 0;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar .nav-chevron { margin-left: auto; transition: transform 150ms ease; }
+.sidebar .nav-parent[aria-expanded="true"] .nav-chevron { transform: rotate(180deg); }
+.sidebar .nav-children {
+  margin: 4px 0 8px 20px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  display: grid;
+  gap: 4px;
+}
+.sidebar .nav-children[hidden], [data-knowledge-view][hidden] { display: none !important; }
+.sidebar .nav-children .nav-item { min-height: 40px; font-size: 0.78rem; }
+.sidebar .nav-parent:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (min-width: 1081px) {
+  .sidebar[data-collapsed="true"] .nav-parent > span:not(.nav-icon),
+  .sidebar[data-collapsed="true"] .nav-children { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar .nav-chevron { transition: none; }
+}
+.sidebar .nav-parent { background: transparent; }
+.sidebar .nav-parent:hover { background: var(--surface-soft); }
+.sidebar .nav-parent.active { background: var(--primary-soft); }
+body:not([data-knowledge-view]) [data-knowledge-view]:not([data-knowledge-view="saved"]) { display: none; }
+[data-quality-view][hidden] { display: none !important; }
+#automation-workspace-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+#automation-workspace > .step-definitions { margin-top: 24px; }
+
+/* Use one text scale and label column for parent, child and standalone links. */
+.sidebar .primary-nav .nav-item {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 11px;
+  gap: 11px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: normal;
+}
+.sidebar .primary-nav .nav-item.active { font-weight: 700; }
+.sidebar .primary-nav .nav-icon { flex: 0 0 20px; }
+.sidebar .nav-parent > span:nth-child(2),
+.sidebar .nav-children .nav-item > span:first-child {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+@media (min-width: 1081px) {
+  .sidebar[data-collapsed="true"] .primary-nav .nav-item {
+    padding: 0;
+    justify-content: center;
+  }
+}

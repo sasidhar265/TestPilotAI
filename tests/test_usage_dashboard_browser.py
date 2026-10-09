@@ -22,10 +22,10 @@ def test_usage_dashboard_filters_themes_empty_error_and_navigation():
             nonlocal failure
             url = urlparse(r.request.url)
             path = url.path
-            if path in ["/", "/quality-lifecycle"] or path.startswith("/static/"):
+            if path in ["/", "/usage"] or path.startswith("/static/"):
                 f = root / (
                     "index.html"
-                    if path in ["/", "/quality-lifecycle"]
+                    if path in ["/", "/usage"]
                     else path.removeprefix("/static/")
                 )
                 r.fulfill(body=f.read_bytes(), content_type=mimetypes.guess_type(f)[0])
@@ -92,7 +92,7 @@ def test_usage_dashboard_filters_themes_empty_error_and_navigation():
         page.route("**/*", route)
         page.goto("http://localhost/")
         assert not periods
-        page.locator('.primary-nav a[href="/quality-lifecycle"]').click()
+        page.locator('.primary-nav a[href="/usage"]').click()
         playwright.expect(page.locator("#usage-cards")).to_contain_text("240")
         playwright.expect(page.locator("#usage-cards")).to_contain_text("$0.4813")
         playwright.expect(page.locator("#usage-cards")).to_contain_text("Partial subtotal")

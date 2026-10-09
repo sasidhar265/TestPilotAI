@@ -127,7 +127,7 @@
   el("refresh-usage").addEventListener("click", refresh);
   el("usage-period").addEventListener("change", refresh);
   const refreshWhenVisible = () => {
-    if (location.pathname === "/quality-lifecycle") refresh();
+    if (location.pathname === "/usage") refresh();
   };
   window.addEventListener("workspace-page-changed", refreshWhenVisible);
   window.addEventListener("workspace-suite-rendered", refreshWhenVisible);

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20260927-mobile-drawer" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
@@ -46,15 +46,24 @@
             <a class="nav-item" href="/project-dashboard"
               ><span class="nav-icon">▥</span><span>Project dashboard</span></a
             >
-            <a class="nav-item" href="/"
-              ><span class="nav-icon">✦</span><span>Quality workspace</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="quality-navigation" hidden>
+                <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
+                <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/progress"
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
               ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
             >
+            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -62,9 +71,21 @@
             <a class="nav-item active" aria-current="page" href="/documentation"
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
-            <a class="nav-item" href="/knowledge"
-              ><span class="nav-icon">◈</span><span>Knowledge source</span></a
-            >
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="knowledge-navigation"><span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="knowledge-navigation" hidden>
+                <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
+                <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
+              </div>
+            </div>
+            <div class="nav-group">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="finance-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="finance-navigation" hidden>
+                <a class="nav-item" href="/products"><span>Products</span></a>
+                <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"><span>Calculation validators</span></a>
+              </div>
+            </div>
             <a class="nav-item" href="/logs"
               ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
             >
@@ -290,9 +311,11 @@
                 <h3>Runtime logs</h3>
                 <p>
                   Search using a request reference ID and choose a Status filter. The filter applies
-                  to the loaded entries, up to 100 per request. Scroll through the logs and expand
-                  available event or technical details. Clear the search field and search again to
-                  return to recent logs.
+                  to the loaded entries, up to 200 per request. Expand a high-level record to view
+                  its timestamped event timeline and technical details, or select Expand all
+                  records. Choose UTC or local time, search loaded messages, pause live refresh, or
+                  download filtered JSONL entries. Rotating server files retain more history. Clear
+                  the reference field and search again to return to recent logs.
                 </p>
               </article>
               <article class="card">
@@ -639,7 +662,7 @@
       </main>
     </div>
 
-    <script src="/static/scripts/navigation.js?v=20260927-mobile-drawer" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
     <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>

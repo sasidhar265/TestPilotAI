@@ -959,6 +959,14 @@ $("generate-form").addEventListener("submit", async (e) => {
         "business_rules",
         businessRules.map((rule) => `${rule.id}: ${rule.description}`).join("\n"),
       );
+      form.append(
+        "finance_calculation",
+        window.financeCalculationContext?.()
+          ? JSON.stringify(window.financeCalculationContext())
+          : "",
+      );
+      form.append("finance_product_id", $("finance-domain-product")?.value || "");
+      form.append("finance_journey_ids", $("finance-domain-journey")?.value || "");
       const response = await upload("/api/generate/document", form, options);
       const result = await response.json();
       generated = result.suite;
@@ -975,6 +983,11 @@ $("generate-form").addEventListener("submit", async (e) => {
           manual_testing_type: manualTestingType,
           llm_model: llmModel,
           business_rules: businessRules,
+          finance_calculation: window.financeCalculationContext?.() || null,
+          finance_product_id: $("finance-domain-product")?.value || null,
+          finance_journey_ids: $("finance-domain-journey")?.value
+            ? [$("finance-domain-journey").value]
+            : [],
         },
         options,
       );
@@ -1334,14 +1347,22 @@ async function loadAvailableModels() {
     const response = await fetch("/api/llm/models");
     if (!response.ok) throw await responseError(response);
     const result = await response.json();
-    const models = result.models.filter((model) => model.can_use);
-    select.replaceChildren(...models.map((model) => new Option(model.display_name, model.model)));
+    const models = result.models.filter((model) => model.can_use || model.visible_in_ui);
+    select.replaceChildren(
+      ...models.map((model) => {
+        const option = new Option(model.display_name, model.model);
+        option.title = model.reason;
+        return option;
+      }),
+    );
     if (models.length) {
       if (models.some((model) => model.model === previous)) select.value = previous;
       select.disabled = false;
-      select.dataset.access = "allowed";
-      $("llm-model-status").textContent =
-        "Only models that pass account access checks are listed. Usage limits can change.";
+      const selected = models.find((model) => model.model === select.value);
+      select.dataset.access = selected.can_use ? "allowed" : "blocked";
+      $("llm-model-status").textContent = selected.can_use
+        ? "Models that pass account access checks can generate. Usage limits can change."
+        : selected.reason;
     } else {
       select.replaceChildren(new Option("No models available", ""));
       select.dataset.access = "blocked";

@@ -25,16 +25,24 @@
     $("status").textContent = message;
   };
   function show(stage, focus = true) {
+    const views = ["requirements", "stories", "scenarios", "test-cases", "execution", "automation"];
+    const view = views[stage - 1];
+    if (window.navigateWorkspace && (location.pathname !== "/" || document.body.dataset.qualityView !== view)) {
+      window.navigateWorkspace(stage === 1 ? "/" : `/?view=${view}`, focus);
+      if (focus) tabs[stage - 1].focus({ preventScroll: true });
+      return;
+    }
     state.stage = stage;
-    workspace.hidden = !state.stories && !suite;
+    workspace.hidden = stage === 1 || stage === 6;
     tabs.forEach((tab, index) => {
       const active = index + 1 === stage;
       tab.setAttribute("aria-selected", String(active));
       tab.tabIndex = active ? 0 : -1;
-      $(`stage-panel-${index + 1}`).hidden = !active;
+      const panel = $(`stage-panel-${index + 1}`);
+      if (panel) panel.hidden = !active;
       if (active && focus) tab.focus({ preventScroll: true });
       const strip = tab.parentElement;
-      if (active && !workspace.hidden && strip.scrollWidth > strip.clientWidth) {
+      if (active && strip.getClientRects().length && strip.scrollWidth > strip.clientWidth) {
         const left = tab.offsetLeft - strip.offsetLeft;
         if (left < strip.scrollLeft) strip.scrollLeft = left;
         else if (left + tab.offsetWidth > strip.scrollLeft + strip.clientWidth)
@@ -48,7 +56,7 @@
   tabs.forEach((tab, index) => {
     tab.onclick = () => show(index + 1, false);
     tab.onkeydown = (event) => {
-      const next = { ArrowRight: (index + 1) % 5, ArrowLeft: (index + 4) % 5, Home: 0, End: 4 }[
+      const next = { ArrowRight: (index + 1) % tabs.length, ArrowLeft: (index + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[
         event.key
       ];
       if (next !== undefined) {
@@ -90,7 +98,7 @@
         "Review test cases",
       );
     }
-    workspace.hidden = !state.stories && !suite;
+    workspace.hidden = state.stage === 1 || state.stage === 6;
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
     $("validate-requirements").disabled = state.busy || Boolean(activeGeneration);
@@ -252,6 +260,9 @@
     $(id).addEventListener("click", sourceChanged),
   );
   window.addEventListener("workspace-source-replaced", sourceChanged);
+  ["finance-domain-product", "finance-domain-journey"].forEach((id) =>
+    $(id)?.addEventListener("change", sourceChanged),
+  );
   ["output-target", "manual-testing-type", "llm-model"].forEach((id) =>
     $(id).addEventListener("change", () => {
       revision += 1;
@@ -338,6 +349,11 @@
     const target = selectedGenerationTarget();
     return {
       ...state.request,
+      finance_calculation: window.financeCalculationContext?.() || null,
+      finance_product_id: $("finance-domain-product")?.value || null,
+      finance_journey_ids: $("finance-domain-journey")?.value
+        ? [$("finance-domain-journey").value]
+        : [],
       generation_target: target,
       output_format: target === "manual" ? "normal" : "bdd",
       manual_testing_type: $("manual-testing-type").value,
@@ -372,6 +388,11 @@
       description,
       business_rules: parseBusinessRules(),
       additional_context: "",
+      finance_calculation: window.financeCalculationContext?.() || null,
+      finance_product_id: $("finance-domain-product")?.value || null,
+      finance_journey_ids: $("finance-domain-journey")?.value
+        ? [$("finance-domain-journey").value]
+        : [],
       uploaded_brd_text: uploadedBrdText,
       uploaded_brd_receipt: uploadedBrdReceipt,
     };
@@ -1043,6 +1064,11 @@
     show(4, false);
     sync();
   });
-  show(1, false);
+  window.addEventListener("workspace-page-changed", (event) => {
+    const stages = { requirements: 1, stories: 2, scenarios: 3, "test-cases": 4, execution: 5, automation: 6 };
+    if (event.detail.path === "/" && stages[event.detail.view]) show(stages[event.detail.view], false);
+  });
+  const initialStages = { stories: 2, scenarios: 3, "test-cases": 4, execution: 5, automation: 6 };
+  if (location.pathname === "/") show(initialStages[document.body.dataset.qualityView] || 1, false);
   sync();
 })();

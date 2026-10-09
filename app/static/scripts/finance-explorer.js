@@ -68,10 +68,12 @@
     });
   });
   byId("finance-start").addEventListener("click", () => {
+    window.navigateWorkspace("/");
     byId("description").focus({ preventScroll: true });
     byId("test-studio").scrollIntoView({ block: "start" });
   });
   byId("finance-explore").addEventListener("click", () => {
+    window.navigateWorkspace("/products");
     document
       .querySelector('[data-finance-product][aria-pressed="true"]')
       .focus({ preventScroll: true });
