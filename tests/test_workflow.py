@@ -67,6 +67,10 @@ async def test_agents_load_markdown_and_validate_provider_output(tmp_path):
     agent.runner.generate_structured = AsyncMock(return_value=source.stories)
     assert await agent.stories(source.request) == source.stories
     call = agent.runner.generate_structured.call_args
+    assert "senior business analyst" in call.kwargs["instructions"]
+    assert "reference_only" in call.kwargs["instructions"]
+    assert "BUSINESS ANALYSIS KNOWLEDGE" in call.kwargs["prompt"]
+    assert "DOMAIN-PROFILE" in call.kwargs["prompt"]
     assert "stage 2" in call.kwargs["instructions"]
     assert "exact, contiguous quote" in call.kwargs["instructions"]
     assert call.kwargs["validate"](source.stories) == source.stories

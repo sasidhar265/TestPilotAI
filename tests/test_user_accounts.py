@@ -44,7 +44,7 @@ def test_admin_creates_hashed_account_with_real_identity(account_app):
     response = create(client)
     assert response.status_code == 201
     assert "password" not in response.text
-    assert response.json()["role"] == "user"
+    assert response.json()["role"] == "functional_tester"
     assert authenticate(settings, "jane", "wrong-password") is None
     assert authenticate(settings, "JANE", "a-long-test-password") is not None
     with database(settings) as connection:
@@ -161,8 +161,10 @@ def test_admin_can_amend_role_and_access_together(account_app):
     client.cookies.set(SESSION_COOKIE, promoted_session)
     assert client.get("/api/admin/users").status_code == 200
     client.cookies.set(SESSION_COOKIE, issue_browser_session("owner", settings))
-    response = client.patch("/api/admin/users/jane/access", json={"role": "user", "enabled": False})
-    assert response.json()["role"] == "user"
+    response = client.patch(
+        "/api/admin/users/jane/access", json={"role": "functional_tester", "enabled": False}
+    )
+    assert response.json()["role"] == "functional_tester"
     assert not response.json()["enabled"]
     assert not valid_session(promoted_session, settings)
     assert (
@@ -173,7 +175,7 @@ def test_admin_can_amend_role_and_access_together(account_app):
     )
     assert (
         client.patch(
-            "/api/admin/users/owner/access", json={"role": "user", "enabled": True}
+            "/api/admin/users/owner/access", json={"role": "functional_tester", "enabled": True}
         ).status_code
         == 409
     )
@@ -185,7 +187,7 @@ def test_unchanged_access_preserves_session(account_app):
     session = issue_browser_session("jane", settings)
     assert (
         client.patch(
-            "/api/admin/users/jane/access", json={"role": "user", "enabled": True}
+            "/api/admin/users/jane/access", json={"role": "functional_tester", "enabled": True}
         ).status_code
         == 200
     )

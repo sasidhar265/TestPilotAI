@@ -17,8 +17,12 @@
     <link rel="stylesheet" href="/static/styles/user-guide.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
   </head>
-  <body class="explore-page">
+  <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -62,7 +66,7 @@
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
-              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
             >
             <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
@@ -93,6 +97,12 @@
             <a class="nav-item" href="/docs"
               ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
+            <div class="nav-group admin-navigation" data-permission="admin" hidden>
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="admin-navigation"><span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="admin-navigation" hidden>
+                <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
+              </div>
+            </div>
           </nav>
           <nav class="docs-nav" aria-label="On this page">
             <span class="nav-label">On this page</span><a href="#start">Before you start</a
@@ -256,10 +266,15 @@
                 available model.
               </li>
               <li>
-                Select <strong>Validate requirements</strong> in the Business alignment gate.
-                Address its findings against approved business sources before continuing.
+                Open <strong>Requirements</strong> and select <strong>Review BRD</strong> for a document summary, domain review and prioritized findings.
+                Review the cited knowledge and owner questions. The optional approved-source alignment check is also available in Requirements; downstream generation still enforces server-side alignment.
               </li>
-              <li>Select <strong>Read requirements</strong> to prepare the next stage.</li>
+              <li>Select <strong>Generate stories</strong> to prepare the next stage.</li>
+              <li>
+                Use <strong>Run in background</strong> to keep working while a compact bottom-right banner
+                shows stage progress and a running indicator. Select <strong>Open</strong> to return to the same
+                pop-up. Completed progress remains available until you dismiss it or start a new run.
+              </li>
             </ol>
             <div class="callout">
               <span>A useful requirement is specific</span>
@@ -567,10 +582,14 @@
       </main>
     </div>
 
+    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
-    <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
     <script src="/static/scripts/user-guide.js?v=20260923" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

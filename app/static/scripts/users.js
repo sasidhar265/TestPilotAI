@@ -1,3 +1,4 @@
+const roleLabels = {ba: "Business analyst", functional_tester: "Functional tester", automation_tester: "Automation tester", non_functional_tester: "Non-functional tester", test_lead: "Test lead", admin: "Admin"};
 const status = document.getElementById("users-status"),
   list = document.getElementById("users-list"),
   form = document.getElementById("create-user");
@@ -18,16 +19,23 @@ async function loadUsers() {
     `${users.length} account${users.length === 1 ? "" : "s"}`;
   for (const user of users) {
     const row = document.createElement("tr");
-    for (const value of [
-      user.display_name,
-      user.username,
-      user.role === "admin" ? "Admin" : "User",
-      user.enabled ? "Enabled" : "Disabled",
-    ]) {
+    for (const value of [user.display_name, user.username]) {
       const cell = document.createElement("td");
       cell.textContent = value;
       row.append(cell);
     }
+    const roleCell = document.createElement("td");
+    const roleBadge = document.createElement("span");
+    roleBadge.className = "user-role";
+    roleBadge.textContent = roleLabels[user.role] || user.role;
+    roleCell.append(roleBadge);
+    row.append(roleCell);
+    const accessCell = document.createElement("td");
+    const accessBadge = document.createElement("span");
+    accessBadge.className = `user-access ${user.enabled ? "enabled" : "disabled"}`;
+    accessBadge.textContent = user.enabled ? "Enabled" : "Disabled";
+    accessCell.append(accessBadge);
+    row.append(accessCell);
     const actions = document.createElement("td");
     if (user.managed && user.username.toLowerCase() !== currentUsername.toLowerCase()) {
       const edit = document.createElement("button");
@@ -159,9 +167,9 @@ form.onsubmit = async (event) => {
 };
 (async () => {
   try {
-    const profile = await request("/api/auth/profile");
+    const profile = await window.loadWorkspaceProfile();
     currentUsername = profile.username;
-    showProfile(profile);
+    window.renderWorkspaceProfile(profile);
     await loadUsers();
   } catch (error) {
     status.textContent = error.message;
@@ -169,17 +177,6 @@ form.onsubmit = async (event) => {
   }
 })();
 
-function showProfile(profile) {
-  document.getElementById("profile-name").textContent = profile.display_name;
-  document.getElementById("profile-role").textContent = "Administrator";
-  const icon =
-    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><circle cx="12" cy="10" r="2.5"/><path d="M8 16c0-4 8-4 8 0"/></svg>';
-  for (const id of ["profile-toggle", "profile-avatar"])
-    document.getElementById(id).innerHTML = icon;
-  document
-    .getElementById("profile-toggle")
-    .setAttribute("aria-label", `Open profile menu for ${profile.display_name} (Administrator)`);
-}
 const profileToggle = document.getElementById("profile-toggle"),
   profilePanel = document.getElementById("profile-panel");
 function closeProfile() {

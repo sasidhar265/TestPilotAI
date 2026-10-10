@@ -6,6 +6,7 @@
       return null;
     }
   };
+  if (document.body.dataset.guest === "true") return;
   const reference = window.financeCalculationContext();
   if (reference) {
     document.getElementById("finance-reference-status").hidden = false;

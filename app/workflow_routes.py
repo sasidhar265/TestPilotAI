@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import ValidationError
 
+from app.agents.business_analyst import BAReport, BusinessAnalystAgent
 from app.agents.context_converter_agent import ContextConverterAgent
 from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
 from app.agents.runner import CopilotGenerationError
@@ -92,6 +93,17 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
             "filename": document.filename,
             "uploaded_brd_receipt": issue_brd_receipt(document.text, settings),
         }
+
+
+@router.post("/ba-review", response_model=BAReport)
+async def ba_review(request: GenerateRequest, settings: Config) -> BAReport:
+    with stage_operation("BA Agent review"):
+        try:
+            return await BusinessAnalystAgent(settings).review(request)
+        except (CopilotGenerationError, RuntimeError, ValueError) as error:
+            raise HTTPException(
+                503, "BA review unavailable. Check provider access and retry."
+            ) from error
 
 
 @router.post("/validate-requirements", response_model=RequirementsReport)

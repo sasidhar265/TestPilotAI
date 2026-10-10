@@ -40,7 +40,7 @@ The homepage now provides five connected tabs:
 
 1. **Requirements:** read a BRD upload, pasted command prompt, or linked Jira ticket. Review the
    extracted text and shared rules before continuing.
-2. **Stories:** create source-grounded stories with acceptance criteria. Review or edit them and
+2. **Stories:** a senior auto-finance business analyst creates BRD-grounded stories with testable acceptance criteria and explicit owner questions. Approved business knowledge and reference-only domain context inform the analysis without adding unsupported scope. Review or edit them and
    select **Use these stories**.
 3. **Scenarios:** create format-neutral coverage linked to those story IDs. Review or edit the
    preconditions, actions and expected results, then select **Use these scenarios**.
@@ -181,8 +181,13 @@ entry, and **Approve selected** are kept together there. Reviewer and Jira issue
 validation. Multi-step Excel exports merge repeated case-detail cells instead of duplicating them
 on every step row.
 
-The UI shows payload-free orchestration events in the generation popup and lifecycle panel. The
-top-right notification bell records run completion, failures, and system updates. A separate notice
+The UI shows payload-free orchestration events in the generation popup and lifecycle panel.
+**Run in background** shows a compact bottom-right banner with a running indicator,
+completed-stage percentage and **Open** action. This applies to BA review, stories, scenarios,
+test cases, execution and automation packs. Reopening preserves recorded steps, files and elapsed
+time. Finished progress remains available until dismissed or a new run starts. Progress follows
+reported milestones; 100% is shown only after the operation returns successfully.
+The top-right notification bell records run completion, failures, and system updates. A separate notice
 tells the user when an approved exact-match suite came from the knowledge base. Sign out is
 available from the adjacent profile menu rather than the sidebar.
 
@@ -975,3 +980,37 @@ for retention, migration of existing plaintext stores, backups and deletion.
 Workspace navigation groups related tools under expandable parents. Knowledge contains [Saved knowledge](http://127.0.0.1:8000/knowledge) and [Knowledge graph](http://127.0.0.1:8000/knowledge?view=graph). Auto finance contains [Domain pack](http://127.0.0.1:8000/knowledge?view=domain) and [Calculation validators](http://127.0.0.1:8000/knowledge?view=calculations). Each child opens a focused view with its own heading, URL and active navigation state.
 
 Quality workspace has focused Requirements (`/`), Stories (`/?view=stories`), Scenarios (`/?view=scenarios`), Test cases (`/?view=test-cases`) and Automation packs (`/?view=automation`) views. Switching these views, including browser back/forward, retains the current in-memory drafts, approvals and suite. The Execution view (`/?view=execution`) shows the active suite execution plan and results. Progress & execution (`/progress`) contains Execution intelligence and execution history; the product explorer lives under Auto finance → Products (`/products`), and application usage has its own Usage page (`/usage`). Reloading the application does not persist in-memory drafts.
+
+Requirements exposes senior auto-finance BRD review alongside story generation using one shared text, document or Jira source. The review shows a summary, eight review areas, prioritized findings, owner questions and knowledge provenance. It uses approved baseline sources and domain rules, with reference-only catalogue context and exact quotation checks. Missing approved knowledge downgrades readiness; review does not grant business approval or assert regulatory compliance. The approved-source alignment check is available in Requirements, and downstream server gates remain. Reports are hidden when their source changes.
+
+Functional scenario and test-case generation uses a senior test analyst lens, with BRD/story
+traceability, risk-based coverage and observable expected results. Automation scenarios, C#
+bindings and implementation packs use a senior test automation engineer lens, preserving approved
+contracts and data, reusable services and actual BDD execution evidence. These roles do not
+replace business-owner approval or the existing quality and execution gates.
+
+Account roles are assigned under **Admin actions → Manage users**. Permissions are checked on
+API operations as well as reflected in the UI:
+
+| Role | Available operations |
+| --- | --- |
+| Business analyst | BRD review, requirements and stories; no test scenarios, case generation or execution |
+| Functional tester | Functional API/UI cases; no automation or non-functional generation |
+| Automation tester | Automation API/UI scenarios and BDD implementation packs; no functional manual generation |
+| Non-functional tester | Performance/database cases and JMeter/SQL/Oracle script operations |
+| Test lead | All testing choices and operations; no user administration |
+| Admin | All operations, including user management |
+
+New accounts default to Functional tester. The existing general `user` role migrates to Test lead
+so existing testing access is preserved. The migration preserves identities and password hashes
+and invalidates existing managed-account sessions. Role/access updates invalidate changed sessions;
+users must sign in again. The initial admin and self-account protections remain in place.
+A configured service API token remains privileged; browser requests use their signed account role.
+When authentication is explicitly disabled for local development, the local workspace has admin access.
+
+Business analyst accounts land on **Requirements** after sign-in and when returning Home. BRD review and story generation share the same requirement source. The former BA Agent URL redirects to Requirements; role permissions continue to hide testing operations from BA accounts.
+
+The same workflow navigation is shown across all signed-in application pages, including BA review,
+Knowledge, runtime logs, documentation and Manage users. Supporting-page links open the corresponding
+workspace stage; workspace tabs retain current drafts and progress during view switches. The bar
+shows only the stages permitted by the account role and scrolls horizontally on smaller screens.

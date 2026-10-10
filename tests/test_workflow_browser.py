@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 
 import pytest
 
+from app.roles import capabilities
+
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
 @pytest.mark.parametrize("mode", ["manual", "automation", "non_functional"])
@@ -48,7 +50,12 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         if path == "/api/workspace/rules":
             result = {"business_rules": []}
         elif path == "/api/auth/profile":
-            result = {"display_name": "Reviewer", "is_admin": False}
+            result = {
+                "display_name": "Reviewer",
+                "role": "test_lead",
+                "is_admin": False,
+                "capabilities": capabilities("test_lead"),
+            }
         elif path.endswith("/cancel"):
             cancellations.append(path)
             result = {"cancelled": True}
@@ -149,6 +156,14 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 page.locator("#background-generation-overlay").click()
                 pw.expect(page.locator("#generation-overlay")).to_be_hidden()
                 pw.expect(page.locator("#stop-generation")).to_be_visible()
+                banner = page.locator("#background-run-tray")
+                pw.expect(banner).to_be_visible()
+                pw.expect(banner).to_have_attribute("data-compact", "true")
+                assert banner.evaluate("node => getComputedStyle(node).position") == "fixed"
+                pw.expect(page.locator("#reopen-generation")).to_have_text("Open")
+                page.click("#reopen-generation")
+                pw.expect(page.locator("#generation-overlay-title")).to_have_text(title)
+                page.click("#background-generation-overlay")
             if cancel:
                 page.locator(
                     "#stop-generation" if background else "#cancel-generation-overlay"
@@ -186,9 +201,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.get_by_role("tab")).to_have_count(6)
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         page.screenshot(path="/tmp/workflow-input.png", full_page=True)
-        pw.expect(
-            page.get_by_role("heading", name="Which finance requirement should we test?")
-        ).to_be_visible()
+        pw.expect(page.get_by_role("heading", name="Review finance requirements")).to_be_visible()
         for control in ("output-target", "manual-testing-type", "llm-model"):
             pw.expect(page.locator(f"#generate-form #{control}")).to_be_visible()
         page.set_viewport_size({"width": 390, "height": 844})

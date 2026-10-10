@@ -18,8 +18,12 @@
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
   </head>
-  <body class="explore-page">
+  <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -62,7 +66,7 @@
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
-              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
             >
             <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
@@ -93,6 +97,12 @@
             <a class="nav-item" href="/docs"
               ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
+            <div class="nav-group admin-navigation" data-permission="admin" hidden>
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="admin-navigation"><span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="admin-navigation" hidden>
+                <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
+              </div>
+            </div>
           </nav>
           <div class="side-status">
             <div class="status-line"><span class="pulse"></span><span>Local diagnostics</span></div>
@@ -505,14 +515,18 @@
         <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </main>
     </div>
+    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/knowledge-view.js?v=20261009" defer></script>
     <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/workspace-profile.js?v=20260909-page-alignment" defer></script>
-    <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
     <script src="/static/scripts/knowledge.js?v=20261009-focused-views" defer></script>
     <script src="/static/scripts/knowledge-graph-data.js?v=20261009-finance-graph" defer></script>
     <script src="/static/scripts/knowledge-graph.js?v=20261009-focused-views" defer></script>
     <script src="/static/scripts/finance-tools.js?v=20261009-focused-views" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

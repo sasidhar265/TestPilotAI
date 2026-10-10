@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.agent_runtime import AgentEvent
 from app.agents import TestStorageAgent
 from app.agents.automation_execution_agent import AutomationExecutionAgent, AutomationExecutionError
+from app.agents.business_analyst import BusinessAnalystAgent
 from app.agents.context_converter_agent import ContextConversionError, ContextConverterAgent
 from app.agents.lifecycle_agents import (
     BugReporterAgent,
@@ -103,6 +104,7 @@ from app.observability import (
     ui_log_handler,
 )
 from app.protected_memory import MemoryProtectionError
+from app.role_access import enforce_role_access
 from app.script_packs import router as script_pack_router
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
@@ -134,6 +136,7 @@ configure_logging(
 )
 
 app = FastAPI(
+    dependencies=[Depends(enforce_role_access)],
     lifespan=memory_lifespan,
     title="Quality Lifecycle Studio API",
     version="0.1.0",
@@ -371,10 +374,16 @@ async def logout() -> Response:
 @app.get("/usage", include_in_schema=False)
 @app.get("/", include_in_schema=False)
 async def index(request: Request) -> Response:
+    if request.url.path == "/" and request.query_params.get("view") == "ba-agent":
+        return RedirectResponse("/?view=requirements", status_code=303)
     if not valid_session(
         request.cookies.get(SESSION_COOKIE, ""), settings_at_startup
     ) and valid_guest_session(request.cookies.get(GUEST_COOKIE, ""), settings_at_startup):
-        html = INDEX.read_text().replace("<body>", '<body data-guest="true">', 1)
+        html = INDEX.read_text().replace(
+            '<body data-access-pending="true">',
+            '<body data-access-pending="true" data-guest="true">',
+            1,
+        )
         return Response(html, media_type="text/html", headers=HTML_HEADERS)
     return FileResponse(INDEX, headers=HTML_HEADERS)
 
@@ -531,6 +540,7 @@ async def list_agents() -> list[dict[str, object]]:
             InputAgent.descriptor,
             BusinessRulesAgent.descriptor,
             RequirementsValidationAgent.descriptor,
+            BusinessAnalystAgent.descriptor,
             STORY_AGENT,
             SCENARIO_AGENT,
             KnowledgeAgent.descriptor,

@@ -1,0 +1,5 @@
+{
+  "missing-description": {"request": {}, "status": 422},
+  "short-description": {"request": {"description": "short"}, "status": 422},
+  "forged-upload": {"request": {"description": "Quotation requests must reject a negative deposit.", "uploaded_brd_text": "Quotation requests must reject a negative deposit.", "uploaded_brd_receipt": "invalid-receipt"}, "status": 422}
+}

@@ -25,10 +25,11 @@
     $("status").textContent = message;
   };
   function show(stage, focus = true) {
-    const views = ["requirements", "stories", "scenarios", "test-cases", "execution", "automation"];
-    const view = views[stage - 1];
+    const view = window.workflowStages[stage - 1].view;
+    const targetUrl = window.workflowStageUrl(view);
+    if (window.roleCanNavigate && !window.roleCanNavigate(targetUrl)) return;
     if (window.navigateWorkspace && (location.pathname !== "/" || document.body.dataset.qualityView !== view)) {
-      window.navigateWorkspace(stage === 1 ? "/" : `/?view=${view}`, focus);
+      window.navigateWorkspace(targetUrl, focus);
       if (focus) tabs[stage - 1].focus({ preventScroll: true });
       return;
     }
@@ -56,12 +57,12 @@
   tabs.forEach((tab, index) => {
     tab.onclick = () => show(index + 1, false);
     tab.onkeydown = (event) => {
-      const next = { ArrowRight: (index + 1) % tabs.length, ArrowLeft: (index + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[
-        event.key
-      ];
+      const available = tabs.filter(item => !item.hasAttribute("data-role-hidden"));
+      const position = available.indexOf(tab);
+      const next = { ArrowRight: (position + 1) % available.length, ArrowLeft: (position + available.length - 1) % available.length, Home: 0, End: available.length - 1 }[event.key];
       if (next !== undefined) {
         event.preventDefault();
-        show(next + 1);
+        show(tabs.indexOf(available[next]) + 1);
       }
     };
   });
@@ -102,6 +103,7 @@
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
     $("validate-requirements").disabled = state.busy || Boolean(activeGeneration);
+    $("ba-review").disabled = state.busy || Boolean(activeGeneration);
     $("stage-stories").disabled = state.busy || !state.request || Boolean(state.stories);
     $("stage-stories").textContent = state.stories ? "Stories created ✓" : "Create stories →";
     $("stage-stories").title = state.stories
@@ -247,7 +249,10 @@
   let latestBrdText = null;
   function sourceChanged() {
     revision += 1;
+    syncAgentWorkflow();
     latestBrdText = null;
+    $("ba-report").hidden = true;
+    $("ba-status").textContent = "Source changed. Run BA review again for the current input.";
     $("requirements-validation-report").hidden = true;
     if (!state.request) return;
     invalidate(1);
@@ -323,13 +328,17 @@
           "Inputs changed during this operation. Retry using the current requirements.",
         );
     };
+    let outcome = "Completed";
     try {
       await task(current);
     } catch (error) {
+      outcome = operation?.cancelled ? "Cancelled" : "Failed";
       status(operation?.cancelled ? `${generationStages[kind].label} cancelled.` : error.message);
+      if (kind === "ba-review") $("ba-status").textContent = operation?.cancelled ? "BA review cancelled." : error.message;
     } finally {
       if (operation) {
         await stopLifecycleFeed(operation.requestId);
+        finishAgentWorkflow(outcome);
         activeGeneration = null;
         $("stop-generation").classList.add("hidden");
         hideGenerationOverlay();
@@ -451,9 +460,39 @@
       sync();
     }
   }
-  window.addEventListener("requirements-validation", (event) =>
-    renderRequirementsValidation(event.detail),
-  );
+  window.addEventListener("requirements-validation", (event) => {
+    renderRequirementsValidation(event.detail);
+    if (event.detail.status === "blocked") {
+      window.navigateWorkspace("/?view=requirements", false);
+      $("requirements-validation-report").closest("details").open = true;
+    }
+  });
+  function renderBaReport(report) {
+    const list = (items) => `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`;
+    const label = (value) => String(value).replaceAll("_", " ");
+    $("ba-report").hidden = false;
+    $("ba-report").innerHTML = `<div class="ba-outcome"><span class="section-kicker">Review outcome</span><h3>${esc(label(report.outcome))}</h3><time>${esc(new Date(report.assessed_at).toLocaleString())}</time></div>
+      <h3>BRD summary</h3><p>${esc(report.summary)}</p>
+      <div class="ba-summary-grid"><div><h3>Business objectives</h3>${list(report.objectives)}</div><div><h3>Document scope</h3>${list(report.scope)}</div></div>
+      <h3>Domain review</h3><div class="ba-area-grid">${report.areas.map((area) => `<article><span class="chip">${esc(label(area.status))}</span><h4>${esc(label(area.area))}</h4><p>${esc(area.reason)}</p>${area.document_quote ? `<blockquote>${esc(area.document_quote)}</blockquote>` : ""}</article>`).join("")}</div>
+      <h3>Findings &amp; recommendations</h3>${report.findings.length ? report.findings.map((finding) => `<article class="ba-finding"><span class="chip">${esc(finding.severity)}</span><h4>${esc(finding.title)}</h4><p>${esc(finding.reason)}</p><p><strong>Recommendation:</strong> ${esc(finding.recommendation)}</p>${finding.document_quote ? `<blockquote>${esc(finding.document_quote)}</blockquote>` : ""}${finding.evidence.map((source) => `<blockquote><strong>${esc(source.source_id)}</strong>: ${esc(source.quote)}</blockquote>`).join("")}</article>`).join("") : "<p>No document-specific findings returned.</p>"}
+      <div class="ba-summary-grid"><div><h3>Questions for the business owner</h3>${list(report.open_questions)}</div><div><h3>Next steps</h3>${list(report.next_steps)}</div></div>
+      <details><summary>Knowledge considered &amp; review traceability</summary>${report.knowledge_sources.map((source) => `<p><strong>${esc(source.title)}</strong> · ${esc(source.id)} · ${esc(source.version)} · ${esc(label(source.authority))} · ${esc(source.owner)}</p>`).join("")}${list(report.knowledge_limitations)}<p>Document: <code>${esc(report.document_fingerprint)}</code></p><p>Knowledge: <code>${esc(report.knowledge_fingerprint)}</code></p></details>
+      <p class="field-help">BA review supports business decisions. Business approval has not been granted; regulatory compliance has not been assessed.</p>`;
+    $("ba-status").textContent = `BA review complete: ${label(report.outcome)}.`;
+  }
+  $("ba-review").onclick = () => work("BA Agent is reviewing the BRD…", async (current) => {
+    $("ba-report").hidden = true;
+    $("ba-status").textContent = "BA Agent is reviewing scope, domain knowledge and testability…";
+    const source = await readRequirementSource(current);
+    try {
+      const report = await post("ba-review", {...source, llm_model: $("llm-model").value || "auto-fallback"});
+      current(); renderBaReport(report);
+    } catch (error) {
+      $("ba-status").textContent = error.message;
+      throw error;
+    }
+  }, "ba-review");
   $("validate-requirements").onclick = () =>
     work("Validating business alignment…", async (current) => {
       $("requirements-validation-report").hidden = true;

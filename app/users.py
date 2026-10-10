@@ -10,6 +10,47 @@ from typing import Any
 
 from app.config import Settings
 
+USER_SCHEMA = """(
+            username TEXT PRIMARY KEY COLLATE NOCASE,
+            display_name TEXT NOT NULL, password_hash TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('admin', 'test_lead', 'ba',
+                'functional_tester', 'automation_tester', 'non_functional_tester')),
+            enabled INTEGER NOT NULL DEFAULT 1, version INTEGER NOT NULL DEFAULT 1,
+            first_name TEXT NOT NULL DEFAULT '', last_name TEXT NOT NULL DEFAULT ''
+        )"""
+
+
+def migrate_user_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(f"CREATE TABLE IF NOT EXISTS users {USER_SCHEMA}")
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+    if "first_name" not in columns:
+        connection.execute("BEGIN IMMEDIATE")
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+    if "first_name" not in columns:
+        connection.execute("ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT ''")
+        connection.execute("ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ''")
+        for row in connection.execute("SELECT username, display_name FROM users").fetchall():
+            first, _, last = row["display_name"].partition(" ")
+            connection.execute(
+                "UPDATE users SET first_name = ?, last_name = ? WHERE username = ?",
+                (first, last, row["username"]),
+            )
+    schema = connection.execute("SELECT sql FROM sqlite_master WHERE name = 'users'").fetchone()[0]
+    if "'ba'" not in schema:
+        if not connection.in_transaction:
+            connection.execute("BEGIN IMMEDIATE")
+        schema = connection.execute(
+            "SELECT sql FROM sqlite_master WHERE name = 'users'"
+        ).fetchone()[0]
+        if "'ba'" not in schema:
+            connection.execute(f"CREATE TABLE users_roles {USER_SCHEMA}")
+            connection.execute("""INSERT INTO users_roles
+                SELECT username, display_name, password_hash,
+                    CASE role WHEN 'user' THEN 'test_lead' ELSE role END,
+                    enabled, version + 1, first_name, last_name FROM users""")
+            connection.execute("DROP TABLE users")
+            connection.execute("ALTER TABLE users_roles RENAME TO users")
+
 
 @contextmanager
 def database(settings: Settings) -> Iterator[sqlite3.Connection]:
@@ -17,26 +58,7 @@ def database(settings: Settings) -> Iterator[sqlite3.Connection]:
     path.parent.mkdir(parents=True, exist_ok=True)
     with closing(sqlite3.connect(path)) as connection, connection:
         connection.row_factory = sqlite3.Row
-        connection.execute("""CREATE TABLE IF NOT EXISTS users (
-            username TEXT PRIMARY KEY COLLATE NOCASE,
-            display_name TEXT NOT NULL, password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('admin', 'user')),
-            enabled INTEGER NOT NULL DEFAULT 1, version INTEGER NOT NULL DEFAULT 1,
-            first_name TEXT NOT NULL DEFAULT '', last_name TEXT NOT NULL DEFAULT ''
-        )""")
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
-        if "first_name" not in columns:
-            connection.execute("BEGIN IMMEDIATE")
-            columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
-        if "first_name" not in columns:
-            connection.execute("ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT ''")
-            connection.execute("ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ''")
-            for row in connection.execute("SELECT username, display_name FROM users").fetchall():
-                first, _, last = row["display_name"].partition(" ")
-                connection.execute(
-                    "UPDATE users SET first_name = ?, last_name = ? WHERE username = ?",
-                    (first, last, row["username"]),
-                )
+        migrate_user_schema(connection)
         yield connection
 
 

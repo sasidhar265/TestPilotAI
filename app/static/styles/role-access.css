@@ -1,0 +1,4 @@
+[data-role-hidden] { display: none !important; }
+body[data-access-pending] :is(.generation-options, #stage-tab-3, #stage-tab-4, #stage-tab-5, #stage-tab-6, #review-stories, [data-automation-control], #open-script-pack) { visibility: hidden; }
+.admin-navigation[hidden] { display: none; }
+.admin-navigation { margin-top: 8px; }

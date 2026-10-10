@@ -4,7 +4,7 @@ import secrets
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
@@ -18,6 +18,7 @@ from app.auth import (
     valid_guest_session,
 )
 from app.config import Settings, get_settings
+from app.roles import Role, capabilities
 from app.users import database, get_user, password_hash, public_user
 
 router = APIRouter()
@@ -32,6 +33,14 @@ def current_user(request: Request, settings: Config) -> dict[str, Any]:
             "username": "temporary-guest",
             "display_name": "Guest",
             "role": "guest",
+            "enabled": True,
+            "managed": False,
+        }
+    if user is None and not settings.browser_login_enabled and not settings.api_auth_token_value:
+        return {
+            "username": settings.app_username,
+            "display_name": "Local administrator",
+            "role": "admin",
             "enabled": True,
             "managed": False,
         }
@@ -54,13 +63,13 @@ class NewUser(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=12, max_length=256)
-    role: Literal["admin", "user"] = "user"
+    role: Role = "functional_tester"
     enabled: bool = True
 
 
 class UserAccess(BaseModel):
     enabled: bool
-    role: Literal["admin", "user"] | None = None
+    role: Role | None = None
 
 
 @router.get("/api/auth/profile", include_in_schema=False)
@@ -71,6 +80,7 @@ def profile(
     initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper() if parts else "?"
     guest_expiry = guest_session_expiry(request.cookies.get(GUEST_COOKIE, ""), settings)
     return public_user(user) | {
+        "capabilities": capabilities(user["role"]),
         "initials": initials,
         "is_admin": user["role"] == "admin",
         "is_guest": user["role"] == "guest",
@@ -149,7 +159,7 @@ def update_access(
 class UserUpdate(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
-    role: Literal["admin", "user"]
+    role: Role
     enabled: bool
     password: str | None = Field(default=None, min_length=12, max_length=256)
 

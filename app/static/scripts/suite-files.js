@@ -3,6 +3,8 @@ let featureFile = null;
 let stepDefinitionTask = null;
 let stepDefinitionTimer = null;
 let stepDefinitionRequest = null;
+let packBackgroundUsed = false;
+const packOperation = window.createOperationProgress();
 let packFileProgressTimer = null;
 let packFileProgressSequence = 0;
 let packFileProgressRequest = null;
@@ -27,7 +29,23 @@ function closeStepDefinitionProgress() {
   $("cs-generation-dialog").close();
 }
 
+function updatePackBanner(events = []) {
+  for (const event of events) {
+    if (event.action === "file_generated" && event.status === "success") packOperation.advance(70);
+    if (event.action === "pack_generation" && event.status === "success") packOperation.advance(90);
+  }
+  packOperation.render($("pack-run-tray"), $("pack-run-percent"), "pack", "Progress through completed pack stages");
+  $("dismiss-pack-progress").hidden = packOperation.status === "Running";
+}
+function finishPackBanner(status) {
+  packOperation.finish(status);
+  if (status === "Completed") $("cs-generation-message").textContent = "Automation pack complete. Review the recorded generated files.";
+  if (status === "Cancelled") $("cs-generation-message").textContent = "Automation pack generation cancelled.";
+  updatePackBanner();
+  if (packBackgroundUsed) $("pack-run-tray").hidden = false;
+}
 function showStepDefinitionProgress() {
+  $("pack-run-tray").hidden = true;
   if (!$("cs-generation-dialog").open) $("cs-generation-dialog").showModal();
 }
 
@@ -43,6 +61,7 @@ function resetPackFileProgress() {
 }
 
 function updatePackFileProgress(events) {
+  updatePackBanner(events);
   events.forEach((event) => {
     packFileProgressSequence = Math.max(packFileProgressSequence, event.sequence);
     if (event.action === "pack_stage" || event.action === "pack_generation") {
@@ -91,6 +110,10 @@ function startPackFileProgress(requestId) {
 }
 
 function startStepDefinitionProgress() {
+  packBackgroundUsed = false;
+  packOperation.reset();
+  updatePackBanner();
+  $("pack-run-tray").hidden = true;
   $("cs-generation-title").textContent = "Generating automation pack";
   $("cs-generation-message").textContent =
     "Creating bindings, implementations and supporting files. Your pack will open when ready.";
@@ -119,6 +142,8 @@ function closeSuiteMenus() {
 }
 
 function resetSuiteFiles() {
+  $("pack-run-tray").hidden = true;
+  packBackgroundUsed = false;
   window.resetScriptPack?.();
   closeStepDefinitionProgress();
   resetPackFileProgress();
@@ -282,7 +307,7 @@ async function ensureStepDefinitions() {
       $("cs-generation-dialog").querySelector('[role="progressbar"]').classList.add("hidden");
       $("hide-cs-generation").querySelector(".generation-action-label").textContent = "Close";
       $("cancel-cs-generation").classList.add("hidden");
-      showStepDefinitionProgress();
+      if (!packBackgroundUsed || $("cs-generation-dialog").open) showStepDefinitionProgress();
     }
     throw error;
   } finally {
@@ -296,6 +321,7 @@ async function ensureStepDefinitions() {
       if (packFileProgressTimer) clearTimeout(packFileProgressTimer);
       packFileProgressTimer = null;
       if (!failed) closeStepDefinitionProgress();
+      finishPackBanner(generation.cancelled ? "Cancelled" : failed ? "Failed" : "Completed");
     }
   }
 }
@@ -432,7 +458,24 @@ $("copy-feature-file").onclick = () =>
 $("close-feature-view").onclick = () => $("feature-file-view").classList.add("hidden");
 $("close-step-view").onclick = () => $("step-definitions").classList.add("hidden");
 $("close-cs-download").onclick = () => $("cs-download-dialog").close();
-$("hide-cs-generation").onclick = () => $("cs-generation-dialog").close();
+$("hide-cs-generation").onclick = () => {
+  $("cs-generation-dialog").close();
+  if (stepDefinitionTask || packBackgroundUsed) {
+    packBackgroundUsed = true;
+    updatePackBanner();
+    $("pack-run-tray").hidden = false;
+  }
+};
+$("reopen-pack-generation").onclick = () => {
+  if (!stepDefinitionTask) {
+    $("cs-generation-title").textContent = `Automation pack · ${packOperation.status}`;
+    $("cs-generation-dialog").querySelector('[role="progressbar"]').classList.add("hidden");
+    $("cancel-cs-generation").classList.add("hidden");
+    $("hide-cs-generation").querySelector(".generation-action-label").textContent = "Back to progress";
+  }
+  showStepDefinitionProgress();
+};
+$("dismiss-pack-progress").onclick = () => { $("pack-run-tray").hidden = true; };
 $("cancel-cs-generation").onclick = cancelFullPackGeneration;
 $("download-step-definitions").onclick = suiteFileAction(async () => {
   const artifact = await ensureStepDefinitions();

@@ -174,3 +174,20 @@ def test_finance_risk_evidence_reaches_framework_generation():
 def test_finance_risk_evidence_does_not_leak_into_other_profiles():
     body = load_profile_instructions("testpilot", "automation-test-generator")
     assert "quotation-risk-and-evidence.md" not in body
+
+
+@pytest.mark.parametrize("target", ["manual", "automation", "auto", "both"])
+def test_runtime_generation_includes_senior_testing_roles(target):
+    instructions = generation_agent_instructions(target)
+    assert "senior test analyst" in instructions
+    assert "senior test automation engineer" in instructions
+    assert "independent expected results" in instructions
+    assert "System.Net.Http.HttpClient" in instructions
+
+
+def test_pack_runtime_includes_senior_engineering_and_execution_contract():
+    instructions = step_definition_agent_instructions()
+    assert "senior test automation engineer" in instructions
+    assert "free of if/else, switch and ternary expressions" in instructions
+    assert "actual discovered/executed results" in instructions
+    assert "senior test automation engineer" in load_agent_instructions("multi-language")

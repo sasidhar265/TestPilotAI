@@ -11,8 +11,7 @@ let guestWarningStage = 0;
 let guestWarningDismissTimer = null;
 const isGuest = document.body.dataset.guest === "true";
 
-fetch("/api/auth/profile")
-  .then((response) => (response.ok ? response.json() : null))
+window.loadWorkspaceProfile()
   .then((profile) => {
     guestAccessUntil = Date.parse(profile?.guest_access_until || "") || 0;
   })

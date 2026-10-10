@@ -1,0 +1,60 @@
+/* Shared semantic type scale, loaded after page styles on every application page. */
+:root {
+  --font-ui: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text-body: 0.875rem;
+  --text-control: 0.8125rem;
+  --text-label: 0.75rem;
+  --text-title: 2rem;
+  --text-section: 1.375rem;
+  --text-subsection: 1rem;
+}
+:root body {
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+:root body :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  text-transform: none;
+  overflow-wrap: break-word;
+}
+:root body h1 { font-size: var(--text-title); line-height: 1.2; letter-spacing: -0.03em; }
+:root body h2 { font-size: var(--text-section); line-height: 1.3; letter-spacing: -0.02em; }
+:root body h3 { font-size: var(--text-subsection); line-height: 1.4; letter-spacing: -0.01em; }
+:root body :is(h4, h5, h6) { font-size: var(--text-body); line-height: 1.4; letter-spacing: normal; }
+:root body main :is(p, li, dd, dt) { font-size: var(--text-body); line-height: 1.6; }
+:root body :is(.page-intro, .users-intro, .field-help, .help-text, .hint, #ba-status) {
+  font-size: var(--text-control); line-height: 1.6;
+}
+:root body :is(.eyebrow, .section-kicker, .nav-label, .field-label, legend) {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:root body main label { font-size: var(--text-control); line-height: 1.5; }
+:root body :is(button, input, select, textarea, a.button) { font-family: var(--font-ui); }
+:root body :is(input, select, textarea) { font-size: var(--text-body); line-height: 1.5; }
+:root body :is(button.primary, button.secondary, button.quiet-button, button.stop, button.inspect-button, a.button) {
+  font-size: var(--text-control); font-weight: 650; line-height: 1.35; text-transform: none; letter-spacing: normal;
+}
+:root body .sidebar .primary-nav .nav-item {
+  font-size: var(--text-control); font-weight: 600; line-height: 1.4; letter-spacing: normal; text-transform: none;
+}
+:root body .sidebar .primary-nav .nav-item.active { font-weight: 700; }
+:root body :is(.stage-tab, .view-tab, .output-tab, [role="tab"]) {
+  font-family: var(--font-ui); font-size: var(--text-control); line-height: 1.4; letter-spacing: normal; text-transform: none;
+}
+:root body main :is(table, summary) { font-size: var(--text-control); line-height: 1.5; }
+:root body main th { font-weight: 650; text-transform: none; letter-spacing: normal; }
+:root body :is(small, .muted, .badge, .status-badge, .review-badge, .live-badge) {
+  font-size: var(--text-label); line-height: 1.5; letter-spacing: normal;
+}
+/* Technical output retains its own monospace representation. */
+:root body :is(code, pre, .code-editor) { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+@media (max-width: 700px) {
+  :root { --text-title: 1.5rem; --text-section: 1.25rem; }
+}

@@ -99,6 +99,10 @@ def test_mobile_navigation_and_page_layout(path, engine, width, height):
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/*", mobile_route)
         page.goto("http://localhost" + path)
+        pw.expect(page.locator(".workflow-navigation")).to_be_visible()
+        pw.expect(page.locator(".workflow-navigation .stage-tabs > :is(button, a)")).to_have_count(
+            6
+        )
         toggle = page.locator("#sidebar-toggle")
         pw.expect(toggle).to_have_attribute("aria-expanded", "false")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path

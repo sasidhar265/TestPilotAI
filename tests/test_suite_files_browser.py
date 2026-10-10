@@ -17,6 +17,7 @@ from app.agents.test_case_validator import ValidationReport
 from app.config import Settings
 from app.models import ExportFormat
 from app.models import TestSuite as Suite
+from app.roles import capabilities
 
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
@@ -56,6 +57,16 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
 
     def route_request(route):
         path = urlparse(route.request.url).path
+        if path == "/api/auth/profile":
+            route.fulfill(
+                json={
+                    "display_name": "Reviewer",
+                    "role": "test_lead",
+                    "is_admin": False,
+                    "capabilities": capabilities("test_lead"),
+                }
+            )
+            return
         paths.append(path)
         if path == "/" or path.startswith("/static/"):
             file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
@@ -103,14 +114,17 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         }""",
             {"suite": source.model_dump(mode="json"), "validation": validation.model_dump()},
         )
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator(".suite-jira summary").click()
         playwright.expect(page.locator(".suite-jira")).to_have_attribute("open", "")
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         playwright.expect(page.locator(".suite-jira")).not_to_have_attribute("open", "")
         page.locator("#view-feature").click()
         playwright.expect(page.locator("#feature-file-content")).to_contain_text(
             "Feature: Quotation API"
         )
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#generate-step-definitions").click()
         playwright.expect(page.locator("#step-definitions")).to_be_visible()
@@ -120,12 +134,14 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
             page.locator(".step-definition-file", has=page.locator(".copy-step-definition")).count()
             == 1
         )
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         with page.expect_download() as download:
             page.locator("#suite-download-cs").click()
         assert download.value.suggested_filename.endswith(".cs")
         assert "PendingStepException" in Path(download.value.path()).read_text()
         assert paths.count("/api/step-definitions/languages/pack") == 0
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_visible()
@@ -133,15 +149,34 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         playwright.expect(page.locator("#cs-generation-time")).not_to_have_text("00:00 elapsed")
         page.locator("#hide-cs-generation").click()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
-        page.locator("#suite-view-menu summary").click()
-        page.locator("#view-csharp-pack").click()
+        playwright.expect(page.locator("#pack-run-tray")).to_be_visible()
+        playwright.expect(page.locator("#pack-run-percent")).to_have_text("0%")
+        for width in (320, 390, 1440):
+            page.set_viewport_size({"width": width, "height": 900})
+            bounds = page.locator("#pack-run-tray").bounding_box()
+            assert bounds["x"] >= 0 and bounds["x"] + bounds["width"] <= width
+            assert bounds["y"] + bounds["height"] <= 900
+        page.set_viewport_size({"width": 1440, "height": 1100})
+        page.click("#reopen-pack-generation")
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_visible()
         assert len(pending_step_requests) == 1
         pending_step_requests.pop().fulfill(json=csharp.model_dump())
         playwright.expect(page.locator("#step-definitions")).to_be_visible()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
+        playwright.expect(page.locator("#pack-run-percent")).to_have_text("100%")
+        playwright.expect(page.locator("#pack-run-tray")).to_have_attribute(
+            "data-status", "completed"
+        )
+        page.click("#reopen-pack-generation")
+        playwright.expect(page.locator("#cs-generation-title")).to_have_text(
+            "Automation pack · Completed"
+        )
+        playwright.expect(page.locator("#cancel-cs-generation")).to_be_hidden()
+        page.click("#hide-cs-generation")
+        page.click("#dismiss-pack-progress")
         assert page.evaluate("stepDefinitionTimer === null")
         playwright.expect(page.locator("#feature-file-view")).to_be_hidden()
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         for format in ["xlsx", "csv", "pdf", "json"]:
             playwright.expect(page.locator(f"#{format}")).to_be_visible()
@@ -152,11 +187,13 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         with page.expect_download() as download:
             page.locator("#download-feature").click()
         assert download.value.suggested_filename.endswith(".feature")
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         with page.expect_download() as download:
             page.locator("#download-csharp-pack").click()
         assert download.value.suggested_filename.endswith(".zip")
         assert paths.count("/api/step-definitions/languages/pack") == 1
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         with page.expect_download() as download:
             page.locator("#suite-download-cs").click()
@@ -164,16 +201,20 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         assert "PendingStepException" in Path(download.value.path()).read_text()
         assert paths.count("/api/step-definitions/languages/bindings") == 1
         page.evaluate("data => render(data)", source.model_dump(mode="json"))
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#step-definitions")).to_be_visible()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
         assert paths.count("/api/step-definitions/languages/pack") == 1
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator(".suite-jira summary").click()
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         playwright.expect(page.locator(".suite-jira")).not_to_have_attribute("open", "")
         page.keyboard.press("Escape")
         page.set_viewport_size({"width": 390, "height": 844})
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         bounds = page.locator("#suite-download-menu .suite-menu-options").bounding_box()
         assert bounds["x"] >= 0 and bounds["x"] + bounds["width"] <= 390
@@ -184,12 +225,14 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         manual["test_cases"][0].update(execution_mode="manual", gherkin=None)
         page.evaluate("data => render(data)", manual)
         assert page.evaluate("stepDefinitionArtifact === null")
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         playwright.expect(page.locator("#view-feature")).to_be_disabled()
         playwright.expect(page.locator("#generate-step-definitions")).to_be_disabled()
         playwright.expect(page.locator("#view-csharp-pack")).to_be_disabled()
         playwright.expect(page.locator("#download-csharp-pack")).to_be_disabled()
         for format in ["xlsx", "csv", "pdf", "json"]:
+            page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
             page.locator("#suite-download-menu summary").click()
             playwright.expect(page.locator(f"#{format}")).to_be_visible()
             with page.expect_download() as download:
@@ -197,6 +240,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
             assert download.value.suggested_filename.endswith("." + format)
             assert Path(download.value.path()).stat().st_size > 0
         page.evaluate("validationReport.passed = false; syncSuiteFileActions();")
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         playwright.expect(page.locator("#pdf")).to_be_disabled()
         page.evaluate(
@@ -204,6 +248,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
             "data.feature_name = 'Changed API'; render(data); }",
             source.model_dump(mode="json"),
         )
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_visible()
@@ -220,6 +265,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         playwright.expect(page.locator("#cs-generation-dialog")).to_be_hidden()
         assert page.evaluate("stepDefinitionTimer === null && stepDefinitionTask === null")
         # A cancelled pack must not render or enter the cache, and can be retried.
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#cancel-cs-generation")).to_be_visible()
@@ -232,6 +278,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         assert page.evaluate("stepDefinitionTask === null && stepDefinitionRequest === null")
         assert page.evaluate("stepDefinitionTimer === null && stepDefinitionArtifact === null")
         assert any(path.endswith("/cancel") for path in paths)
+        page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-view-menu summary").click()
         page.locator("#view-csharp-pack").click()
         playwright.expect(page.locator("#cancel-cs-generation")).to_be_enabled()
@@ -257,6 +304,16 @@ def test_model_picker_only_lists_available_routes() -> None:
 
     def route_request(route):
         path = urlparse(route.request.url).path
+        if path == "/api/auth/profile":
+            route.fulfill(
+                json={
+                    "display_name": "Reviewer",
+                    "role": "test_lead",
+                    "is_admin": False,
+                    "capabilities": capabilities("test_lead"),
+                }
+            )
+            return
         if path == "/" or path.startswith("/static/"):
             file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
             route.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
@@ -343,6 +400,16 @@ def test_business_scenarios_and_test_case_headings_are_distinct() -> None:
 
     def route_request(route):
         path = urlparse(route.request.url).path
+        if path == "/api/auth/profile":
+            route.fulfill(
+                json={
+                    "display_name": "Reviewer",
+                    "role": "test_lead",
+                    "is_admin": False,
+                    "capabilities": capabilities("test_lead"),
+                }
+            )
+            return
         if path == "/" or path.startswith("/static/"):
             file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
             route.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
@@ -392,6 +459,16 @@ def test_pack_progress_ignores_stale_responses_and_preserves_failure():
 
     def route_request(route):
         path = urlparse(route.request.url).path
+        if path == "/api/auth/profile":
+            route.fulfill(
+                json={
+                    "display_name": "Reviewer",
+                    "role": "test_lead",
+                    "is_admin": False,
+                    "capabilities": capabilities("test_lead"),
+                }
+            )
+            return
         if path == "/" or path.startswith("/static/"):
             file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
             route.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])

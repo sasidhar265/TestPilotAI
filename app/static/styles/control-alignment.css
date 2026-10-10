@@ -1,0 +1,111 @@
+/* Shared form geometry is loaded after page styles, for every account role.
+   Geometry overrides prevent older page-specific selectors from changing it. */
+:root {
+  --control-height: 44px;
+  --control-radius: 10px;
+  --control-gap: 12px;
+  --control-font-size: var(--text-control, 0.8125rem);
+}
+:root body :is(input:not([type]), input[type="text"], input[type="search"],
+  input[type="email"], input[type="password"], input[type="number"],
+  input[type="url"], input[type="tel"], input[type="date"],
+  input[type="datetime-local"], select) {
+  box-sizing: border-box;
+  height: var(--control-height) !important;
+  min-height: var(--control-height) !important;
+  max-width: 100%;
+  min-width: 0;
+  margin-block: 0 !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--line-strong, #c6d6e0);
+  border-radius: var(--control-radius) !important;
+  font-family: var(--font-ui, inherit);
+  font-size: var(--control-font-size) !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  color: var(--ink, #172d43);
+  background-color: var(--surface, #fff);
+  vertical-align: middle;
+}
+:root body select {
+  display: block;
+  padding-right: 38px !important;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+:root body textarea:not(.code-editor) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  padding: 12px !important;
+  border-radius: var(--control-radius) !important;
+  font-size: var(--control-font-size) !important;
+  line-height: 1.6 !important;
+}
+/* The attached-file and source controls occupy the bottom of this composer. */
+:root body .textarea-wrap > textarea { padding-bottom: 72px !important; }
+:root body .password-field > input { padding-right: 52px !important; }
+:root body :is(button.primary, button.secondary, button.quiet-button,
+  button.stop, button.inspect-button, button.log-toolbar-action,
+  .log-view-menu > summary, a.button) {
+  box-sizing: border-box;
+  min-height: var(--control-height) !important;
+  margin-block: 0 !important;
+  padding: 10px 16px !important;
+  border-radius: var(--control-radius) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-ui, inherit);
+  font-size: var(--control-font-size) !important;
+  line-height: 1.5 !important;
+  font-weight: 650;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+/* Square icon actions use the same target height without text-button padding. */
+:root body :is(button.edit-user, button.delete-user) {
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0 !important;
+}
+:root body :is(button, a.button) .arrow {
+  font-size: inherit;
+  line-height: inherit;
+}
+:root body :is(input, select, textarea):focus-visible {
+  outline: 3px solid var(--primary, #087e83);
+  outline-offset: 3px;
+}
+:root body :is(.generation-actions, .tools, .graph-toolbar,
+  .log-page-controls, .users-form-actions, .ba-actions) {
+  align-items: center;
+  gap: var(--control-gap);
+}
+:root body :is(.generation-options, .graph-controls, .finance-input-grid,
+  .finance-domain-selection) { align-items: start; gap: var(--control-gap); }
+:root body .generation-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+}
+:root body .tools { align-items: flex-end; }
+:root body :is(.generation-options, .graph-controls, .finance-input-grid,
+  .finance-domain-selection) label { min-width: 0; }
+:root body .option-help { min-height: 2.4em; }
+:root body :is(.graph-controls, .finance-input-grid, .finance-domain-selection) :is(input, select) { width: 100%; }
+/* Empty role-filtered action groups must not leave an empty row. */
+:root body :is(.generation-actions, .tools, .users-form-actions):empty { display: none; }
+/* Preserve visibility controlled by generation state and role authorization. */
+:root body :is(button, a.button):is([hidden], .hidden) { display: none; }
+@media (max-width: 700px) {
+  :root body :is(.generation-actions, .users-form-actions, .graph-toolbar,
+    .log-page-controls, .tools) { flex-wrap: wrap; }
+  :root body .generation-options { grid-template-columns: 1fr; }
+  :root body .generation-actions > :is(button, a.button) { width: 100%; }
+}

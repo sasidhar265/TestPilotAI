@@ -73,6 +73,7 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         page.locator("#requirement-file").set_input_files(
             {"name": "Requirements.pdf", "mimeType": "application/pdf", "buffer": b"fixture"}
         )
+        page.locator(".ba-approved-check > summary").click()
         page.locator("#validate-requirements").click()
         panel = page.locator("#requirements-validation-report")
         playwright.expect(panel).to_contain_text("Reject a negative deposit.")
@@ -115,6 +116,7 @@ def test_failed_uploaded_brd_shows_suggestions_preview_and_download():
         playwright.expect(page.locator("#status")).to_contain_text(
             "must contain 1 to 50,000 characters"
         )
+        page.evaluate("window.navigateWorkspace('/')")
         page.locator("#file-remove").click()
         playwright.expect(panel).to_be_hidden()
         browser.close()

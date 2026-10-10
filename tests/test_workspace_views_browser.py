@@ -95,6 +95,6 @@ def test_focused_views_history_and_automation_preview():
         page.locator('.primary-nav a[href="/progress"]').click()
         pw.expect(page.locator("#work-dashboard")).to_be_visible()
         pw.expect(page.locator("#stage-panel-5")).to_be_hidden()
-        pw.expect(page.locator(".workflow-navigation")).to_be_hidden()
+        pw.expect(page.locator(".workflow-navigation")).to_be_visible()
         assert not errors, errors
         browser.close()

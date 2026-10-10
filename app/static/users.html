@@ -7,7 +7,6 @@
     <title>Manage users — Auto Finance Quality</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/index.css?v=20260909-case-review" />
-    <link rel="stylesheet" href="/static/styles/users.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
@@ -15,8 +14,13 @@
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/users.css?v=20261010-control-alignment" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
   </head>
-  <body>
+  <body data-access-pending="true">
     <div class="app-shell">
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -60,7 +64,7 @@
               ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
             >
             <a class="nav-item" href="/quality-lifecycle"
-              ><span class="nav-icon">◎</span><span>Quality Lifecycle</span></a
+              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
             >
             <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
@@ -91,26 +95,12 @@
             <a class="nav-item" href="/docs"
               ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
-            <span class="nav-label">Administration</span>
-            <a
-              class="nav-item active"
-              href="/admin/users"
-              aria-current="page"
-              aria-label="Manage users"
-              ><span class="nav-icon" aria-hidden="true"
-                ><svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                >
-                  <path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z" />
-                  <circle cx="12" cy="10" r="2.5" />
-                  <path d="M8 16c0-4 8-4 8 0" /></svg></span
-              ><span>Manage users</span></a
-            >
+            <div class="nav-group admin-navigation" data-permission="admin" hidden>
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="admin-navigation"><span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="admin-navigation" hidden>
+                <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
+              </div>
+            </div>
           </nav>
 
           <div class="side-status">
@@ -156,9 +146,9 @@
       <main class="workspace users-workspace" id="main-content">
         <header class="topbar">
           <div>
-            <div class="eyebrow">Workspace / Administration</div>
+            <div class="eyebrow">Admin actions / Manage users</div>
             <h1>Manage users</h1>
-            <p class="users-intro">Create accounts and control who can access your workspace.</p>
+            <p class="users-intro">Manage accounts, assigned roles and workspace access.</p>
           </div>
           <div class="top-actions">
             <div class="profile-menu">
@@ -197,7 +187,7 @@
             <div>
               <span class="eyebrow">Account setup</span>
               <h2 id="create-title">Create user</h2>
-              <p>Users can access the workspace. Admins can also manage accounts.</p>
+              <p>Assign each user a role to control their available workspace operations. Only admins can manage accounts.</p>
             </div>
           </div>
           <form id="create-user">
@@ -229,16 +219,16 @@
               ></label
             >
             <fieldset class="account-options">
-              <legend>User role</legend>
-              <div class="account-radio-row">
-                <label class="account-option"
-                  ><input type="radio" name="role" value="user" checked /><span>User</span></label
-                >
-                <label class="account-option"
-                  ><input type="radio" name="role" value="admin" /><span>Admin</span></label
-                >
-              </div>
-              <small class="field-help">Admins can also manage user accounts.</small>
+              <legend id="user-role-label">User role</legend>
+              <select name="role" id="user-role" aria-labelledby="user-role-label" aria-describedby="role-help">
+                <option value="ba">Business analyst</option>
+                <option value="functional_tester" selected>Functional tester</option>
+                <option value="automation_tester">Automation tester</option>
+                <option value="non_functional_tester">Non-functional tester</option>
+                <option value="test_lead">Test lead</option>
+                <option value="admin">Admin</option>
+              </select>
+              <small class="field-help" id="role-help">BA: BRD review and stories. Testers: their assigned testing operations. Test lead: all testing. Admin: all operations and user management.</small>
             </fieldset>
             <fieldset class="account-options">
               <legend>Application access</legend>
@@ -303,9 +293,13 @@
       </main>
     </div>
 
+    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/auth.js?v=20260923-guest-views" defer></script>
-    <script src="/static/scripts/users.js?v=20260907-inline-radios" defer></script>
+    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/users.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

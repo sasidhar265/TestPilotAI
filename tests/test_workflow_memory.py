@@ -1,6 +1,6 @@
 """Duplicate requirements reuse durable stages without another provider call."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from test_memory import suite
@@ -88,10 +88,31 @@ async def test_invalid_stored_stories_are_regenerated(tmp_path):
     settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
     agent = WorkflowAgent(settings)
     source = handoff()
-    key = agent.knowledge.key("stories", source.request)
+    _, fingerprint, _ = agent.business_analyst.knowledge()
+    key = agent.knowledge.key(f"stories:{fingerprint}", source.request)
     invalid = source.stories.model_copy(deep=True)
     invalid.stories[0].source_excerpt = "This is not in the original requirements."
     agent.knowledge.remember(key, invalid)
     agent.runner.generate_structured = AsyncMock(return_value=source.stories)
     assert await agent.stories(source.request) == source.stories
     agent.runner.generate_structured.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_changed_business_knowledge_regenerates_stories(tmp_path):
+    agent = WorkflowAgent(
+        Settings(
+            _env_file=None,
+            organizational_memory_path=tmp_path / "memory.db",
+            organizational_memory_enabled=True,
+        )
+    )
+    source = handoff()
+    agent.runner.generate_structured = AsyncMock(return_value=source.stories)
+    agent.business_analyst.knowledge = Mock(return_value=([], "version-one", []))
+    await agent.stories(source.request)
+    await agent.stories(source.request)
+    assert agent.runner.generate_structured.await_count == 1
+    agent.business_analyst.knowledge.return_value = ([], "version-two", [])
+    await agent.stories(source.request)
+    assert agent.runner.generate_structured.await_count == 2

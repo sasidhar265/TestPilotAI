@@ -26,7 +26,10 @@ def test_guest_preview_hides_evidence_and_does_not_fetch_customer_data(width):
             if path == "/":
                 html = (Path(__file__).parents[1] / "app/static/index.html").read_text()
                 request.fulfill(
-                    body=html.replace("<body>", '<body data-guest="true">'),
+                    body=html.replace(
+                        '<body data-access-pending="true">',
+                        '<body data-access-pending="true" data-guest="true">',
+                    ),
                     content_type="text/html",
                 )
             elif path == "/api/auth/profile":

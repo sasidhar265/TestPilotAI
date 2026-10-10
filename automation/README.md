@@ -212,3 +212,18 @@ builder, model, bindings and `Input/FinanceCalculations.Json` use the shared str
 The input vectors are synthetic arithmetic cases, not quotations or approved pricing policy.
 The default project discovers them with the existing features; targeted runs may use
 `--filter FullyQualifiedName~AutoFinance`. See [domain tools](../docs/auto-finance-domain.md).
+
+`BaReview.feature` executes three BA Agent input-rejection scenarios against the configured server: missing description, short text and a forged uploaded-document receipt. Fixtures, request builder, HttpClient service and bindings are included. These scenarios validate the input/evidence boundary; substantive LLM-generated review content is checked with isolated unit/browser fixtures and requires configured provider access for a live review.
+
+Role authorization checks are in `Features/RoleAccess.feature`, with role fixtures in
+`Input/RoleAccess.Json` and synthetic account data in `Input/RoleAccount.Json`. Run them against
+an isolated configured server/database with `QUALITY_LIFECYCLE_BASE_URL`, `ROLE_TEST_ADMIN_USER`
+and `ROLE_TEST_ADMIN_PASSWORD`. The pack creates temporary accounts, checks permitted/denied
+operations and role-change session revocation, and deletes its accounts after each scenario:
+
+```sh
+dotnet test QualityLifecycle.Automation.csproj --filter FullyQualifiedName~RoleSpecificWorkspaceAuthorization
+```
+
+Permitted generation probes deliberately use an invalid BRD and expect schema validation rather
+than invoking an AI provider. These checks verify authorization, not generated-suite execution.

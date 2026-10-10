@@ -1,6 +1,7 @@
 /* Page behavior only. The matching HTML defines structure and CSS defines appearance. */
 
 let reviewSourceRequest = null;
+const generationOperation = window.createOperationProgress();
 let suite = null,
   validationReport = null,
   stepDefinitionArtifact = null,
@@ -14,6 +15,10 @@ let suite = null,
   lifecyclePollPromise = null,
   lifecycleSequence = 0,
   generationOverlayTimer = null,
+  generationStartedAt = 0,
+  generationFinishedAt = null,
+  lastGenerationTarget = null,
+  backgroundProgressUsed = false,
   runtimeDetails = null,
   modelAccessRequest = 0,
   notificationUnread = 0,
@@ -109,6 +114,7 @@ async function api(path, body, options = {}) {
     requestId = options.requestId || crypto.randomUUID(),
     headers = { "Content-Type": "application/json", "X-Request-ID": requestId };
   if (managed) startLifecycleFeed(requestId);
+  let completion = "Completed";
   try {
     const response = await fetch(path, {
       method: "POST",
@@ -118,8 +124,14 @@ async function api(path, body, options = {}) {
     });
     if (!response.ok) throw await responseError(response);
     return response;
+  } catch (error) {
+    completion = error.name === "AbortError" ? "Cancelled" : "Failed";
+    throw error;
   } finally {
-    if (managed) await stopLifecycleFeed(requestId);
+    if (managed) {
+      await stopLifecycleFeed(requestId);
+      finishAgentWorkflow(completion);
+    }
   }
 }
 async function upload(path, body, options = {}) {
@@ -257,6 +269,7 @@ function elapsed(ms) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 const generationStages = {
+  "ba-review": {label: "BA review", agent: "BA Agent", title: "Reviewing BRD", message: "Assessing the BRD against available auto-finance knowledge."},
   stories: {
     label: "Story generation",
     agent: "Story Agent",
@@ -291,7 +304,13 @@ const generationStages = {
   },
 };
 function showGenerationOverlay(target) {
-  window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: true } }));
+  lastGenerationTarget = target;
+  stopGenerationHome.prepend($("stop-generation"));
+  $("generation-progress-slot").append($("generation-progress-panel"));
+  $("background-run-tray").hidden = true;
+  $("cancel-generation-overlay").hidden = !activeGeneration;
+  $("background-generation-label").textContent = activeGeneration ? "Run in background" : "Back to progress";
+  window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: Boolean(activeGeneration) } }));
   const stories = target === "stories",
     automatic = target === "auto",
     manual = target === "manual" || target === "non_functional",
@@ -329,6 +348,13 @@ function showGenerationOverlay(target) {
     $("generation-overlay-message").textContent =
       `${stage.message} You can run this in the background while keeping this page open.`;
   }
+  if (!activeGeneration && generationFinishedAt !== null) {
+    $("generation-agent-label").textContent = generationOperation.status;
+    $("generation-overlay-title").textContent = `${stage?.label || "Generation"} · ${generationOperation.status}`;
+    $("generation-overlay-message").textContent = "Review the recorded agent progress and validation evidence for this operation.";
+  }
+  document.querySelector(".generation-agent-pulse").classList.toggle("hidden", !activeGeneration);
+  document.querySelector(".generation-progress").classList.toggle("hidden", !activeGeneration);
   document
     .querySelector(".generation-llm-details")
     .classList.toggle("hidden", Boolean(stage?.runtime));
@@ -342,18 +368,17 @@ function showGenerationOverlay(target) {
   $("generation-overlay").classList.remove("hidden");
   $("cancel-generation-overlay").focus();
   document.body.classList.add("dialog-open");
-  const started = performance.now();
-  $("generation-overlay-time").textContent = "00:00 elapsed";
-  generationOverlayTimer = setInterval(
-    () =>
-      ($("generation-overlay-time").textContent =
-        `${elapsed(performance.now() - started)} elapsed`),
-    250,
-  );
+  if (generationOverlayTimer) clearInterval(generationOverlayTimer);
+  updateGenerationClock();
+  if (generationFinishedAt === null)
+    generationOverlayTimer = setInterval(updateGenerationClock, 250);
+
 }
 function hideGenerationOverlay(releaseBusy = true) {
-  if (generationOverlayTimer) clearInterval(generationOverlayTimer);
-  generationOverlayTimer = null;
+  if (releaseBusy && generationOverlayTimer) {
+    clearInterval(generationOverlayTimer);
+    generationOverlayTimer = null;
+  }
   $("generation-overlay").classList.add("hidden");
   if ($("knowledge-notice-overlay").classList.contains("hidden"))
     document.body.classList.remove("dialog-open");
@@ -361,13 +386,58 @@ function hideGenerationOverlay(releaseBusy = true) {
     window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: false } }));
 }
 $("cancel-generation-overlay").onclick = () => $("stop-generation").click();
+document.querySelector(".topbar").after($("background-run-tray"));
+const stopGenerationHome = $("stop-generation").parentElement;
+function updateGenerationClock() {
+  const value = `${elapsed((generationFinishedAt ?? performance.now()) - generationStartedAt)} elapsed`;
+  $("generation-overlay-time").textContent = value;
+  $("background-run-time").textContent = value;
+}
+function updateGenerationBanner(event = null) {
+  const phases = {ba_review_source: 20, ba_review_knowledge: 40, ba_review_assessment: 60, ba_review_evidence: 80};
+  const milestones = {...phases, enrich_requirements: 20, recall_approved_suite: 60,
+    generate_manual: 60, generate_automation: 60, validation_basis: 70,
+    create_stories: 90, workflow_stage: 90};
+  if (["success", "passed"].includes(event?.status) && milestones[event.action]) {
+    const progress = event.action === "workflow_stage" && event.agent === "Requirements processing" ? 20 : milestones[event.action];
+    generationOperation.advance(progress);
+  }
+  if (event?.action === "bdd_report" && event.status === "running")
+    generationOperation.advance(80);
+  generationOperation.render($("background-run-tray"), $("background-run-percent"), "operation", "Progress through completed agent stages");
+}
+function showBackgroundProgress() {
+  $("background-run-tray").dataset.compact = "true";
+  $("background-run-symbol").hidden = false;
+  $("background-run-percent").hidden = false;
+  $("reopen-generation").textContent = "Open";
+  $("dismiss-generation-progress").textContent = "×";
+  $("dismiss-generation-progress").setAttribute("aria-label", "Dismiss generation progress");
+  updateGenerationBanner();
+  $("background-run-body").append($("generation-progress-panel"));
+  stopGenerationHome.prepend($("stop-generation"));
+  $("background-run-title").textContent = generationStages[lastGenerationTarget]?.label || "Generation progress";
+  $("background-run-summary").textContent = generationFinishedAt === null
+    ? "Running in the background. Agent updates continue below."
+    : `Operation ${generationOperation.status.toLowerCase()}. Recorded progress is available below.`;
+  $("dismiss-generation-progress").hidden = generationFinishedAt === null;
+  $("background-run-tray").hidden = false;
+}
 $("background-generation-overlay").onclick = () => {
   if (activeGeneration) activeGeneration.background = true;
+  backgroundProgressUsed = true;
   hideGenerationOverlay(false);
-  $("status").textContent =
-    `${generationStages[activeGeneration?.kind]?.label || "Generation"} continues in the background. Keep this page open; use Stop to cancel.`;
-  $("stop-generation").focus();
+  showBackgroundProgress();
+  if (activeGeneration) $("status").textContent =
+    `${generationStages[activeGeneration.kind]?.label || "Generation"} continues in the background. Keep this page open; open progress to return to the pop-up.`;
+  $("reopen-generation").focus({preventScroll: true});
 };
+$("reopen-generation").onclick = () => {
+  if (activeGeneration) activeGeneration.background = false;
+  showGenerationOverlay(lastGenerationTarget);
+  if (!activeGeneration) $("background-generation-overlay").focus();
+};
+$("dismiss-generation-progress").onclick = () => { $("background-run-tray").hidden = true; };
 $("notification-bell").onclick = (event) => {
   event.stopPropagation();
   setProfilePanel(false);
@@ -632,6 +702,8 @@ function renderLifecycleEvents(events) {
     $("generation-background-events").querySelector(".empty-event")?.remove();
     lifecycleSequence = event.sequence;
     renderValidationEvidence(event);
+    updateAgentWorkflow(event);
+    updateGenerationBanner(event);
     $("live-agent-events").append(lifecycleItem(event));
     $("generation-background-events").append(lifecycleItem(event));
   });
@@ -678,12 +750,19 @@ function startLifecycleFeed(requestId) {
   if (activeLifecycleTimer) clearInterval(activeLifecycleTimer);
   activeLifecycleRequestId = requestId;
   lifecyclePollPromise = null;
+  generationStartedAt = performance.now();
+  generationFinishedAt = null;
+  generationOperation.reset();
+  backgroundProgressUsed = false;
+  $("background-run-tray").hidden = true;
+  $("generation-progress-slot").append($("generation-progress-panel"));
   resetLifecycleFeed();
+  beginAgentWorkflow(activeGeneration?.kind || null);
   addNotification(
     "Generation started",
     activeGeneration?.kind === "stories"
       ? "Your requirements are being converted into stories."
-      : "A new test-generation run is now processing.",
+      : generationStages[activeGeneration?.kind]?.message || "An agent operation is now processing.",
   );
   pollLifecycle(requestId);
   activeLifecycleTimer = setInterval(() => pollLifecycle(requestId), 500);
@@ -1258,50 +1337,56 @@ function renderStepDefinitions(artifact) {
   setWorkflowStage(3);
   $("step-definitions").scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function syncAgentWorkflow() {
-  const target = $("output-target").value;
-  const discipline = $("manual-testing-type").selectedOptions[0].textContent;
-  const descriptions = {
-    api: "Review requests, responses and API business rules.",
-    ui: "Review user journeys, screen behavior and accessibility.",
-    performance: "Review workload, response time and throughput criteria.",
-    database: "Review data integrity, queries and persistence rules.",
-  };
-  const manual = [
-    "ManualTestCaseGeneratorAgent",
-    `${discipline}: ${descriptions[$("manual-testing-type").value]}`,
+let agentWorkflowRun = null;
+function renderAgentWorkflow() {
+  const run = agentWorkflowRun;
+  const badge = document.querySelector(".agent-route-badge");
+  const context = document.querySelector(".agent-route-orchestrator");
+  badge.textContent = run ? run.status : "Ready";
+  badge.dataset.status = run?.status || "ready";
+  context.textContent = run ? "Updates reported by the running agents" : "Choose an action in Requirements";
+  $("agent-workflow-summary").textContent = run
+    ? generationStages[run.kind]?.label || "Agent operation"
+    : "Review the BRD or generate stories from the shared requirement source.";
+  const steps = run ? [...run.agents.values()] : [
+    {agent: "Review BRD", summary: "Senior business analyst reviews scope, domain knowledge and testability.", status: "Available"},
+    {agent: "Generate stories", summary: "Story Agent creates source-grounded stories and acceptance criteria.", status: "Available"},
   ];
-  const automation = [
-    "AutomationTestCaseGeneratorAgent",
-    "Generate BDD / Gherkin scenarios from approved coverage.",
-  ];
-  const steps = [
-    ["InputAgent + BusinessRulesAgent", "Prepare requirements and supplied business rules."],
-    ["StoryGeneratorAgent", "Create user stories for review and acceptance."],
-    ["ScenarioGeneratorAgent", "Design scenarios linked to approved stories."],
-    ["DecisionAgent", "Route coverage to the selected testing track."],
-  ];
-  if (target !== "automation") steps.push(manual);
-  if (target === "automation" || target === "both") steps.push(automation);
-  steps.push(
-    ["TestCaseValidatorAgent", "Check completeness, traceability and quality rules."],
-    ["ContextConverterAgent + OutputAgent", "Format exports and retain approved artifacts."],
-  );
-  if (target === "automation" || target === "both")
-    steps.push(["AutomationExecutionAgent", "Check readiness and run configured BDD tests."]);
-  $("agent-workflow-summary").textContent = {
-    manual: `Functional · ${discipline}`,
-    non_functional: `Non-Functional · ${discipline}`,
-    automation: `Automation · BDD / Gherkin · ${discipline}`,
-    both: `Functional · ${discipline} + Automation · BDD / Gherkin`,
-  }[target];
-  $("agent-workflow-steps").innerHTML = steps
-    .map(
-      ([title, description], index) =>
-        `<li class="agent-route-step"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(title)}</strong><small>${esc(description)}</small></div></li>`,
-    )
-    .join("");
+  $("agent-workflow-steps").innerHTML = steps.length ? steps.map((event, index) => {
+    const timestamp = event.timestamp ? new Date(event.timestamp) : null;
+    const time = timestamp && !Number.isNaN(timestamp.getTime())
+      ? `<time datetime="${esc(event.timestamp)}" title="${esc(timestamp.toLocaleString())}">${esc(timestamp.toLocaleTimeString())}</time>` : "";
+    return `<li class="agent-route-step" data-status="${esc(event.status)}"><span class="agent-route-number">${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(event.agent)}</strong><small>${esc(event.summary)}</small><span class="agent-route-state">${esc(event.status)} ${time}</span></div></li>`;
+  }).join("") : '<li class="agent-route-waiting">Preparing the request. Waiting for an agent update…</li>';
 }
+function syncAgentWorkflow() {
+  if (agentWorkflowRun?.status === "Running") return;
+  agentWorkflowRun = null;
+  renderAgentWorkflow();
+}
+function beginAgentWorkflow(kind) {
+  agentWorkflowRun = {kind, status: "Running", agents: new Map()};
+  renderAgentWorkflow();
+}
+function updateAgentWorkflow(event) {
+  if (!agentWorkflowRun) return;
+  const previous = agentWorkflowRun.agents.get(event.agent);
+  const status = event.status === "info" && previous ? previous.status : event.status;
+  agentWorkflowRun.agents.set(event.agent, {...event, status});
+  renderAgentWorkflow();
+}
+function finishAgentWorkflow(status) {
+  if (!agentWorkflowRun) return;
+  agentWorkflowRun.status = status;
+  generationOperation.finish(status);
+  updateGenerationBanner();
+  generationFinishedAt = performance.now();
+  updateGenerationClock();
+  $("generation-background-state").textContent = status.toUpperCase();
+  if (backgroundProgressUsed) showBackgroundProgress();
+  renderAgentWorkflow();
+}
+window.addEventListener("workspace-role-ready", syncAgentWorkflow);
 function selectedGenerationTarget() {
   return $("output-target").value === "non_functional" ? "manual" : $("output-target").value;
 }
@@ -1395,26 +1480,7 @@ loadRuntimeStatus();
 
 async function loadUserProfile() {
   try {
-    const response = await fetch("/api/auth/profile");
-    if (!response.ok) throw new Error("Profile unavailable");
-    const profile = await response.json();
-    const adminIcon =
-      '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><circle cx="12" cy="10" r="2.5"/><path d="M8 16c0-4 8-4 8 0"/></svg>';
-    for (const id of ["profile-toggle", "profile-avatar"]) {
-      if (profile.is_admin) $(id).innerHTML = adminIcon;
-      else $(id).textContent = profile.initials;
-    }
-    $("manage-users").classList.toggle("hidden", !profile.is_admin);
-    $("profile-name").textContent = profile.display_name;
-    $("profile-role").textContent = profile.is_guest
-      ? "Guest · View only"
-      : profile.is_admin
-        ? "Administrator"
-        : "Workspace account";
-    $("profile-toggle").setAttribute(
-      "aria-label",
-      `Open profile menu for ${profile.display_name}${profile.is_admin ? " (Administrator)" : ""}`,
-    );
+    window.renderWorkspaceProfile(await window.loadWorkspaceProfile());
   } catch {
     $("profile-name").textContent = "Profile unavailable";
   }

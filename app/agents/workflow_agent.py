@@ -5,6 +5,7 @@ import json
 from app.agent_instructions import load_agent_instructions
 from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
+from app.agents.business_analyst import BusinessAnalystAgent
 from app.agents.requirements_validation import RequirementsValidationAgent
 from app.agents.runner import StructuredAgentDefinition
 from app.agents.validation_evidence import fingerprint, functionality, labels
@@ -19,6 +20,7 @@ class WorkflowAgent:
     def __init__(self, settings: Settings):
         self.runner = ArtifactGenerationRunner(settings)
         self.knowledge = WorkflowKnowledgeAgent(settings)
+        self.business_analyst = BusinessAnalystAgent(settings)
         self.requirements_validator = RequirementsValidationAgent(settings)
 
     async def stories(self, request: GenerateRequest) -> Stories:
@@ -36,7 +38,8 @@ class WorkflowAgent:
             self._story_evidence(request, result, passed=True)
             return result
 
-        key = self.knowledge.key("stories", request)
+        sources, knowledge_fingerprint, limitations = self.business_analyst.knowledge()
+        key = self.knowledge.key(f"stories:{knowledge_fingerprint}", request)
         known = self.knowledge.recall(key, Stories, validate)
         if known is not None:
             return known
@@ -49,6 +52,8 @@ class WorkflowAgent:
             ),
             instructions=load_agent_instructions("story-generator"),
             prompt=request.model_dump_json()
+            + "\nBUSINESS ANALYSIS KNOWLEDGE\n"
+            + json.dumps({"sources": sources, "limitations": limitations})
             + "\nOUTPUT SCHEMA\n"
             + str(Stories.model_json_schema()),
             validate=validate,
@@ -175,9 +180,9 @@ STORY_AGENT = FunctionalAgentDescriptor(
     id="story-generator-agent",
     name="Story Agent",
     kind=AgentKind.STORY_GENERATOR,
-    purpose="Convert BRD, prompt and Jira requirements into source-grounded user stories.",
+    purpose="Create source-grounded user stories as a senior auto-finance business analyst.",
     runtime="configured-ai-providers",
-    capabilities=("requirements-to-stories", "source-traceability"),
+    capabilities=("requirements-to-stories", "source-traceability", "business-analysis"),
     instruction_file=".github/agents/story-generator.agent.md",
 )
 SCENARIO_AGENT = FunctionalAgentDescriptor(

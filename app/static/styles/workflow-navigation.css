@@ -1,0 +1,168 @@
+/* Shared workflow bar for workspace and supporting pages. */
+.workflow-navigation { min-width: 0; margin-bottom: 24px; }
+.stage-navigation-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 28px 0 14px;
+}
+.stage-eyebrow {
+  color: var(--primary);
+  font-size: var(--text-label, 0.75rem);
+  font-weight: 650;
+  letter-spacing: normal;
+}
+.stage-navigation-heading h2 {
+  margin: 5px 0 0;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+.stage-navigation-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.stage-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.stage-tabs :is(button, a) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 80px;
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  text-align: left;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.stage-tabs :is(button, a):hover {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+.stage-tabs :is(button, a)[aria-selected="true"] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+.stage-tabs :is(button, a)[aria-selected="true"] strong {
+  color: var(--primary-dark);
+}
+.stage-tabs :is(button, a):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.stage-tab-copy {
+  min-width: 0;
+}
+.stage-tab-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.stage-tabs strong {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.stage-tabs small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+.stage-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.stage-tabs :is(button, a)[aria-selected="true"] .stage-number {
+  color: #fff;
+  border-color: var(--primary-button);
+  background: var(--primary-button);
+}
+.stage-count {
+  padding: 1px 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.stage-count[hidden] {
+  display: none;
+}
+.stage-indicator {
+  display: none;
+}
+.stage-tabs .complete .stage-indicator {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 800;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-tabs :is(button, a) {
+    transition: none;
+  }
+}
+@media (max-width: 1200px) {
+  .stage-tabs {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 7px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .stage-tabs :is(button, a) {
+    flex: 1 0 174px;
+    scroll-snap-align: start;
+  }
+}
+@media (max-width: 700px) {
+  .stage-tabs {
+    overflow-x: auto;
+    display: flex;
+    margin: 0 0 16px;
+  }
+  .stage-tabs :is(button, a) {
+    min-width: 174px;
+  }
+}
+.stage-tabs a { text-decoration: none; font-family: inherit; }
+body[data-access-pending] [data-workflow-step] { visibility: hidden; }

@@ -8,21 +8,26 @@
     "/products": "Products",
     "/usage": "Usage",
   };
-  const views = { requirements: "Requirements", stories: "Stories", scenarios: "Scenarios", "test-cases": "Test cases", execution: "Execution", automation: "Automation packs" };
+  const views = Object.fromEntries(window.workflowStages.map(stage => [stage.view, stage.title]));
   const stageNavigation = document.createElement("section");
   stageNavigation.className = "workflow-navigation";
   stageNavigation.setAttribute("aria-label", "Quality workflow navigation");
   stageNavigation.append(document.querySelector(".stage-navigation-heading"), document.querySelector(".stage-tabs"));
   function showPage(focus = false) {
+    if (location.pathname === "/" && new URLSearchParams(location.search).get("view") === "ba-agent") history.replaceState(null, "", "/?view=requirements");
     if (document.body.dataset.guest === "true" && location.pathname !== "/") history.replaceState(null, "", "/");
     const path = location.pathname;
     const requested = new URLSearchParams(location.search).get("view") || "requirements";
     const view = path === "/products" ? "products" : (requested in views ? requested : "requirements");
     document.body.dataset.qualityView = view;
-    const pagePath = path === "/products" ? "/" : path === "/" && view === "automation" ? "/automation" : path;
+    const pagePath = path === "/products" ? "/" : path === "/" && view === "automation" ? `/${view}` : path;
     document.querySelectorAll("[data-workspace-page]").forEach((page) => { page.hidden = page.dataset.workspacePage !== pagePath; });
     const navigationHost = document.querySelector(`[data-workspace-page="${pagePath}"]`);
-    stageNavigation.hidden = path !== "/";
+    stageNavigation.hidden = false;
+    if (path !== "/") stageNavigation.querySelectorAll('[role="tab"]').forEach((tab, index) => {
+      tab.setAttribute("aria-selected", "false");
+      tab.tabIndex = index === 0 ? 0 : -1;
+    });
     if (navigationHost) {
       const hero = navigationHost.querySelector(".finance-hero");
       if (path === "/" && view === "requirements" && hero) hero.after(stageNavigation);
@@ -52,6 +57,8 @@
     if (focus) { heading.tabIndex = -1; heading.focus(); window.scrollTo(0, 0); }
   }
   window.navigateWorkspace = (url, focus = true) => {
+    if (url === "/" && window.roleHomePath) url = window.roleHomePath;
+    if (window.roleCanNavigate && !window.roleCanNavigate(url)) return;
     if (location.pathname + location.search !== url) history.pushState(null, "", url);
     showPage(focus);
   };
