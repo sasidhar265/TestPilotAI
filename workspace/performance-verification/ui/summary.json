@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "metadata": {
+    "run_id": "20261013T171255488986Z",
+    "tool": "Playwright Chromium",
+    "target": "http://127.0.0.1:8000",
+    "infrastructure_failure": null
+  },
+  "configuration": {
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 2,
+    "duration_seconds": 0,
+    "warmup_seconds": 0,
+    "think_time_ms": 0,
+    "timeout_ms": 30000,
+    "checks": [
+      {
+        "case_id": "TC-UI-LOGIN-001"
+      }
+    ],
+    "thresholds": {
+      "p95_ms": 10000,
+      "p99_ms": null,
+      "max_error_percent": 0,
+      "min_samples": 2
+    }
+  },
+  "warmup_samples_excluded": 0,
+  "cases": [
+    {
+      "case_id": "TC-UI-LOGIN-001",
+      "samples": 2,
+      "errors": 0,
+      "error_percent": 0.0,
+      "throughput_per_second": 7.551,
+      "min_ms": 48.29,
+      "mean_ms": 132.3,
+      "max_ms": 216.32,
+      "p50_ms": 48.29,
+      "p90_ms": 216.32,
+      "p95_ms": 216.32,
+      "p99_ms": 216.32,
+      "passed": true,
+      "reasons": []
+    }
+  ],
+  "method": "Nearest-rank percentiles over measured samples, including failures; per-case throughput uses observed wall time."
+}

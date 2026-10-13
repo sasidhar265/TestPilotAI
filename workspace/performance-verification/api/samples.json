@@ -1,0 +1,41 @@
+[
+  {
+    "case_id": "TC-HEALTH-001",
+    "start_ms": 1791911666859.0,
+    "end_ms": 1791911666926.0,
+    "elapsed_ms": 67.0,
+    "success": true,
+    "status": "200",
+    "bytes": "1182",
+    "latency_ms": "64",
+    "connect_ms": "15",
+    "active_threads": "1",
+    "warmup": false
+  },
+  {
+    "case_id": "TC-HEALTH-001",
+    "start_ms": 1791911666941.0,
+    "end_ms": 1791911666943.0,
+    "elapsed_ms": 2.0,
+    "success": true,
+    "status": "200",
+    "bytes": "1182",
+    "latency_ms": "2",
+    "connect_ms": "0",
+    "active_threads": "1",
+    "warmup": false
+  },
+  {
+    "case_id": "TC-HEALTH-001",
+    "start_ms": 1791911666956.0,
+    "end_ms": 1791911666957.0,
+    "elapsed_ms": 1.0,
+    "success": true,
+    "status": "200",
+    "bytes": "1182",
+    "latency_ms": "1",
+    "connect_ms": "0",
+    "active_threads": "1",
+    "warmup": false
+  }
+]

@@ -1,0 +1,4 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1791911666859,67,TC-HEALTH-001,200,OK,Approved case workload 1-1,text,true,,1182,177,1,1,http://127.0.0.1:8000/api/health,64,0,15
+1791911666941,2,TC-HEALTH-001,200,OK,Approved case workload 1-1,text,true,,1182,177,1,1,http://127.0.0.1:8000/api/health,2,0,0
+1791911666956,1,TC-HEALTH-001,200,OK,Approved case workload 1-1,text,true,,1182,177,1,1,http://127.0.0.1:8000/api/health,1,0,0

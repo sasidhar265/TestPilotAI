@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "metadata": {
+    "run_id": "20261013T171425319898Z",
+    "tool": "Apache JMeter",
+    "target": "http://127.0.0.1:8000",
+    "tool_exit_code": 0
+  },
+  "configuration": {
+    "threads": 1,
+    "ramp_seconds": 1,
+    "iterations": 3,
+    "duration_seconds": 0,
+    "warmup_seconds": 0,
+    "think_time_ms": 10,
+    "timeout_ms": 30000,
+    "checks": [
+      {
+        "case_id": "TC-HEALTH-001"
+      }
+    ],
+    "thresholds": {
+      "p95_ms": 5000,
+      "p99_ms": 5000,
+      "max_error_percent": 0,
+      "min_samples": 3
+    }
+  },
+  "warmup_samples_excluded": 0,
+  "cases": [
+    {
+      "case_id": "TC-HEALTH-001",
+      "samples": 3,
+      "errors": 0,
+      "error_percent": 0.0,
+      "throughput_per_second": 30.612,
+      "min_ms": 1.0,
+      "mean_ms": 23.33,
+      "max_ms": 67.0,
+      "p50_ms": 2.0,
+      "p90_ms": 67.0,
+      "p95_ms": 67.0,
+      "p99_ms": 67.0,
+      "passed": true,
+      "reasons": []
+    }
+  ],
+  "method": "Nearest-rank percentiles over measured samples, including failures; per-case throughput uses observed wall time."
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "case_id": "TC-UI-LOGIN-001",
+    "user": 0,
+    "iteration": 0,
+    "start_ms": 1791911576044.965,
+    "end_ms": 1791911576261.2778,
+    "elapsed_ms": 216.3182499971299,
+    "success": true,
+    "failure": null,
+    "browser_error_count": 0,
+    "navigation_metrics": {
+      "ttfb_ms": 15.600000001490116,
+      "dom_content_loaded_ms": 100.39999999850988,
+      "load_ms": 101.89999999850988,
+      "fcp_ms": 200
+    },
+    "action_timings": [],
+    "warmup": false
+  },
+  {
+    "case_id": "TC-UI-LOGIN-001",
+    "user": 0,
+    "iteration": 1,
+    "start_ms": 1791911576261.5303,
+    "end_ms": 1791911576309.8198,
+    "elapsed_ms": 48.289624999597436,
+    "success": true,
+    "failure": null,
+    "browser_error_count": 0,
+    "navigation_metrics": {
+      "ttfb_ms": 2.699999999254942,
+      "dom_content_loaded_ms": 10.5,
+      "load_ms": 11.399999998509884,
+      "fcp_ms": 24
+    },
+    "action_timings": [],
+    "warmup": false
+  }
+]

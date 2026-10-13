@@ -1,0 +1,2 @@
+case_id,samples,errors,error_percent,throughput_per_second,min_ms,mean_ms,max_ms,p50_ms,p90_ms,p95_ms,p99_ms,passed
+TC-HEALTH-001,3,0,0.0,30.612,1.0,23.33,67.0,2.0,67.0,67.0,67.0,True

@@ -1,0 +1,52 @@
+<!doctype html>
+    <html lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Performance execution report</title>
+    <style>body{font:14px/1.6 system-ui;background:#f4f7fa;color:#203247;margin:24px}
+    main{padding:28px;background:white;border-radius:14px}
+    table{border-collapse:collapse;width:100%}
+    td,th{padding:10px;border-bottom:1px solid #dde5ef;text-align:left}
+    .scroll{overflow:auto}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere}
+    @media print{body{margin:0}}</style>
+    <main>
+    <h1>Performance execution report · PASS</h1>
+    <p>{&#x27;run_id&#x27;: &#x27;20261013T171255488986Z&#x27;, &#x27;tool&#x27;: &#x27;Playwright Chromium&#x27;, &#x27;target&#x27;: &#x27;http://127.0.0.1:8000&#x27;, &#x27;infrastructure_failure&#x27;: None}</p>
+    <p>Nearest-rank percentiles over measured samples, including failures; per-case throughput uses observed wall time.</p>
+    <p>Warm-up samples excluded: 0.</p>
+    <div class="scroll">
+    <table>
+    <thead>
+    <tr><th>case_id</th><th>samples</th><th>errors</th><th>error_percent</th><th>throughput_per_second</th><th>min_ms</th><th>mean_ms</th><th>max_ms</th><th>p50_ms</th><th>p90_ms</th><th>p95_ms</th><th>p99_ms</th><th>passed</th></tr>
+    </thead>
+    <tbody><tr><td>TC-UI-LOGIN-001</td><td>2</td><td>0</td><td>0.0</td><td>7.551</td><td>48.29</td><td>132.3</td><td>216.32</td><td>48.29</td><td>216.32</td><td>216.32</td><td>216.32</td><td>True</td></tr></tbody>
+    </table>
+    </div>
+    <ul></ul>
+    <h2>Workload and supplied budgets</h2>
+    <pre>{
+  &quot;threads&quot;: 1,
+  &quot;ramp_seconds&quot;: 1,
+  &quot;iterations&quot;: 2,
+  &quot;duration_seconds&quot;: 0,
+  &quot;warmup_seconds&quot;: 0,
+  &quot;think_time_ms&quot;: 0,
+  &quot;timeout_ms&quot;: 30000,
+  &quot;checks&quot;: [
+    {
+      &quot;case_id&quot;: &quot;TC-UI-LOGIN-001&quot;
+    }
+  ],
+  &quot;thresholds&quot;: {
+    &quot;p95_ms&quot;: 10000,
+    &quot;p99_ms&quot;: null,
+    &quot;max_error_percent&quot;: 0,
+    &quot;min_samples&quot;: 2
+  }
+}</pre>
+    <p>Measured results from this run only. Review sample counts,
+    load-generator capacity and server telemetry
+    before capacity or production decisions.</p>
+    </main>
+    </html>
