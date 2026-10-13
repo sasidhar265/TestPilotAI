@@ -162,6 +162,7 @@ function resetSuiteFiles() {
 function syncSuiteFileActions() {
   const approved = Boolean(suite?.test_cases.length && validationReport?.passed);
   $("open-script-pack").disabled = !approved;
+  $("open-script-pack").hidden = $("output-target").value === "automation";
   const containsAutomation = Boolean(
     suite?.test_cases.some((c) => c.execution_mode === "automation"),
   );

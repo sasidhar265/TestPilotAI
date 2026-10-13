@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
     <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
-    <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
+    <link rel="stylesheet" href="/static/styles/script-packs.css?v=20261013-script-option" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
       body[data-workspace-path="/auto-finance-guide"] .topbar { display: none !important; }
@@ -520,14 +520,6 @@
             <p id="stage-status" role="status">
               Add a BRD, paste requirements, or connect a Jira ticket to begin.
             </p>
-            <section class="generation-knowledge" aria-labelledby="generation-knowledge-title">
-              <div class="section-heading">
-                <div><span class="section-kicker">Generation context</span><h2 id="generation-knowledge-title">Knowledge and considerations</h2></div>
-                <button id="preview-generation-knowledge" class="secondary" type="button">Preview knowledge context</button>
-              </div>
-              <p id="generation-knowledge-status" role="status">Preview the domain topics and rules available before generation. Each workflow stage also prepares its own context summary.</p>
-              <div id="generation-knowledge-content"></div>
-            </section>
             <div
               id="stage-panel-1"
               class="stage-panel"
@@ -2200,12 +2192,11 @@
     <script src="/static/scripts/dashboard.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/execution-logs.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-    <script src="/static/scripts/suite-files.js?v=20261013-explicit-provider" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20261013-script-option" defer></script>
     <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
-    <script src="/static/scripts/generation-knowledge.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261013-workspace-recovery" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261013-remove-context-panel" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261001-project" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>

@@ -124,3 +124,5 @@
     padding: 0;
   }
 }
+
+#open-script-pack[hidden] { display: none !important; }

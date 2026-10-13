@@ -357,23 +357,7 @@
     activeGeneration?.kind
       ? { requestId: activeGeneration.requestId, signal: activeGeneration.controller.signal }
       : {};
-  const knowledgeStages = new Set(["ba-review", "validate-requirements", "stories", "scenarios", "test-cases"]);
-  const previewKnowledge = async (stage, request) => {
-    const context = await (await api("/api/workflow/knowledge-context", { stage, request }, {
-      signal: activeGeneration?.controller.signal,
-      trackLifecycle: false,
-    })).json();
-    window.dispatchEvent(new CustomEvent("generation-knowledge-context", { detail: context }));
-    return context;
-  };
   const post = async (path, body) => {
-    if (knowledgeStages.has(path)) {
-      try { await previewKnowledge(path, body.request || body); }
-      catch (error) {
-        if (error.name === "AbortError") throw error;
-        window.dispatchEvent(new CustomEvent("generation-knowledge-unavailable", { detail: error.message }));
-      }
-    }
     const result = await (await api(`/api/workflow/${path}`, body, transportOptions())).json();
     if (["ba-review", "stories", "scenarios", "test-cases"].includes(path)) recordOperationResult(path, result);
     if (path === "execution-plan") recordOperationResult(path, result);
@@ -381,13 +365,6 @@
     if (path === "test-cases") recordSuiteValidation(result.validation, result.suite);
     return result;
   };
-  $("preview-generation-knowledge").onclick = () => work("Preparing knowledge context…", async (current) => {
-    const source = state.request ? requestOptions() : await readRequirementSource(current);
-    current();
-    await previewKnowledge("stories", source);
-    current();
-    status("Knowledge context ready. Review the sources and considerations below.");
-  });
   function requestOptions() {
     const target = selectedGenerationTarget();
     return {

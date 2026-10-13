@@ -84,6 +84,7 @@ def test_script_builder_and_reporting(tmp_path):
         page.route("**/*", route)
         page.goto("http://localhost/")
         page.evaluate("data => { validationReport=data.validation; render(data.suite); }", data)
+        pw.expect(page.locator("#open-script-pack")).to_be_hidden()
         page.locator("#select-all").click()
         page.locator('.primary-nav a[href="/?view=automation"]').click()
         pw.expect(page.locator("h1")).to_have_text("Automation packs")
