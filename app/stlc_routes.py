@@ -11,6 +11,7 @@ from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.auth import SESSION_COOKIE, session_username
 from app.config import Settings, get_settings
 from app.models import BusinessRule, GenerateRequest, TestSuite
+from app.services.accepted_outputs import AcceptedOutputService
 from app.services.stlc import LifecycleError, LifecycleStore
 from app.stlc_models import (
     AttemptInput,
@@ -53,8 +54,10 @@ Actor = Annotated[str, Depends(actor)]
 
 
 @router.get("")
-def snapshot(storage: Store) -> dict[str, Any]:
-    return storage.snapshot()
+def snapshot(storage: Store, settings: Config) -> dict[str, Any]:
+    data = storage.snapshot()
+    data["accepted_outputs"] = AcceptedOutputService(settings.accepted_output_directory).inventory()
+    return data
 
 
 @router.post("/requirements", status_code=201)

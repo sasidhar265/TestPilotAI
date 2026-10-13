@@ -252,6 +252,7 @@ class AcceptSuiteRequest(SuiteRequest):
     selected_case_ids: list[str] = Field(min_length=1)
     manual_format: ManualArtifactFormat = ManualArtifactFormat.EXCEL
     accepted_by: str = Field(min_length=2, max_length=100)
+    workflow_context: dict[str, object] | None = None
 
 
 class ValidationReportPayload(BaseModel):

@@ -49,7 +49,7 @@ const loadKnowledge = async () => {
   document.querySelector("#memory-status").textContent = data.enabled ? "Enabled" : "Disabled";
   const stages = data.workflow_counts;
   document.querySelector("#reuse-status").textContent = !data.enabled
-    ? "Knowledge storage is disabled. Requests will not reuse saved suites or workflow stages."
+    ? "AI knowledge reuse is disabled. Explicitly approved files remain available below; this setting does not hide your saved approvals."
     : stages
       ? `${data.suite_count} validated test suites · ${stages.stories} story batches · ${stages.scenarios} scenario batches stored. ${data.suite_count === 0 ? "No complete test suites are saved yet; saved workflow stages can still be reused." : "Matching requests can reuse saved knowledge."}`
       : "Workflow-stage counts are unavailable from this server version. The suite count does not include saved stories or scenarios.";
@@ -64,7 +64,7 @@ const loadKnowledge = async () => {
       identifier: item.memory_key,
     })),
     6,
-    "No suites are stored yet.",
+    "No suites in the AI reuse cache. Explicitly approved files are listed under Approved outputs.",
     "suites",
     "identifier",
   );
@@ -79,11 +79,13 @@ const loadKnowledge = async () => {
       identifier: item.artifact_id,
     })),
     6,
-    "No approved converted outputs are stored yet.",
+    "No approved outputs are stored yet.",
     "outputs",
     "identifier",
   );
   document.querySelector("#service-state").textContent = "● Source available";
+  const artifact = new URLSearchParams(location.search).get("artifact");
+  if (artifact) await showDetail("outputs", artifact);
 };
 
 const showDetail = async (source, identifier) => {

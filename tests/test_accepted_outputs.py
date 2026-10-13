@@ -111,3 +111,43 @@ def test_acceptance_rejects_failed_validation_and_unknown_case(tmp_path: Path) -
         AcceptedOutputService(tmp_path).accept(failed)
     with pytest.raises(AcceptanceError, match="Unknown selected"):
         AcceptedOutputService(tmp_path).accept(unknown)
+
+
+def test_saved_approvals_discoverable_without_reuse_and_preserve_selected_suite(tmp_path):
+    service = AcceptedOutputService(tmp_path)
+    request = acceptance_request().model_copy(update={"selected_case_ids": ["TC-001"]})
+    receipt = service.accept(request)
+    inventory = service.inventory()
+    assert len(inventory) == 1
+    assert inventory[0]["accepted_by"] == receipt.accepted_by
+    detail = service.entry(inventory[0]["artifact_id"])
+    assert [case["id"] for case in detail["suite"]["test_cases"]] == ["TC-001"]
+    assert detail["acceptance"]["selected_case_ids"] == ["TC-001"]
+
+
+def test_existing_receipts_work_without_suite_snapshot_and_reject_modified_files(tmp_path):
+    service = AcceptedOutputService(tmp_path)
+    service.accept(acceptance_request("csv"))
+    next(tmp_path.glob("*-suite.json")).unlink()
+    assert len(service.inventory()) == 2
+    path = next(tmp_path.glob("*.feature"))
+    path.write_text("Modified after approval")
+    assert len(service.inventory()) == 1
+
+
+def test_acceptance_preserves_grounded_story_and_scenario_approval_evidence(tmp_path):
+    import json
+
+    context = json.loads(Path("automation/Input/Workflow.Json").read_text())["approved-scenarios"][
+        "body"
+    ]
+    context["story_approvals"] = {"ST-001": "Reviewer"}
+    context["scenario_approvals"] = {"SC-001": "Reviewer"}
+    request = acceptance_request().model_copy(update={"workflow_context": context})
+    service = AcceptedOutputService(tmp_path)
+    service.accept(request)
+    detail = service.entry(service.inventory()[0]["artifact_id"])
+    assert detail["workflow"]["story_approvals"] == {"ST-001": "Reviewer"}
+    invalid = context | {"story_approvals": {"ST-404": "Reviewer"}}
+    with pytest.raises(AcceptanceError, match="Unknown stage approval"):
+        service.accept(request.model_copy(update={"workflow_context": invalid}))

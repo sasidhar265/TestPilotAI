@@ -39,10 +39,12 @@ def test_five_stage_workflow_and_source_invalidation(mode):
 
     def route(r):
         path = urlparse(r.request.url).path
-        if path in {"/", "/products", "/progress"} or path.startswith("/static/"):
+        if path in {"/", "/products", "/progress", "/auto-finance-guide"} or path.startswith(
+            "/static/"
+        ):
             file = static / (
                 "index.html"
-                if path in {"/", "/products", "/progress"}
+                if path in {"/", "/products", "/progress", "/auto-finance-guide"}
                 else path.removeprefix("/static/")
             )
             r.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
@@ -225,13 +227,9 @@ def test_five_stage_workflow_and_source_invalidation(mode):
 
         page.goto("http://localhost/")
         page.locator("#finance-explore").click()
-        pw.expect(page.locator('[data-finance-product="PCP"]')).to_be_focused()
-        page.locator('[data-finance-product="BCH"]').focus()
-        page.keyboard.press("Enter")
-        pw.expect(page.locator("#finance-product-name")).to_have_text("Business Contract Hire")
-        pw.expect(page.locator('[data-finance-product="BCH"]')).to_have_attribute(
-            "aria-pressed", "true"
-        )
+        pw.expect(page).to_have_url("http://localhost/auto-finance-guide?section=products")
+        guide = page.frame_locator("#auto-finance-guide-frame")
+        pw.expect(guide.locator("#products")).to_be_visible()
         pw.expect(page.locator("#description")).to_have_value("")
         page.get_by_role("link", name="Requirements", exact=True).click()
         page.locator("#finance-start").click()
@@ -464,6 +462,10 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.locator("#review-cases")).to_be_disabled()
         stage_popup("#stage-cases", "/api/workflow/test-cases", "Generating test cases")
         pw.expect(page.locator("#results")).to_be_visible()
+        approval_context = page.evaluate("window.workflowApprovalContext()")
+        assert approval_context["story_approvals"]["ST-001"] == "Story Reviewer"
+        assert approval_context["scenario_approvals"]["SC-001"] == "Scenario Reviewer"
+
         for control in (
             "suite-view-menu",
             "accepted-by",

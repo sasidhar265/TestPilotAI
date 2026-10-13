@@ -7,8 +7,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth import SESSION_COOKIE, issue_browser_session
 from app.config import Settings, get_settings
-from app.main import app
+from app.main import app, settings_at_startup
 from app.models import TestSuite as Suite
 from app.services.stlc import LifecycleError, LifecycleStore
 from app.stlc_models import (
@@ -350,10 +351,22 @@ def test_ci_runner_writes_evidence_under_framework_reports(storage, tmp_path, mo
 
 
 def test_stlc_routes_persist_and_translate_conflicts(tmp_path):
-    settings = Settings(_env_file=None, organizational_memory_path=tmp_path / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=tmp_path / "memory.db",
+        accepted_output_directory=tmp_path / "accepted",
+        api_auth_token="route-test-token",
+    )
     app.dependency_overrides[get_settings] = lambda: settings
     try:
-        with TestClient(app) as client:
+        with TestClient(
+            app,
+            cookies={
+                SESSION_COOKIE: issue_browser_session(
+                    settings_at_startup.app_username, settings_at_startup
+                )
+            },
+        ) as client:
             response = client.post("/api/stlc/requirements", json=requirement().model_dump())
             assert response.status_code == 201, response.text
             assert (

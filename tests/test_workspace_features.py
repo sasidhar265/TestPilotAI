@@ -17,8 +17,9 @@ from app.agents.multilanguage_agent import (
     validate_pack,
 )
 from app.agents.test_case_validator import ValidationReport
+from app.auth import SESSION_COOKIE, issue_browser_session
 from app.config import Settings, get_settings
-from app.main import app
+from app.main import app, settings_at_startup
 from app.memory import OrganizationalMemory
 from app.models import BusinessRule, GenerateRequest
 from app.models import TestSuite as Suite
@@ -188,10 +189,22 @@ def test_dashboard_persists_real_counts_and_separates_repository_execution(tmp_p
 
 
 def test_workspace_routes_roundtrip_rules_and_language_files(workspace, request_model):
-    settings = Settings(_env_file=None, organizational_memory_path=workspace / "memory.db")
+    settings = Settings(
+        _env_file=None,
+        organizational_memory_path=workspace / "memory.db",
+        accepted_output_directory=workspace / "accepted",
+        api_auth_token="route-test-token",
+    )
     app.dependency_overrides[get_settings] = lambda: settings
     try:
-        with TestClient(app) as client:
+        with TestClient(
+            app,
+            cookies={
+                SESSION_COOKIE: issue_browser_session(
+                    settings_at_startup.app_username, settings_at_startup
+                )
+            },
+        ) as client:
             response = client.put(
                 "/api/workspace/rules",
                 json={

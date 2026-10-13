@@ -12,6 +12,7 @@
     if (!snapshot) return;
     const project = get("pm-project").value;
     const scoped = (kind) => snapshot[kind].filter((item) => item.project === project);
+    const approvedOutputs = (snapshot.accepted_outputs || []).filter(item => item.project === project);
     const versions = scoped("requirements");
     const latest = new Map();
     for (const item of versions) {
@@ -28,29 +29,43 @@
     const openDefects = defects.filter((item) => !["resolved", "closed"].includes(item.status));
     const suiteIds = new Set(suites.map((item) => item.id));
     const impacts = snapshot.impacts.filter((item) => suiteIds.has(item.suite_id));
-    const records = [...versions, ...baselines, ...suites, ...cycles, ...defects, ...attempts];
+    const records = [...versions, ...baselines, ...suites, ...cycles, ...defects, ...attempts, ...approvedOutputs];
     const ids = new Set(records.map((item) => item.id));
     const activity = snapshot.audit.filter((item) => ids.has(item.record_id));
     const timestamps = [...records, ...activity]
       .map((item) => item.created_at)
       .filter(Boolean)
       .sort();
-    const owners = [...new Set(requirements.map((item) => item.owner).filter(Boolean))];
+    const owners = [...new Set([...requirements.map((item) => item.owner), ...approvedOutputs.map(item => item.accepted_by)].filter(Boolean))];
     get("pm-project-title").textContent = project || "Your project at a glance";
     get("pm-project-summary").textContent = project
-      ? "Requirements, ownership and delivery records for this project."
+      ? project === "Unassigned workspace" ? "Approved workflow artifacts saved without a project assignment. These are separate from formal requirement baselines and execution results." : "Requirements, ownership and delivery records for this project."
       : "Save your first project requirement in Quality lifecycle to build this overview.";
     get("pm-project-details").innerHTML = [
       ["Project ID", project || "No projects yet"],
-      ["Requirement owners", owners.join(", ") || "Not recorded"],
+      ["Owners / reviewers", owners.join(", ") || "Not recorded"],
       ["First recorded", date(timestamps[0])],
       ["Last activity", date(timestamps.at(-1))],
     ]
       .map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`)
       .join("");
+    let approvals = get("pm-approved-outputs");
+    if (!approvals) {
+      approvals = document.createElement("section"); approvals.id = "pm-approved-outputs"; approvals.className = "pm-card";
+      get("pm-metrics").after(approvals);
+    }
+    approvals.hidden = !approvedOutputs.length;
+    approvals.innerHTML = `<h3>Approved workflow outputs</h3><p>Saved approval evidence is available even when AI knowledge reuse is disabled.</p><ul class="pm-baselines">${approvedOutputs.map(item => `<li><strong>${esc(item.feature)}</strong> ${badge(item.format)}<small>${esc(item.cases)} cases · Approved by ${esc(item.accepted_by)} · ${esc(date(item.created_at))}</small><a href="/knowledge?view=saved&amp;artifact=${encodeURIComponent(item.artifact_id)}">View saved output ↗</a></li>`).join("")}</ul>`;
     const metric = (label, value, hint) =>
       `<article class="pm-card"><span>${esc(label)}</span><strong>${value}</strong><small>${esc(hint)}</small></article>`;
-    get("pm-metrics").innerHTML =
+    const unassigned = project === "Unassigned workspace";
+    ["pm-baselines", "pm-requirements", "pm-cycles"].forEach(id => { get(id).closest("section").hidden = unassigned; });
+    get("pm-metrics").innerHTML = unassigned
+      ? metric("Approved files", approvedOutputs.length, "Verified approval receipts") +
+        metric("Case entries", approvedOutputs.reduce((total, item) => total + item.cases, 0), "Across the saved artifact versions") +
+        metric("Approval batches", new Set(approvedOutputs.map(item => item.receipt || item.artifact_id)).size, "Explicit test-case approvals") +
+        metric("Reviewers", owners.length, "Recorded approval names")
+      :
       metric("Requirements", requirements.length, "Latest version of each requirement") +
       metric(
         "Approved requirements",
@@ -67,7 +82,7 @@
           )
           .join("")
       : '<li class="pm-empty">No baselines saved. Group reviewed requirements in Quality lifecycle.</li>';
-    const attention = [];
+    const attention = unassigned ? ["Use View saved output to inspect approved artifacts and their reviewer evidence. These files have no project assignment; they do not imply a formal baseline or executed tests."] : [];
     const pending = requirements.filter((r) => r.status !== "approved").length;
     if (pending) attention.push(`${pending} requirements need review or approval.`);
     const flagged = requirements.filter((r) => r.quality_flags?.length).length;
@@ -141,7 +156,7 @@
       const selection = get("pm-project").value;
       const projects = [
         ...new Set(
-          [...data.requirements, ...data.baselines, ...data.suites, ...data.cycles].map(
+          [...data.requirements, ...data.baselines, ...data.suites, ...data.cycles, ...(data.accepted_outputs || [])].map(
             (r) => r.project,
           ),
         ),

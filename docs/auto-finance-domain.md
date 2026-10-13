@@ -227,3 +227,18 @@ When live checkpoints are unavailable, the UI can show the returned BA outcome o
 validation report, explicitly identified as response data. The final suite report takes
 precedence over an earlier repair failure. Completed operations never retain an indefinite
 waiting message: missing validation evidence and missing source references are stated directly.
+
+## Saved approvals and project visibility
+
+Final **Approve selected** writes the selected suite snapshot and, when available, the grounded
+source/story/scenario handoff, stage reviewers and BA/requirements reports alongside the
+approval receipt. These records are approval history; they do not create or approve a formal
+business requirement baseline and do not claim test execution.
+
+Saved outputs reads receipt-verified approved files independently of the organisational
+memory reuse setting. Existing acceptance receipts remain discoverable without a suite
+snapshot; feature/CSV content and Excel rows can be inspected. Repeated artifacts with the
+same content digest are deduplicated in Saved outputs. Project dashboard lists approval files
+and batches under **Unassigned workspace** until they have a project assignment, with links
+back to Saved outputs. Older receipts cannot reconstruct story/scenario history that was never
+persisted. Named project requirement baselines and execution cycles remain separately governed.

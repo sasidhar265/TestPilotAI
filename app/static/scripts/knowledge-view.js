@@ -1,6 +1,6 @@
 (() => {
   const views = {
-    saved: ["Saved outputs", "Knowledge", "Browse validated suites and artifacts available for reuse."],
+    saved: ["Saved outputs", "Knowledge", "Browse approved workflow outputs and validated suites. Saved approvals remain visible independently of AI reuse."],
     graph: ["Knowledge graph", "Knowledge", "Explore connected requirements, tests, results and domain references."],
     domain: ["Project knowledge & rules", "Auto finance", "Review configured agent reference documents, product and journey context, and explicitly approved business rules."],
     calculations: ["Calculation checks", "Auto finance", "Validate supplied amounts with explicit arithmetic conventions."],

@@ -1194,6 +1194,13 @@
     const stages = { requirements: 1, stories: 2, scenarios: 3, "test-cases": 4, execution: 5, automation: 6 };
     if (event.detail.path === "/" && stages[event.detail.view]) show(stages[event.detail.view], false);
   });
+  window.workflowApprovalContext = () => state.request && state.stories ? {
+    request: state.request, stories: state.stories, ...(state.scenarios ? {scenarios:state.scenarios} : {}),
+    story_approvals: Object.fromEntries([...state.acceptedStories].map(([id, value]) => [id, value.reviewer])),
+    scenario_approvals: Object.fromEntries(state.acceptedScenarios),
+    ...(savedBaReport ? {ba_report:savedBaReport} : {}),
+    ...(savedRequirementsReport ? {requirements_report:savedRequirementsReport} : {}),
+  } : null;
   // Tab-scoped, account-scoped recovery for links that load another document.
   let draftKey = null;
   let restoringDraft = false;

@@ -66,6 +66,17 @@ def test_project_dashboard_evidence_filters_and_refresh():
         "audit": [],
         "attempts": [],
         "impacts": [{"suite_id": "s1"}],
+        "accepted_outputs": [
+            {
+                "artifact_id": "abc123",
+                "feature": "Saved quote",
+                "format": "feature",
+                "cases": 2,
+                "accepted_by": "Reviewer",
+                "created_at": now,
+                "project": "Unassigned workspace",
+            }
+        ],
     }
     fail = False
     with pw.sync_playwright() as browser_api:
@@ -98,6 +109,13 @@ def test_project_dashboard_evidence_filters_and_refresh():
         page.route("**/*", route)
         page.goto("http://localhost/project-dashboard")
         pw.expect(page.locator("#pm-content")).to_be_visible()
+        page.locator("#pm-project").select_option("Unassigned workspace")
+        pw.expect(page.locator("#pm-approved-outputs")).to_contain_text("Saved quote")
+        pw.expect(page.locator("#pm-metrics strong")).to_have_text(["1", "2", "1", "1"])
+        pw.expect(page.locator("#pm-approved-outputs")).to_contain_text("Approved by Reviewer")
+        assert (
+            page.locator("#pm-approved-outputs a").get_attribute("href").endswith("artifact=abc123")
+        )
         page.locator("#pm-project").select_option("PCP")
         pw.expect(page.locator("#pm-project-title")).to_have_text("PCP")
         pw.expect(page.locator("#pm-metrics strong")).to_have_text(["1", "1", "1", "1"])

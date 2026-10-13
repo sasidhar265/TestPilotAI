@@ -35,6 +35,7 @@ from app.observability import (
     publish_lifecycle_event,
     request_id_context,
 )
+from app.services.accepted_outputs import AcceptedOutputService
 from app.services.automation_reports import report_path
 from app.services.dashboard import DashboardStore
 from app.services.usage import UsageStore
@@ -83,15 +84,21 @@ async def knowledge_sources(
         enabled=settings.organizational_memory_enabled,
         protection=settings.memory_protection,
     )
+    accepted = AcceptedOutputService(settings.accepted_output_directory).inventory()
+    by_id = {item["artifact_id"]: item for item in outputs.entries()}
+    accepted_by_id = {}
+    for item in accepted:
+        accepted_by_id.setdefault(item["artifact_id"], item)
+    by_id.update(accepted_by_id)
     return {
         "domain_library": profile_knowledge_sources(settings.agent_profile),
         "enabled": settings.organizational_memory_enabled,
         "suite_count": memory.count(),
         "workflow_counts": memory.workflow_counts(),
-        "approved_output_count": outputs.count(),
-        "scenario_count": outputs.scenario_count(),
+        "approved_output_count": len(by_id),
+        "scenario_count": sum(int(item["cases"]) for item in by_id.values()),
         "suites": memory.entries(),
-        "approved_outputs": outputs.entries(),
+        "approved_outputs": list(by_id.values()),
     }
 
 
@@ -113,7 +120,12 @@ async def knowledge_source_detail(
     )
     detail: dict[str, object] = {
         "suite": memory.entry(identifier) if source == "suites" else None,
-        "output": outputs.entry(identifier) if source == "outputs" else None,
+        "output": (
+            AcceptedOutputService(settings.accepted_output_directory).entry(identifier)
+            or outputs.entry(identifier)
+        )
+        if source == "outputs"
+        else None,
     }
     if source not in {"suites", "outputs"} or detail[source[:-1]] is None:
         raise HTTPException(status_code=404, detail="Knowledge source entry not found")

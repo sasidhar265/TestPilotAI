@@ -1324,6 +1324,7 @@ $("accept-selected").onclick = async () => {
       selected_case_ids: selected,
       manual_format: "xlsx",
       accepted_by: acceptedBy,
+      workflow_context: window.workflowApprovalContext?.() || null,
     });
     const receipt = await response.json();
     $("review-state").textContent = "Approved";
