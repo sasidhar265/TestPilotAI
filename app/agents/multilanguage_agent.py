@@ -221,6 +221,7 @@ class MultiLanguageAgent:
         )
         return await ArtifactGenerationRunner(self.settings).generate_structured(
             definition,
+            llm_model=request.llm_model,
             instructions=instructions,
             prompt=json.dumps(
                 {

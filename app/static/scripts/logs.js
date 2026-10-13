@@ -1,4 +1,7 @@
 const $ = (id) => document.getElementById(id);
+const activityView = new URLSearchParams(location.search).get("view") === "activity";
+let activityController = null;
+let activityReference = "";
 const esc = (value) =>
   String(value).replace(
     /[&<>'"]/g,
@@ -177,13 +180,14 @@ async function loadLogs(reference = "", background = false) {
   loading = true;
   if (reference !== referenceFilter) logPage = 1;
   referenceFilter = reference;
+  if (activityView) loadRequestActivity(reference);
   const query = new URLSearchParams({ limit: $("log-limit").value });
   if (reference) query.set("request_id", reference);
   if (!background) {
     logsLoaded = false;
     $("log-count").textContent = "…";
   }
-  $("result-title").textContent = reference ? "Search results" : "Recent logs";
+  $("result-title").textContent = reference ? activityView ? "Technical request logs" : "Search results" : "Recent logs";
   if (!background) setState("Searching logs", "Reading local application activity…");
   try {
     const response = await fetch(`/api/logs?${query}`);
@@ -206,6 +210,57 @@ async function loadLogs(reference = "", background = false) {
       pendingLoad = null;
       loadLogs(next.reference);
     }
+  }
+}
+async function loadRequestActivity(reference) {
+  activityController?.abort();
+  const panel = $("request-activity");
+  panel.hidden = !reference;
+  if (reference !== activityReference) {
+    $("request-activity-events").replaceChildren();
+    $("request-activity-status").textContent = "Loading agent activity…";
+    activityReference = reference;
+  }
+  if (!reference) return;
+  const controller = new AbortController();
+  activityController = controller;
+  $("request-activity-reference").textContent = `Reference ID: ${reference}`;
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(`/api/generation/${encodeURIComponent(reference)}/events`, {
+      signal: controller.signal, cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Activity request failed (${response.status})`);
+    const data = await response.json();
+    if (activityController !== controller) return;
+    const events = [], waiting = new Map();
+    for (const event of data.events || []) {
+      if (event.action === "provider_wait") {
+        const key = event.summary.replace(/\(\d+s elapsed\)/g, "(elapsed)");
+        const prior = waiting.get(event.agent);
+        if (prior?.key === key) events[prior.index] = event;
+        else {
+          waiting.set(event.agent, { key, index: events.length });
+          events.push(event);
+        }
+      } else {
+        if (event.action?.startsWith("provider_")) waiting.delete(event.agent);
+        events.push(event);
+      }
+    }
+    $("request-activity-events").innerHTML = events.map((event) => {
+      const label = event.action === "provider_wait" ? "Waiting update"
+        : ["running", "started"].includes(event.status) ? "Started" : event.status;
+      return `<li class="record-event"><div class="record-event-heading"><strong>${esc(event.agent)}</strong><span>${esc(label)} · ${esc((event.action || "activity").replaceAll("_", " "))}</span><time>${esc(formatTime(event.timestamp))}</time></div><p class="activity-summary">${esc(event.summary)}</p></li>`;
+    }).join("");
+    $("request-activity-status").textContent = events.length
+      ? `${data.complete ? "Backend activity finished" : "Live activity"} · ${events.length} displayed checkpoints. Updated ${formatTime(new Date().toISOString())}.`
+      : "No backend checkpoints are available for this reference yet. Older activity may have expired or been cleared by a server restart.";
+  } catch (error) {
+    if (activityController !== controller) return;
+    $("request-activity-status").textContent = "Agent activity could not be loaded. Any displayed timeline is from an earlier refresh. Live updates will retry; technical request logs are shown separately below.";
+  } finally {
+    clearTimeout(timeout);
   }
 }
 function searchLogs() {
@@ -242,6 +297,11 @@ fetch("/api/health")
     $("service-state").textContent = "● Service unavailable";
   });
 const initialReference = new URLSearchParams(window.location.search).get("request_id") || "";
+if (activityView) {
+  document.querySelector(".topbar h1").textContent = "Operation activity";
+  document.querySelector(".explore-banner").hidden = true;
+  document.title = "Operation activity · Auto Finance Quality";
+}
 $("log-reference").value = initialReference;
 loadLogs(initialReference);
 

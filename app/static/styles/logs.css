@@ -1113,3 +1113,10 @@ body {
   .log-page-controls label { flex: 1 1 100%; }
   .log-page-controls button { flex: 1; }
 }
+
+.request-activity { margin-bottom:22px; height:auto; min-height:0; display:block; }
+.request-activity[hidden] { display:none; }
+.request-activity .activity-timeline { list-style:none; border-left:2px solid var(--line); max-height:600px; overflow-y:auto; margin:18px 0 0; padding-left:24px; }
+.request-activity .activity-summary { font-family:inherit; line-height:1.6; font-size:.88rem; overflow-wrap:anywhere; }
+.request-activity .record-event-heading strong { color:var(--ink); font-size:.8rem; }
+.request-activity #request-activity-reference { overflow-wrap:anywhere; }

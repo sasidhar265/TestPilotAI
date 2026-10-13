@@ -35,6 +35,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         suite["test_cases"][0]["gherkin"] = None
     errors, calls, pending_stories, cancellations = [], [], [], []
     pending_stages = {}
+    provider = "openai" if mode == "automation" else "codex"
 
     def route(r):
         path = urlparse(r.request.url).path
@@ -47,7 +48,18 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             r.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
             return
         result = {"ok": True, "events": [], "complete": True, "models": []}
-        if path == "/api/workspace/rules":
+        if path == "/api/llm/models":
+            result = {
+                "models": [
+                    {
+                        "model": provider,
+                        "display_name": provider,
+                        "can_use": True,
+                        "reason": "Test route",
+                    }
+                ]
+            }
+        elif path == "/api/workspace/rules":
             result = {"business_rules": []}
         elif path == "/api/auth/profile":
             result = {
@@ -64,7 +76,31 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 "description": handoff["request"]["description"],
                 "filename": "Requirements.pdf",
             }
+        elif path == "/api/workflow/knowledge-context":
+            result = {
+                "stage": r.request.post_data_json["stage"],
+                "delivery": "Reference context supplied before generation.",
+                "domain": {
+                    "enabled": False,
+                    "selected": False,
+                    "products": [],
+                    "journeys": [],
+                    "approved_rules": [],
+                    "calculation": None,
+                },
+                "topics": [],
+                "shared_rules": [],
+                "request_rules": [],
+                "approved_sources": [],
+                "uploaded_brd_present": False,
+                "limitations": [],
+                "notice": "Reference-only context.",
+                "prepared_at": "2026-10-13T10:00:00Z",
+                "fingerprint": "fixture",
+                "request_fingerprint": "fixture",
+            }
         elif path == "/api/workflow/stories":
+            assert r.request.post_data_json["llm_model"] == provider
             pending_stories.append(r)
             return
         elif path == "/api/workflow/jira-stories":
@@ -83,6 +119,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 ]
             }
         elif path == "/api/workflow/scenarios":
+            assert r.request.post_data_json["request"]["llm_model"] == provider
             result = handoff["scenarios"]
             assert r.request.post_data_json["stories"] == handoff["stories"]
         elif path in ("/api/workflow/validate-stories", "/api/workflow/validate-scenarios"):
@@ -93,6 +130,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 )
                 return
         elif path == "/api/workflow/test-cases":
+            assert r.request.post_data_json["request"]["llm_model"] == provider
             calls.append(r.request.post_data_json)
             result = {
                 "suite": suite,
@@ -201,7 +239,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.get_by_role("tab")).to_have_count(6)
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         page.screenshot(path="/tmp/workflow-input.png", full_page=True)
-        pw.expect(page.get_by_role("heading", name="Review finance requirements")).to_be_visible()
+        pw.expect(page.get_by_role("heading", name="Add requirements")).to_be_visible()
         for control in ("output-target", "manual-testing-type", "llm-model"):
             pw.expect(page.locator(f"#generate-form #{control}")).to_be_visible()
         page.set_viewport_size({"width": 390, "height": 844})
@@ -212,10 +250,10 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         page.set_viewport_size({"width": 1440, "height": 1000})
         pw.expect(page.locator("#output-target option")).to_have_text(
             [
-                "Functional",
-                "Automation (BDD / Gherkin)",
-                "Non-Functional",
-                "Both (Automation + Functional)",
+                "Manual functional tests",
+                "Automated tests (BDD / Gherkin)",
+                "Non-functional tests",
+                "Manual + automated tests",
             ]
         )
         page.locator("#output-target").select_option(mode)

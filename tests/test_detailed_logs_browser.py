@@ -148,9 +148,7 @@ def test_pagination_groups_events_filters_refreshes_and_exports_all_pages():
     def route(request):
         path = urlparse(request.request.url).path
         if path == "/logs" or path.startswith("/static/"):
-            file = static / (
-                "logs.html" if path == "/logs" else path.removeprefix("/static/")
-            )
+            file = static / ("logs.html" if path == "/logs" else path.removeprefix("/static/"))
             request.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
         elif path == "/api/logs":
             request.fulfill(json={"entries": entries, "count": len(entries)})
@@ -200,6 +198,99 @@ def test_pagination_groups_events_filters_refreshes_and_exports_all_pages():
         page.click("#log-refresh")
         pw.expect(page.locator("#log-page-status")).to_have_text("Page 1 of 1")
         pw.expect(page.locator(".log-row")).to_have_count(3)
+        page.set_viewport_size({"width": 390, "height": 844})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        assert not errors, errors
+        browser.close()
+
+
+@pytest.mark.skipif(os.getenv("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
+def test_operation_link_shows_readable_agent_activity_without_technical_logs():
+    pw = pytest.importorskip("playwright.sync_api")
+    static = Path(__file__).parents[1] / "app/static"
+    state = {
+        "events": [
+            {
+                "sequence": 1,
+                "agent": "BA Agent",
+                "action": "ba_review_knowledge",
+                "status": "success",
+                "summary": "Prepared domain knowledge <img src=x>.",
+            },
+            {
+                "sequence": 2,
+                "agent": "AI Provider",
+                "action": "provider_wait",
+                "status": "running",
+                "summary": "Codex is generating the review (20s elapsed).",
+            },
+            {
+                "sequence": 3,
+                "agent": "AI Provider",
+                "action": "provider_wait",
+                "status": "running",
+                "summary": "Codex is generating the review (30s elapsed).",
+            },
+            {
+                "sequence": 4,
+                "agent": "AI Provider",
+                "action": "provider_response",
+                "status": "success",
+                "summary": "Review response received.",
+            },
+            {
+                "sequence": 5,
+                "agent": "Artifact Validator",
+                "action": "validate_artifact",
+                "status": "success",
+                "summary": "Review citations checked.",
+            },
+        ],
+        "complete": True,
+    }
+    calls, errors = [], []
+
+    def route(request):
+        url = urlparse(request.request.url)
+        if url.path == "/logs" or url.path.startswith("/static/"):
+            file = static / (
+                "logs.html" if url.path == "/logs" else url.path.removeprefix("/static/")
+            )
+            request.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
+        elif url.path == "/api/logs":
+            request.fulfill(json={"entries": [], "count": 0})
+        elif url.path == "/api/generation/trace-activity/events":
+            calls.append(url.path)
+            request.fulfill(
+                json=state
+                | {
+                    "events": [
+                        event | {"timestamp": "2026-10-13T10:00:00Z"} for event in state["events"]
+                    ]
+                }
+            )
+        else:
+            request.fulfill(json={"display_name": "Reviewer", "is_admin": False})
+
+    with pw.sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.route("**/*", route)
+        page.goto("http://logs.test/logs?request_id=trace-activity&view=activity")
+        pw.expect(page.locator("h1")).to_have_text("Operation activity")
+        pw.expect(page.locator("#request-activity-status")).to_contain_text("finished")
+        pw.expect(page.locator("#request-activity-events li")).to_have_count(4)
+        pw.expect(page.locator("#request-activity-events")).to_contain_text("30s elapsed")
+        pw.expect(page.locator("#request-activity-events")).not_to_contain_text("20s elapsed")
+        pw.expect(page.locator("#request-activity-events")).to_contain_text(
+            "Review citations checked"
+        )
+        assert page.locator("#request-activity-events img").count() == 0
+        state.update(events=[], complete=False)
+        page.locator("#log-refresh").click()
+        pw.expect(page.locator("#request-activity-status")).to_contain_text("server restart")
+        assert len(calls) >= 2
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert not errors, errors

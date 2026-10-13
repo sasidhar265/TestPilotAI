@@ -121,3 +121,29 @@ def test_ba_rejects_forged_upload_before_calling_provider(tmp_path):
         )
     assert error.value.status_code == 422
     reviewer.runner.generate_structured.assert_not_awaited()
+
+
+@pytest.mark.parametrize("provider", ["codex", "openai"])
+def test_ba_review_preserves_explicit_provider(tmp_path, provider):
+    reviewer = agent(tmp_path)
+    asyncio.run(reviewer.review(GenerateRequest(description=DOCUMENT, llm_model=provider)))
+    assert reviewer.runner.generate_structured.call_args.kwargs["llm_model"] == provider
+
+
+def test_ba_review_publishes_evidence_checks_and_distinguishes_available_sources(
+    tmp_path, monkeypatch
+):
+    events = []
+    monkeypatch.setattr(
+        "app.agents.business_analyst.publish_lifecycle_event", lambda *event: events.append(event)
+    )
+    reviewer = agent(tmp_path, approved=True)
+    report = asyncio.run(reviewer.review(GenerateRequest(description=DOCUMENT)))
+    basis = next(event for event in events if event[1] == "validation_basis")
+    assert basis[2] == "passed"
+    assert "BRD quotation grounding" in basis[3]
+    assert "knowledge fingerprint" in basis[3]
+    sources = [event[3] for event in events if event[1] == "validation_source"]
+    assert any("POLICY" in source and "not cited" in source for source in sources)
+    assert any("reference_only" in source for source in sources)
+    assert report.business_approval == "not_granted"

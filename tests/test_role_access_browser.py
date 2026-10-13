@@ -91,6 +91,8 @@ def test_role_choices_and_navigation(role):
         page.goto("http://localhost/knowledge")
         pw.expect(page.locator("body")).to_have_attribute("data-role", role)
         pw.expect(page.locator(".workflow-navigation")).to_be_visible()
+        assert not page.locator(".workflow-shortcuts").evaluate("element => element.open")
+        page.locator(".workflow-shortcuts summary").click()
         visible = page.locator(".workflow-navigation [data-workflow-step]:visible")
         expected = 6 if access["automation"] else 4 if access["test_cases"] else 2
         pw.expect(visible).to_have_count(expected)

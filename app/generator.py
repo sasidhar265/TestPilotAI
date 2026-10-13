@@ -11,6 +11,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from app.agent_activity import await_agent_activity
 from app.agent_instructions import generation_agent_instructions
 from app.agents import AgentCapability, AgentDescriptor
 from app.agents.runner import (
@@ -20,7 +21,7 @@ from app.agents.runner import (
     json_object,
 )
 from app.config import Settings
-from app.model_policy import CODEX_MODEL, COPILOT_ROUTES
+from app.model_policy import CODEX_MODEL, COPILOT_MODEL, COPILOT_ROUTES
 from app.models import (
     ExecutionMode,
     GenerateRequest,
@@ -31,6 +32,7 @@ from app.models import (
     TestFormat,
     TestSuite,
 )
+from app.observability import publish_lifecycle_event
 from app.services.usage import codex_output, record_provider_usage
 from app.subprocess_cleanup import stop_process_tree
 
@@ -452,6 +454,7 @@ class FallbackGenerator:
     )
 
     def __init__(self, settings: Settings) -> None:
+        self.settings = settings
         self.copilot = CopilotGenerator(settings)
         self.openai = OpenAIGenerator(settings)
         self.codex = CodexGenerator(settings)
@@ -464,13 +467,13 @@ class FallbackGenerator:
         existing_titles: list[str] | None = None,
     ) -> TestSuite:
         if request.llm_model == LlmModel.OPENAI:
-            return await self.openai.generate(request, phase, existing_titles)
+            return await self._generate_with_activity(self.openai, request, phase, existing_titles)
         if request.llm_model == LlmModel.GEMINI:
-            return await self.gemini.generate(request, phase, existing_titles)
+            return await self._generate_with_activity(self.gemini, request, phase, existing_titles)
         if request.llm_model == LlmModel.CODEX:
-            return await self.codex.generate(request, phase, existing_titles)
+            return await self._generate_with_activity(self.codex, request, phase, existing_titles)
         if request.llm_model != LlmModel.AUTO_FALLBACK:
-            return await self.copilot.generate(request, phase, existing_titles)
+            return await self._generate_with_activity(self.copilot, request, phase, existing_titles)
 
         failures: list[str] = []
         routes: tuple[tuple[str, GeneratorProvider, LlmModel], ...] = (
@@ -482,9 +485,17 @@ class FallbackGenerator:
         for route, provider, selection in routes:
             try:
                 selected = request.model_copy(update={"llm_model": selection})
-                return await provider.generate(selected, phase, existing_titles)
+                return await self._generate_with_activity(
+                    provider, selected, phase, existing_titles
+                )
             except Exception as error:
                 failures.append(f"{route}: {error}")
+                publish_lifecycle_event(
+                    "AI Provider",
+                    "provider_fallback",
+                    "info",
+                    f"{route} could not complete generation; checking the next configured route.",
+                )
                 logger.warning(
                     "generation_provider_fallback route=%s error_type=%s",
                     route,
@@ -492,6 +503,30 @@ class FallbackGenerator:
                 )
         raise CopilotGenerationError(
             "All configured AI providers are unavailable. " + " | ".join(failures)
+        )
+
+    async def _generate_with_activity(
+        self,
+        provider: GeneratorProvider,
+        request: GenerateRequest,
+        phase: str,
+        existing_titles: list[str] | None,
+    ) -> TestSuite:
+        models = {
+            "github-copilot": COPILOT_MODEL,
+            "openai-api": self.settings.openai_model,
+            "gemini-api": self.settings.gemini_model,
+            "codex-cli": CODEX_MODEL,
+        }
+        route = {
+            LlmModel.OPENAI: "openai-api",
+            LlmModel.GEMINI: "gemini-api",
+            LlmModel.CODEX: "codex-cli",
+        }.get(request.llm_model, "github-copilot")
+        return await await_agent_activity(
+            provider.generate(request, phase, existing_titles),
+            f"{route} / {models.get(route, 'configured model')}",
+            f"{request.generation_target.value} test cases ({phase})",
         )
 
 

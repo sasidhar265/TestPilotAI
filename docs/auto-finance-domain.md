@@ -113,3 +113,93 @@ dotnet test automation/QualityLifecycle.Automation.csproj \
 A signed `API_SESSION_COOKIE` is also supported; keep it outside tracked files.
 The fixture expectations assume the supplied GBP/two-decimal/half-up test configuration.
 Use a separately configured test app when your deployment has different precision or rounding.
+
+## Domain knowledge library
+
+Auto finance → **UK domain guide** opens `/auto-finance-guide` within the shared workspace,
+preserving navigation and workflow drafts. It embeds `app/static/auto-finance-uk.html`, a self-contained
+reference with an interactive conceptual graph, product/use-case comparisons, official UK
+brand/provider examples, the vehicle-to-contract journey, financial terminology, source links
+and a signing checklist. Download HTML preserves the inline styles and scripts for offline
+reading; print expands the guide. No checklist data is submitted or persisted.
+Only the guide permits same-origin framing, and its exact inline script is allowed by a
+content hash; other pages retain their existing framing and script restrictions.
+**Download PDF** serves `app/static/auto-finance-uk.pdf`: an A4 document with a cover,
+page-numbered contents, running headers/footers, section bookmarks and clickable references.
+Rebuild it after guide edits with `.venv/bin/python tools/export_auto_finance_guide.py`
+in a development environment with Playwright and Chromium installed. Browser rendering is
+required only to build the file, not when users download it. The PDF metadata records the
+source HTML SHA-256 fingerprint for freshness checks.
+The guide is public-source reference material, not a live pricing catalogue or approved policy.
+It is not automatically loaded into agent prompts and does not alter the configured market,
+approved rule catalogue, source baseline or saved coverage graph. Promotion into agent context
+and approved requirements follows the existing owner/source/version governance workflow.
+
+Knowledge → Auto finance → Domain pack now lists and searches the configured profile's
+Markdown knowledge documents, including the original quotation BRD/catalogue/risk material.
+The same files are loaded into agent prompts, independently of organisational memory.
+
+The auto-finance-quotation profile includes product distinctions, lifecycle analysis,
+calculation/data evidence and a governance/approval backlog. Each new document identifies
+version, reference status, review date, scope, sources and responsible review functions.
+Lifecycle guidance applies only to explicitly requested journeys and does not widen the
+quotation BRD's scope. Public-source material is reference-only.
+
+Follow auto-finance-governance-and-gaps.md to promote reviewed source material into the
+business baseline, approved domain rules and explicit requirement mappings. No owner,
+policy threshold, pricing oracle or business approval has been invented. The baseline and
+approved rule lists remain empty until the accountable owners provide approved material.
+
+## Generation context visibility
+
+The Quality workspace includes **Knowledge and considerations** with a manual preview action.
+Before BA review, alignment validation, story, scenario and test-case calls, the UI requests
+`POST /api/workflow/knowledge-context` with the stage and source request. It shows the profile
+reference topics and section guidance, selected domain product/journey focus, calculation
+conventions/results, exact approved domain/shared/request rules, and effective approved sources.
+The preview calls no model and grants no approval. It records preparation time and source,
+request and context fingerprints. Stage snapshots remain visible for review during the session;
+editing requirements or options marks earlier snapshots as historical. They are not persisted
+as execution evidence or attached to exported artifacts.
+
+Delivery is stage-specific: scenario generation receives reviewed stories and scoped request
+context, not the full library directly. The preview describes context available before the call,
+not model reasoning or proof that every topic influenced output. Configuration can change between
+preview and generation; validation and artifact evidence remain separate. Preview failures are
+shown and do not replace the existing generation/alignment gates.
+
+## Live agent activity
+
+The generation dialog and background panel show the latest backend agent/action and a timestamped
+activity timeline. Knowledge preview requests do not take over the active generation feed.
+Provider execution reports the selected route/model, real elapsed waiting every ten seconds,
+response arrival, repair and fallback attempts, and stage validation. The activity stream records
+execution status and safe summaries, not prompts, customer data, generated payloads or internal
+model reasoning. Feed connection errors and completed requests with no reported activity are
+shown explicitly. Activity is process-local and bounded; a server restart clears it.
+
+## Selected AI provider
+
+The AI provider selected in Requirements is passed through BA review, approved-source alignment,
+stories, scenarios, test cases and automation-pack generation. Explicit Codex, OpenAI API, Gemini
+and Copilot selections use only that provider; repairs remain on the same provider and access
+failures are reported rather than silently switching to Copilot. Only `auto-fallback` retains
+the configured Copilot → OpenAI API → Gemini API → Codex route. Copilot uses `claude-haiku-4.5`;
+Codex uses `gpt-6-astra`. OpenAI API and Gemini use their configured models. Reusing a validated
+local artifact does not invoke any provider.
+
+Explicit non-Copilot test-case requests use local governed coordination, avoiding a hidden
+Copilot coordinator call. Validation and storage controls still apply to the generated suite.
+
+## Validation evidence in the popup
+
+BA review publishes its deterministic evidence checks (review-area completeness, BRD quote
+and knowledge-citation grounding, and unchanged knowledge fingerprint) using the same
+validation event contract as stories, scenarios and the Quality Gate. Sources distinguish
+verified citations from available but uncited references. Passing these checks does not grant
+business approval or establish regulatory compliance, financial correctness or test execution.
+
+When live checkpoints are unavailable, the UI can show the returned BA outcome or suite
+validation report, explicitly identified as response data. The final suite report takes
+precedence over an earlier repair failure. Completed operations never retain an indefinite
+waiting message: missing validation evidence and missing source references are stated directly.

@@ -96,8 +96,8 @@ class BusinessAnalystAgent:
         self.settings = settings
         self.runner = ArtifactGenerationRunner(settings)
 
-    def knowledge(self) -> tuple[list[dict], str, list[str]]:
-        sources = []
+    def knowledge(self) -> tuple[list[dict[str, str]], str, list[str]]:
+        sources: list[dict[str, str]] = []
         limitations = []
         path = self.settings.requirements_baseline_path
         try:
@@ -213,7 +213,8 @@ class BusinessAnalystAgent:
             for area in assessment.areas:
                 if area.status == "covered" and not area.document_quote.strip():
                     raise ValueError("Covered areas require a verified BRD quotation.")
-            for item in [*assessment.areas, *assessment.findings]:
+            items: list[BAArea | BAFinding] = [*assessment.areas, *assessment.findings]
+            for item in items:
                 if item.document_quote and " ".join(item.document_quote.split()) not in document:
                     raise ValueError("A BRD quotation could not be verified.")
             for finding in assessment.findings:
@@ -234,6 +235,7 @@ class BusinessAnalystAgent:
             instructions=load_agent_instructions("business-analyst"),
             prompt=prompt,
             validate=validate,
+            llm_model=request.llm_model,
         )
         publish_lifecycle_event(
             "BA Agent review", "ba_review_assessment", "success", "Domain assessment generated."
@@ -259,6 +261,37 @@ class BusinessAnalystAgent:
             "success",
             "Review evidence and outcome checked.",
         )
+        publish_lifecycle_event(
+            "BA Agent review",
+            "validation_basis",
+            "passed",
+            f"Checked all {len(AREAS)} review areas, required BRD excerpts, "
+            "BRD quotation grounding, and cited knowledge quotations against the loaded sources. "
+            "Confirmed the knowledge fingerprint did not change during the review. "
+            f"Review outcome: {assessment.outcome}. "
+            "These are evidence checks, not business approval, "
+            "regulatory assessment or test execution.",
+        )
+        publish_lifecycle_event(
+            "BA Agent review",
+            "validation_source",
+            "info",
+            "BRD in the current request; knowledge SHA-256 " + fingerprint + ".",
+        )
+        cited_ids = {e.source_id for finding in assessment.findings for e in finding.evidence}
+        for source in sources:
+            publish_lifecycle_event(
+                "BA Agent review",
+                "validation_source",
+                "info",
+                f"{source['title']} · {source['id']} · v{source['version']} · "
+                f"{source['authority']} · "
+                + (
+                    "Cited quotation verified."
+                    if source["id"] in cited_ids
+                    else "Available to review; not cited in findings."
+                ),
+            )
         return BAReport(
             **assessment.model_dump(),
             assessed_at=datetime.now(UTC).isoformat(),

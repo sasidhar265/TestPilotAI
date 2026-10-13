@@ -201,3 +201,20 @@ async def test_rejected_story_grounding_reports_failed_evidence(monkeypatch):
             GenerateRequest(description="A different functionality without the original source")
         )
     assert next(e[2] for e in events if e[1] == "validation_basis") == "failed"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["codex", "openai"])
+async def test_story_and_scenario_handoffs_preserve_provider(tmp_path, provider):
+    source = handoff()
+    source.request = GenerateRequest.model_validate(
+        source.request.model_dump() | {"llm_model": provider}
+    )
+    agent = WorkflowAgent(Settings(_env_file=None, organizational_memory_enabled=False))
+    agent.requirements_validator = SimpleNamespace(require=AsyncMock())
+    agent.runner.generate_structured = AsyncMock(return_value=source.stories)
+    await agent.stories(source.request)
+    assert agent.runner.generate_structured.call_args.kwargs["llm_model"] == provider
+    agent.runner.generate_structured = AsyncMock(return_value=source.scenarios)
+    await agent.scenarios(source)
+    assert agent.runner.generate_structured.call_args.kwargs["llm_model"] == provider

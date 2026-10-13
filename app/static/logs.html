@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f7fb" />
     <title>Auto Finance Quality — Application logs</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
-    <link rel="stylesheet" href="/static/styles/logs.css?v=20261009-pagination-20261009-single-search" />
+    <link rel="stylesheet" href="/static/styles/logs.css?v=20261013-operation-activity" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
-    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
@@ -190,6 +190,13 @@
           </div>
           <span class="explore-banner-symbol" aria-hidden="true">⌁</span>
         </section>
+        <section id="request-activity" class="results-card request-activity" hidden aria-labelledby="request-activity-title">
+          <div class="results-head"><div><span class="kicker">Backend checkpoints</span><h2 id="request-activity-title">Agent activity for this operation</h2></div></div>
+          <p id="request-activity-reference" class="search-help"></p>
+          <p id="request-activity-status" role="status">Loading agent activity…</p>
+          <p class="search-help">These are reported execution steps, not internal model reasoning. Live updates refresh every 5 seconds. Activity is bounded and clears when the server restarts. Export below downloads the technical logs.</p>
+          <ol id="request-activity-events" class="activity-timeline"></ol>
+        </section>
         <section class="results-card">
           <div class="results-head">
             <div>
@@ -315,12 +322,12 @@
     </div>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/logs.js?v=20261009-pagination" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/logs.js?v=20261013-operation-activity" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

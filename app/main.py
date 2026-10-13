@@ -371,6 +371,7 @@ async def logout() -> Response:
 @app.get("/progress", include_in_schema=False)
 @app.get("/quality-lifecycle", include_in_schema=False)
 @app.get("/products", include_in_schema=False)
+@app.get("/auto-finance-guide", include_in_schema=False)
 @app.get("/usage", include_in_schema=False)
 @app.get("/", include_in_schema=False)
 async def index(request: Request) -> Response:

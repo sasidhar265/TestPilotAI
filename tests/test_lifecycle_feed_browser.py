@@ -110,3 +110,104 @@ def test_generation_submit_starts_only_one_request_while_rules_are_saving():
         playwright.expect(page.locator("#status")).to_contain_text("Simulated generation stop")
         assert len(generation_calls) == 1
         browser.close()
+
+
+@pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
+def test_knowledge_preview_preserves_active_feed_and_provider_activity():
+    playwright = pytest.importorskip("playwright.sync_api")
+    static = Path(__file__).parents[1] / "app/static"
+    polled_runs = []
+
+    def route(request):
+        url = urlparse(request.request.url)
+        path = url.path
+        if path == "/" or path.startswith("/static/"):
+            file = static / ("index.html" if path == "/" else path.removeprefix("/static/"))
+            request.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
+        elif path.startswith("/api/generation/") and path.endswith("/events"):
+            polled_runs.append(path.split("/")[3])
+            after = int(parse_qs(url.query).get("after", ["0"])[0])
+            request.fulfill(
+                json={
+                    "events": []
+                    if after
+                    else [
+                        {
+                            "sequence": 1,
+                            "agent": "AI Provider",
+                            "action": "provider_wait",
+                            "summary": (
+                                "Codex is generating stories; waiting for response (10s elapsed)."
+                            ),
+                            "status": "running",
+                            "timestamp": "2026-10-13T10:00:00Z",
+                        }
+                    ],
+                    "complete": False,
+                }
+            )
+        elif path == "/api/workflow/knowledge-context":
+            request.fulfill(json={"stage": "stories"})
+        elif path == "/api/auth/profile":
+            request.fulfill(json={"display_name": "Reviewer", "is_admin": False})
+        else:
+            request.fulfill(
+                json={"models": [], "events": [], "history": [], "active": [], "business_rules": []}
+            )
+
+    with playwright.sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page()
+        page.route("**/*", route)
+        page.goto("http://localhost/")
+        page.evaluate("startLifecycleFeed('story-operation')")
+        playwright.expect(page.locator("#generation-current-agent")).to_have_text("AI Provider")
+        page.evaluate("api('/api/workflow/knowledge-context', {}, {trackLifecycle: false})")
+        assert page.evaluate("activeLifecycleRequestId") == "story-operation"
+        assert page.evaluate("agentWorkflowRun.status") == "Running"
+        page.wait_for_timeout(600)
+        assert set(polled_runs) == {"story-operation"}
+        playwright.expect(page.locator("#generation-current-activity")).to_contain_text(
+            "generating stories"
+        )
+        playwright.expect(page.locator("#generation-background-events li")).to_have_count(1)
+        page.evaluate("""renderLifecycleEvents([
+          {sequence: 2, agent: 'AI Provider', action: 'provider_wait', status: 'running',
+           summary: 'Codex is generating stories; waiting for response (20s elapsed).'},
+          {sequence: 3, agent: 'AI Provider', action: 'provider_wait', status: 'running',
+           summary: 'Codex is generating stories; waiting for response (30s elapsed).'}
+        ])""")
+        playwright.expect(page.locator("#generation-background-events li")).to_have_count(1)
+        playwright.expect(page.locator("#live-agent-events li")).to_have_count(1)
+        playwright.expect(page.locator("#generation-background-events")).to_contain_text(
+            "30s elapsed"
+        )
+        playwright.expect(page.locator("#generation-background-events")).not_to_contain_text(
+            "20s elapsed"
+        )
+        page.evaluate("""renderLifecycleEvents([
+          {sequence: 4, agent: 'AI Provider', action: 'provider_response', status: 'success',
+           summary: 'Response received.'},
+          {sequence: 5, agent: 'AI Provider', action: 'provider_call', status: 'running',
+           summary: 'Starting another call.'},
+          {sequence: 6, agent: 'AI Provider', action: 'provider_wait', status: 'running',
+           summary: 'Codex is generating stories; waiting for response (10s elapsed).'}
+        ])""")
+        playwright.expect(page.locator("#generation-background-events li")).to_have_count(4)
+        page.evaluate("stopLifecycleFeed('story-operation')")
+        page.evaluate("finishAgentWorkflow('Completed')")
+        playwright.expect(page.locator("#generation-background-events")).not_to_contain_text(
+            "Waiting for the first"
+        )
+        page.evaluate("startLifecycleFeed('empty-operation')")
+        page.evaluate("stopLifecycleFeed('empty-operation')")
+        # Model the missing-events outcome separately from a provider-success outcome.
+        page.evaluate(
+            "lifecycleSequence = 0; "
+            "document.getElementById('generation-background-events').innerHTML = "
+            "'<li class=empty-event></li>'; finishAgentWorkflow('Failed')"
+        )
+        playwright.expect(page.locator("#generation-background-events")).to_contain_text(
+            "No backend agent activity"
+        )
+        browser.close()

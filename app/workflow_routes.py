@@ -20,6 +20,7 @@ from app.agents.workflow_agent import WorkflowAgent, test_case_request
 from app.config import Settings, get_settings
 from app.dependencies import get_multi_agent_pipeline
 from app.jira import JiraClient
+from app.knowledge_context import KnowledgePreviewRequest, knowledge_context
 from app.models import AutomationRunRequest, GenerateRequest, SuiteRequest
 from app.observability import (
     generation_cancellations,
@@ -48,6 +49,15 @@ class ExecutionPlanRequest(SuiteRequest):
 
 Config = Annotated[Settings, Depends(get_settings)]
 Pipeline = Annotated[MultiAgentTestPipeline, Depends(get_multi_agent_pipeline)]
+
+
+@router.post("/knowledge-context")
+async def preview_knowledge_context(request: KnowledgePreviewRequest, settings: Config) -> dict:
+    """Explain reference exposure without contacting a model or approving requirements."""
+    try:
+        return knowledge_context(request.request, request.stage, settings)
+    except (OSError, ValueError) as error:
+        raise HTTPException(422, "Knowledge context unavailable: " + str(error)) from error
 
 
 @contextmanager

@@ -9,7 +9,8 @@ from test_mobile_navigation_browser import mobile_route
 
 
 @pytest.mark.skipif(os.getenv("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
-def test_ba_review_upload_summary_and_source_invalidation():
+@pytest.mark.parametrize("provider", ["codex", "openai"])
+def test_ba_review_upload_summary_and_source_invalidation(provider):
     pw = pytest.importorskip("playwright.sync_api")
     errors, requests, pending_reviews = [], [], []
     report = assessment().model_dump() | {
@@ -26,7 +27,41 @@ def test_ba_review_upload_summary_and_source_invalidation():
 
     def route(request):
         path = urlparse(request.request.url).path
-        if path == "/api/workflow/ba-review":
+        if path == "/api/llm/models":
+            request.fulfill(
+                json={
+                    "models": [
+                        {
+                            "model": provider,
+                            "display_name": provider,
+                            "can_use": True,
+                            "reason": "Test route",
+                        }
+                    ]
+                }
+            )
+        elif path == "/api/health":
+            request.fulfill(
+                json={
+                    "ok": True,
+                    "openai_model": "gpt-5.4",
+                    "gemini_model": "gemini-test",
+                    "openai_configured": True,
+                }
+            )
+        elif path == "/api/workflow/knowledge-context":
+            from app.config import Settings
+            from app.knowledge_context import knowledge_context
+            from app.models import GenerateRequest
+
+            payload = request.request.post_data_json
+            request.fulfill(
+                json=knowledge_context(
+                    GenerateRequest.model_validate(payload["request"]), payload["stage"], Settings()
+                )
+            )
+        elif path == "/api/workflow/ba-review":
+            assert request.request.post_data_json["llm_model"] == provider
             requests.append(request.request.post_data_json)
             pending_reviews.append(request)
         elif path == "/api/workflow/requirements/document":
@@ -46,7 +81,7 @@ def test_ba_review_upload_summary_and_source_invalidation():
                             "timestamp": "2026-10-09T10:00:00Z",
                             "agent": "BA Agent review",
                             "status": "success",
-                                "action": "ba_review_knowledge",
+                            "action": "ba_review_knowledge",
                             "summary": "Reviewed BRD scope and domain knowledge <img src=x>.",
                         }
                     ]
@@ -82,6 +117,9 @@ def test_ba_review_upload_summary_and_source_invalidation():
         )
         page.click("#ba-review")
         pw.expect(page.locator("#generation-overlay")).to_be_visible()
+        pw.expect(page.locator("#generation-llm-provider")).to_have_text(
+            "Codex CLI" if provider == "codex" else "OpenAI API"
+        )
         pw.expect(page.locator("#generation-background-events li")).to_have_count(1)
         page.click("#background-generation-overlay")
         tray = page.locator("#background-run-tray")
@@ -117,12 +155,33 @@ def test_ba_review_upload_summary_and_source_invalidation():
         page.evaluate("window.navigateWorkspace('/')")
         pending_reviews.pop().fulfill(json=report)
         pw.expect(page.locator("#ba-report")).to_be_visible()
+        pw.expect(page.locator("#generation-validation-evidence")).to_contain_text(
+            "Returned BA review outcome"
+        )
+        pw.expect(page.locator("#generation-validation-evidence")).not_to_contain_text(
+            "Waiting for validation evidence"
+        )
         pw.expect(tray).to_contain_text("Operation completed")
         pw.expect(page.locator("#background-run-percent")).to_have_text("100%")
         pw.expect(tray).to_have_attribute("data-status", "completed")
         completed_time = page.locator("#background-run-time").inner_text()
         page.click("#reopen-generation")
         pw.expect(page.locator("#generation-overlay-title")).to_have_text("BA review · Completed")
+        pw.expect(page.locator("#generation-agent-label")).to_have_text("Completed")
+        pw.expect(page.locator("#generation-overlay .generation-progress")).to_be_hidden()
+        pw.expect(page.locator("#generation-overlay .generation-agent-pulse")).to_be_hidden()
+        pw.expect(page.locator("#generation-current-agent")).to_have_text("Operation completed")
+        pw.expect(page.locator("#generation-overview-status")).to_have_text("Completed")
+        pw.expect(page.locator("#generation-overview-output")).to_contain_text(
+            "needs clarification"
+        )
+        pw.expect(page.locator("#generation-next-step")).to_contain_text("resolve open questions")
+        page.locator(".generation-validation summary").click()
+        pw.expect(page.locator("#generation-validation-evidence")).to_be_visible()
+        page.locator(".generation-request-details summary").click()
+        pw.expect(page.locator("#generation-request-reference")).not_to_have_text(
+            "Not assigned yet"
+        )
         pw.expect(page.locator("#cancel-generation-overlay")).to_be_hidden()
         pw.expect(page.locator("#generation-overlay-time")).to_have_text(completed_time)
         pw.expect(page.locator("#generation-background-events li")).to_have_count(1)
@@ -139,6 +198,10 @@ def test_ba_review_upload_summary_and_source_invalidation():
         assert requests[0]["uploaded_brd_receipt"] == "server-receipt"
         assert "Uploaded BRD" in requests[0]["description"]
         assert page.locator("#ba-report img").count() == 0
+        page.evaluate("showGenerationOverlay('ba-review')")
+        page.click("#generation-view-result")
+        pw.expect(page.locator("#generation-overlay")).to_be_hidden()
+        pw.expect(page.locator("#ba-report")).to_be_visible()
         page.fill("#description", "Changed business requirements for a new document.")
         pw.expect(page.locator("#ba-report")).to_be_hidden()
         pw.expect(workflow.locator(".agent-route-badge")).to_have_text("Ready")

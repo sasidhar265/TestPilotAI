@@ -54,6 +54,7 @@ $("cases").addEventListener("submit", async (event) => {
   const options = { requestId, signal: controller.signal };
   activeGeneration = { requestId, controller, cancelled: false };
   let saved = false;
+  let outcome = "Completed";
   startLifecycleFeed(requestId);
   syncGenerateAvailability();
   $("accept-selected").disabled = true;
@@ -85,6 +86,8 @@ $("cases").addEventListener("submit", async (event) => {
     if (suite !== snapshot || activeGeneration.cancelled)
       throw new Error("The suite changed or regeneration was cancelled. Your review is saved.");
     validationReport = result.validation;
+    recordOperationResult("test-cases", result);
+    recordSuiteValidation(result.validation, result.suite);
     reviewSourceRequest = result.source_request || source;
     render(result.suite);
     resetAcceptance();
@@ -107,6 +110,7 @@ $("cases").addEventListener("submit", async (event) => {
     $("status").textContent = message;
     $("timer").textContent = `COMPLETE · ${elapsed(performance.now() - started)}`;
   } catch (error) {
+    outcome = activeGeneration?.cancelled ? "Cancelled" : "Failed";
     runFailed = true;
     const message = `${saved ? "Review saved to knowledge. " : ""}${activeGeneration?.cancelled ? "Regeneration cancelled." : error.message} Your previous suite is still available.`;
     status.textContent = message;
@@ -115,6 +119,7 @@ $("cases").addEventListener("submit", async (event) => {
   } finally {
     clearInterval(ticker);
     await stopLifecycleFeed(requestId);
+    finishAgentWorkflow(outcome);
     activeGeneration = null;
     $("accept-selected").disabled = false;
     $("stop-generation").classList.add("hidden");

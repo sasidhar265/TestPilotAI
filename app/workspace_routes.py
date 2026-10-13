@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
+from app.agent_instructions import profile_knowledge_sources
 from app.agents.multilanguage_agent import (
     LANGUAGES,
     LanguageArtifact,
@@ -83,6 +84,7 @@ async def knowledge_sources(
         protection=settings.memory_protection,
     )
     return {
+        "domain_library": profile_knowledge_sources(settings.agent_profile),
         "enabled": settings.organizational_memory_enabled,
         "suite_count": memory.count(),
         "workflow_counts": memory.workflow_counts(),

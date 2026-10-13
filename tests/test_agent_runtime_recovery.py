@@ -85,3 +85,29 @@ async def test_coordinator_timeout_recovers_instead_of_failing_request(
     assert outcome.validation.passed
     assert outcome.trace[0].tool == "coordinator_recovery"
     assert outcome.trace[-1].tool == "finish_run"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("selection", ["codex", "openai", "gemini"])
+async def test_explicit_provider_never_invokes_copilot_coordinator(
+    tmp_path, monkeypatch, selection
+):
+    from unittest.mock import AsyncMock
+
+    invoke = AsyncMock(side_effect=AssertionError("Copilot must not be called"))
+    monkeypatch.setattr(CopilotAgentRunner, "invoke", invoke)
+    generator = FallbackGenerator()
+    validator = TestCaseValidatorAgent()
+    storage = StorageAgent(OrganizationalMemory(tmp_path / "memory.db"))
+    runtime = AgentRuntime(Settings(), generator, validator, storage)  # type: ignore[arg-type]
+    request = GenerateRequest(
+        description="As a user, I want an option to stay logged in between browser sessions.",
+        llm_model=selection,
+    )
+    outcome = await runtime.run(request)
+    assert generator.calls == 1
+    assert outcome.validation.passed
+    assert outcome.trace[0].tool == "coordinate_selected_provider"
+    assert outcome.trace[-1].tool == "finish_run"
+    assert storage.find(request) is not None
+    invoke.assert_not_awaited()

@@ -23,7 +23,7 @@ from app.agents.test_case_validator import ValidationReport
 from app.automation_layout import layout_instructions, validate_layout
 from app.automation_pack import csharp_assets
 from app.config import Settings
-from app.models import ExecutionMode, TestSuite
+from app.models import ExecutionMode, LlmModel, TestSuite
 from app.quotation_contract import quotation_feature, quotation_sources
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,7 @@ class StepDefinitionArtifact(BaseModel):
 class StepDefinitionRequest(BaseModel):
     suite: TestSuite
     validation: ValidationReport
+    llm_model: LlmModel = LlmModel.AUTO_FALLBACK
 
 
 STEP_DEFINITION_AGENT = StructuredAgentDefinition(
@@ -285,6 +286,7 @@ class ReqnRollStepDefinitionAgent:
                 instructions=instructions,
                 prompt=prompt,
                 validate=validate,
+                llm_model=request.llm_model,
             )
             self.memory.put(scope, scenarios, artifact)
             return artifact

@@ -285,3 +285,13 @@ async def test_brd_events_do_not_claim_business_approval(tmp_path, monkeypatch):
     reference = next(e[3] for e in events if e[1] == "validation_source")
     assert "User-provided BRD" in reference
     assert "Business approval not assessed" in reference
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["codex", "openai"])
+async def test_alignment_preserves_explicit_provider(tmp_path, provider):
+    instance = agent(tmp_path)
+    await instance.require(
+        GenerateRequest.model_validate(REQUEST.model_dump() | {"llm_model": provider})
+    )
+    assert instance.runner.generate_structured.call_args.kwargs["llm_model"] == provider

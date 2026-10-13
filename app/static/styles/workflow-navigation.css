@@ -166,3 +166,12 @@
 }
 .stage-tabs a { text-decoration: none; font-family: inherit; }
 body[data-access-pending] [data-workflow-step] { visibility: hidden; }
+
+/* Supporting pages keep workflow destinations available without a second full navigation bar. */
+.workflow-support-navigation, .workflow-navigation:has(> .workflow-shortcuts) { margin:16px 0 22px; }
+.workflow-home-link { display:inline-block; color:var(--primary); font-size:.85rem; font-weight:600; margin:0 0 10px; }
+.workflow-shortcuts { border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:12px 16px; }
+.workflow-shortcuts > summary { cursor:pointer; color:var(--muted); font-size:.82rem; font-weight:600; }
+.workflow-shortcuts .stage-tabs { margin:14px 0 0; box-shadow:none; }
+.workflow-shortcuts .stage-navigation-heading { display:none; }
+.workflow-shortcuts > .workflow-navigation { margin:0; }

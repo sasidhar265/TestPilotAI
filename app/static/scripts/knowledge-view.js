@@ -1,9 +1,9 @@
 (() => {
   const views = {
-    saved: ["Saved knowledge", "Knowledge", "Browse approved suites and artifacts available for reuse."],
+    saved: ["Saved outputs", "Knowledge", "Browse validated suites and artifacts available for reuse."],
     graph: ["Knowledge graph", "Knowledge", "Explore connected requirements, tests, results and domain references."],
-    domain: ["Domain pack", "Auto finance", "Inspect configured products, journeys and versioned business rules."],
-    calculations: ["Calculation validators", "Auto finance", "Validate supplied amounts with explicit arithmetic conventions."],
+    domain: ["Domain knowledge", "Auto finance", "Explore finance reference topics, products, journeys and business rules."],
+    calculations: ["Calculation checks", "Auto finance", "Validate supplied amounts with explicit arithmetic conventions."],
   };
   let view = new URLSearchParams(location.search).get("view") || "saved";
   if (location.hash === "#finance-tools-title") view = "domain";

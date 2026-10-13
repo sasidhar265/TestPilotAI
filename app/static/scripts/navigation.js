@@ -3,6 +3,48 @@
   const toggle = document.getElementById("sidebar-toggle");
   const content = document.getElementById("sidebar-content");
   if (!sidebar || !toggle || !content) return;
+  // Keep the existing destinations and permissions; group infrequent tools together.
+  const nav = sidebar.querySelector(".primary-nav");
+  const financeNavigation = document.getElementById("finance-navigation");
+  if (financeNavigation && !financeNavigation.querySelector('[href="/auto-finance-guide"]')) {
+    const guide = document.createElement("a");
+    guide.className = "nav-item";
+    guide.href = "/auto-finance-guide";
+    const label = document.createElement("span");
+    label.textContent = "UK domain guide";
+    guide.append(label);
+    financeNavigation.prepend(guide);
+  }
+  const labels = {
+    "/project-dashboard": "Project dashboard",
+    "/progress": "Execution reports",
+    "/quality-lifecycle": "Coverage & traceability",
+    "/usage": "AI usage",
+    "/knowledge": "Saved outputs",
+    "/knowledge?view=domain": "Domain knowledge",
+    "/knowledge?view=calculations": "Calculation checks",
+  };
+  nav.querySelectorAll("a").forEach((link) => {
+    const url = new URL(link.href);
+    const label = labels[url.pathname + url.search];
+    if (label) link.querySelector("span:last-child").textContent = label;
+  });
+  nav.querySelectorAll(".nav-label").forEach((label) => {
+    label.textContent = label.classList.contains("explore-nav-label") ? "Reference" : "Work";
+  });
+  const helpLinks = ["/static/user-guide.html", "/documentation", "/logs", "/docs"]
+    .map((path) => nav.querySelector(`a[href="${path}"]`)).filter(Boolean);
+  if (helpLinks.length) {
+    const group = document.createElement("div");
+    group.className = "nav-group";
+    group.innerHTML = '<button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="help-navigation"><span class="nav-icon" aria-hidden="true">?</span><span>Help &amp; diagnostics</span><span class="nav-chevron" aria-hidden="true">⌄</span></button><div class="nav-children" id="help-navigation" hidden></div>';
+    helpLinks.forEach((link) => {
+      link.querySelector(".nav-icon")?.remove();
+      group.lastElementChild.append(link);
+    });
+    const admin = nav.querySelector(".admin-navigation");
+    nav.insertBefore(group, admin);
+  }
   sidebar.querySelectorAll(".nav-parent").forEach((parent) => {
     const children = document.getElementById(parent.getAttribute("aria-controls"));
     let current = false;

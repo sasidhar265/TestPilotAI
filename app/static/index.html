@@ -16,7 +16,9 @@
     <style>
       [data-workspace-page][hidden] { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20261010-agent-banners" />
+    <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261013" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20261013-live-agent-activity" />
+    <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20261001-project" />
@@ -26,7 +28,7 @@
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/guest.css?v=20260927-privacy" />
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
-    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
@@ -242,17 +244,17 @@
               <span class="finance-eyebrow"
                 ><span aria-hidden="true">✦</span> AUTOMOBILE FINANCE INTELLIGENCE</span
               >
-              <h2 id="finance-hero-title">Every journey starts<br />with a confident quote.</h2>
+              <h2 id="finance-hero-title">Build coverage from<br />your requirements.</h2>
               <p>
                 Bring your finance requirements into focus. Build traceable coverage from the first
                 business rule to the final test result.
               </p>
               <div class="finance-hero-actions">
                 <button type="button" id="finance-start">
-                  Create test coverage <span aria-hidden="true">↗</span>
+                  Start with requirements <span aria-hidden="true">↗</span>
                 </button>
                 <button type="button" id="finance-explore">
-                  Explore products <span aria-hidden="true">↓</span>
+                  Browse finance products <span aria-hidden="true">↓</span>
                 </button>
               </div>
               <div class="finance-hero-tags">
@@ -516,6 +518,14 @@
             <p id="stage-status" role="status">
               Add a BRD, paste requirements, or connect a Jira ticket to begin.
             </p>
+            <section class="generation-knowledge" aria-labelledby="generation-knowledge-title">
+              <div class="section-heading">
+                <div><span class="section-kicker">Generation context</span><h2 id="generation-knowledge-title">Knowledge and considerations</h2></div>
+                <button id="preview-generation-knowledge" class="secondary" type="button">Preview knowledge context</button>
+              </div>
+              <p id="generation-knowledge-status" role="status">Preview the domain topics and rules available before generation. Each workflow stage also prepares its own context summary.</p>
+              <div id="generation-knowledge-content"></div>
+            </section>
             <div
               id="stage-panel-1"
               class="stage-panel"
@@ -777,7 +787,7 @@
               <div class="panel-head">
                 <div>
                   <span class="section-kicker">Business analysis</span>
-                  <h2>Review finance requirements</h2>
+                  <h2>Add requirements</h2>
                   <p>
                     Paste a vehicle finance requirement or attach your quotation BRD. Review
                     stories, scenarios and test cases, then capture execution evidence.
@@ -790,7 +800,7 @@
 
               <form id="generate-form">
                 <label class="field-label" for="description"
-                  >Finance requirement or acceptance criteria</label
+                  >Requirements or acceptance criteria</label
                 >
                 <div class="textarea-wrap">
                   <textarea
@@ -897,8 +907,8 @@
                 <details class="rule-control" id="rule-control">
                   <summary>
                     <span
-                      ><b>Business requirements &amp; rules</b
-                      ><small>One shared source, fetched before generation</small></span
+                      ><b>Shared business rules</b
+                      ><small>Add approved rules for this workspace</small></span
                     ><span class="rule-count" id="rule-count">0 rules</span>
                   </summary>
                   <div class="rule-editor">
@@ -968,16 +978,16 @@
                 <div class="controls">
                   <div class="generation-options">
                     <fieldset class="generation-select-control">
-                      <legend>Type of test cases</legend>
+                      <legend>Test output</legend>
                       <select
                         id="output-target"
                         name="output_target"
-                        aria-label="Type of test cases"
+                        aria-label="Test output"
                       >
-                        <option value="manual">Functional</option>
-                        <option value="automation" selected>Automation (BDD / Gherkin)</option>
-                        <option value="non_functional">Non-Functional</option>
-                        <option value="both">Both (Automation + Functional)</option>
+                        <option value="manual">Manual functional tests</option>
+                        <option value="automation" selected>Automated tests (BDD / Gherkin)</option>
+                        <option value="non_functional">Non-functional tests</option>
+                        <option value="both">Manual + automated tests</option>
                       </select>
                       <small class="option-help"
                         >Choose the test case coverage you want to generate.</small
@@ -995,7 +1005,7 @@
                       </select>
                     </fieldset>
                     <fieldset class="generation-select-control">
-                      <legend>LLM</legend>
+                      <legend>AI provider</legend>
                       <select
                         id="llm-model"
                         name="llm_model"
@@ -1334,6 +1344,11 @@
               <div id="notes"></div>
             </details>
           </section>
+        </div>
+        <div data-workspace-page="/auto-finance-guide" hidden>
+          <iframe id="auto-finance-guide-frame" title="UK auto finance domain guide"
+            style="display:block;width:100%;height:calc(100vh - 170px);min-height:600px;border:1px solid var(--line);border-radius:16px;background:white;"
+            loading="lazy"></iframe>
         </div>
         <div data-workspace-page="/automation" hidden>
           <section class="stage-panel" id="automation-workspace" aria-labelledby="automation-title">
@@ -1934,6 +1949,14 @@
         <p id="generation-overlay-message">
           The specialist agents are designing and validating your coverage.
         </p>
+        <dl class="generation-overview" aria-label="Operation overview">
+          <div><dt>Operation</dt><dd id="generation-overview-status">Preparing</dd></div>
+          <div><dt>Result</dt><dd id="generation-overview-output">Not available yet</dd></div>
+          <div><dt>Checks</dt><dd id="generation-overview-validation">Not reported yet</dd></div>
+        </dl>
+        <p id="generation-service-caption" class="generation-service-caption">Checking the selected generation service…</p>
+        <p id="generation-next-step" class="generation-next-step" role="status">Keep this page open, or continue in the background.</p>
+        <details class="generation-request-details"><summary>Provider &amp; request details</summary>
         <dl class="generation-llm-details" aria-label="Active LLM details">
           <div>
             <dt>Provider</dt>
@@ -1948,6 +1971,8 @@
             <dd id="generation-llm-auth">Detecting…</dd>
           </div>
         </dl>
+        <p class="generation-reference">Reference ID: <code id="generation-request-reference">Not assigned yet</code></p>
+        </details>
         <div class="generation-agent-pulse" aria-label="Generation stages">
           <span>Analyze</span><span>Design</span><span>Validate</span>
         </div>
@@ -1958,20 +1983,30 @@
           aria-labelledby="generation-background-title"
         >
           <div>
-            <h3 id="generation-background-title">Agent progress</h3>
+            <h3 id="generation-background-title">Current activity</h3>
             <span id="generation-background-state">STARTING</span>
           </div>
+          <div class="generation-current-activity" role="status">
+            <strong id="generation-current-agent">Preparing request</strong>
+            <p id="generation-current-activity">Waiting for backend activity.</p>
+            <small id="generation-feed-health">Connecting to backend activity…</small>
+            <a id="generation-activity-log" href="/logs" target="_blank" rel="noopener">Detailed activity logs ↗</a>
+          </div>
+          <details class="generation-activity-details"><summary>Activity timeline <span id="generation-activity-count">0 updates</span></summary>
           <ol id="generation-background-events" aria-live="polite">
-            <li class="empty-event">Waiting for the first agent update…</li>
+            <li class="empty-event">Preparing the request; agent updates will appear here.</li>
           </ol>
+          </details>
         </section>
         </div>
-        <section class="generation-validation" aria-labelledby="generation-validation-title">
-          <h3 id="generation-validation-title">Validation basis &amp; reference sources</h3>
+        <details class="generation-validation" aria-labelledby="generation-validation-title">
+          <summary id="generation-validation-title">Checks &amp; source references</summary>
           <div id="generation-validation-evidence" aria-live="polite">
             <p>Waiting for validation evidence. No checks have been reported yet.</p>
           </div>
-        </section>
+        </details>
+        <p class="generation-trust-note">A finished operation does not grant business approval or prove that tests were executed.</p>
+        <button id="generation-view-result" class="primary" type="button" hidden>View result →</button>
         <div class="generation-progress"><span class="generation-progress-bar"></span></div>
         <div class="generation-dialog-footer">
           <span id="generation-overlay-time">00:00 elapsed</span
@@ -2135,25 +2170,27 @@
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/operation-progress.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261009-automation-alignment" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261013-embedded-guide" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/index.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/suite-review.js?v=20260909-review-layout" defer></script>
+    <script src="/static/scripts/index.js?v=20261013-popup-overview" defer></script>
+    <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/execution-logs.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-    <script src="/static/scripts/suite-files.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20261013-explicit-provider" defer></script>
     <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
+    <script src="/static/scripts/generation-knowledge.js?v=20261013" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20261009-home-hero" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261001-project" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

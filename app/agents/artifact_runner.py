@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from app.agent_activity import await_agent_activity
 from app.agent_instructions import load_agent_section
 from app.agents.reqnroll_validation import IncompleteImplementationError
 from app.agents.runner import (
@@ -23,7 +24,9 @@ from app.agents.runner import (
 )
 from app.config import Settings
 from app.generator import _codex_failure_message, _openai_output_text, _strict_json_schema
-from app.model_policy import CODEX_MODEL
+from app.model_policy import CODEX_MODEL, COPILOT_MODEL, COPILOT_ROUTES
+from app.models import LlmModel
+from app.observability import publish_lifecycle_event
 from app.services.model_access import clear_provider_exhausted, mark_provider_exhausted
 from app.services.usage import codex_output, record_provider_usage
 from app.subprocess_cleanup import stop_process_tree
@@ -43,6 +46,7 @@ class ArtifactGenerationRunner:
         instructions: str,
         prompt: str,
         validate: Callable[[OutputModel], OutputModel] | None = None,
+        llm_model: LlmModel = LlmModel.AUTO_FALLBACK,
     ) -> OutputModel:
         async def copilot(current_prompt: str) -> OutputModel:
             return await self.copilot.generate_structured(
@@ -58,27 +62,77 @@ class ArtifactGenerationRunner:
         async def gemini(current_prompt: str) -> OutputModel:
             return await self._gemini(definition, instructions, current_prompt)
 
-        providers: list[tuple[str, Callable[[str], Awaitable[OutputModel]]]] = [
-            ("github-copilot", copilot)
-        ]
-        if self.settings.openai_api_key_value:
-            providers.append(("openai-api", openai))
-        if self.settings.gemini_api_key_value:
-            providers.append(("gemini-api", gemini))
-        if shutil.which(self.settings.codex_executable):
-            providers.append(("codex-cli", codex))
+        routes: dict[str, Callable[[str], Awaitable[OutputModel]]] = {
+            "github-copilot": copilot,
+            "openai-api": openai,
+            "gemini-api": gemini,
+            "codex-cli": codex,
+        }
+        if llm_model == LlmModel.AUTO_FALLBACK:
+            names = ["github-copilot"]
+            if self.settings.openai_api_key_value:
+                names.append("openai-api")
+            if self.settings.gemini_api_key_value:
+                names.append("gemini-api")
+            if shutil.which(self.settings.codex_executable):
+                names.append("codex-cli")
+        elif llm_model.value in COPILOT_ROUTES:
+            names = ["github-copilot"]
+        else:
+            selected = {
+                LlmModel.OPENAI: "openai-api",
+                LlmModel.GEMINI: "gemini-api",
+                LlmModel.CODEX: "codex-cli",
+            }.get(llm_model)
+            if selected is None:
+                raise CopilotGenerationError(
+                    "Unsupported provider selection. Copilot requires claude-haiku-4.5."
+                )
+            names = [selected]
+        providers = [(name, routes[name]) for name in names]
         last_validation: ValueError | None = None
         failures: list[str] = []
+        purpose = {
+            "BAAssessment": "business analyst review",
+            "AlignmentAssessment": "requirements alignment",
+            "Stories": "stories and acceptance criteria",
+            "Scenarios": "scenario coverage",
+            "StepDefinitionArtifact": "C# automation pack",
+            "TestSuite": "test cases",
+        }.get(definition.output_model.__name__, "structured artifact")
+        models = {
+            "github-copilot": COPILOT_MODEL,
+            "openai-api": self.settings.openai_model,
+            "gemini-api": self.settings.gemini_model,
+            "codex-cli": CODEX_MODEL,
+        }
         for name, generate in providers:
             # Repair on the same provider once, then advance; do not restart exhausted routes.
             current_prompt = prompt
             for attempt in range(2):
                 try:
-                    artifact = await generate(current_prompt)
+                    artifact = await await_agent_activity(
+                        generate(current_prompt),
+                        f"{name} / {models[name]}",
+                        f"{purpose} (attempt {attempt + 1})",
+                    )
                 except CopilotGenerationError as error:
                     logger.warning("artifact_provider_unavailable route=%s", name)
                     message = str(error)
                     failures.append(f"{name}: {message}")
+                    publish_lifecycle_event(
+                        "AI Provider",
+                        "provider_fallback"
+                        if llm_model == LlmModel.AUTO_FALLBACK
+                        else "provider_selected_failed",
+                        "info" if llm_model == LlmModel.AUTO_FALLBACK else "warning",
+                        f"{name} could not complete this request. "
+                        + (
+                            "Checking remaining configured routes."
+                            if llm_model == LlmModel.AUTO_FALLBACK
+                            else "Explicit selection prevents switching to another provider."
+                        ),
+                    )
                     if any(
                         token in message.casefold()
                         for token in ("quota", "429", "exhausted", "usage limit", "rate limit")
@@ -89,9 +143,33 @@ class ArtifactGenerationRunner:
                 if validate is None:
                     return artifact
                 try:
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "validate_artifact",
+                        "running",
+                        f"Checking {purpose} against the stage's validation rules.",
+                    )
                     result = validate(artifact)
                 except ValueError as error:
                     last_validation = error
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "validation_basis",
+                        "failed",
+                        f"Stage validation rejected the output for {purpose}. "
+                        "A repair or final failure is reported separately.",
+                    )
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "repair_artifact",
+                        "warning",
+                        "Output did not pass validation. "
+                        + (
+                            "Preparing a repair on the same provider."
+                            if attempt == 0
+                            else "The repair attempt also failed validation."
+                        ),
+                    )
                     logger.warning(
                         "artifact_implementation_incomplete route=%s attempt=%s", name, attempt + 1
                     )
@@ -106,6 +184,26 @@ class ArtifactGenerationRunner:
                         )
                     )
                 else:
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "validation_basis",
+                        "passed",
+                        f"Output for {purpose} passed its typed output schema and "
+                        "the stage's validation callback. "
+                        "This is not test execution or business approval.",
+                    )
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "validation_source",
+                        "info",
+                        f"Application-owned output schema and validation callback for {purpose}.",
+                    )
+                    publish_lifecycle_event(
+                        "Artifact Validator",
+                        "validate_artifact",
+                        "success",
+                        f"Output for {purpose} passed this stage's validation checks.",
+                    )
                     logger.info("artifact_implementation_complete route=%s", name)
                     return result
         if last_validation is not None:
@@ -126,7 +224,12 @@ class ArtifactGenerationRunner:
                 "after repair attempts. Last validation issue: " + str(last_validation)
             ) from last_validation
         raise CopilotGenerationError(
-            "All configured code-generation providers are unavailable. " + " ".join(failures)
+            (
+                "All configured code-generation providers are unavailable. "
+                if llm_model == LlmModel.AUTO_FALLBACK
+                else "The selected generation provider is unavailable. "
+            )
+            + " ".join(failures)
         )
 
     async def _openai(

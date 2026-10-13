@@ -249,7 +249,8 @@ async function ensureStepDefinitions() {
   const snapshot = suite;
   const validation = validationReport;
   const language = selectedLanguage();
-  const cacheKey = "full-pack:" + language + (await artifactPolicyKey()) + JSON.stringify(snapshot);
+  const llmModel = $("llm-model").value || "auto-fallback";
+  const cacheKey = "full-pack:" + language + ":" + llmModel + (await artifactPolicyKey()) + JSON.stringify(snapshot);
   if (suite !== snapshot || selectedLanguage() !== language)
     throw new Error("Suite or language changed. Try again.");
   if (stepDefinitionCache.has(cacheKey)) {
@@ -273,7 +274,7 @@ async function ensureStepDefinitions() {
   const task = (async () => {
     const response = await api(
       "/api/step-definitions/languages/pack",
-      { suite: snapshot, validation, language },
+      { suite: snapshot, validation, language, llm_model: llmModel },
       {
         requestId: generation.requestId,
         signal: generation.controller.signal,

@@ -82,6 +82,19 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
                 content_type=artifact.media_type,
                 headers={"Content-Disposition": f'attachment; filename="{artifact.filename}"'},
             )
+        elif path == "/api/llm/models":
+            route.fulfill(
+                json={
+                    "models": [
+                        {
+                            "model": "codex",
+                            "display_name": "Codex CLI",
+                            "can_use": True,
+                            "reason": "Test route",
+                        }
+                    ]
+                }
+            )
         elif path == "/api/workspace/rules":
             route.fulfill(json={"business_rules": []})
         elif path == "/api/workspace/standards":
@@ -93,6 +106,7 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
         elif path == "/api/step-definitions/languages/download":
             route.fulfill(body=b"test-zip", content_type="application/zip")
         elif path == "/api/step-definitions/languages/pack":
+            assert route.request.post_data_json["llm_model"] == "codex"
             pending_step_requests.append(route)
         elif path.startswith("/api/generation/") and path.endswith("/cancel"):
             route.fulfill(json={"cancelled": True})

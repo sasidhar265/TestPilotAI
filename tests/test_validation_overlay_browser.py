@@ -70,6 +70,7 @@ def test_validation_overlay_sources_retries_and_reset():
                  summary: 'Checked 3 automation password reset cases; TC-003 failed.'}
             ]);
         }""")
+        page.locator(".generation-validation summary").click()
         panel = page.locator("#generation-validation-evidence")
         pw.expect(panel).to_contain_text("Zero blocking errors; one warning")
         pw.expect(panel).to_contain_text("Current request <reference>")
@@ -82,7 +83,46 @@ def test_validation_overlay_sources_retries_and_reset():
         pw.expect(panel.locator("article")).to_have_count(5)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.screenshot(path="/tmp/validation-overlay-mobile.png", full_page=True)
+        page.evaluate("finishAgentWorkflow('Completed')")
+        pw.expect(panel).not_to_contain_text("Waiting for source references")
+        pw.expect(panel).to_contain_text("No source references were reported for this check")
         page.evaluate("resetLifecycleFeed()")
         pw.expect(panel).to_contain_text("No checks have been reported yet")
         pw.expect(panel).not_to_contain_text("Current request")
+        page.evaluate("finishAgentWorkflow('Completed')")
+        pw.expect(panel).to_contain_text("No validation evidence was reported")
+        pw.expect(panel).not_to_contain_text("Waiting for validation evidence")
+        page.evaluate("""() => {
+          resetLifecycleFeed();
+          recordSuiteValidation({passed: false, score: 60, acceptance_criteria_total: 2,
+            acceptance_criteria_covered: 1, findings: [{message: 'Missing criterion'}]},
+            {feature_name: 'Password reset', test_cases: [{id: 'TC-001'}]});
+          finishAgentWorkflow('Completed');
+        }""")
+        pw.expect(panel).to_contain_text("Quality Gate · failed")
+        pw.expect(page.locator("#generation-overview-validation")).to_have_text("Needs attention")
+        pw.expect(panel).to_contain_text("score 60/100")
+        pw.expect(panel).to_contain_text("1/2")
+        pw.expect(panel).not_to_contain_text("Waiting")
+        page.evaluate("""() => {
+          recordSuiteValidation({passed: true, score: 100, acceptance_criteria_total: 2,
+            acceptance_criteria_covered: 2, findings: []},
+            {feature_name: 'Password reset', test_cases: [{id: 'TC-001'}]});
+        }""")
+        pw.expect(panel).to_contain_text("Quality Gate · passed")
+        pw.expect(page.locator("#generation-overview-validation")).to_have_text(
+            "Reported checks passed"
+        )
+        pw.expect(panel).not_to_contain_text("score 60/100")
+        page.evaluate("""() => {
+          resetLifecycleFeed();
+          renderValidationEvidence({agent: 'BA Agent review', action: 'validation_source',
+            status: 'info', summary: 'Available source'});
+          recordReturnedEvidence('BA Agent review', 'reported', 'Returned review outcome',
+            ['Response source']);
+          finishAgentWorkflow('Completed');
+        }""")
+        pw.expect(panel).to_contain_text("BA Agent review · reported")
+        pw.expect(panel).to_contain_text("Available source")
+        pw.expect(panel).not_to_contain_text("pending")
         browser.close()

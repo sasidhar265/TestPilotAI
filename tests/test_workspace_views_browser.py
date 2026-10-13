@@ -39,6 +39,10 @@ def test_focused_views_history_and_automation_preview():
         page.click("#finance-explore")
         pw.expect(page).to_have_url("http://localhost/products")
         pw.expect(page.locator(".finance-explorer")).to_be_visible()
+        assert not page.locator(".workflow-shortcuts").evaluate("element => element.open")
+        pw.expect(page.locator(".workflow-home-link")).to_be_visible()
+        page.locator(".workflow-shortcuts summary").click()
+        pw.expect(page.locator("#stage-tab-1")).to_be_visible()
         page.get_by_role("link", name="Requirements", exact=True).click()
         pw.expect(page.locator(".finance-domain-selection")).to_be_hidden()
         pw.expect(page.locator(".finance-guide")).to_be_hidden()
@@ -95,6 +99,6 @@ def test_focused_views_history_and_automation_preview():
         page.locator('.primary-nav a[href="/progress"]').click()
         pw.expect(page.locator("#work-dashboard")).to_be_visible()
         pw.expect(page.locator("#stage-panel-5")).to_be_hidden()
-        pw.expect(page.locator(".workflow-navigation")).to_be_visible()
+        pw.expect(page.locator(".workflow-support-navigation")).to_be_visible()
         assert not errors, errors
         browser.close()

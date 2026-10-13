@@ -352,8 +352,37 @@
     activeGeneration?.kind
       ? { requestId: activeGeneration.requestId, signal: activeGeneration.controller.signal }
       : {};
-  const post = async (path, body) =>
-    (await api(`/api/workflow/${path}`, body, transportOptions())).json();
+  const knowledgeStages = new Set(["ba-review", "validate-requirements", "stories", "scenarios", "test-cases"]);
+  const previewKnowledge = async (stage, request) => {
+    const context = await (await api("/api/workflow/knowledge-context", { stage, request }, {
+      signal: activeGeneration?.controller.signal,
+      trackLifecycle: false,
+    })).json();
+    window.dispatchEvent(new CustomEvent("generation-knowledge-context", { detail: context }));
+    return context;
+  };
+  const post = async (path, body) => {
+    if (knowledgeStages.has(path)) {
+      try { await previewKnowledge(path, body.request || body); }
+      catch (error) {
+        if (error.name === "AbortError") throw error;
+        window.dispatchEvent(new CustomEvent("generation-knowledge-unavailable", { detail: error.message }));
+      }
+    }
+    const result = await (await api(`/api/workflow/${path}`, body, transportOptions())).json();
+    if (["ba-review", "stories", "scenarios", "test-cases"].includes(path)) recordOperationResult(path, result);
+    if (path === "execution-plan") recordOperationResult(path, result);
+    if (path === "execute") recordOperationResult("execution", result);
+    if (path === "test-cases") recordSuiteValidation(result.validation, result.suite);
+    return result;
+  };
+  $("preview-generation-knowledge").onclick = () => work("Preparing knowledge context…", async (current) => {
+    const source = state.request ? requestOptions() : await readRequirementSource(current);
+    current();
+    await previewKnowledge("stories", source);
+    current();
+    status("Knowledge context ready. Review the sources and considerations below.");
+  });
   function requestOptions() {
     const target = selectedGenerationTarget();
     return {
@@ -396,6 +425,7 @@
     return {
       description,
       business_rules: parseBusinessRules(),
+      llm_model: $("llm-model").value || "auto-fallback",
       additional_context: "",
       finance_calculation: window.financeCalculationContext?.() || null,
       finance_product_id: $("finance-domain-product")?.value || null,
@@ -407,6 +437,9 @@
     };
   }
   function renderRequirementsValidation(report) {
+    recordReturnedEvidence("Requirements Validation Agent", report.status,
+      `Returned alignment report: ${report.message} Regulatory compliance: ${report.regulatory_compliance || "not assessed"}.`,
+      (report.sources || []).map((s) => `${s.title || s.id} · ${s.id} · v${s.version || "not supplied"}`));
     const panel = $("requirements-validation-report");
     panel.hidden = false;
     panel.dataset.status = report.status;
@@ -468,6 +501,10 @@
     }
   });
   function renderBaReport(report) {
+    recordReturnedEvidence("BA Agent review", "reported",
+      `Returned BA review outcome: ${report.outcome}. Business approval: ${report.business_approval}; regulatory compliance: ${report.regulatory_compliance}. Detailed check events were not received; this displays the final response.`,
+      [ `Document: ${report.document_fingerprint}. Knowledge: ${report.knowledge_fingerprint}.`,
+        ...(report.knowledge_sources || []).map((s) => `${s.title} · ${s.id} · v${s.version} · ${s.authority} (available source; citation not inferred)`)]);
     const list = (items) => `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`;
     const label = (value) => String(value).replaceAll("_", " ");
     $("ba-report").hidden = false;

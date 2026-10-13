@@ -151,15 +151,20 @@ def test_full_pack_rejects_pending_and_missing_coverage(request_model):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["codex", "openai"])
 async def test_pack_uses_configured_runner_and_shared_standards(
-    workspace, request_model, monkeypatch
+    workspace, request_model, monkeypatch, provider
 ):
     from app.agents.multilanguage_agent import ArtifactGenerationRunner
 
     runner = AsyncMock()
     monkeypatch.setattr(ArtifactGenerationRunner, "generate_structured", runner)
+    request_model = LanguageRequest.model_validate(
+        request_model.model_dump() | {"llm_model": provider}
+    )
     await MultiLanguageAgent(Settings(_env_file=None)).generate(request_model)
     options = runner.call_args.kwargs
+    assert options["llm_model"] == provider
     assert "Use scenario-scoped state" in options["instructions"]
     assert "No feature tags" in options["instructions"]
     assert json.loads(options["prompt"])["language"] == "python"

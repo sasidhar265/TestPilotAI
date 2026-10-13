@@ -99,6 +99,9 @@ def test_mobile_navigation_and_page_layout(path, engine, width, height):
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/*", mobile_route)
         page.goto("http://localhost" + path)
+        if page.locator(".workflow-shortcuts").count():
+            pw.expect(page.locator(".workflow-shortcuts summary")).to_be_visible()
+            page.locator(".workflow-shortcuts summary").tap()
         pw.expect(page.locator(".workflow-navigation")).to_be_visible()
         pw.expect(page.locator(".workflow-navigation .stage-tabs > :is(button, a)")).to_have_count(
             6

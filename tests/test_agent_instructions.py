@@ -191,3 +191,25 @@ def test_pack_runtime_includes_senior_engineering_and_execution_contract():
     assert "free of if/else, switch and ternary expressions" in instructions
     assert "actual discovered/executed results" in instructions
     assert "senior test automation engineer" in load_agent_instructions("multi-language")
+
+
+def test_domain_library_matches_prompt_sources_and_remains_reference_only() -> None:
+    from app.agent_instructions import profile_knowledge_sources
+
+    sources = profile_knowledge_sources("auto-finance-quotation")
+    instructions = load_profile_instructions("auto-finance-quotation")
+    assert len(sources) >= 7
+    for source in sources:
+        assert source["authority"] == "reference_only"
+        assert source["content"] in instructions
+        assert source["path"].startswith(".github/agent-profiles/")
+    lifecycle = next(s for s in sources if s["id"] == "auto-finance-lifecycle.md")
+    assert "quotation scope remains unchanged" in lifecycle["content"]
+
+
+@pytest.mark.parametrize("profile", ["../auto-finance-quotation", "/tmp", "unknown-profile"])
+def test_domain_library_rejects_outside_or_unknown_profiles(profile: str) -> None:
+    from app.agent_instructions import profile_knowledge_sources
+
+    with pytest.raises(ValueError):
+        profile_knowledge_sources(profile)

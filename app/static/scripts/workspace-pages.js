@@ -3,16 +3,20 @@
   const titles = {
     "/project-dashboard": "Project dashboard",
     "/": "Requirements",
-    "/progress": "Progress & execution",
-    "/quality-lifecycle": "Quality Lifecycle",
+    "/progress": "Execution reports",
+    "/quality-lifecycle": "Coverage & traceability",
     "/products": "Products",
-    "/usage": "Usage",
+    "/auto-finance-guide": "UK domain guide",
+    "/usage": "AI usage",
   };
   const views = Object.fromEntries(window.workflowStages.map(stage => [stage.view, stage.title]));
   const stageNavigation = document.createElement("section");
   stageNavigation.className = "workflow-navigation";
   stageNavigation.setAttribute("aria-label", "Quality workflow navigation");
   stageNavigation.append(document.querySelector(".stage-navigation-heading"), document.querySelector(".stage-tabs"));
+  const shortcutNavigation = document.createElement("section");
+  shortcutNavigation.className = "workflow-support-navigation";
+  shortcutNavigation.innerHTML = '<a class="workflow-home-link" href="/">← Open quality workspace</a><details class="workflow-shortcuts"><summary>Workflow shortcuts</summary></details>';
   function showPage(focus = false) {
     if (location.pathname === "/" && new URLSearchParams(location.search).get("view") === "ba-agent") history.replaceState(null, "", "/?view=requirements");
     if (document.body.dataset.guest === "true" && location.pathname !== "/") history.replaceState(null, "", "/");
@@ -22,6 +26,10 @@
     document.body.dataset.qualityView = view;
     const pagePath = path === "/products" ? "/" : path === "/" && view === "automation" ? `/${view}` : path;
     document.querySelectorAll("[data-workspace-page]").forEach((page) => { page.hidden = page.dataset.workspacePage !== pagePath; });
+    if (path === "/auto-finance-guide") {
+      const frame = document.getElementById("auto-finance-guide-frame");
+      if (!frame.getAttribute("src")) frame.src = "/static/auto-finance-uk.html?embedded=1";
+    }
     const navigationHost = document.querySelector(`[data-workspace-page="${pagePath}"]`);
     stageNavigation.hidden = false;
     if (path !== "/") stageNavigation.querySelectorAll('[role="tab"]').forEach((tab, index) => {
@@ -29,9 +37,15 @@
       tab.tabIndex = index === 0 ? 0 : -1;
     });
     if (navigationHost) {
-      const hero = navigationHost.querySelector(".finance-hero");
-      if (path === "/" && view === "requirements" && hero) hero.after(stageNavigation);
-      else navigationHost.prepend(stageNavigation);
+      if (path !== "/") {
+        shortcutNavigation.querySelector("details").append(stageNavigation);
+        navigationHost.prepend(shortcutNavigation);
+      } else {
+        shortcutNavigation.remove();
+        const hero = navigationHost.querySelector(".finance-hero");
+        if (view === "requirements" && hero) hero.after(stageNavigation);
+        else navigationHost.prepend(stageNavigation);
+      }
     }
     document.querySelectorAll("[data-quality-view]").forEach((section) => {
       if (section !== document.body) section.hidden = section.dataset.qualityView !== view;
@@ -52,7 +66,7 @@
     const heading = document.querySelector(".topbar h1");
     heading.textContent = title;
     document.title = `${title} — Auto Finance Quality`;
-    document.querySelector(".topbar .eyebrow").textContent = path === "/" ? `Quality workspace / ${title}` : `${path === "/products" ? "Auto finance" : "Workspace"} / ${title}`;
+    document.querySelector(".topbar .eyebrow").textContent = path === "/" ? `Quality workspace / ${title}` : `${["/products", "/auto-finance-guide"].includes(path) ? "Auto finance" : "Workspace"} / ${title}`;
     window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path, view } }));
     if (focus) { heading.tabIndex = -1; heading.focus(); window.scrollTo(0, 0); }
   }

@@ -223,6 +223,7 @@ class RequirementsValidationAgent:
                     "Invalid requirements assessment.",
                 ),
                 instructions=instructions,
+                llm_model=request.llm_model,
                 prompt=prompt,
             )
             # Check completeness and citations independently of model judgments.

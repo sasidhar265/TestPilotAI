@@ -57,6 +57,17 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         if path == "/" or path.startswith("/static/"):
             file = static / (path.removeprefix("/static/") if path != "/" else "index.html")
             route.fulfill(body=file.read_bytes(), content_type=mimetypes.guess_type(file)[0])
+        elif path == "/api/auth/profile":
+            from app.roles import capabilities
+
+            route.fulfill(
+                json={
+                    "display_name": "Reviewer",
+                    "role": "test_lead",
+                    "is_admin": False,
+                    "capabilities": capabilities("test_lead"),
+                }
+            )
         elif path == "/api/reviews":
             reviews.append(route.request.post_data_json)
             route.fulfill(json={"review_id": "saved-review", "status": "saved"})
@@ -84,7 +95,6 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         page.goto("http://localhost/")
         page.evaluate(
             """data => {
-            startLifecycleFeed = () => {}; stopLifecycleFeed = async () => {};
             reviewSourceRequest = data.source; validationReport = data.validation;
             render(data.suite);
         }""",
@@ -121,6 +131,8 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         )
         playwright.expect(page.locator("#case-review-comments-0")).to_have_value(comments)
         assert page.evaluate("suite.test_cases[0].title") == "Valid login"
+        page.wait_for_function("activeGeneration === null")
+        assert page.evaluate("generationOperation.status") == "Failed"
         page.locator("#case-review-panel-0 .save-case-review").click()
         playwright.expect(page.locator("#case-review-panel-0 .save-case-review")).to_have_text(
             "Regenerating…"
@@ -136,6 +148,16 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
         playwright.expect(page.locator("#review-state")).to_have_text("Review required")
         playwright.expect(page.locator("#case-review-comments-0")).to_have_value("")
         assert page.evaluate("stepDefinitionArtifact === null")
+        page.wait_for_function("activeGeneration === null")
+        assert page.evaluate("generationOperation.status") == "Completed"
+        page.evaluate("showGenerationOverlay('manual')")
+        playwright.expect(page.locator("#generation-agent-label")).to_have_text("Completed")
+        playwright.expect(page.locator("#generation-overlay .generation-progress")).to_be_hidden()
+        playwright.expect(
+            page.locator("#generation-overlay .generation-agent-pulse")
+        ).to_be_hidden()
+        playwright.expect(page.locator("#cancel-generation-overlay")).to_be_hidden()
+        page.evaluate("hideGenerationOverlay()")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.locator("#case-review-comments-0").fill("Also add the locked account condition")
         page.locator("#case-review-panel-0 .save-case-review").click()
@@ -147,5 +169,7 @@ def test_review_regeneration_preserves_source_and_handles_failure_and_cancel(mod
             "Review saved to knowledge. Regeneration cancelled."
         )
         assert page.evaluate("suite.test_cases[0].title") == "Invalid password is rejected"
+        page.wait_for_function("activeGeneration === null")
+        assert page.evaluate("generationOperation.status") == "Cancelled"
         assert not errors, errors
         browser.close()

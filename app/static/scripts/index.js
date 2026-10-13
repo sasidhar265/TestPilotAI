@@ -26,6 +26,7 @@ let suite = null,
   runCompletionNotified = false,
   runFailed = false;
 const shownKnowledgeNotices = new Set();
+let generationResultSummary = null;
 const $ = (id) => document.getElementById(id);
 const esc = (v) =>
   String(v).replace(
@@ -110,7 +111,7 @@ async function responseError(response) {
   return error;
 }
 async function api(path, body, options = {}) {
-  const managed = !options.requestId,
+  const managed = !options.requestId && options.trackLifecycle !== false,
     requestId = options.requestId || crypto.randomUUID(),
     headers = { "Content-Type": "application/json", "X-Request-ID": requestId };
   if (managed) startLifecycleFeed(requestId);
@@ -143,6 +144,7 @@ async function upload(path, body, options = {}) {
 }
 function showRuntimeDetails(health) {
   runtimeDetails = {
+    health,
     provider: "Automatic fallback",
     model: `Copilot → ${health.openai_model} → ${health.gemini_model} → Codex`,
     auth:
@@ -150,9 +152,7 @@ function showRuntimeDetails(health) {
         ? "Copilot + API key + Codex"
         : "Copilot + signed-in Codex",
   };
-  $("generation-llm-provider").textContent = runtimeDetails.provider;
-  $("generation-llm-model").textContent = runtimeDetails.model;
-  $("generation-llm-auth").textContent = runtimeDetails.auth;
+  syncSelectedRuntimeDetails();
   if (!systemHealthNotified) {
     addNotification(
       "System ready",
@@ -161,6 +161,24 @@ function showRuntimeDetails(health) {
     );
     systemHealthNotified = true;
   }
+}
+function syncSelectedRuntimeDetails() {
+  if (!runtimeDetails) return;
+  const selection = $("llm-model").value || "auto-fallback";
+  const explicit = {
+    codex: { provider: "Codex CLI", model: "gpt-6-astra", auth: "Codex sign-in" },
+    openai: { provider: "OpenAI API", model: runtimeDetails.health.openai_model, auth: "OpenAI API key" },
+    gemini: { provider: "Gemini API", model: runtimeDetails.health.gemini_model, auth: "Gemini API key" },
+  };
+  const detail = selection === "auto-fallback" ? runtimeDetails
+    : explicit[selection] || { provider: "GitHub Copilot", model: "claude-haiku-4.5", auth: "Copilot account" };
+  $("generation-llm-provider").textContent = detail.provider;
+  $("generation-llm-model").textContent = detail.model;
+  $("generation-llm-auth").textContent = detail.auth;
+  $("generation-service-caption").textContent = `Selected route: ${detail.provider} · ${detail.model}`;
+  $("model-name").textContent = detail.provider;
+  $("llm-model-detail").textContent = detail.model;
+  $("auth-mode").textContent = detail.auth;
 }
 async function loadRuntimeStatus() {
   const origin = window.MobileApp?.backend || window.location.origin;
@@ -184,6 +202,7 @@ async function loadRuntimeStatus() {
         : "Copilot + signed-in Codex";
     $("memory-status").textContent =
       `${health.organizational_memory} · ${health.organizational_memory_entries} suites`;
+    syncSelectedRuntimeDetails();
   } catch {
     runtimeDetails = null;
     $("generation-llm-provider").textContent = "Unavailable";
@@ -308,9 +327,10 @@ function showGenerationOverlay(target) {
   stopGenerationHome.prepend($("stop-generation"));
   $("generation-progress-slot").append($("generation-progress-panel"));
   $("background-run-tray").hidden = true;
-  $("cancel-generation-overlay").hidden = !activeGeneration;
-  $("background-generation-label").textContent = activeGeneration ? "Run in background" : "Back to progress";
-  window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: Boolean(activeGeneration) } }));
+  const running = Boolean(activeGeneration) && generationFinishedAt === null;
+  $("cancel-generation-overlay").hidden = !running;
+  $("background-generation-label").textContent = running ? "Run in background" : "Back to progress";
+  window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: running } }));
   const stories = target === "stories",
     automatic = target === "auto",
     manual = target === "manual" || target === "non_functional",
@@ -348,13 +368,13 @@ function showGenerationOverlay(target) {
     $("generation-overlay-message").textContent =
       `${stage.message} You can run this in the background while keeping this page open.`;
   }
-  if (!activeGeneration && generationFinishedAt !== null) {
+  if (generationFinishedAt !== null) {
     $("generation-agent-label").textContent = generationOperation.status;
     $("generation-overlay-title").textContent = `${stage?.label || "Generation"} · ${generationOperation.status}`;
     $("generation-overlay-message").textContent = "Review the recorded agent progress and validation evidence for this operation.";
   }
-  document.querySelector(".generation-agent-pulse").classList.toggle("hidden", !activeGeneration);
-  document.querySelector(".generation-progress").classList.toggle("hidden", !activeGeneration);
+  document.querySelector(".generation-agent-pulse").classList.toggle("hidden", !running);
+  $("generation-overlay").querySelector(".generation-progress").classList.toggle("hidden", !running);
   document
     .querySelector(".generation-llm-details")
     .classList.toggle("hidden", Boolean(stage?.runtime));
@@ -364,8 +384,10 @@ function showGenerationOverlay(target) {
     .map((label) => `<span>${label}</span>`)
     .join("");
   if (!runtimeDetails) loadRuntimeStatus();
-  $("generation-llm-model").textContent = $("llm-model").selectedOptions[0].textContent;
+  if (runtimeDetails) syncSelectedRuntimeDetails();
+  else $("generation-llm-model").textContent = $("llm-model").selectedOptions[0].textContent;
   $("generation-overlay").classList.remove("hidden");
+  renderGenerationOverview();
   $("cancel-generation-overlay").focus();
   document.body.classList.add("dialog-open");
   if (generationOverlayTimer) clearInterval(generationOverlayTimer);
@@ -652,6 +674,59 @@ document.addEventListener("click", (event) => {
     setSourceMenu(false);
 });
 const validationEvidence = new Map();
+function recordOperationResult(stage, result) {
+  const counts = {
+    stories: result.stories?.length,
+    scenarios: result.scenarios?.length,
+    "test-cases": result.suite?.test_cases?.length,
+    "execution-plan": result.cases?.length,
+  };
+  const labels = { stories: "stories", scenarios: "scenarios", "test-cases": "test cases", "execution-plan": "planned cases" };
+  generationResultSummary = {
+    stage,
+    output: stage === "ba-review" ? `Review: ${String(result.outcome).replaceAll("_", " ")}`
+      : stage === "execution" ? `Run: ${result.status || "reported"}`
+      : counts[stage] !== undefined ? `${counts[stage]} ${labels[stage]}` : "Result available",
+    next: stage === "ba-review" ? result.outcome === "ready_for_business_review"
+      ? "Review the BA findings before confirming the requirements and creating stories."
+      : "Review the findings and resolve open questions before continuing."
+      : stage === "stories" ? "Review and accept the stories to create scenarios."
+      : stage === "scenarios" ? "Review and accept the scenarios to create test cases."
+      : stage === "execution-plan" ? "Review the plan and runtime prerequisites before starting execution."
+      : stage === "execution" ? "Review the runner-reported results and any failures in the Execution stage."
+      : result.validation?.passed === false ? "Resolve the validation findings before accepting the test cases."
+      : "Review and accept the test cases before building automation or recording execution.",
+  };
+  renderGenerationOverview();
+}
+function renderGenerationOverview() {
+  const finished = generationFinishedAt !== null;
+  $("generation-overview-status").textContent = finished ? generationOperation.status : "In progress";
+  $("generation-overview-output").textContent = generationResultSummary?.output || "Not available";
+  const statuses = [...validationEvidence.values()].map((entry) => entry.status);
+  $("generation-overview-validation").textContent = !statuses.length
+    ? finished ? "Not reported" : "Not reported yet"
+    : statuses.includes("failed") || statuses.includes("blocked") ? "Needs attention"
+    : statuses.every((value) => ["passed", "aligned"].includes(value)) ? "Reported checks passed"
+    : statuses.every((value) => value === "pending") ? finished ? "Result not reported" : "Awaiting result"
+    : "Results reported";
+  $("generation-next-step").textContent = finished
+    ? generationOperation.status === "Completed" ? generationResultSummary?.next || "Review the operation output and recorded evidence."
+      : generationOperation.status === "Cancelled" ? "The operation was cancelled. Review any retained output before retrying."
+      : "The operation stopped with an error. Open the activity log for details before retrying."
+    : "Keep this page open. You can continue in the background or cancel the operation.";
+  $("generation-view-result").hidden = !finished || !generationResultSummary;
+  $("generation-activity-count").textContent = `${$("generation-background-events").querySelectorAll("li:not(.empty-event)").length} updates`;
+}
+$("generation-view-result").addEventListener("click", () => {
+  const stage = generationResultSummary?.stage;
+  const view = stage === "ba-review" ? "requirements" : stage === "execution-plan" ? "execution" : stage;
+  hideGenerationOverlay();
+  $("background-run-tray").hidden = true;
+  if (view && window.navigateWorkspace) window.navigateWorkspace(window.workflowStageUrl(view), false);
+  const target = stage === "ba-review" ? $("ba-report") : $("stage-panel-" + ({ stories: 2, scenarios: 3, "test-cases": 4, execution: 5, "execution-plan": 5 }[stage] || 4));
+  target?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 function renderValidationEvidence(event) {
   if (!["validation_basis", "validation_source"].includes(event.action)) return;
   if (event.action === "validation_basis") {
@@ -669,14 +744,45 @@ function renderValidationEvidence(event) {
       });
     validationEvidence.get(event.agent).sources.push(event.summary);
   }
+  paintValidationEvidence();
+}
+function paintValidationEvidence() {
+  renderGenerationOverview();
+  if (!validationEvidence.size) {
+    $("generation-validation-evidence").textContent = generationFinishedAt === null
+      ? "Waiting for validation evidence. No checks have been reported yet."
+      : "No validation evidence was reported before this operation ended. Completion alone does not establish that checks passed.";
+    return;
+  }
   $("generation-validation-evidence").innerHTML = [...validationEvidence.entries()]
     .map(
       ([agent, evidence]) =>
-        `<article><h4>${esc(agent)} · ${esc(evidence.status)}</h4><p>${esc(evidence.basis)}</p><strong>Reference knowledge sources</strong>${evidence.sources.length ? `<ul>${evidence.sources.map((source) => `<li>${esc(source)}</li>`).join("")}</ul>` : "<p>Waiting for source references…</p>"}</article>`,
+        `<article><h4>${esc(agent)} · ${esc(evidence.status === "pending" && generationFinishedAt !== null ? "result not reported" : evidence.status)}</h4><p>${esc(evidence.basis)}</p><strong>Reference knowledge sources</strong>${evidence.sources.length ? `<ul>${evidence.sources.map((source) => `<li>${esc(source)}</li>`).join("")}</ul>` : `<p>${generationFinishedAt === null ? "Waiting for source references…" : "No source references were reported for this check."}</p>`}</article>`,
     )
     .join("");
 }
+function recordReturnedEvidence(agent, status, basis, sources = [], replace = false) {
+  const existing = validationEvidence.get(agent);
+  if (existing && existing.status !== "pending" && !replace) return;
+  if (existing?.status === "pending") sources = [...new Set([...existing.sources, ...sources])];
+  validationEvidence.set(agent, { status, basis, sources });
+  paintValidationEvidence();
+}
+function recordSuiteValidation(report, generated) {
+  if (!report) return;
+  recordReturnedEvidence("Quality Gate", report.passed ? "passed" : "failed",
+    `Returned design-validation report: ${report.passed ? "passed" : "failed"}, score ${report.score}/100. Recognized criteria covered: ${report.acceptance_criteria_covered ?? "not reported"}/${report.acceptance_criteria_total ?? "not reported"}. ${(report.findings || []).length} findings returned. This is not test execution or business approval.`,
+    [`Returned suite: ${generated?.feature_name || "unnamed"}. Case IDs: ${(generated?.test_cases || []).map((c) => c.id).join(", ") || "none"}. Detailed live checkpoints may be unavailable.`],
+    validationEvidence.has("Quality Gate") && validationEvidence.get("Quality Gate").status !== (report.passed ? "passed" : "failed"));
+}
+const lifecycleWaitingRows = new Map();
 function resetLifecycleFeed() {
+  generationResultSummary = null;
+  $("generation-activity-count").textContent = "0 updates";
+  document.querySelector(".generation-activity-details").open = false;
+  document.querySelector(".generation-validation").open = false;
+  document.querySelector(".generation-request-details").open = false;
+  lifecycleWaitingRows.clear();
   validationEvidence.clear();
   $("generation-validation-evidence").innerHTML =
     "<p>Waiting for validation evidence. No checks have been reported yet.</p>";
@@ -688,56 +794,87 @@ function resetLifecycleFeed() {
   lifecycleSequence = 0;
   runCompletionNotified = false;
   runFailed = false;
+  $("generation-current-agent").textContent = "Preparing request";
+  $("generation-current-activity").textContent = "Waiting for backend activity. The request may still be preparing its source and knowledge context.";
+  $("generation-feed-health").textContent = "Connecting to backend activity…";
 }
 function lifecycleItem(event) {
   if (event.status === "failed") runFailed = true;
   const item = document.createElement("li");
   item.className = event.status;
-  item.innerHTML = `<strong>${esc(event.agent)}</strong><p>${esc(event.summary)}</p><em>${esc(event.status)}</em>`;
+  const time = event.timestamp ? new Date(event.timestamp).toLocaleTimeString() : "";
+  const label = event.action === "provider_wait" ? "waiting update"
+    : ["running", "started"].includes(event.status) ? "started" : event.status;
+  item.innerHTML = `<strong>${esc(event.agent)}</strong><p>${esc(event.summary)}</p><em>${esc(label)} · ${esc((event.action || "activity").replaceAll("_", " "))}${time ? ` · ${esc(time)}` : ""}</em>`;
   return item;
+}
+function renderLifecycleRow(event) {
+  const live = lifecycleItem(event), background = lifecycleItem(event);
+  if (event.action === "provider_wait") {
+    const key = event.summary.replace(/\(\d+s elapsed\)/g, "(elapsed)");
+    const previous = lifecycleWaitingRows.get(event.agent);
+    if (previous?.key === key) {
+      previous.live.replaceWith(live);
+      previous.background.replaceWith(background);
+    } else {
+      $("live-agent-events").append(live);
+      $("generation-background-events").append(background);
+    }
+    lifecycleWaitingRows.set(event.agent, { key, live, background });
+    return;
+  }
+  if (event.action?.startsWith("provider_")) lifecycleWaitingRows.delete(event.agent);
+  $("live-agent-events").append(live);
+  $("generation-background-events").append(background);
 }
 function renderLifecycleEvents(events) {
   events.forEach((event) => {
     if (event.sequence <= lifecycleSequence) return;
     $("generation-background-events").querySelector(".empty-event")?.remove();
     lifecycleSequence = event.sequence;
+    $("generation-current-agent").textContent = event.agent;
+    $("generation-current-activity").textContent = event.summary;
+    $("generation-feed-health").textContent = event.timestamp
+      ? `Last backend update: ${new Date(event.timestamp).toLocaleTimeString()}` : "Backend activity received";
     renderValidationEvidence(event);
     updateAgentWorkflow(event);
     updateGenerationBanner(event);
-    $("live-agent-events").append(lifecycleItem(event));
-    $("generation-background-events").append(lifecycleItem(event));
+    renderLifecycleRow(event);
   });
   $("live-agent-events").scrollTop = $("live-agent-events").scrollHeight;
   $("generation-background-events").scrollTop = $("generation-background-events").scrollHeight;
+  renderGenerationOverview();
 }
 async function pollLifecycle(requestId) {
   if (requestId !== activeLifecycleRequestId) return;
   if (lifecyclePollPromise) return lifecyclePollPromise;
   const poll = (async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     try {
       const response = await fetch(
         `/api/generation/${encodeURIComponent(requestId)}/events?after=${lifecycleSequence}`,
+        { signal: controller.signal },
       );
-      if (!response.ok) return;
+      if (!response.ok) throw new Error(`Activity feed returned ${response.status}`);
       const data = await response.json();
       if (requestId !== activeLifecycleRequestId) return;
       renderLifecycleEvents(data.events || []);
+      if (lifecycleSequence && !data.events?.length && $("generation-feed-health").textContent.includes("temporarily unavailable"))
+        $("generation-feed-health").textContent = "Live activity reconnected. Waiting for the next backend update.";
+      if (!lifecycleSequence)
+        $("generation-feed-health").textContent = data.complete
+          ? "Backend finished without reporting activity." : "Connected. Waiting for the backend to report its first activity.";
       if (data.complete) {
         $("live-agent-feed-state").textContent = "COMPLETE";
         $("generation-background-state").textContent = "COMPLETE";
-        if (!runCompletionNotified) {
-          const stage = generationStages[activeGeneration?.kind];
-          addNotification(
-            runFailed ? "Operation failed" : `${stage?.label || "Generation"} completed`,
-            runFailed
-              ? "The operation stopped with an error. Review its status for details."
-              : "The operation finished. Review its output in the workspace.",
-            runFailed ? "error" : "success",
-          );
-          runCompletionNotified = true;
-        }
       }
-    } catch {}
+    } catch {
+      if (requestId === activeLifecycleRequestId)
+        $("generation-feed-health").textContent = "Live activity temporarily unavailable. Retrying; the operation may still be running.";
+    } finally {
+      clearTimeout(timeout);
+    }
   })();
   lifecyclePollPromise = poll;
   try {
@@ -757,6 +894,8 @@ function startLifecycleFeed(requestId) {
   $("background-run-tray").hidden = true;
   $("generation-progress-slot").append($("generation-progress-panel"));
   resetLifecycleFeed();
+  $("generation-activity-log").href = `/logs?request_id=${encodeURIComponent(requestId)}&view=activity`;
+  $("generation-request-reference").textContent = requestId;
   beginAgentWorkflow(activeGeneration?.kind || null);
   addNotification(
     "Generation started",
@@ -1019,6 +1158,7 @@ $("generate-form").addEventListener("submit", async (e) => {
     manualTestingType = $("manual-testing-type").value,
     llmModel = $("llm-model").value;
   showGenerationOverlay($("output-target").value);
+  let generationOutcome = "Completed";
   try {
     $("status").textContent = selectedFile
       ? "The Input Agent is preparing the document…"
@@ -1077,6 +1217,8 @@ $("generate-form").addEventListener("submit", async (e) => {
       reviewSourceRequest = result.source_request || null;
     }
     validationReport = validation;
+    recordOperationResult("test-cases", { suite: generated, validation });
+    recordSuiteValidation(validation, generated);
     render(generated);
     const validationText = validation
       ? ` Validation: ${validation.passed ? "passed" : "needs review"} (${validation.score}/100).`
@@ -1087,6 +1229,7 @@ $("generate-form").addEventListener("submit", async (e) => {
     $("timer").textContent = `COMPLETE · ${elapsed(performance.now() - start)}`;
     loadRuntimeStatus();
   } catch (err) {
+    generationOutcome = activeGeneration?.cancelled ? "Cancelled" : "Failed";
     if (activeGeneration?.cancelled) {
       $("status").textContent = `Generation stopped. Reference ID: ${requestId}`;
     } else {
@@ -1096,6 +1239,7 @@ $("generate-form").addEventListener("submit", async (e) => {
   } finally {
     clearInterval(ticker);
     await stopLifecycleFeed(requestId);
+    finishAgentWorkflow(generationOutcome);
     activeGeneration = null;
     generationSubmitPending = false;
     syncGenerateAvailability();
@@ -1344,7 +1488,9 @@ function renderAgentWorkflow() {
   const context = document.querySelector(".agent-route-orchestrator");
   badge.textContent = run ? run.status : "Ready";
   badge.dataset.status = run?.status || "ready";
-  context.textContent = run ? "Updates reported by the running agents" : "Choose an action in Requirements";
+  context.textContent = run ? run.status === "Running"
+    ? "Updates reported by the running agents" : "Recorded activity for this finished operation"
+    : "Choose an action in Requirements";
   $("agent-workflow-summary").textContent = run
     ? generationStages[run.kind]?.label || "Agent operation"
     : "Review the BRD or generate stories from the shared requirement source.";
@@ -1376,13 +1522,48 @@ function updateAgentWorkflow(event) {
   renderAgentWorkflow();
 }
 function finishAgentWorkflow(status) {
-  if (!agentWorkflowRun) return;
-  agentWorkflowRun.status = status;
+  if (!runCompletionNotified) {
+    const stage = generationStages[activeGeneration?.kind];
+    addNotification(status === "Completed" ? `${stage?.label || "Generation"} completed` : `Operation ${status.toLowerCase()}`,
+      status === "Completed" ? "The operation finished. Review its output and validation evidence in the workspace." : "The operation stopped. Review its status and recorded validation evidence.",
+      status === "Completed" ? "success" : status === "Cancelled" ? "info" : "error");
+    runCompletionNotified = true;
+  }
+  if (agentWorkflowRun) {
+    agentWorkflowRun.status = status;
+    agentWorkflowRun.agents.forEach((event, key) => {
+      if (["running", "started", "pending"].includes(event.status))
+        agentWorkflowRun.agents.set(key, { ...event, status: "finished", summary: `Last reported: ${event.summary}` });
+    });
+  }
   generationOperation.finish(status);
   updateGenerationBanner();
   generationFinishedAt = performance.now();
+  renderGenerationOverview();
+  paintValidationEvidence();
   updateGenerationClock();
   $("generation-background-state").textContent = status.toUpperCase();
+  $("live-agent-feed-state").textContent = status.toUpperCase();
+  $("generation-current-agent").textContent = `Operation ${status.toLowerCase()}`;
+  $("generation-current-activity").textContent = status === "Completed"
+    ? "Processing has finished. Review the output and recorded validation evidence."
+    : "Processing has stopped. Review the operation result and recorded activity.";
+  $("generation-agent-label").textContent = status;
+  $("generation-overlay-title").textContent = `${generationStages[lastGenerationTarget]?.label || "Generation"} · ${status}`;
+  $("generation-overlay-message").textContent = "Review the recorded agent progress and validation evidence for this operation.";
+  $("cancel-generation-overlay").hidden = true;
+  $("background-generation-label").textContent = "Back to progress";
+  document.querySelector(".generation-agent-pulse").classList.add("hidden");
+  $("generation-overlay").querySelector(".generation-progress").classList.add("hidden");
+  if (generationOverlayTimer) clearInterval(generationOverlayTimer);
+  generationOverlayTimer = null;
+  if (!lifecycleSequence) {
+    const empty = $("generation-background-events").querySelector(".empty-event");
+    if (empty) empty.textContent =
+      `Request ${status.toLowerCase()}. No backend agent activity was received; review the operation result or detailed logs.`;
+    $("generation-current-agent").textContent = `Request ${status.toLowerCase()}`;
+    $("generation-current-activity").textContent = "No backend activity was reported for this request.";
+  }
   if (backgroundProgressUsed) showBackgroundProgress();
   renderAgentWorkflow();
 }
@@ -1448,6 +1629,7 @@ async function loadAvailableModels() {
       $("llm-model-status").textContent = selected.can_use
         ? "Models that pass account access checks can generate. Usage limits can change."
         : selected.reason;
+      syncSelectedRuntimeDetails();
     } else {
       select.replaceChildren(new Option("No models available", ""));
       select.dataset.access = "blocked";
@@ -1465,7 +1647,10 @@ async function loadAvailableModels() {
 }
 $("refresh-llm-models").addEventListener("click", loadAvailableModels);
 if (document.body.dataset.guest !== "true") loadAvailableModels();
-$("llm-model").addEventListener("change", checkModelAccess);
+$("llm-model").addEventListener("change", () => {
+  syncSelectedRuntimeDetails();
+  checkModelAccess();
+});
 const descriptionInput = $("description"),
   characterCount = $("character-count");
 descriptionInput.addEventListener("input", () => {

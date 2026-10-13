@@ -5,7 +5,14 @@
   const navigation = document.createElement("section");
   navigation.className = "workflow-navigation";
   navigation.setAttribute("aria-label", "Quality workflow navigation");
-  navigation.innerHTML = `<div class="stage-navigation-heading"><div><span class="stage-eyebrow">Your workspace</span><h2>Workflow outputs</h2></div><p>Review, refine and move to the next stage.</p></div>`;
+  const shortcuts = document.createElement("details");
+  shortcuts.className = "workflow-shortcuts";
+  shortcuts.innerHTML = '<summary>Workflow shortcuts</summary>';
+  const home = document.createElement("a");
+  home.className = "workflow-home-link";
+  home.href = "/";
+  home.textContent = "← Open quality workspace";
+  navigation.append(home, shortcuts);
   const links = document.createElement("nav");
   links.className = "stage-tabs";
   links.setAttribute("aria-label", "Quality workflow stages");
@@ -27,7 +34,7 @@
     link.append(number, copy);
     links.append(link);
   });
-  navigation.append(links);
+  shortcuts.append(links);
   const header = main.querySelector(".topbar");
   if (header) header.after(navigation);
   else main.prepend(navigation);

@@ -14,7 +14,8 @@ from app.agents.runner import CopilotAgentRunner, CopilotGenerationError, Copilo
 from app.agents.test_case_generator_agent import TestCaseGeneratorAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.config import Settings
-from app.models import GenerateRequest, TestSuite
+from app.model_policy import COPILOT_ROUTES
+from app.models import GenerateRequest, LlmModel, TestSuite
 from app.observability import lifecycle_events, publish_lifecycle_event, request_id_context
 
 
@@ -55,6 +56,13 @@ class AgentRuntime:
         self.client_factory = client_factory
 
     async def run(self, request: GenerateRequest) -> AgentOutcome:
+        if request.llm_model in {LlmModel.CODEX, LlmModel.OPENAI, LlmModel.GEMINI}:
+            return await self._complete_governed_run(request, None, None, [], recovery=False)
+        if (
+            request.llm_model != LlmModel.AUTO_FALLBACK
+            and request.llm_model.value not in COPILOT_ROUTES
+        ):
+            raise CopilotGenerationError("Copilot requires claude-haiku-4.5 by application policy.")
         try:
             from copilot.tools import ToolResult, define_tool
         except ImportError as error:
@@ -240,16 +248,33 @@ class AgentRuntime:
         trace: list[AgentEvent],
     ) -> AgentOutcome:
         """Complete safely when the model-directed coordinator idles prematurely."""
+        return await self._complete_governed_run(request, suite, validation, trace, recovery=True)
+
+    async def _complete_governed_run(
+        self,
+        request: GenerateRequest,
+        suite: TestSuite | None,
+        validation: ValidationReport | None,
+        trace: list[AgentEvent],
+        *,
+        recovery: bool,
+    ) -> AgentOutcome:
+        """Use the same validation/storage controls without a separate Copilot call."""
 
         def record(tool: str, status: str, summary: str) -> None:
             event = AgentEvent(sequence=len(trace) + 1, tool=tool, status=status, summary=summary)
             trace.append(event)
-            publish_lifecycle_event("Governed Recovery", tool, status, summary)
+            publish_lifecycle_event(
+                "Governed Recovery" if recovery else "OrchestratorAgent", tool, status, summary
+            )
 
         record(
-            "coordinator_recovery",
+            "coordinator_recovery" if recovery else "coordinate_selected_provider",
             "started",
-            "Coordinator became idle before completion; using the governed fallback workflow.",
+            "Coordinator became idle before completion; using the governed fallback workflow."
+            if recovery
+            else f"Coordinating locally for the explicitly selected {request.llm_model.value} "
+            "provider. No separate Copilot coordinator call will be made.",
         )
         if suite is None:
             suite = await self.generator.generate(request)
@@ -257,7 +282,7 @@ class AgentRuntime:
                 "design_test_suite",
                 "success",
                 (
-                    f"Fallback transformed {len(suite.test_cases)} OrchestratorAgent scenarios "
+                    f"Transformed {len(suite.test_cases)} OrchestratorAgent scenarios "
                     "through DecisionAgent."
                 ),
             )
@@ -267,10 +292,10 @@ class AgentRuntime:
             record("validate_test_suite", status, f"Quality score: {validation.score}/100.")
         if not validation.passed:
             raise CopilotGenerationError(
-                "The recovered test suite did not pass the quality gate. Try adding explicit "
+                "The generated test suite did not pass the quality gate. Try adding explicit "
                 "acceptance criteria to the requirement."
             )
         suite = self.storage.store(request, suite)
-        record("store_validated_suite", "success", "Saved the recovered approved suite.")
-        record("finish_run", "success", "Recovered coordinator run completed successfully.")
+        record("store_validated_suite", "success", "Validated suite passed to governed storage.")
+        record("finish_run", "success", "Governed coordinator run completed successfully.")
         return AgentOutcome(suite=suite, validation=validation, trace=trace)

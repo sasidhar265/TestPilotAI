@@ -2,7 +2,9 @@
 
 import asyncio
 import atexit
+import base64
 import contextvars
+import hashlib
 import hmac
 import json
 import logging
@@ -14,6 +16,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from http.cookies import SimpleCookie
 from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
+from pathlib import Path
 from queue import Full, Queue
 from threading import Lock
 from types import TracebackType
@@ -553,6 +556,24 @@ class OrganizationHttpMiddleware:
                     b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
                     b"script-src 'self'; style-src 'self' 'unsafe-inline'"
                 )
+                if (
+                    scope.get("path") == "/static/auto-finance-uk.html"
+                    and status_code in {200, 304}
+                ):
+                    # Allow this exact script while retaining the single-file export.
+                    guide = Path(__file__).parent / "static" / "auto-finance-uk.html"
+                    script = (
+                        guide.read_text(encoding="utf-8")
+                        .partition("<script>")[2]
+                        .partition("</script>")[0]
+                    )
+                    digest = base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest())
+                    content_security_policy = content_security_policy.replace(
+                        b"script-src 'self'", b"script-src 'self' 'sha256-" + digest + b"'"
+                    )
+                    content_security_policy = content_security_policy.replace(
+                        b"frame-ancestors 'none'", b"frame-ancestors 'self'"
+                    )
                 if not self.settings.is_production and scope.get("path") == "/redoc":
                     content_security_policy = (
                         b"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
@@ -564,7 +585,12 @@ class OrganizationHttpMiddleware:
                     [
                         (b"x-request-id", request_id.encode("ascii")),
                         (b"x-content-type-options", b"nosniff"),
-                        (b"x-frame-options", b"DENY"),
+                        (
+                            b"x-frame-options",
+                            b"SAMEORIGIN"
+                            if scope.get("path") == "/static/auto-finance-uk.html"
+                            else b"DENY",
+                        ),
                         (b"referrer-policy", b"no-referrer"),
                         (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
                         (

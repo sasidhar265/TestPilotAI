@@ -59,6 +59,28 @@ def load_agent_instructions(agent_id: str) -> str:
     )
 
 
+def profile_knowledge_sources(profile: str) -> list[dict[str, str]]:
+    """Expose the same reference documents used in prompts, without granting approval."""
+    if not _PROFILE_NAME.fullmatch(profile):
+        raise ValueError("Invalid agent profile name")
+    directory = PROFILE_DIRECTORY / profile
+    if not directory.is_dir():
+        raise ValueError(f"Unknown agent profile: {profile}")
+    sources = []
+    for path in sorted((directory / "knowledge").glob("*.md")):
+        content = _instruction_body(path)
+        sources.append(
+            {
+                "id": path.name,
+                "title": content.splitlines()[0].removeprefix("# "),
+                "authority": "reference_only",
+                "path": str(path.relative_to(PROFILE_DIRECTORY.parent.parent)),
+                "content": content,
+            }
+        )
+    return sources
+
+
 def load_profile_instructions(profile: str, agent_id: str | None = None) -> str:
     """Load common and optional per-agent project policy from a safe profile directory."""
     if not _PROFILE_NAME.fullmatch(profile):
@@ -75,15 +97,8 @@ def load_profile_instructions(profile: str, agent_id: str | None = None) -> str:
         override = directory / f"{agent_id}.md"
         if override.is_file():
             sections.append(_instruction_body(override))
-    knowledge_directory = directory / "knowledge"
-    if knowledge_directory.is_dir():
-        for knowledge_file in sorted(knowledge_directory.glob("*.md")):
-            sections.append(
-                "PROJECT KNOWLEDGE SOURCE: "
-                + knowledge_file.name
-                + "\n"
-                + _instruction_body(knowledge_file)
-            )
+    for source in profile_knowledge_sources(profile):
+        sections.append("PROJECT KNOWLEDGE SOURCE: " + source["id"] + "\n" + source["content"])
     return "\n\n".join(sections)
 
 

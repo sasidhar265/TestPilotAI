@@ -1,4 +1,7 @@
 import asyncio
+import base64
+import hashlib
+from pathlib import Path
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -6,6 +9,51 @@ from pydantic import SecretStr, ValidationError
 from app.auth import issue_browser_session, session_username
 from app.config import Settings
 from app.services import model_access
+
+
+def test_domain_guide_csp_allows_exact_script_without_relaxing_other_pages() -> None:
+    from starlette.applications import Starlette
+    from starlette.responses import FileResponse
+    from starlette.routing import Mount, Route
+    from starlette.staticfiles import StaticFiles
+    from starlette.testclient import TestClient
+
+    from app.observability import OrganizationHttpMiddleware
+
+    guide = Path(__file__).parents[1] / "app/static/auto-finance-uk.html"
+
+    async def page(request):
+        return FileResponse(guide)
+
+    app = Starlette(
+        routes=[Mount("/static", StaticFiles(directory=guide.parent)), Route("/knowledge", page)]
+    )
+    app.add_middleware(
+        OrganizationHttpMiddleware,
+        settings=Settings(_env_file=None, api_auth_token=SecretStr("guide-test-token")),
+    )
+    with TestClient(app) as client:
+        headers = {"Authorization": "Bearer guide-test-token"}
+        response = client.get("/static/auto-finance-uk.html", headers=headers)
+        assert response.status_code == 200
+        script = response.text.partition("<script>")[2].partition("</script>")[0]
+        digest = base64.b64encode(hashlib.sha256(script.encode()).digest()).decode()
+        policy = response.headers["content-security-policy"]
+        assert f"script-src 'self' 'sha256-{digest}'" in policy
+        assert "frame-ancestors 'self'" in policy
+        assert response.headers["x-frame-options"] == "SAMEORIGIN"
+        assert "'unsafe-inline'" not in policy.split("script-src ")[1].split(";")[0]
+        cached = client.get(
+            "/static/auto-finance-uk.html",
+            headers=headers | {"If-None-Match": response.headers["etag"]},
+        )
+        assert cached.status_code == 304
+        assert cached.headers["content-security-policy"] == policy
+        ordinary = client.get("/knowledge", headers=headers)
+        assert "script-src 'self';" in ordinary.headers["content-security-policy"]
+        assert "sha256-" not in ordinary.headers["content-security-policy"]
+        assert "frame-ancestors 'none'" in ordinary.headers["content-security-policy"]
+        assert ordinary.headers["x-frame-options"] == "DENY"
 
 
 def test_provider_diagnostics_redact_all_provider_credentials() -> None:

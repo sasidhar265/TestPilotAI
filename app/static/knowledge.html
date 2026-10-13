@@ -7,6 +7,7 @@
     <title>Auto Finance Quality — Knowledge source</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/knowledge.css?v=20260917" />
+    <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
     <link rel="stylesheet" href="/static/styles/knowledge-graph.css?v=20261009-finance-graph" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
@@ -18,7 +19,7 @@
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
-    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261010-every-page" />
+    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
@@ -351,7 +352,7 @@
           <div class="section-heading">
             <div>
               <span class="section-kicker">Auto-finance domain</span>
-              <h2 id="finance-tools-title">Domain pack</h2>
+              <h2 id="finance-tools-title">Domain knowledge</h2>
             </div>
           </div>
           <p id="finance-pack-status" class="section-copy">
@@ -367,6 +368,13 @@
               <ul id="finance-journeys"></ul>
             </div>
           </div>
+          <h3>Explore domain knowledge</h3>
+          <p class="section-copy">Read the reference documents used by the agents. Product and lifecycle guidance remains subject to business review; each document identifies its scope and sources.</p>
+          <label>Search knowledge <input id="domain-library-search" type="search" placeholder="Product, journey or concept" /></label>
+          <p id="domain-library-status" class="section-copy" role="status">Loading reference documents…</p>
+          <div id="domain-library-filters" class="library-filters" aria-label="Knowledge topics"></div>
+          <div id="domain-library" class="library-grid"></div>
+          <article id="domain-reader" class="domain-reader" hidden aria-labelledby="domain-reader-title" tabindex="-1"></article>
           <details class="finance-rule-view">
             <summary>Business rules and traceability configuration</summary>
             <div id="finance-rules"></div>
@@ -380,7 +388,7 @@
           </section>
         <section data-knowledge-view="calculations" class="knowledge-card finance-tools">
           <div class="finance-calculator">
-            <h2>Calculation validators</h2>
+            <h2>Calculation checks</h2>
             <p class="section-copy">
               Check supplied values under explicit arithmetic conventions. Use an approved product
               pricing engine for APR, irregular cashflows, flat-rate lending and early settlement.
@@ -517,16 +525,18 @@
     </div>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/knowledge-view.js?v=20261009" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261009-workspace-navigation" defer></script>
+    <script src="/static/scripts/knowledge-view.js?v=20261013-simplified-navigation" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/knowledge.js?v=20261009-focused-views" defer></script>
+    <script src="/static/scripts/knowledge.js?v=20261013-domain-library" defer></script>
+    <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
+    <script src="/static/scripts/domain-library.js?v=20261013" defer></script>
     <script src="/static/scripts/knowledge-graph-data.js?v=20261009-finance-graph" defer></script>
     <script src="/static/scripts/knowledge-graph.js?v=20261009-focused-views" defer></script>
     <script src="/static/scripts/finance-tools.js?v=20261009-focused-views" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-embedded-guide" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

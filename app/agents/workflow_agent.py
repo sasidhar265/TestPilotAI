@@ -39,10 +39,30 @@ class WorkflowAgent:
             return result
 
         sources, knowledge_fingerprint, limitations = self.business_analyst.knowledge()
+        publish_lifecycle_event(
+            "Knowledge Agent",
+            "prepare_story_knowledge",
+            "success",
+            f"Prepared {len(sources)} domain/business reference sources for story generation. "
+            f"{len(limitations)} knowledge limitations are recorded.",
+        )
         key = self.knowledge.key(f"stories:{knowledge_fingerprint}", request)
+        publish_lifecycle_event(
+            "Knowledge Agent",
+            "lookup_workflow",
+            "running",
+            "Checking whether a validated story batch can be reused.",
+        )
         known = self.knowledge.recall(key, Stories, validate)
         if known is not None:
             return known
+        publish_lifecycle_event(
+            "Story Agent",
+            "design_stories",
+            "running",
+            "No reusable story batch returned. Preparing requirements, "
+            "domain context and output schema for AI generation.",
+        )
         result = await self.runner.generate_structured(
             StructuredAgentDefinition(
                 Stories,
@@ -51,6 +71,7 @@ class WorkflowAgent:
                 "Story generation returned invalid output.",
             ),
             instructions=load_agent_instructions("story-generator"),
+            llm_model=request.llm_model,
             prompt=request.model_dump_json()
             + "\nBUSINESS ANALYSIS KNOWLEDGE\n"
             + json.dumps({"sources": sources, "limitations": limitations})
@@ -86,9 +107,21 @@ class WorkflowAgent:
 
         source = StoryHandoff(request=handoff.request, stories=handoff.stories)
         key = self.knowledge.key("scenarios", source)
+        publish_lifecycle_event(
+            "Knowledge Agent",
+            "lookup_workflow",
+            "running",
+            "Checking whether a validated scenario batch can be reused.",
+        )
         known = self.knowledge.recall(key, Scenarios, validate)
         if known is not None:
             return known
+        publish_lifecycle_event(
+            "Scenario Agent",
+            "design_scenarios",
+            "running",
+            "Preparing reviewed stories and acceptance criteria for scenario coverage design.",
+        )
         result = await self.runner.generate_structured(
             StructuredAgentDefinition(
                 Scenarios,
@@ -97,6 +130,7 @@ class WorkflowAgent:
                 "Scenario generation returned invalid output.",
             ),
             instructions=load_agent_instructions("scenario-generator"),
+            llm_model=handoff.request.llm_model,
             prompt=handoff.model_dump_json()
             + "\nOUTPUT SCHEMA\n"
             + str(Scenarios.model_json_schema()),
