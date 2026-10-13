@@ -6,21 +6,22 @@
     "/progress": "Execution reports",
     "/quality-lifecycle": "Coverage & traceability",
     "/products": "Products",
-    "/auto-finance-guide": "UK domain guide",
+    "/auto-finance-guide": "UK finance guide",
     "/usage": "AI usage",
   };
   const views = Object.fromEntries(window.workflowStages.map(stage => [stage.view, stage.title]));
+  // Keep generation context controls beside the requirements they govern.
+  document.querySelector(".panel.composer").append(document.querySelector(".finance-context-settings"));
   const stageNavigation = document.createElement("section");
   stageNavigation.className = "workflow-navigation";
   stageNavigation.setAttribute("aria-label", "Quality workflow navigation");
   stageNavigation.append(document.querySelector(".stage-navigation-heading"), document.querySelector(".stage-tabs"));
-  const shortcutNavigation = document.createElement("section");
-  shortcutNavigation.className = "workflow-support-navigation";
-  shortcutNavigation.innerHTML = '<a class="workflow-home-link" href="/">← Open quality workspace</a><details class="workflow-shortcuts"><summary>Workflow shortcuts</summary></details>';
   function showPage(focus = false) {
+    if (location.pathname === "/products") history.replaceState(null, "", "/auto-finance-guide?section=products");
     if (location.pathname === "/" && new URLSearchParams(location.search).get("view") === "ba-agent") history.replaceState(null, "", "/?view=requirements");
     if (document.body.dataset.guest === "true" && location.pathname !== "/") history.replaceState(null, "", "/");
     const path = location.pathname;
+    document.body.dataset.workspacePath = path;
     const requested = new URLSearchParams(location.search).get("view") || "requirements";
     const view = path === "/products" ? "products" : (requested in views ? requested : "requirements");
     document.body.dataset.qualityView = view;
@@ -28,20 +29,26 @@
     document.querySelectorAll("[data-workspace-page]").forEach((page) => { page.hidden = page.dataset.workspacePage !== pagePath; });
     if (path === "/auto-finance-guide") {
       const frame = document.getElementById("auto-finance-guide-frame");
+      if (new URLSearchParams(location.search).get("section") === "products") {
+        const revealProducts = () => requestAnimationFrame(() => {
+          const target = frame.contentDocument?.getElementById("products");
+          if (target) window.scrollTo({top: window.scrollY + frame.getBoundingClientRect().top + target.getBoundingClientRect().top, behavior:"smooth"});
+        });
+        if (frame.contentDocument?.getElementById("products")) revealProducts();
+        else frame.addEventListener("load", revealProducts, {once:true});
+      }
       if (!frame.getAttribute("src")) frame.src = "/static/auto-finance-uk.html?embedded=1";
     }
     const navigationHost = document.querySelector(`[data-workspace-page="${pagePath}"]`);
-    stageNavigation.hidden = false;
+    stageNavigation.hidden = path !== "/";
     if (path !== "/") stageNavigation.querySelectorAll('[role="tab"]').forEach((tab, index) => {
       tab.setAttribute("aria-selected", "false");
       tab.tabIndex = index === 0 ? 0 : -1;
     });
     if (navigationHost) {
       if (path !== "/") {
-        shortcutNavigation.querySelector("details").append(stageNavigation);
-        navigationHost.prepend(shortcutNavigation);
+        navigationHost.append(stageNavigation);
       } else {
-        shortcutNavigation.remove();
         const hero = navigationHost.querySelector(".finance-hero");
         if (view === "requirements" && hero) hero.after(stageNavigation);
         else navigationHost.prepend(stageNavigation);
@@ -68,9 +75,14 @@
     document.title = `${title} — Auto Finance Quality`;
     document.querySelector(".topbar .eyebrow").textContent = path === "/" ? `Quality workspace / ${title}` : `${["/products", "/auto-finance-guide"].includes(path) ? "Auto finance" : "Workspace"} / ${title}`;
     window.dispatchEvent(new CustomEvent("workspace-page-changed", { detail: { path, view } }));
-    if (focus) { heading.tabIndex = -1; heading.focus(); window.scrollTo(0, 0); }
+    if (focus) {
+      if (path === "/auto-finance-guide") document.getElementById("auto-finance-guide-frame").focus();
+      else { heading.tabIndex = -1; heading.focus(); }
+      window.scrollTo(0, 0);
+    }
   }
   window.navigateWorkspace = (url, focus = true) => {
+    if (url === "/products") url = "/auto-finance-guide?section=products";
     if (url === "/" && window.roleHomePath) url = window.roleHomePath;
     if (window.roleCanNavigate && !window.roleCanNavigate(url)) return;
     if (location.pathname + location.search !== url) history.pushState(null, "", url);

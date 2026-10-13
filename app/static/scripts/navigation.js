@@ -11,17 +11,18 @@
     guide.className = "nav-item";
     guide.href = "/auto-finance-guide";
     const label = document.createElement("span");
-    label.textContent = "UK domain guide";
+    label.textContent = "UK finance guide";
     guide.append(label);
     financeNavigation.prepend(guide);
   }
+  financeNavigation?.querySelector('a[href="/products"]')?.remove();
   const labels = {
     "/project-dashboard": "Project dashboard",
     "/progress": "Execution reports",
     "/quality-lifecycle": "Coverage & traceability",
     "/usage": "AI usage",
     "/knowledge": "Saved outputs",
-    "/knowledge?view=domain": "Domain knowledge",
+    "/knowledge?view=domain": "Project knowledge & rules",
     "/knowledge?view=calculations": "Calculation checks",
   };
   nav.querySelectorAll("a").forEach((link) => {

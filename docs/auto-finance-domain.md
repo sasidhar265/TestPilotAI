@@ -116,7 +116,13 @@ Use a separately configured test app when your deployment has different precisio
 
 ## Domain knowledge library
 
-Auto finance → **UK domain guide** opens `/auto-finance-guide` within the shared workspace,
+Auto finance → **UK finance guide** combines the former Products overview with the UK guide
+at `/auto-finance-guide`. The Requirements product-exploration action and legacy `/products`
+links open its product section. **Project knowledge & rules** is the renamed domain source
+and configuration view; **Calculation checks** remains available separately.
+Product, journey and calculation-context controls remain available in Requirements under
+**Configure product and calculation context**, beside the request they affect.
+The guide opens within the shared workspace,
 preserving navigation and workflow drafts. It embeds `app/static/auto-finance-uk.html`, a self-contained
 reference with an interactive conceptual graph, product/use-case comparisons, official UK
 brand/provider examples, the vehicle-to-contract journey, financial terminology, source links
@@ -131,9 +137,27 @@ in a development environment with Playwright and Chromium installed. Browser ren
 required only to build the file, not when users download it. The PDF metadata records the
 source HTML SHA-256 fingerprint for freshness checks.
 The guide is public-source reference material, not a live pricing catalogue or approved policy.
-It is not automatically loaded into agent prompts and does not alter the configured market,
-approved rule catalogue, source baseline or saved coverage graph. Promotion into agent context
-and approved requirements follows the existing owner/source/version governance workflow.
+The BA agent extracts eight reference sections from the canonical HTML through
+`app/domain_knowledge.py`; it uses the same visible text and source links without UI controls,
+scripts or styles. Source IDs are `UK-AUTO-FINANCE:<section>`, with version, path and content
+fingerprints. They also enter the story agent's business-analysis context. This does not alter
+the configured market, approved rule catalogue, source baseline or saved coverage graph.
+Promotion into approved requirements follows the existing owner/source/version workflow.
+
+BA review selects product and functionality excerpts using explicit selectors or BRD wording.
+For a new-vehicle PCP quote, it selects PCP, quotation and purchase-finance calculations;
+other products and lifecycle endpoints are excluded unless the BRD includes them.
+BA review requires exactly one `domain_checks` entry per selected guide topic.
+Reports distinguish gaps in BRD criteria from missing domain knowledge.
+Covered topics need a verified BRD quotation; applicable checks need an exact quotation
+from their topic source. Missing/duplicate topics, fabricated citations and exclusion of an
+explicitly selected product/journey are rejected. Gaps and potential reference conflicts
+require clarification; they are not compliance findings or business approval. Sources are
+reloaded after assessment, and changed knowledge invalidates the review.
+The report includes server-computed `domain_validation` counts, topic-level explanations,
+recommendations and citation metadata. Requirements displays it and provides **Download BA
+report** as a standalone HTML document, with **Open report** in a new tab. The pre-generation context preview lists the exact guide topics supplied
+to BA review and story generation; scenario/test-case delivery remains stage-specific.
 
 Knowledge → Auto finance → Domain pack now lists and searches the configured profile's
 Markdown knowledge documents, including the original quotation BRD/catalogue/risk material.

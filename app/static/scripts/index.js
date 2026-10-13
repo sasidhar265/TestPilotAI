@@ -415,19 +415,12 @@ function updateGenerationClock() {
   $("generation-overlay-time").textContent = value;
   $("background-run-time").textContent = value;
 }
-function updateGenerationBanner(event = null) {
-  const phases = {ba_review_source: 20, ba_review_knowledge: 40, ba_review_assessment: 60, ba_review_evidence: 80};
-  const milestones = {...phases, enrich_requirements: 20, recall_approved_suite: 60,
-    generate_manual: 60, generate_automation: 60, validation_basis: 70,
-    create_stories: 90, workflow_stage: 90};
-  if (["success", "passed"].includes(event?.status) && milestones[event.action]) {
-    const progress = event.action === "workflow_stage" && event.agent === "Requirements processing" ? 20 : milestones[event.action];
-    generationOperation.advance(progress);
-  }
-  if (event?.action === "bdd_report" && event.status === "running")
-    generationOperation.advance(80);
-  generationOperation.render($("background-run-tray"), $("background-run-percent"), "operation", "Progress through completed agent stages");
+function updateGenerationBanner() {
+  // Provider/lifecycle events report activity, not a measurable fraction of remaining work.
+  generationOperation.render($("background-run-tray"), $("background-run-percent"),
+    "operation", "Completion percentage is unavailable while the operation is running", true);
 }
+
 function showBackgroundProgress() {
   $("background-run-tray").dataset.compact = "true";
   $("background-run-symbol").hidden = false;

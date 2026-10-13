@@ -73,7 +73,7 @@ target tools and are not imported into the repository BDD dashboard.
 
 ## Verification
 
-`automation/Features/ScriptPacks.feature` exercises all three generation and download targets
+`automation/Features/ScriptPacks.feature` exercises API performance, browser performance and database generation/download targets
 plus mapping and approval failures through ReqnRoll and HttpClient. Its fixtures use the
 existing workspace health endpoint and constant SQL queries; they do not invent business
 schemas. Run against a separately started test application:
@@ -88,3 +88,39 @@ dotnet test automation/QualityLifecycle.Automation.csproj \
 Supply `API_AUTH_TOKEN` when the target requires authentication. Repository API tests verify
 the script-building boundary. Execute each resulting native pack in its actual environment
 to verify its behavior; API test success does not establish load-test or database correctness.
+
+## Detailed performance packs
+
+The builder now offers **API performance · Apache JMeter** and **UI performance ·
+Playwright Chromium**. Both retain the approved case mappings and use the shared framework
+layout. Performance workload and acceptance budgets include users, ramp-up, iterations,
+pacing, excluded warm-up time, p95/p99 limits, maximum error rate and minimum measured samples.
+API duration mode overrides iterations. No percentile SLA is invented: supply the budgets
+approved for your environment. A one-sample default is for a smoke run, not a capacity study.
+
+API packs include a per-user CookieManager, request status/duration assertions, optional
+pacing, exact approved payload files, properties and `Reqnroll/run.py`. With JMeter installed,
+set `TARGET_BASE_URL` and run `python Reqnroll/run.py`. `JMETER_BIN` selects the executable;
+`JMETER_PRIVATE_PROPERTIES` points to private authentication properties. Browser packs require
+Playwright Chromium, explicit relative page paths, readiness selectors and optional JSON
+journey actions. Supported actions are `click`, `fill`, `select` and `wait_visible`, each
+with a selector; fill/select use `value`, and secret fill values use `value_env` instead.
+Set `TARGET_BASE_URL`, optionally private `BROWSER_STORAGE_STATE`, and run
+`python Features/browser-performance.py`. Browser concurrency is limited to 50 users.
+
+Runners produce unique directories under `TestResults/Reports`, retaining `samples.json`,
+`summary.json`, `summary.csv` and a standalone `report.html`. API runs also retain JTL,
+JMeter logs and the native dashboard. Reports show sample counts, errors, error percentage,
+throughput, min/mean/max and nearest-rank p50/p90/p95/p99. Browser samples include individual
+action durations, navigation TTFB/DOMContentLoaded/load and available FCP timings. Browser
+HTTP/network/page errors and journey-budget failures count as failed samples. These browser
+measurements are not field Core Web Vitals or Lighthouse scores.
+
+Warm-up remains in raw evidence but is excluded from the shared aggregate/gates; JMeter's
+native dashboard includes raw warm-up samples. Failed samples remain in percentile calculations.
+Absent or insufficient measured samples fail. Tool/infrastructure and budget failures return a
+nonzero runner exit code. These native results are not automatically imported into the BDD
+execution dashboard. Keep the run environment, deployment, dataset, load-generator capacity
+and server/DB/queue telemetry with the report before interpreting capacity or bottlenecks.
+Authentication sequences, correlation and data variation must follow the target contract;
+no login flow, business endpoint, selector or lender rule is inferred.

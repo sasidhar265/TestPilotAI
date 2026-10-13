@@ -13,6 +13,8 @@ Feature: Performance and database script packs
       | TC-SCRIPT-001 | jmeter | Features/performance.jmx | DurationAssertion |
       | TC-SCRIPT-002 | sql | Features/database.sql | actual_rows |
       | TC-SCRIPT-003 | oracle | Features/database.sql | RAISE_APPLICATION_ERROR |
+      | TC-SCRIPT-012 | performance-api | Utilities/PerformanceReportUtility.py | p95_ms |
+      | TC-SCRIPT-013 | browser | Services/BrowserPerformanceService.py | ready_selector |
 
   Scenario Outline: <caseId> - Download <fixture> scripts with input files
     Given the Quality Lifecycle Studio is available
@@ -25,6 +27,8 @@ Feature: Performance and database script packs
       | TC-SCRIPT-004 | jmeter | Features/performance.jmx |
       | TC-SCRIPT-005 | sql | Features/database.sql |
       | TC-SCRIPT-006 | oracle | Features/database.sql |
+      | TC-SCRIPT-014 | browser | Features/browser-performance.py |
+      | TC-SCRIPT-015 | performance-api | Reqnroll/run.py |
 
   Scenario Outline: <caseId> - Reject script generation when <condition>
     Given the Quality Lifecycle Studio is available
@@ -39,3 +43,4 @@ Feature: Performance and database script packs
       | TC-SCRIPT-009 | duplicate-case | every selected | case mappings are duplicated |
       | TC-SCRIPT-010 | failed-gate | Quality Gate-approved | the Quality Gate has failed |
       | TC-SCRIPT-011 | invalid-query | one SELECT | the query is not a single SELECT |
+      | TC-SCRIPT-016 | missing-browser-selector | ready_selector | browser readiness evidence is missing |

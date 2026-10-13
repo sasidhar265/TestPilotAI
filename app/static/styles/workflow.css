@@ -548,6 +548,14 @@
 .ba-workspace .generation-actions > button { min-height: 44px; }
 #ba-status { margin: 12px 0 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.6; }
 #ba-report { margin-top: 24px; }
+.ba-domain-validation { margin:20px 0; padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--surface-soft); }
+.ba-domain-validation .panel-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:center; }
+.ba-domain-validation h3 { margin:0; }
+.ba-domain-metrics { display:flex; flex-wrap:wrap; gap:8px; }
+.ba-domain-metrics span { padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); font-size:.8rem; }
+.ba-domain-check { padding:14px; margin:12px 0; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.ba-domain-check summary { cursor:pointer; font-size:.85rem; font-weight:650; }
+.ba-domain-check code { overflow-wrap:anywhere; }
 .ba-summary-grid, .ba-area-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .ba-area-grid article, .ba-finding { padding: 16px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; }
 .ba-outcome { padding: 20px; background: var(--primary-soft); border-radius: 12px; }
@@ -646,3 +654,12 @@ body:has(#background-run-tray:not([hidden])) #pack-run-tray { bottom: max(120px,
 .generation-current-activity p { margin:6px 0; line-height:1.5; font-size:.85rem; }
 .generation-current-activity small { display:block; color:var(--muted); font-size:.72rem; }
 .generation-current-activity a { display:inline-block; margin-top:8px; font-size:.75rem; color:var(--primary); }
+
+.background-run-tray[data-indeterminate="true"]::after {
+  width: 35%;
+  animation: operation-indeterminate 1.8s ease-in-out infinite alternate;
+}
+@keyframes operation-indeterminate { from { left: 0; } to { left: 65%; } }
+@media (prefers-reduced-motion: reduce) {
+  .background-run-tray[data-indeterminate="true"]::after { animation: none; }
+}

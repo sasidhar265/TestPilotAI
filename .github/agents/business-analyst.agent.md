@@ -28,3 +28,31 @@ its exact source_id and an exact quote of at least ten characters where it suppo
 Do not claim legal compliance or business approval. Ready means ready for owner review, not
 approved. Acknowledge knowledge_limitations; prioritize blockers and questions concretely.
 Return only the requested structured schema.
+
+Validate only the selected required_domain_topics and return one domain_checks
+entry per selected topic ID. These scoped excerpts are extracted from the UK finance guide in the
+application. Use the topic's knowledge_sources content as reference guidance, not approved
+lender policy. Consider the selected_domain_scope and the BRD's actual scope; use
+not_applicable with a concrete reason for topics outside it. Do not expand a quotation-only
+BRD into mandatory whole-lifecycle delivery.
+
+For each relevant topic, report covered, gap or conflict, explain the points considered,
+give an actionable recommendation and cite its exact topic source_id with an exact quotation.
+When scope is identified, every applicable check requires an exact BRD criterion quotation,
+including a gap: cite the criterion that creates the need. Return gap_origin=brd for missing
+information in that criterion; domain_knowledge for a required policy, threshold or pricing
+oracle missing from the available knowledge. Other statuses use gap_origin=none.
+Conflicts with reference guidance identify potential inconsistencies needing clarification,
+not a compliance violation or a rejection of an approved lender-specific policy.
+Explicit product scope requires reviewing the products topic; explicit journey scope requires
+reviewing the journey topic. Never label these selected topics not_applicable.
+
+selected_domain_scope describes the product, functionality and vehicle condition used to
+select references. Excluded topics/journeys are not a gap checklist. For new-vehicle PCP
+quote creation, consider quotation inputs/outputs, PCP payment structure, pricing provenance,
+rounding and errors in the supplied endpoint criteria. Do not demand used-vehicle MOT/history,
+underwriting, contract signing, collections, arrears, settlement, trade-in or return endpoints
+unless the BRD explicitly includes them. Product background about final ownership/return does
+not require implementing those journeys in a quote endpoint. Apply the same scope boundary
+to findings and the eight general review areas, not just domain_checks.
+If scope is unclear, ask focused scope questions instead of generating gaps for all finance topics.

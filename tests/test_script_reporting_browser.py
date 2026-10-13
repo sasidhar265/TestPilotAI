@@ -72,6 +72,7 @@ def test_script_builder_and_reporting(tmp_path):
                     "complete": True,
                     "business_rules": [],
                     "display_name": "Reviewer",
+                    "is_admin": True,
                     "models": [],
                 }
             )
@@ -100,6 +101,24 @@ def test_script_builder_and_reporting(tmp_path):
         result.value.save_as(tmp_path / "jmeter.zip")
         with zipfile.ZipFile(tmp_path / "jmeter.zip") as archive:
             assert "Features/performance.jmx" in archive.namelist()
+        page.locator("#script-pack-target").select_option("browser")
+        page.locator('[data-field="path"]').fill("/login")
+        page.locator('[data-field="ready_selector"]').fill("#login-button")
+        page.locator('[data-field="max_response_ms"]').fill("10000")
+        page.locator("#script-performance-budgets summary").click()
+        page.locator("#script-p95").fill("10000")
+        page.locator("#script-min-samples").fill("2")
+        page.locator("#script-iterations").fill("2")
+        page.locator("#generate-script-pack").click()
+        pw.expect(page.locator("#script-pack-status")).to_contain_text("1 cases mapped")
+        with page.expect_download() as browser_pack:
+            page.locator("#download-script-pack").click()
+        browser_pack.value.save_as(tmp_path / "browser.zip")
+        with zipfile.ZipFile(tmp_path / "browser.zip") as archive:
+            assert "Services/BrowserPerformanceService.py" in archive.namelist()
+            settings = json.loads(archive.read("Input/PerformanceConfig.Json"))
+            assert settings["thresholds"]["p95_ms"] == 10000
+            assert settings["thresholds"]["min_samples"] == 2
         for target in ("sql", "oracle"):
             page.locator("#script-pack-target").select_option(target)
             pw.expect(page.locator("#script-pack-preview")).to_be_hidden()

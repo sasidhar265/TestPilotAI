@@ -5,6 +5,7 @@ import json
 import re
 import zipfile
 from decimal import Decimal
+from pathlib import Path
 from typing import Literal
 from xml.etree import ElementTree as ET
 
@@ -55,13 +56,40 @@ class DatabaseCheck(BaseModel):
         return value
 
 
+class BrowserAction(BaseModel):
+    action: Literal["click", "fill", "select", "wait_visible"]
+    selector: str = Field(min_length=1, max_length=2000)
+    value: str = Field(default="", max_length=10000)
+    value_env: str = Field(default="", pattern=r"^[A-Za-z_][A-Za-z0-9_]*$|^$")
+
+
+class BrowserCheck(BaseModel):
+    case_id: str
+    path: str = Field(min_length=1, max_length=4000)
+    ready_selector: str = Field(min_length=1, max_length=2000)
+    actions: list[BrowserAction] = Field(default_factory=list, max_length=50)
+    expected_status: int = Field(default=200, ge=100, le=599)
+    max_response_ms: int = Field(gt=0, le=3600000)
+
+    _relative_path = field_validator("path")(HttpCheck.relative_path.__func__)
+
+
 class ScriptPackRequest(StepDefinitionRequest):
-    target: Literal["jmeter", "sql", "oracle"]
+    target: Literal["jmeter", "browser", "sql", "oracle"]
     http_checks: list[HttpCheck] = Field(default_factory=list, max_length=100)
+    browser_checks: list[BrowserCheck] = Field(default_factory=list, max_length=100)
     database_checks: list[DatabaseCheck] = Field(default_factory=list, max_length=100)
     threads: int = Field(default=1, ge=1, le=10000)
     ramp_seconds: int = Field(default=1, ge=1, le=86400)
     iterations: int = Field(default=1, ge=1, le=1000000)
+    think_time_ms: int = Field(default=0, ge=0, le=3600000)
+    warmup_seconds: int = Field(default=0, ge=0, le=86400)
+    duration_seconds: int = Field(default=0, ge=0, le=86400)
+    p95_ms: int | None = Field(default=None, gt=0, le=3600000)
+    p99_ms: int | None = Field(default=None, gt=0, le=3600000)
+    max_error_percent: float = Field(default=0, ge=0, le=100)
+    min_samples: int = Field(default=1, ge=1, le=10000000)
+    timeout_ms: int = Field(default=30000, ge=1, le=3600000)
 
 
 class ScriptPack(BaseModel):
@@ -102,6 +130,16 @@ def jmeter_plan(request: ScriptPackRequest) -> str:
     )
     prop(loop, "LoopController.continue_forever", "false", "boolProp")
     prop(loop, "LoopController.loops", request.iterations)
+    if request.duration_seconds:
+        prop(group, "ThreadGroup.scheduler", "true", "boolProp")
+        prop(group, "ThreadGroup.duration", request.duration_seconds)
+        loop.find("stringProp[@name='LoopController.loops']").text = "-1"
+    cookies, _ = node(tree, "CookieManager", "Per-user cookies", "CookiePanel")
+    ET.SubElement(cookies, "collectionProp", name="CookieManager.cookies")
+    prop(cookies, "CookieManager.clearEachIteration", "false", "boolProp")
+    if request.think_time_ms:
+        timer, _ = node(tree, "ConstantTimer", "Request pacing", "ConstantTimerGui")
+        prop(timer, "ConstantTimer.delay", request.think_time_ms)
     for index, check in enumerate(request.http_checks, 1):
         sampler, children = node(tree, "HTTPSamplerProxy", check.case_id, "HttpTestSampleGui")
         for key, value in {
@@ -185,13 +223,24 @@ def database_script(request: ScriptPackRequest) -> str:
 
 def build_pack(request: ScriptPackRequest) -> ScriptPack:
     require_implementation_approval(request.validation)
-    checks = request.http_checks if request.target == "jmeter" else request.database_checks
+    checks = {
+        "jmeter": request.http_checks,
+        "browser": request.browser_checks,
+        "sql": request.database_checks,
+        "oracle": request.database_checks,
+    }[request.target]
     if not checks:
         raise ValueError("Supply at least one case mapping for the selected script type.")
-    if (request.target == "jmeter" and request.database_checks) or (
-        request.target != "jmeter" and request.http_checks
+    if (
+        sum(
+            bool(group)
+            for group in (request.http_checks, request.browser_checks, request.database_checks)
+        )
+        != 1
     ):
         raise ValueError("Supply only mappings for the selected script type.")
+    if request.target == "browser" and (request.threads > 50 or request.duration_seconds):
+        raise ValueError("Browser runs support at most 50 users and iteration-based workloads.")
     ids = [check.case_id for check in checks]
     suite_ids = [case.id for case in request.suite.test_cases]
     if (
@@ -215,8 +264,9 @@ def build_pack(request: ScriptPackRequest) -> ScriptPack:
         "Case coverage: " + ", ".join(ids) + ".\n\n"
         "Input/CaseData.Json retains selected cases; Input/TestData.Json retains mappings.\n"
         "Reqnroll contains runner configuration; Features contains the executable checks.\n"
-        "StepDefinitions, Hooks, TestContext, Services, Builders, Models and Utilities are unused "
-        "by these native script packs. No BDD runtime or Playwright is required.\n\n"
+        "StepDefinitions, Hooks, TestContext, Builders and Models are unused by these native "
+        "script packs. Utilities contains measured reporting; browser Services contains "
+        "journey execution. No BDD runtime or Playwright is required.\n\n"
     )
     if request.target == "jmeter":
         if quotation_feature(request.suite.feature_name):
@@ -231,6 +281,21 @@ def build_pack(request: ScriptPackRequest) -> ScriptPack:
             "# Set the target host before execution. Keep credentials outside the pack.\n"
             "host=\nprotocol=https\nport=\nconnect_timeout=10000\nresponse_timeout=30000\n"
             "jmeter.save.saveservice.output_format=csv\n"
+            "jmeter.save.saveservice.timestamp_format=ms\n"
+            "jmeter.save.saveservice.print_field_names=true\n"
+            "jmeter.save.saveservice.assertion_results_failure_message=true\n"
+            "jmeter.save.saveservice.response_data=false\n"
+            "jmeter.save.saveservice.response_data.on_error=false\n"
+            "jmeter.save.saveservice.time=true\n"
+            "jmeter.save.saveservice.label=true\n"
+            "jmeter.save.saveservice.successful=true\n"
+            "jmeter.save.saveservice.latency=true\n"
+            "jmeter.save.saveservice.connect_time=true\n"
+            "jmeter.save.saveservice.thread_counts=true\n"
+            "jmeter.save.saveservice.bytes=true\n"
+            "jmeter.save.saveservice.sent_bytes=true\n"
+            "jmeter.save.saveservice.response_code=true\n"
+            "jmeter.save.saveservice.response_message=true\n"
         )
         for index, check in enumerate(request.http_checks, 1):
             if check.body:
@@ -248,6 +313,32 @@ def build_pack(request: ScriptPackRequest) -> ScriptPack:
             "the configured iteration count. Redirects are not followed. Add environment-specific "
             "authentication, correlation and pacing where the journey requires them.\n"
             "https://jmeter.apache.org/usermanual/get-started.html\n"
+        )
+    elif request.target == "browser":
+        template = Path(__file__).parent / "templates/performance"
+        files["Services/BrowserPerformanceService.py"] = (template / "browser.py").read_text()
+        files["Features/browser-performance.py"] = (
+            "import runpy\nfrom pathlib import Path\n"
+            "runpy.run_path(str(Path(__file__).resolve().parents[1] / "
+            "'Services/BrowserPerformanceService.py'), run_name='__main__')\n"
+        )
+        files["requirements.txt"] = "playwright>=1.49,<2\n"
+        readme = readme.replace(
+            "No BDD runtime or Playwright is required.",
+            "Playwright Chromium is required; no BDD runtime is required.",
+        )
+        readme += (
+            "## Real-browser performance (Python 3.11+)\n\n"
+            "Install `python -m pip install -r requirements.txt` and "
+            "`python -m playwright install chromium`. Set TARGET_BASE_URL to the actual origin "
+            "and run `python Features/browser-performance.py`. "
+            "Each isolated browser user runs the supplied actions and waits for your explicit "
+            "ready selector. Optional BROWSER_STORAGE_STATE points to a private authenticated "
+            "Playwright state file; action value_env reads secrets from runtime environment. "
+            "Do not put credentials in Input. Journey timing includes navigation, actions and "
+            "readiness. Samples include TTFB, DOMContentLoaded, load and available FCP timings. "
+            "These are observed browser timings, not Lighthouse scores or field Core Web Vitals. "
+            "Browser users share this load generator: monitor its CPU/memory. Maximum 50 users.\n"
         )
     else:
         files["Features/database.sql"] = database_script(request)
@@ -274,6 +365,56 @@ def build_pack(request: ScriptPackRequest) -> ScriptPack:
                 "this. The wrapper uses standard SELECT/CASE; the supplied query must match your "
                 "database dialect.\n"
             )
+    if request.target in {"jmeter", "browser"}:
+        template = Path(__file__).parent / "templates/performance"
+        files["Utilities/PerformanceReportUtility.py"] = (template / "report.py").read_text()
+        files["PERFORMANCE-PLAN.md"] = (template / "plan.md").read_text()
+        files["Input/PerformanceConfig.Json"] = json.dumps(
+            {
+                "threads": request.threads,
+                "ramp_seconds": request.ramp_seconds,
+                "iterations": request.iterations,
+                "duration_seconds": request.duration_seconds,
+                "warmup_seconds": request.warmup_seconds,
+                "think_time_ms": request.think_time_ms,
+                "timeout_ms": request.timeout_ms,
+                "checks": [{"case_id": check.case_id} for check in checks],
+                "thresholds": {
+                    "p95_ms": request.p95_ms,
+                    "p99_ms": request.p99_ms,
+                    "max_error_percent": request.max_error_percent,
+                    "min_samples": request.min_samples,
+                },
+            },
+            indent=2,
+        )
+        if request.target == "jmeter":
+            files["Reqnroll/run.py"] = (template / "run.py").read_text()
+            readme += (
+                "\n## Recommended runner with CI gates (Python 3.11+)\n\n"
+                "Set TARGET_BASE_URL; optionally JMETER_BIN and JMETER_PRIVATE_PROPERTIES "
+                "for private authentication properties. Run `python Reqnroll/run.py`. "
+                "The runner creates a unique timestamped results directory, JTL, JMeter "
+                "dashboard and the shared measured report. Duration mode supersedes iterations.\n"
+            )
+        readme += (
+            "\n## Workload, evidence and acceptance\n\n"
+            "Input/PerformanceConfig.Json records workload and supplied budgets. No organisation "
+            "SLA is inferred: p95/p99 gates are optional until supplied. The default error budget "
+            "is zero and minimum samples is one; select business-approved budgets and adequate "
+            "sample counts for your environment. Warm-up samples remain in raw data but are "
+            "excluded from the shared summary. JMeter's dashboard includes all raw samples. "
+            "Review per-case p50/p90/p95/p99, min/mean/max, throughput and error rate. "
+            "Failures count in latency percentiles. Missing/insufficient samples fail the gate. "
+            "The runner exits nonzero on tool, assertion or SLA failure. Reports include "
+            "samples.json, summary.json, summary.csv and report.html.\n\n"
+            "Use smoke, baseline, load, stress and soak runs with explicitly chosen load levels. "
+            "Record deployment/version, environment, dataset, test window, generator capacity "
+            "and server CPU/memory/DB/queue telemetry alongside the report. Correlate spikes "
+            "with application traces. Repeat baselines under comparable conditions. "
+            "Authentication setup, business data and API token/ID correlation must come from "
+            "the actual contract; they are not fabricated by this generator.\n"
+        )
     files["README.md"] = readme
     return ScriptPack(
         target=request.target,

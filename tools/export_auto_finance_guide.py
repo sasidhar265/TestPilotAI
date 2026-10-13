@@ -56,6 +56,10 @@ th,td { padding:3mm 2mm; overflow-wrap:anywhere; }
 thead { display:table-header-group; }
 tr { break-inside:avoid; }
 .graph-shell { display:block; }
+.network-panel { display:block!important; break-inside:avoid; }
+.network-legend { display:flex!important; }
+#topic-network { display:block!important; }
+.mobile-network { display:none!important; }
 .graph-scroll { break-inside:avoid; }
 .graph-scroll svg { width:100%; min-width:0; }
 .graph-detail { display:none; }
@@ -101,9 +105,12 @@ def main() -> None:
           document.querySelectorAll('details').forEach(el => el.open = true);
           document.querySelectorAll('[hidden]').forEach(el => el.hidden = false);
           document.querySelector('#graph .intro').textContent =
-            'Arrows describe conceptual relationships across the UK auto finance journey. '+
-            'The relationship list follows on the next page. This authored domain map is '+
+            'The graph shows quotation inputs on the left, the quote in the centre and '+
+            'its downstream uses on the right. Labels explain each connection. The full '+
+            'journey and relationship list follow. This authored domain map is '+
             'separate from the application’s saved requirement and test-coverage graph.';
+          document.querySelector('#graph-overview>summary').textContent =
+            'The full finance journey';
           document.querySelectorAll('.graph-node').forEach(el =>
             el.classList.remove('selected','related'));
           document.querySelectorAll('.graph-edge').forEach(el => el.classList.remove('selected'));

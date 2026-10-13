@@ -15,9 +15,11 @@
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20260916-final-ui" />
     <style>
       [data-workspace-page][hidden] { display: none !important; }
+      body[data-workspace-path="/auto-finance-guide"] .topbar { display: none !important; }
+      #auto-finance-guide-frame { display: block; width: 100%; min-height: 600px; border: 0; background: transparent; }
     </style>
-    <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261013" />
-    <link rel="stylesheet" href="/static/styles/workflow.css?v=20261013-live-agent-activity" />
+    <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261013-modern-dialog" />
+    <link rel="stylesheet" href="/static/styles/workflow.css?v=20261013-indeterminate" />
     <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
@@ -1347,7 +1349,6 @@
         </div>
         <div data-workspace-page="/auto-finance-guide" hidden>
           <iframe id="auto-finance-guide-frame" title="UK auto finance domain guide"
-            style="display:block;width:100%;height:calc(100vh - 170px);min-height:600px;border:1px solid var(--line);border-radius:16px;background:white;"
             loading="lazy"></iframe>
         </div>
         <div data-workspace-page="/automation" hidden>
@@ -1912,7 +1913,7 @@
       <div class="background-run-heading">
         <span id="background-run-symbol" class="background-run-symbol" aria-hidden="true" hidden></span>
         <div><h2 id="background-run-title">Generation progress</h2><p id="background-run-summary" class="background-run-summary" role="status"></p></div>
-        <span id="background-run-percent" class="background-run-percent" role="progressbar" aria-label="Completed operation stages" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>0%</span>
+        <span id="background-run-percent" class="background-run-percent" role="progressbar" aria-label="Operation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>0%</span>
         <div class="background-run-actions">
           <span id="background-run-time" class="background-run-time">00:00 elapsed</span>
           <button class="secondary background-run-open" id="reopen-generation" type="button">Open</button>
@@ -1941,6 +1942,8 @@
       aria-describedby="generation-overlay-message"
     >
       <div class="generation-dialog">
+        <header class="operation-dialog-header">
+        <span class="operation-dialog-eyebrow">Workflow activity</span>
         <div class="generation-orbit" aria-hidden="true">
           <span></span><span></span><span></span><b>✦</b>
         </div>
@@ -1949,6 +1952,8 @@
         <p id="generation-overlay-message">
           The specialist agents are designing and validating your coverage.
         </p>
+        </header>
+        <div class="operation-dialog-body">
         <dl class="generation-overview" aria-label="Operation overview">
           <div><dt>Operation</dt><dd id="generation-overview-status">Preparing</dd></div>
           <div><dt>Result</dt><dd id="generation-overview-output">Not available yet</dd></div>
@@ -1956,23 +1961,6 @@
         </dl>
         <p id="generation-service-caption" class="generation-service-caption">Checking the selected generation service…</p>
         <p id="generation-next-step" class="generation-next-step" role="status">Keep this page open, or continue in the background.</p>
-        <details class="generation-request-details"><summary>Provider &amp; request details</summary>
-        <dl class="generation-llm-details" aria-label="Active LLM details">
-          <div>
-            <dt>Provider</dt>
-            <dd id="generation-llm-provider">Detecting…</dd>
-          </div>
-          <div>
-            <dt>Model</dt>
-            <dd id="generation-llm-model">Detecting…</dd>
-          </div>
-          <div>
-            <dt>Authentication</dt>
-            <dd id="generation-llm-auth">Detecting…</dd>
-          </div>
-        </dl>
-        <p class="generation-reference">Reference ID: <code id="generation-request-reference">Not assigned yet</code></p>
-        </details>
         <div class="generation-agent-pulse" aria-label="Generation stages">
           <span>Analyze</span><span>Design</span><span>Validate</span>
         </div>
@@ -2005,10 +1993,28 @@
             <p>Waiting for validation evidence. No checks have been reported yet.</p>
           </div>
         </details>
+        <details class="generation-request-details"><summary>Provider &amp; request details</summary>
+        <dl class="generation-llm-details" aria-label="Active LLM details">
+          <div>
+            <dt>Provider</dt>
+            <dd id="generation-llm-provider">Detecting…</dd>
+          </div>
+          <div>
+            <dt>Model</dt>
+            <dd id="generation-llm-model">Detecting…</dd>
+          </div>
+          <div>
+            <dt>Authentication</dt>
+            <dd id="generation-llm-auth">Detecting…</dd>
+          </div>
+        </dl>
+        <p class="generation-reference">Reference ID: <code id="generation-request-reference">Not assigned yet</code></p>
+        </details>
         <p class="generation-trust-note">A finished operation does not grant business approval or prove that tests were executed.</p>
-        <button id="generation-view-result" class="primary" type="button" hidden>View result →</button>
+        </div>
         <div class="generation-progress"><span class="generation-progress-bar"></span></div>
         <div class="generation-dialog-footer">
+          <button id="generation-view-result" class="primary" type="button" hidden>View result →</button>
           <span id="generation-overlay-time">00:00 elapsed</span
           ><button
             class="secondary generation-action-button generation-action-button--background"
@@ -2111,7 +2117,8 @@
           <fieldset class="generation-select-control">
             <legend>Script type</legend>
             <select id="script-pack-target" aria-label="Script type">
-              <option value="jmeter">Performance · Apache JMeter</option>
+              <option value="jmeter">API performance · Apache JMeter</option>
+              <option value="browser">UI performance · Playwright Chromium</option>
               <option value="sql">Database · SQL</option>
               <option value="oracle">Database · Oracle SQL / PL/SQL</option>
             </select>
@@ -2151,6 +2158,18 @@
               required
           /></label>
         </div>
+        <details id="script-performance-budgets"><summary>Performance workload and acceptance budgets</summary>
+          <p class="field-help">Supply your organisation's approved budgets. Percentile limits are optional until agreed. API duration mode overrides iterations. Browser runs support up to 50 users.</p>
+          <div class="script-load-settings">
+            <label>Pacing / think time (ms)<input id="script-think-time" type="number" value="0" min="0" max="3600000" /></label>
+            <label>Warm-up excluded (seconds)<input id="script-warmup" type="number" value="0" min="0" max="86400" /></label>
+            <label>API duration (seconds; 0 = iterations)<input id="script-duration" type="number" value="0" min="0" max="86400" /></label>
+            <label>p95 budget (ms)<input id="script-p95" type="number" min="1" max="3600000" /></label>
+            <label>p99 budget (ms)<input id="script-p99" type="number" min="1" max="3600000" /></label>
+            <label>Maximum error rate (%)<input id="script-error-rate" type="number" value="0" min="0" max="100" step="0.01" /></label>
+            <label>Minimum measured samples per case<input id="script-min-samples" type="number" value="1" min="1" max="10000000" /></label>
+          </div>
+        </details>
         <p id="script-pack-help"></p>
         <div id="script-case-mappings"></div>
       </form>
@@ -2168,13 +2187,13 @@
     </dialog>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/operation-progress.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/operation-progress.js?v=20261013-indeterminate" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261013-embedded-guide" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-embedded-guide" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261013-recovery-navigation" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/index.js?v=20261013-popup-overview" defer></script>
+    <script src="/static/scripts/index.js?v=20261013-honest-progress" defer></script>
     <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
@@ -2182,15 +2201,15 @@
     <script src="/static/scripts/execution-logs.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
     <script src="/static/scripts/suite-files.js?v=20261013-explicit-provider" defer></script>
-    <script src="/static/scripts/script-packs.js?v=20260916-final-ui" defer></script>
+    <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
     <script src="/static/scripts/generation-knowledge.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261013-popup-overview" defer></script>
-    <script src="/static/scripts/finance-explorer.js?v=20261009-home-hero" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261013-workspace-recovery" defer></script>
+    <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261001-project" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261013-embedded-guide" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
   </body>
 </html>

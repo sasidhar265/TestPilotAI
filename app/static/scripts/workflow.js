@@ -16,6 +16,8 @@
     runReport: null,
     stage: 1,
   };
+  let savedBaReport = null;
+  let savedRequirementsReport = null;
   const tabs = [...document.querySelectorAll("[data-stage]")];
   const workspace = document.querySelector(".stage-workspace");
   workspace.before(document.querySelector(".studio-layout"));
@@ -202,6 +204,7 @@
     );
   }
   function invalidate(from) {
+    savedRequirementsReport = null;
     $("requirements-validation-report").hidden = true;
     if (from <= 1) state.request = null;
     if (from <= 2) {
@@ -248,6 +251,8 @@
   let revision = 0;
   let latestBrdText = null;
   function sourceChanged() {
+    savedBaReport = null;
+    savedRequirementsReport = null;
     revision += 1;
     syncAgentWorkflow();
     latestBrdText = null;
@@ -437,6 +442,7 @@
     };
   }
   function renderRequirementsValidation(report) {
+    savedRequirementsReport = report;
     recordReturnedEvidence("Requirements Validation Agent", report.status,
       `Returned alignment report: ${report.message} Regulatory compliance: ${report.regulatory_compliance || "not assessed"}.`,
       (report.sources || []).map((s) => `${s.title || s.id} · ${s.id} · v${s.version || "not supplied"}`));
@@ -501,22 +507,89 @@
     }
   });
   function renderBaReport(report) {
+    savedBaReport = report;
     recordReturnedEvidence("BA Agent review", "reported",
       `Returned BA review outcome: ${report.outcome}. Business approval: ${report.business_approval}; regulatory compliance: ${report.regulatory_compliance}. Detailed check events were not received; this displays the final response.`,
       [ `Document: ${report.document_fingerprint}. Knowledge: ${report.knowledge_fingerprint}.`,
         ...(report.knowledge_sources || []).map((s) => `${s.title} · ${s.id} · v${s.version} · ${s.authority} (available source; citation not inferred)`)]);
     const list = (items) => `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`;
     const label = (value) => String(value).replaceAll("_", " ");
+    const sourceMap = new Map(report.knowledge_sources.map(source => [source.id, source]));
+    const domain = report.domain_validation;
+    const domainChecks = report.domain_checks || [];
+    if (domain) recordReturnedEvidence("BA domain validation",
+      domain.status === "needs_clarification" ? "failed" : domain.status === "covered" ? "passed" : "reported",
+      `UK guide domain review: ${domain.topics_reviewed} topics reviewed; ${domain.covered} covered, ${domain.gaps} gaps, ${domain.conflicts} potential conflicts, ${domain.not_applicable} outside scope. This is reference guidance, not business approval.`,
+      domainChecks.flatMap(check => check.evidence.map(item => `${item.source_id}: ${item.quote}`)), true);
+    const blockers = report.findings.filter(finding => finding.severity === "blocker").length;
+    const majors = report.findings.filter(finding => finding.severity === "major").length;
+    const knowledgeIncomplete = (domain?.alignment_unassessable || 0) > 0 || report.knowledge_limitations.length > 0;
+    const businessFit = report.outcome === "blocked" || blockers ? "Blocked for business review"
+      : report.outcome !== "ready_for_business_review" || majors || domain?.gaps || domain?.conflicts || report.areas.some(area => area.status === "gap") || report.open_questions.length
+        ? "Needs refinement" : knowledgeIncomplete ? "Provisional fit — knowledge incomplete" : "Ready for business review";
+    const alignmentHtml = `<section class="ba-alignment-summary" aria-label="BRD alignment and business fit">
+      <div class="ba-summary-grid"><article><span class="section-kicker">Domain alignment</span>
+      <h3>${domain?.alignment_percent == null ? "Not assessable" : `${esc(domain.alignment_percent)}%`}</h3>
+      <p>${esc(domain?.covered || 0)} covered / ${esc(domain?.alignment_assessable || 0)} assessable in-scope topics.</p>
+      <p class="field-help">${esc(domain?.alignment_method || "Alignment score was not reported. Rerun BA review.")} Outside-scope topics are excluded. Missing knowledge is unassessable, rather than a BRD failure.</p>
+      <p>${esc(domain?.alignment_unassessable || 0)} topics cannot be assessed because domain knowledge is missing.</p></article>
+      <article><span class="section-kicker">Business fit</span><h3>${esc(businessFit)}</h3>
+      <p>${esc(blockers)} blockers · ${esc(majors)} major findings · ${esc(report.open_questions.length)} open questions.</p>
+      <p class="field-help">Based on the scoped BA outcome, review-area gaps and findings. This assesses requirements readiness, not commercial suitability or business approval.</p>
+      ${knowledgeIncomplete ? "<p class='field-help'>Knowledge limitations remain; even 100% alignment is limited to the available references.</p>" : ""}</article></div></section>`;
+    const domainHtml = `<section class="ba-domain-validation" aria-label="Auto-finance domain validation report">
+      <div class="panel-head"><h3>Auto-finance domain validation</h3><div class="story-review-actions"><button type="button" class="secondary" id="open-ba-validation-report">Open report ↗</button><button type="button" class="secondary" id="download-ba-validation-report">Download HTML report</button></div></div>
+      ${domain ? `<p><strong>${esc(label(domain.status))}</strong> · ${esc(domain.topics_reviewed)} relevant guide topics assessed.</p>
+      <div class="ba-domain-metrics"><span>${esc(domain.covered)} covered</span><span>${esc(domain.gaps)} gaps</span><span>${esc(domain.conflicts)} potential conflicts</span><span>${esc(domain.not_applicable)} outside scope</span></div>` : "<p>No domain validation summary was returned. Run BA review again for topic-level validation.</p>"}
+      <p class="field-help">Uses the same reference content as the UK finance guide. Public guidance identifies review questions; approved business policies retain their separate authority.</p>
+      <p class="field-help">Review product: ${esc(report.domain_scope?.product || "Unspecified")} · Vehicle: ${esc(report.domain_scope?.vehicle_condition || "Unspecified")} · Functionality: ${esc(report.domain_scope?.journeys?.join(", ") || "Unspecified")}</p>
+      <details class="ba-scope-summary"><summary>Scope used for this review</summary>${list(report.domain_scope?.scope_basis || [])}<p>Excluded functionality is not reported as missing.</p>${list(report.domain_scope?.excluded_journeys || [])}</details>
+      ${domainChecks.map(check => `<details class="ba-domain-check" data-domain-topic="${esc(check.topic_id)}"><summary><span class="chip">${esc(label(check.status))}</span> ${esc(sourceMap.get(check.topic_id)?.title || check.topic_id)}</summary>
+        <p><strong>Points considered:</strong> ${esc(check.reason)}</p><p><strong>Recommendation:</strong> ${esc(check.recommendation)}</p>
+        ${check.status === "gap" ? `<p><strong>Gap in:</strong> ${esc(label(check.gap_origin || "brd"))}</p>` : ""}
+        ${check.document_quote ? `<blockquote><strong>BRD excerpt:</strong> ${esc(check.document_quote)}</blockquote>` : "<p class='field-help'>No BRD excerpt was reported for this check.</p>"}
+        ${check.evidence.map(item => `<blockquote><strong>${esc(item.source_id)}</strong>: ${esc(item.quote)}</blockquote>`).join("")}
+        <p class="field-help">Topic: <code>${esc(check.topic_id)}</code> · Source: <code>${esc(sourceMap.get(check.topic_id)?.path || "Not reported")}</code> · Reference only</p>
+      </details>`).join("")}</section>`;
     $("ba-report").hidden = false;
     $("ba-report").innerHTML = `<div class="ba-outcome"><span class="section-kicker">Review outcome</span><h3>${esc(label(report.outcome))}</h3><time>${esc(new Date(report.assessed_at).toLocaleString())}</time></div>
       <h3>BRD summary</h3><p>${esc(report.summary)}</p>
+      ${alignmentHtml}
+      ${domainHtml}
       <div class="ba-summary-grid"><div><h3>Business objectives</h3>${list(report.objectives)}</div><div><h3>Document scope</h3>${list(report.scope)}</div></div>
-      <h3>Domain review</h3><div class="ba-area-grid">${report.areas.map((area) => `<article><span class="chip">${esc(label(area.status))}</span><h4>${esc(label(area.area))}</h4><p>${esc(area.reason)}</p>${area.document_quote ? `<blockquote>${esc(area.document_quote)}</blockquote>` : ""}</article>`).join("")}</div>
+      <h3>BRD review areas</h3><div class="ba-area-grid">${report.areas.map((area) => `<article><span class="chip">${esc(label(area.status))}</span><h4>${esc(label(area.area))}</h4><p>${esc(area.reason)}</p>${area.document_quote ? `<blockquote>${esc(area.document_quote)}</blockquote>` : ""}</article>`).join("")}</div>
       <h3>Findings &amp; recommendations</h3>${report.findings.length ? report.findings.map((finding) => `<article class="ba-finding"><span class="chip">${esc(finding.severity)}</span><h4>${esc(finding.title)}</h4><p>${esc(finding.reason)}</p><p><strong>Recommendation:</strong> ${esc(finding.recommendation)}</p>${finding.document_quote ? `<blockquote>${esc(finding.document_quote)}</blockquote>` : ""}${finding.evidence.map((source) => `<blockquote><strong>${esc(source.source_id)}</strong>: ${esc(source.quote)}</blockquote>`).join("")}</article>`).join("") : "<p>No document-specific findings returned.</p>"}
       <div class="ba-summary-grid"><div><h3>Questions for the business owner</h3>${list(report.open_questions)}</div><div><h3>Next steps</h3>${list(report.next_steps)}</div></div>
       <details><summary>Knowledge considered &amp; review traceability</summary>${report.knowledge_sources.map((source) => `<p><strong>${esc(source.title)}</strong> · ${esc(source.id)} · ${esc(source.version)} · ${esc(label(source.authority))} · ${esc(source.owner)}</p>`).join("")}${list(report.knowledge_limitations)}<p>Document: <code>${esc(report.document_fingerprint)}</code></p><p>Knowledge: <code>${esc(report.knowledge_fingerprint)}</code></p></details>
       <p class="field-help">BA review supports business decisions. Business approval has not been granted; regulatory compliance has not been assessed.</p>`;
     $("ba-status").textContent = `BA review complete: ${label(report.outcome)}.`;
+    const exportReport = (openInTab) => {
+      const content = $("ba-report").cloneNode(true);
+      content.querySelectorAll("button").forEach(button => button.remove());
+      content.querySelectorAll("details").forEach(details => { details.open = true; });
+      const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>BA review report</title><style>
+        *{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#203247;font:15px/1.65 system-ui,sans-serif}
+        main{max-width:1080px;margin:36px auto;padding:36px;background:white;border:1px solid #dce4ed;border-radius:16px}
+        header{border-bottom:1px solid #dce4ed;padding-bottom:20px;margin-bottom:24px}h1{margin:0;font-size:30px}h3{margin:24px 0 10px}h4{margin:10px 0}
+        header p,.field-help,time{color:#596b7d;font-size:13px}.section-kicker{color:#536980;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+        .ba-summary-grid,.ba-area-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+        article,details,.ba-domain-validation{border:1px solid #dce4ed;border-radius:10px;padding:18px;margin:14px 0;break-inside:avoid}
+        summary{font-weight:650;cursor:pointer}.chip,.ba-domain-metrics span{display:inline-block;background:#edf4fa;border-radius:6px;padding:4px 9px;font-size:12px;margin:4px 6px 4px 0}
+        blockquote{margin:14px 0;padding:12px 16px;border-left:3px solid #29828b;background:#f3f8fa;white-space:pre-wrap}
+        code{overflow-wrap:anywhere;font-size:12px}p,li{overflow-wrap:anywhere}.panel-head h3{margin-top:0}
+        @media(max-width:640px){main{margin:12px;padding:20px}.ba-summary-grid,.ba-area-grid{grid-template-columns:1fr}h1{font-size:25px}}
+        @media print{body{background:white}main{margin:0;padding:0;border:0}details>summary{list-style:none}@page{size:A4;margin:18mm}}
+        </style></head><body><main><header><h1>Business analysis review report</h1><p>BRD assessment, scoped domain checks, recommendations and source evidence.</p></header>${content.innerHTML}</main></body></html>`;
+      const url = URL.createObjectURL(new Blob([html], {type:"text/html;charset=utf-8"}));
+      const link = document.createElement("a"); link.href = url;
+      if (openInTab) { link.target = "_blank"; link.rel = "noopener"; }
+      else link.download = "BA-auto-finance-validation-report.html";
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), openInTab ? 60000 : 1000);
+    };
+    $("download-ba-validation-report").onclick = () => exportReport(false);
+    $("open-ba-validation-report").onclick = () => exportReport(true);
   }
   $("ba-review").onclick = () => work("BA Agent is reviewing the BRD…", async (current) => {
     $("ba-report").hidden = true;
@@ -1137,13 +1210,70 @@
     $("stage-execution-reason").textContent =
       "The execution plan loads automatically when you enter this stage.";
     $("stage-case-empty").hidden = true;
-    show(4, false);
+    if (!restoringDraft) show(4, false);
     sync();
   });
   window.addEventListener("workspace-page-changed", (event) => {
     const stages = { requirements: 1, stories: 2, scenarios: 3, "test-cases": 4, execution: 5, automation: 6 };
     if (event.detail.path === "/" && stages[event.detail.view]) show(stages[event.detail.view], false);
   });
+  // Tab-scoped, account-scoped recovery for links that load another document.
+  let draftKey = null;
+  let restoringDraft = false;
+  const draftControls = ["description", "business-rules", "finance-domain-product", "finance-domain-journey", "manual-testing-type", "llm-model", "generation-target"];
+  function saveWorkspaceDraft() {
+    if (!draftKey || restoringDraft) return;
+    try {
+      const controls = Object.fromEntries(draftControls.filter(id => $(id)).map(id => [id, $(id).value]));
+      const data = { version: 1, controls, state: {...state, busy:false,
+        acceptedStories:[...state.acceptedStories], jiraStories:[...state.jiraStories],
+        dirtyStories:[...state.dirtyStories], acceptedScenarios:[...state.acceptedScenarios],
+        dirtyScenarios:[...state.dirtyScenarios]}, suite, validationReport, reviewSourceRequest,
+        executionSummary, stepDefinitionArtifact, savedBaReport, savedRequirementsReport, latestBrdText,
+        caseSelections: [...document.querySelectorAll("#cases .case-check")].map(control => control.checked),
+        feedback: Object.fromEntries(["stage-execution-results", "stage-manual"].map(id => [id, $(id).innerHTML])) };
+      sessionStorage.setItem(draftKey, JSON.stringify(data));
+    } catch { /* Storage may be unavailable or full; current-page work remains usable. */ }
+  }
+  window.addEventListener("pagehide", saveWorkspaceDraft);
+  window.addEventListener("workspace-page-changed", saveWorkspaceDraft);
+  document.addEventListener("click", event => {
+    if (event.target.closest("a[href]")) saveWorkspaceDraft();
+  });
+  window.loadWorkspaceProfile().then(profile => {
+    if (!profile.username || profile.is_guest) return;
+    draftKey = `quality-workspace-draft:v1:${profile.username}`;
+    const stored = sessionStorage.getItem(draftKey);
+    if (!stored || state.busy || activeGeneration || state.request || savedBaReport) return;
+    restoringDraft = true;
+    try {
+      const draft = JSON.parse(stored);
+      if (draft.version !== 1) return;
+      for (const [id, value] of Object.entries(draft.controls || {})) if ($(id)) $(id).value = value;
+      if (draft.suite) render(draft.suite);
+      Object.assign(state, draft.state, {busy:false});
+      for (const name of ["acceptedStories", "jiraStories", "acceptedScenarios"]) state[name] = new Map(draft.state[name]);
+      for (const name of ["dirtyStories", "dirtyScenarios"]) state[name] = new Set(draft.state[name]);
+      document.querySelectorAll("#cases .case-check").forEach((control, index) => {
+        if (draft.caseSelections?.[index] !== undefined) control.checked = draft.caseSelections[index];
+      });
+      validationReport = draft.validationReport;
+      reviewSourceRequest = draft.reviewSourceRequest;
+      executionSummary = draft.executionSummary;
+      latestBrdText = draft.latestBrdText;
+      if (state.stories) renderStories();
+      if (state.scenarios) renderScenarios();
+      if (draft.savedBaReport) renderBaReport(draft.savedBaReport);
+      if (draft.savedRequirementsReport) renderRequirementsValidation(draft.savedRequirementsReport);
+      if (draft.stepDefinitionArtifact) renderStepDefinitions(draft.stepDefinitionArtifact);
+      if (state.plan) renderPlan();
+      for (const [id, html] of Object.entries(draft.feedback || {})) if ($(id)) $(id).innerHTML = html;
+      if (location.pathname === "/") show(({stories:2,scenarios:3,"test-cases":4,execution:5,automation:6})[document.body.dataset.qualityView] || 1, false);
+      sync();
+      status("Restored your workspace results and feedback from this browser tab.");
+    } catch { sessionStorage.removeItem(draftKey); }
+    finally { restoringDraft = false; }
+  }).catch(() => {});
   const initialStages = { stories: 2, scenarios: 3, "test-cases": 4, execution: 5, automation: 6 };
   if (location.pathname === "/") show(initialStages[document.body.dataset.qualityView] || 1, false);
   sync();

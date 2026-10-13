@@ -20,9 +20,14 @@
   };
   function mappings() {
     invalidate();
-    const performance = $("script-pack-target").value === "jmeter";
+    const browser = $("script-pack-target").value === "browser";
+    const performance = ["jmeter", "browser"].includes($("script-pack-target").value);
     $("script-load-settings").hidden = !performance;
-    $("script-pack-help").textContent = performance
+    $("script-performance-budgets").hidden = !performance;
+    $("script-duration").disabled = browser;
+    $("script-pack-help").textContent = browser
+      ? "Supply the real page path, ready selector and optional journey actions. Browser users measure navigation plus actions to readiness. Use environment variable names for secret inputs."
+      : performance
       ? "Supply the approved request and response-time budget for each case. Configure the target host in the downloaded pack."
       : "Supply the SELECT query for each case and the expected number of returned rows. For data-quality checks, return violating rows and expect zero. Use your actual schema names.";
     $("script-case-mappings").innerHTML = cases
@@ -33,7 +38,9 @@
         const textarea = (name, label, value = "", extra = "") =>
           `<label>${label}<textarea data-field="${name}" rows="3" ${extra}>${esc(value)}</textarea></label>`;
         return `<fieldset data-script-case="${index}"><legend>${esc(item.id)} · ${esc(item.title)}</legend>${
-          performance
+          browser
+            ? `${input("path", "Page path", "text", data.path || "", 'required placeholder="/your-page"')}${input("ready_selector", "Journey ready selector", "text", data.ready_selector || "", 'required placeholder="Your verified CSS or Playwright selector"')}${input("expected_status", "Expected navigation status", "number", data.expected_status || "200", 'required min="100" max="599"')}${input("max_response_ms", "Maximum journey time (ms)", "number", data.max_response_ms || "", 'required min="1" max="3600000"')}${textarea("actions", "Actions (JSON array: click, fill, select, wait_visible)", data.actions || "[]")}<p class="field-help">Each action supplies action and selector; fill/select may include value. Secret fill values use value_env. Readiness selectors and actions must match your application.</p>`
+            : performance
             ? `<div class="script-load-settings"><label>HTTP method<select data-field="method">${["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => `<option${method === data.method ? " selected" : ""}>${method}</option>`).join("")}</select></label>${input("path", "Request path", "text", data.path || "", 'required placeholder="/your-endpoint"')}${input("expected_status", "Expected HTTP status", "number", data.expected_status || "", 'required min="100" max="599"')}</div>${input("max_response_ms", "Maximum response time (ms)", "number", data.max_response_ms || "", 'required min="1" max="3600000"')}${textarea("body", "Approved request body (optional)", data.request_body || "")}${input("content_type", "Content type", "text", data.content_type || "application/json", "required")}<details><summary>Request headers</summary><p>JSON object of header names and values. Use JMeter property references for runtime credentials.</p>${textarea("headers", "Headers (JSON)", "{}")}</details>`
             : `${textarea("query", "SELECT query", data.query || "", "required")}${input("expected_rows", "Expected returned rows", "number", data.expected_rows || "", 'required min="0" max="2147483647"')}`
         }</fieldset>`;
@@ -72,6 +79,7 @@
           result[input.dataset.field] = input.type === "number" ? Number(input.value) : input.value;
         });
         if (target === "jmeter") result.headers = JSON.parse(result.headers || "{}");
+        if (target === "browser") result.actions = JSON.parse(result.actions || "[]");
         return result;
       });
       const request = {
@@ -81,7 +89,14 @@
         threads: Number($("script-threads").value),
         ramp_seconds: Number($("script-ramp").value),
         iterations: Number($("script-iterations").value),
-        [target === "jmeter" ? "http_checks" : "database_checks"]: rows,
+        think_time_ms: Number($("script-think-time").value),
+        warmup_seconds: Number($("script-warmup").value),
+        duration_seconds: target === "jmeter" ? Number($("script-duration").value) : 0,
+        p95_ms: $("script-p95").value ? Number($("script-p95").value) : null,
+        p99_ms: $("script-p99").value ? Number($("script-p99").value) : null,
+        max_error_percent: Number($("script-error-rate").value),
+        min_samples: Number($("script-min-samples").value),
+        [target === "jmeter" ? "http_checks" : target === "browser" ? "browser_checks" : "database_checks"]: rows,
       };
       $("generate-script-pack").disabled = true;
       $("script-pack-status").textContent = "Building script pack…";

@@ -73,10 +73,6 @@
     byId("test-studio").scrollIntoView({ block: "start" });
   });
   byId("finance-explore").addEventListener("click", () => {
-    window.navigateWorkspace("/products");
-    document
-      .querySelector('[data-finance-product][aria-pressed="true"]')
-      .focus({ preventScroll: true });
-    document.querySelector(".finance-explorer").scrollIntoView({ block: "center" });
+    window.navigateWorkspace("/auto-finance-guide?section=products");
   });
 })();

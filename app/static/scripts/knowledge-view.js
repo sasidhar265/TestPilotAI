@@ -2,7 +2,7 @@
   const views = {
     saved: ["Saved outputs", "Knowledge", "Browse validated suites and artifacts available for reuse."],
     graph: ["Knowledge graph", "Knowledge", "Explore connected requirements, tests, results and domain references."],
-    domain: ["Domain knowledge", "Auto finance", "Explore finance reference topics, products, journeys and business rules."],
+    domain: ["Project knowledge & rules", "Auto finance", "Review configured agent reference documents, product and journey context, and explicitly approved business rules."],
     calculations: ["Calculation checks", "Auto finance", "Validate supplied amounts with explicit arithmetic conventions."],
   };
   let view = new URLSearchParams(location.search).get("view") || "saved";

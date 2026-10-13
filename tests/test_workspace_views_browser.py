@@ -18,6 +18,15 @@ def test_focused_views_history_and_automation_preview():
                 body="Feature: Existing suite\n  Scenario: Health is available\n",
                 content_type="text/plain",
             )
+        elif request.request.url.endswith("/api/auth/profile"):
+            request.fulfill(
+                json={
+                    "username": "reviewer",
+                    "display_name": "Reviewer",
+                    "initials": "RE",
+                    "is_admin": True,
+                }
+            )
         else:
             mobile_route(request)
 
@@ -37,12 +46,13 @@ def test_focused_views_history_and_automation_preview():
         pw.expect(page.locator(".finance-hero")).to_contain_text("AUTOMOBILE FINANCE INTELLIGENCE")
         pw.expect(page.locator(".finance-explorer")).to_be_hidden()
         page.click("#finance-explore")
-        pw.expect(page).to_have_url("http://localhost/products")
-        pw.expect(page.locator(".finance-explorer")).to_be_visible()
-        assert not page.locator(".workflow-shortcuts").evaluate("element => element.open")
-        pw.expect(page.locator(".workflow-home-link")).to_be_visible()
-        page.locator(".workflow-shortcuts summary").click()
-        pw.expect(page.locator("#stage-tab-1")).to_be_visible()
+        pw.expect(page).to_have_url("http://localhost/auto-finance-guide?section=products")
+        pw.expect(
+            page.frame_locator("#auto-finance-guide-frame").locator("#products")
+        ).to_be_visible()
+        pw.expect(page.locator('#finance-navigation a[href="/products"]')).to_have_count(0)
+        pw.expect(page.locator(".workflow-shortcuts")).to_have_count(0)
+        pw.expect(page.locator(".workflow-home-link")).to_have_count(0)
         page.get_by_role("link", name="Requirements", exact=True).click()
         pw.expect(page.locator(".finance-domain-selection")).to_be_hidden()
         pw.expect(page.locator(".finance-guide")).to_be_hidden()
@@ -61,13 +71,13 @@ def test_focused_views_history_and_automation_preview():
         finance_navigation = page.locator(".nav-parent", has_text="Auto finance")
         if finance_navigation.get_attribute("aria-expanded") == "false":
             finance_navigation.click()
-        page.get_by_role("link", name="Products", exact=True).click()
-        pw.expect(page.locator(".finance-explorer")).to_be_visible()
+        page.get_by_role("link", name="UK finance guide", exact=True).click()
+        guide = page.frame_locator("#auto-finance-guide-frame")
+        guide.locator("#product-audience").select_option("business")
+        pw.expect(guide.locator("#product-cards .card:visible")).to_have_count(9)
+        page.get_by_role("link", name="Requirements", exact=True).click()
         page.locator(".finance-context-settings summary").click()
         pw.expect(page.locator(".finance-domain-selection")).to_be_visible()
-        page.click('[data-finance-product="BCH"]')
-        page.get_by_role("link", name="Requirements", exact=True).click()
-        page.click("#finance-start")
         pw.expect(page.locator("#description")).to_have_value(draft)
         page.evaluate(
             "data => { validationReport = {passed: true}; render(data); }",
@@ -99,6 +109,15 @@ def test_focused_views_history_and_automation_preview():
         page.locator('.primary-nav a[href="/progress"]').click()
         pw.expect(page.locator("#work-dashboard")).to_be_visible()
         pw.expect(page.locator("#stage-panel-5")).to_be_hidden()
-        pw.expect(page.locator(".workflow-support-navigation")).to_be_visible()
+        pw.expect(page.locator(".workflow-support-navigation")).to_have_count(0)
+        page.reload()
+        pw.expect(page.locator("#work-dashboard")).to_be_visible()
+        page.get_by_role("button", name="Quality workspace", exact=True).click()
+        page.get_by_role("link", name="Test cases", exact=True).click()
+        assert not errors, errors
+        pw.expect(page.locator("#results")).to_be_visible()
+        pw.expect(page.locator("#cases .case")).to_have_count(len(automation_suite().test_cases))
+        page.get_by_role("link", name="Requirements", exact=True).click()
+        pw.expect(page.locator("#description")).to_have_value(draft)
         assert not errors, errors
         browser.close()

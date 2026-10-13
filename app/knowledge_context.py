@@ -24,9 +24,14 @@ class KnowledgePreviewRequest(BaseModel):
 
 
 def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings: Settings) -> dict:
-    sources, _, limitations = BusinessAnalystAgent(settings).knowledge()
+    reviewer = BusinessAnalystAgent(settings)
+    review_scope = None
+    if stage == "ba-review":
+        sources, _, limitations, review_scope = reviewer.review_knowledge(request)
+    else:
+        sources, _, limitations = reviewer.knowledge()
     topics = []
-    for source in profile_knowledge_sources(settings.agent_profile):
+    for source in [] if stage == "ba-review" else profile_knowledge_sources(settings.agent_profile):
         content = source["content"]
         sections = []
         for part in re.split(r"(?m)^## ", content)[1:]:
@@ -49,6 +54,20 @@ def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings:
         or request.finance_journey_ids
         or request.finance_calculation is not None
     )
+    if stage in {"ba-review", "stories"}:
+        for source in sources:
+            if source["id"].startswith("UK-AUTO-FINANCE:"):
+                topics.append(
+                    {
+                        "id": source["id"],
+                        "title": source["title"],
+                        "path": source["path"],
+                        "authority": source["authority"],
+                        "version": source["version"],
+                        "fingerprint": source["fingerprint"],
+                        "sections": [{"title": source["title"], "points": source["content"]}],
+                    }
+                )
     domain = {
         "enabled": settings.auto_finance_domain_enabled,
         "selected": selected,
@@ -91,14 +110,17 @@ def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings:
     elif selected:
         raise ValueError("Auto-finance domain pack is disabled")
     inputs = {
-        "ba-review": "Profile library and business sources are supplied directly to BA review.",
+        "ba-review": "Scoped UK finance guide excerpts and business sources are supplied "
+        "directly to BA review after selecting relevant BRD criteria. Only selected topics "
+        "require domain checks; excluded functionality is not treated as missing.",
         "validate-requirements": (
             "Effective approved baseline sources govern alignment. The profile is reference "
             "context when AI alignment runs. A verified uploaded BRD can satisfy the source "
             "gate without AI alignment."
         ),
         "stories": (
-            "Profile knowledge and business sources are supplied directly alongside the "
+            "Profile knowledge, UK finance guide topics and business sources are supplied "
+            "directly alongside the "
             "requirements. Story source excerpts and IDs are validated."
         ),
         "scenarios": (
@@ -118,6 +140,7 @@ def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings:
         "prepared_at": datetime.now(UTC).isoformat(),
         "delivery": inputs[stage],
         "topics": topics,
+        "review_scope": review_scope,
         "domain": domain,
         "approved_sources": [s for s in sources if s["authority"] == "approved_business_source"],
         "shared_rules": [r.model_dump() for r in load_business_rules()],

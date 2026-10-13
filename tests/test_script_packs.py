@@ -157,3 +157,47 @@ def test_jmeter_runtime_payload_status_and_duration(tmp_path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+def test_performance_packs_have_workload_runner_and_measured_reporting():
+    for name in ("performance-api", "browser"):
+        files = files_for(request_for(name))
+        config = json.loads(files["Input/PerformanceConfig.Json"])
+        assert config["thresholds"]["min_samples"] >= 2
+        assert "Utilities/PerformanceReportUtility.py" in files
+        assert "summary.csv" in files["Utilities/PerformanceReportUtility.py"]
+        assert "report.html" in files["Utilities/PerformanceReportUtility.py"]
+        assert "No tests have been run" in files["TestResults/Reports/README.md"]
+    root = ET.fromstring(files_for(request_for("performance-api"))["Features/performance.jmx"])
+    assert root.find(".//CookieManager") is not None
+    assert root.find(".//ConstantTimer") is not None
+    assert root.find(".//boolProp[@name='Assertion.assume_success']").text == "true"
+
+
+def test_measured_report_fails_percentile_errors_and_missing_samples(tmp_path):
+    from app.templates.performance.report import report
+
+    config = {
+        "checks": [{"case_id": "C1"}, {"case_id": "C2"}],
+        "thresholds": {"p95_ms": 50, "p99_ms": None, "max_error_percent": 0, "min_samples": 2},
+    }
+    samples = [
+        dict(case_id="C1", elapsed_ms=100, start_ms=1000, end_ms=1100, success=True),
+        dict(case_id="C1", elapsed_ms=10, start_ms=1100, end_ms=1110, success=False),
+        dict(case_id="C1", elapsed_ms=9999, start_ms=0, end_ms=9999, success=True, warmup=True),
+    ]
+    assert not report(samples, config, tmp_path, {"run": "fixture"})
+    result = json.loads((tmp_path / "summary.json").read_text())
+    assert result["warmup_samples_excluded"] == 1
+    assert result["cases"][0]["p95_ms"] == 100
+    assert result["cases"][0]["error_percent"] == 50
+    assert result["cases"][1]["reasons"] == ["Insufficient measured samples"]
+
+
+def test_browser_requires_explicit_readiness_and_bounded_load():
+    with pytest.raises(ValueError):
+        files_for(request_for("missing-browser-selector"))
+    data = request_for("browser")
+    data["threads"] = 51
+    with pytest.raises(ValueError, match="at most 50"):
+        files_for(data)

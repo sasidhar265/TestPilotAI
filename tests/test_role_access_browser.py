@@ -90,12 +90,9 @@ def test_role_choices_and_navigation(role):
             pw.expect(page.locator(".admin-navigation")).to_be_hidden()
         page.goto("http://localhost/knowledge")
         pw.expect(page.locator("body")).to_have_attribute("data-role", role)
-        pw.expect(page.locator(".workflow-navigation")).to_be_visible()
-        assert not page.locator(".workflow-shortcuts").evaluate("element => element.open")
-        page.locator(".workflow-shortcuts summary").click()
-        visible = page.locator(".workflow-navigation [data-workflow-step]:visible")
-        expected = 6 if access["automation"] else 4 if access["test_cases"] else 2
-        pw.expect(visible).to_have_count(expected)
+        pw.expect(page.locator(".workflow-navigation")).to_have_count(0)
+        pw.expect(page.locator(".workflow-shortcuts")).to_have_count(0)
+        pw.expect(page.locator(".primary-nav")).to_be_visible()
         assert len(profile_requests) == 2  # A fresh page has one shared profile request.
         pw.expect(page.locator("#profile-name")).to_have_text("Role Reviewer")
         page.set_viewport_size({"width": 390, "height": 844})

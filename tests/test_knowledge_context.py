@@ -30,7 +30,7 @@ def test_preview_identifies_exact_scoped_references_without_approval(tmp_path):
     assert result["domain"]["approved_rules"] == []
     assert result["approved_sources"] == []
     assert result["limitations"]
-    assert len(result["topics"]) == 7
+    assert len(result["topics"]) == 15
     assert all(t["authority"] == "reference_only" for t in result["topics"])
     assert all(len(t["fingerprint"]) == 64 for t in result["topics"])
     product = next(t for t in result["topics"] if t["id"] == "auto-finance-products.md")
