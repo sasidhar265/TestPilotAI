@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-16",
+  "scope": "SDLC landing, embedded source editor, shared navigation and progressive disclosure",
+  "python": {
+    "passed": 814,
+    "skipped": 146,
+    "warnings": 1
+  },
+  "browser": {
+    "shared_and_legacy": 20,
+    "live_human_lifecycle": 1,
+    "responsive_chromium_webkit": 8
+  },
+  "reqnroll": {
+    "executed": 49,
+    "outcomes": {
+      "Passed": 49
+    },
+    "scenarios": [
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"lead\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"developer\",\"18\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-provider\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"api-docs\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"functional\",\"11\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"release_manager\",\"19\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"ba\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DefectsReturnToDevelopmentAndRequireASeparateQARetest",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ProjectMembershipDoesNotGrantADeveloperBATransitionAuthority",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"release_manager\",\"9\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"admin\",\"15\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"ba\",\"10\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "PreserveVersionHistoryWithoutTransferringApprovalToARevision",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"automation\",\"12\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectARunAgainstAnOutdatedRequirementsBaseline",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"product_owner\",\"17\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RequirementsMustExistBeforeAgentsCanStart",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"non-functional\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"developer\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ExtendTheAgentCatalogueWithoutRemovingTestingAgentsOrModelPolicy",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"user-guide\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownAgentDeliveryRunsReturnAClearNotFoundResponse",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RequirementRevisionsRetainStoryAndTestTraceabilityAndFlagChangeImpacts",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"short-brief\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-target\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "OrderedSDLCStepsComeFromAuthoritativeWorkflowAndFollowRejectionHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"business_stakeholder\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"logs\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"lead\",\"14\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"product_owner\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"knowledge\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"documentation\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "EvidenceIsMandatoryAndConcurrentDecisionsCannotOverwriteProgress",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"non-functional\",\"13\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ReadyStoriesRequireTheAccountableUpstreamRefinementHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"functional\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DownstreamStagesCannotIntroduceIndependentScope",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"admin\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "CompleteEveryHumanLifecycleHandoffAndRetainAttributableApprovals",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"automation\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnApprovedBaselineFlagsPreviousEvidenceAndResetsApprovalWork",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectAStaleRequirementsWrite",
+        "outcome": "Passed"
+      },
+      {
+        "name": "StakeholderRejectionReturnsWorkToClarificationAndBlocksAdvancement",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"resume\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DiscoverSevenSDLCStageAgentsWithEnforcedProviderModels",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"index\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"business_stakeholder\",\"16\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"users\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"cancel\",\"7\",null)",
+        "outcome": "Passed"
+      }
+    ]
+  },
+  "boundaries": [
+    "Isolated test database and local server",
+    "No live AI, generated target-suite or production deployment claimed",
+    "Existing external integration gaps remain in docs/INTEGRATION_GAPS.md"
+  ]
+}

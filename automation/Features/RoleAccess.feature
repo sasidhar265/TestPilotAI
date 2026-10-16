@@ -15,6 +15,10 @@ Feature: Role specific workspace authorization
       | non-functional |
       | lead           |
       | admin          |
+      | business_stakeholder |
+      | product_owner |
+      | developer |
+      | release_manager |
 
   Scenario Outline: Changing an account role revokes its existing session
     Given an isolated account using role fixture "<fixture>"
@@ -29,3 +33,7 @@ Feature: Role specific workspace authorization
       | non-functional |
       | lead           |
       | admin          |
+      | business_stakeholder |
+      | product_owner |
+      | developer |
+      | release_manager |

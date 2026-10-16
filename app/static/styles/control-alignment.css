@@ -51,7 +51,8 @@
 :root body .password-field > input { padding-right: 52px !important; }
 :root body :is(button.primary, button.secondary, button.quiet-button,
   button.stop, button.inspect-button, button.log-toolbar-action,
-  .log-view-menu > summary, a.button) {
+  .log-view-menu > summary, .suite-menu > summary.secondary,
+  .suite-jira > summary.secondary, a.button) {
   box-sizing: border-box;
   min-height: var(--control-height) !important;
   margin-block: 0 !important;
@@ -108,4 +109,9 @@
     .log-page-controls, .tools) { flex-wrap: wrap; }
   :root body .generation-options { grid-template-columns: 1fr; }
   :root body .generation-actions > :is(button, a.button) { width: 100%; }
+}
+
+/* Keep the desktop Jira popover below its shared-height trigger. */
+@media (min-width: 701px) {
+  .suite-jira .jira-popover { top: calc(100% + 7px); }
 }

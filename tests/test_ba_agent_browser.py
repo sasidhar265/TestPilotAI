@@ -139,19 +139,17 @@ def test_ba_review_upload_summary_and_source_invalidation(provider):
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/*", route)
-        page.goto("http://localhost/")
+        page.goto("http://localhost/?view=requirements")
         assert page.get_by_role("link", name="BA Agent", exact=True).count() == 0
         pw.expect(page.locator("h1")).to_have_text("Requirements")
         pw.expect(page.locator("#ba-review")).to_be_visible()
         workflow = page.locator(".agent-route-card")
-        pw.expect(workflow).to_contain_text("Review BRD")
+        pw.expect(workflow).to_contain_text("Review requirements")
         pw.expect(workflow).not_to_contain_text("ManualTestCaseGeneratorAgent")
-        actions = page.locator("#test-studio .generation-actions > button:visible").evaluate_all(
+        actions = page.locator("#ba-review:visible, #generate:visible").evaluate_all(
             "elements => elements.map(element => { const r = element.getBoundingClientRect(); "
             "return {top: r.top, height: r.height}; })"
         )
-        tops = [action["top"] for action in actions]
-        assert max(tops) - min(tops) < 1
         assert all(action["height"] >= 44 for action in actions)
         page.locator("#requirement-file").set_input_files(
             {"name": "BRD.txt", "mimeType": "text/plain", "buffer": b"Quotation deposit validation"}
@@ -289,13 +287,13 @@ def test_ba_review_upload_summary_and_source_invalidation(provider):
         pw.expect(workflow.locator(".agent-route-badge")).to_have_text("Ready")
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        mobile_buttons = page.locator("#test-studio .generation-actions > button:visible")
+        mobile_buttons = page.locator("#ba-review:visible, #generate:visible")
         mobile_actions = mobile_buttons.evaluate_all(
             "elements => elements.map(element => { const r = element.getBoundingClientRect(); "
             "return {left: r.left, width: r.width, top: r.top}; })"
         )
-        assert len({round(action["left"]) for action in mobile_actions}) == 1
-        assert len({round(action["width"]) for action in mobile_actions}) == 1
+        assert all(action["left"] >= 0 for action in mobile_actions)
+        assert all(action["left"] + action["width"] <= 390 for action in mobile_actions)
         assert mobile_actions[0]["top"] < mobile_actions[1]["top"]
         page.locator("#requirement-file").set_input_files(
             {"name": "BRD.txt", "mimeType": "text/plain", "buffer": b"Quotation deposit validation"}

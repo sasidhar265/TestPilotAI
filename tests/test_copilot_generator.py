@@ -181,7 +181,7 @@ def test_system_prompt_loads_repository_markdown_agent_policies() -> None:
     )
 
     assert "You are DecisionAgent" in prompt
-    assert "You are the Automation Test Generator" in prompt
+    assert "You are a senior test automation engineer and the Automation Test Generator" in prompt
     assert "You are the Quality Gate" in prompt
     assert "Quality Lifecycle Studio default project profile" in prompt
     assert "Quality Lifecycle Studio automation override" in prompt

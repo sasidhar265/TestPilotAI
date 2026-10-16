@@ -32,3 +32,12 @@ The OpenAPI reference at `/docs` uses `api-docs.html`, `scripts/api-docs.js`, an
 `styles/api-docs.css`. Swagger UI assets and their license are bundled under
 `vendor/swagger-ui/` so the viewer works without CDN access. The schema remains at
 `/openapi.json`; both routes use the application authentication checks in every environment.
+
+## Shared workspace presentation
+
+Every authenticated page shell loads `styles/workspace-ui.css` last and
+`scripts/workspace-chrome.js` after its page scripts. These supply consistent card and
+form geometry, breadcrumbs, page introductions, keyboard skip links and responsive
+behaviour. Keep page-specific layouts in their existing files; use the shared variables
+and controls for new screens instead of inventing another palette or spacing system.
+See `docs/UI_DESIGN_SYSTEM.md` for the component conventions and validation coverage.

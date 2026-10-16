@@ -1,5 +1,16 @@
 # Auto Finance Quality
 
+The [agent-led SDLC workspace](docs/sdlc-workspace.md) coordinates Planning, Business
+Analysis, Architecture, Development, Quality Engineering, Release and Operations.
+Agents produce versioned handoffs, source changes, independent reviews, builds,
+actual generated-pack BDD results and revision-verified deployments through configured
+server tools. The control centre includes durable runs, failed-gate recovery, task
+traceability and the existing BA/testing workspace. Start in **SDLC workspace → Requirements** (`/`). Requirements are the single scope
+input; saved versions drive every stage. Follow output and evidence in **Agent delivery**
+(`/sdlc`).
+Configure provider access, repository/build commands and deployment/health hooks before
+requesting a tested or production delivery.
+
 Automobile finance test design from quotation requirements to reviewed execution evidence.
 
 Android and iOS projects are available in [`mobile/`](mobile/README.md), including
@@ -29,7 +40,7 @@ from the Mac as PDF or XLSX. A document-ingestion component extracts normalized 
 agent generates the suite, and an independent validator reports coverage, traceability,
 duplicates, clarity, and expected-result quality. Image extraction uses local Tesseract OCR.
 
-The application uses twenty discoverable agents across the test lifecycle. In addition to
+The application exposes discoverable agents across the SDLC and test lifecycle. In addition to
 requirement ingestion, manual/automation generation, validation, conversion, and storage, it can
 normalize business rules, recall approved knowledge, fill privacy-safe test data, summarize test
 execution, draft defects, and calculate quality metrics. `GET /api/agents` lists every agent's
@@ -55,8 +66,8 @@ The homepage now provides five connected tabs:
    Submitted scenarios appear while the runner works; individual outcomes and example names come
    from TRX results when the run finishes. Repository checks do not validate an unrelated generated suite.
 
-Draft handoffs remain available while navigating within the workspace; reloading the page clears
-these drafts. Changing requirements clears downstream drafts and execution results. Story and
+Draft handoffs remain available while navigating within the workspace. An active SDLC project
+can persist and restore them across reloads; browser-tab recovery also remains available. Changing requirements clears downstream drafts and execution results. Story and
 scenario policies live in `story-generator.agent.md` and `scenario-generator.agent.md`; stage 4's
 conversion instructions live in `workflow-test-cases.agent.md`. Story/scenario generation uses the
 configured artifact-provider fallback (Copilot, configured OpenAI, then available Codex); test-case

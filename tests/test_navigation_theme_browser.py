@@ -18,8 +18,10 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
 
         def route(r):
             path = r.request.url.split("localhost")[-1].split("?")[0]
-            if path == "/" or path.startswith("/static/"):
-                f = root / (name + ".html" if path == "/" else path.removeprefix("/static/"))
+            if path in {"/", "/sdlc"} or path.startswith("/static/"):
+                f = root / (
+                    name + ".html" if path in {"/", "/sdlc"} else path.removeprefix("/static/")
+                )
                 r.fulfill(body=f.read_bytes(), content_type=mimetypes.guess_type(f)[0])
                 return
             data = {}
@@ -67,7 +69,7 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
         page.goto("http://localhost/")
         for destination in (
             "/project-dashboard",
-            "/",
+            "/sdlc",
             "/progress",
             "/quality-lifecycle",
             "/static/user-guide.html",

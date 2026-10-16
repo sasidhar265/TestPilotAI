@@ -55,6 +55,26 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=15 * 1024 * 1024, ge=1024)
     max_concurrent_requests: int = Field(default=20, ge=1, le=1000)
     max_concurrent_generations: int = Field(default=2, ge=1, le=100)
+
+    @field_validator("sdlc_repository_path", mode="before")
+    @classmethod
+    def empty_sdlc_repository_is_unconfigured(cls, value: object) -> object:
+        return None if value == "" else value
+
+    sdlc_repository_path: Path | None = None
+    sdlc_greenfield_enabled: bool = False
+    sdlc_build_command: list[str] = Field(default_factory=list)
+    sdlc_preview_command: list[str] = Field(default_factory=list)
+    sdlc_staging_command: list[str] = Field(default_factory=list)
+    sdlc_production_command: list[str] = Field(default_factory=list)
+    sdlc_rollback_command: list[str] = Field(default_factory=list)
+    sdlc_preview_base_url: str = ""
+    sdlc_preview_health_url: str = ""
+    sdlc_staging_health_url: str = ""
+    sdlc_production_health_url: str = ""
+    sdlc_production_enabled: bool = False
+    sdlc_command_timeout_seconds: int = Field(default=900, ge=10, le=3600)
+    sdlc_max_active_runs: int = Field(default=2, ge=1, le=10)
     automation_project_path: Path = Path("automation/QualityLifecycle.Automation.csproj")
     api_base_url: str = ""
     api_bearer_token: SecretStr = SecretStr("")

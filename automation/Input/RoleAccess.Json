@@ -15,9 +15,7 @@
   },
   "functional": {
     "role": "functional_tester",
-    "targets": [
-      "manual"
-    ],
+    "targets": ["manual"],
     "allowedPath": "/api/generate",
     "allowedMethod": "POST",
     "allowedBody": {
@@ -38,9 +36,7 @@
   },
   "automation": {
     "role": "automation_tester",
-    "targets": [
-      "automation"
-    ],
+    "targets": ["automation"],
     "allowedPath": "/api/generate",
     "allowedMethod": "POST",
     "allowedBody": {
@@ -60,9 +56,7 @@
   },
   "non-functional": {
     "role": "non_functional_tester",
-    "targets": [
-      "non_functional"
-    ],
+    "targets": ["non_functional"],
     "allowedPath": "/api/generate",
     "allowedMethod": "POST",
     "allowedBody": {
@@ -84,12 +78,7 @@
   },
   "lead": {
     "role": "test_lead",
-    "targets": [
-      "manual",
-      "automation",
-      "non_functional",
-      "both"
-    ],
+    "targets": ["manual", "automation", "non_functional", "both"],
     "allowedPath": "/api/generate",
     "allowedMethod": "POST",
     "allowedBody": {},
@@ -103,12 +92,7 @@
   },
   "admin": {
     "role": "admin",
-    "targets": [
-      "manual",
-      "automation",
-      "non_functional",
-      "both"
-    ],
+    "targets": ["manual", "automation", "non_functional", "both"],
     "allowedPath": "/api/admin/users",
     "allowedMethod": "GET",
     "allowedBody": {},
@@ -117,6 +101,62 @@
     "deniedMethod": "POST",
     "deniedBody": {},
     "deniedStatus": 422,
+    "changedRole": "functional_tester",
+    "homePath": "/"
+  },
+  "business_stakeholder": {
+    "role": "business_stakeholder",
+    "targets": [],
+    "allowedPath": "/api/sdlc/queue",
+    "allowedMethod": "GET",
+    "allowedBody": {},
+    "allowedStatus": 200,
+    "deniedPath": "/api/admin/users",
+    "deniedMethod": "GET",
+    "deniedBody": {},
+    "deniedStatus": 403,
+    "changedRole": "functional_tester",
+    "homePath": "/"
+  },
+  "product_owner": {
+    "role": "product_owner",
+    "targets": [],
+    "allowedPath": "/api/sdlc/queue",
+    "allowedMethod": "GET",
+    "allowedBody": {},
+    "allowedStatus": 200,
+    "deniedPath": "/api/admin/users",
+    "deniedMethod": "GET",
+    "deniedBody": {},
+    "deniedStatus": 403,
+    "changedRole": "functional_tester",
+    "homePath": "/"
+  },
+  "developer": {
+    "role": "developer",
+    "targets": [],
+    "allowedPath": "/api/sdlc/queue",
+    "allowedMethod": "GET",
+    "allowedBody": {},
+    "allowedStatus": 200,
+    "deniedPath": "/api/admin/users",
+    "deniedMethod": "GET",
+    "deniedBody": {},
+    "deniedStatus": 403,
+    "changedRole": "functional_tester",
+    "homePath": "/"
+  },
+  "release_manager": {
+    "role": "release_manager",
+    "targets": [],
+    "allowedPath": "/api/sdlc/queue",
+    "allowedMethod": "GET",
+    "allowedBody": {},
+    "allowedStatus": 200,
+    "deniedPath": "/api/admin/users",
+    "deniedMethod": "GET",
+    "deniedBody": {},
+    "deniedStatus": 403,
     "changedRole": "functional_tester",
     "homePath": "/"
   }

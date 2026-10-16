@@ -112,7 +112,10 @@ def test_focused_views_history_and_automation_preview():
         pw.expect(page.locator(".workflow-support-navigation")).to_have_count(0)
         page.reload()
         pw.expect(page.locator("#work-dashboard")).to_be_visible()
-        page.get_by_role("button", name="Quality workspace", exact=True).click()
+        pw.expect(page.get_by_role("button", name="SDLC workspace", exact=True)).to_have_attribute(
+            "aria-expanded", "true"
+        )
+        pw.expect(page.locator("#sdlc-navigation")).to_be_visible()
         page.get_by_role("link", name="Test cases", exact=True).click()
         assert not errors, errors
         pw.expect(page.locator("#results")).to_be_visible()

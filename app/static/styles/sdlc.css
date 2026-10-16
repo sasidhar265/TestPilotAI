@@ -1,0 +1,376 @@
+.sdlc-workspace {
+  padding: 24px;
+}
+.sdlc-project-controls,
+.sdlc-project-controls form,
+.sdlc-actions,
+.sdlc-stage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.sdlc-project-controls > label,
+.sdlc-project-controls form {
+  flex: 1;
+  min-width: min(280px, 100%);
+}
+.sdlc-workspace label {
+  display: grid;
+  gap: 6px;
+}
+.sdlc-workspace textarea {
+  width: 100%;
+  margin: 12px 0;
+  resize: vertical;
+}
+.sdlc-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+.sdlc-stages button[aria-current="step"] {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.sdlc-stage-head {
+  align-items: center;
+  justify-content: space-between;
+}
+.sdlc-actions,
+.sdlc-review {
+  margin: 16px 0;
+}
+.sdlc-workspace pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  background: var(--surface-soft);
+}
+.sdlc-workspace #sdlc-links {
+  height: auto !important;
+  min-height: 100px !important;
+  background-image: none;
+}
+.sdlc-history-item {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+.sdlc-history-item summary {
+  cursor: pointer;
+}
+.sdlc-history-item p {
+  margin: 8px 0;
+}
+.sdlc-workspace [hidden] {
+  display: none !important;
+}
+@media (max-width: 700px) {
+  .sdlc-workspace {
+    padding: 16px;
+  }
+  .sdlc-project-controls form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/* Agent delivery cockpit, using the application palette and shared controls. */
+.sdlc-workspace > .panel-head h2 {
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  letter-spacing: -0.04em;
+}
+.sdlc-mission {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.8fr) minmax(300px, 1.6fr);
+  gap: 28px;
+  padding: 28px;
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary-soft), var(--surface) 65%);
+}
+.sdlc-mission h3 {
+  font-size: 1.5rem;
+  margin-top: 8px;
+}
+.sdlc-mission textarea {
+  background: var(--surface);
+}
+.sdlc-mission-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sdlc-delivery-board {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 24px;
+  background: var(--surface);
+}
+.sdlc-environments,
+.sdlc-specialists {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sdlc-environments {
+  margin: 18px 0;
+}
+.sdlc-environments span,
+.sdlc-specialists span,
+.sdlc-run-badge {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: var(--text-label);
+  background: var(--surface-soft);
+}
+.sdlc-environments .connected,
+.sdlc-run-badge[data-status="completed"] {
+  color: var(--success, #237c56);
+}
+.sdlc-environments .missing {
+  color: var(--muted);
+}
+.sdlc-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(245px, 100%), 1fr));
+  gap: 12px;
+}
+.sdlc-agent-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+.sdlc-agent-card.running {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+  background: var(--surface-soft);
+}
+.sdlc-agent-card.passed {
+  border-color: var(--success, #237c56);
+}
+.sdlc-agent-card.blocked,
+.sdlc-agent-card.failed {
+  border-color: var(--danger, #c33d55);
+}
+.sdlc-agent-state {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-label);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sdlc-agent-card h4 {
+  margin: 0 0 8px;
+}
+.sdlc-agent-card p {
+  color: var(--muted);
+}
+.sdlc-agent-card details {
+  margin-top: 14px;
+}
+.sdlc-agent-card pre {
+  max-height: 280px;
+  overflow: auto;
+}
+.sdlc-run-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 24px 0;
+}
+.sdlc-run-toolbar label {
+  flex: 1;
+  min-width: min(250px, 100%);
+}
+.sdlc-evidence-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.sdlc-event-list {
+  padding: 0;
+  list-style: none;
+  max-height: 450px;
+  overflow: auto;
+}
+.sdlc-event-list li {
+  padding: 12px 0 12px 14px;
+  border-left: 3px solid var(--line);
+  margin-bottom: 8px;
+}
+.sdlc-event-list .passed {
+  border-left-color: var(--success, #237c56);
+}
+.sdlc-event-list .blocked,
+.sdlc-event-list .failed {
+  border-left-color: var(--danger, #c33d55);
+}
+.sdlc-event-list p {
+  margin: 6px 0;
+}
+.sdlc-event-list small {
+  color: var(--muted);
+}
+.sdlc-evidence > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
+.sdlc-evidence dt {
+  color: var(--muted);
+}
+.sdlc-evidence dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 650;
+}
+.sdlc-gate-error {
+  padding: 14px;
+  border-radius: 10px;
+  color: var(--danger, #c33d55);
+  background: color-mix(in srgb, var(--danger, #c33d55) 8%, var(--surface));
+}
+.sdlc-artifact-ledger {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+.sdlc-artifact-ledger > summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+@media (max-width: 900px) {
+  .sdlc-mission,
+  .sdlc-evidence-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .sdlc-mission,
+  .sdlc-delivery-board {
+    padding: 16px;
+  }
+  .sdlc-mission-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sdlc-requirements-input,
+.sdlc-source-baseline {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.sdlc-project-controls label,
+.sdlc-requirements-input label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.sdlc-project-controls input,
+.sdlc-project-controls select,
+.sdlc-requirements-input textarea,
+.sdlc-requirements-input select {
+  width: 100%;
+  min-width: 0;
+}
+.sdlc-requirements-input .sdlc-actions > *,
+.sdlc-project-controls button,
+#generate {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sdlc-requirements-input {
+  padding: clamp(12px, 3vw, 28px);
+}
+
+/* Keep project context compact; creation is a secondary action after selection. */
+.sdlc-project-controls > details {
+  flex: 1;
+  min-width: min(280px, 100%);
+}
+.sdlc-project-controls > details > summary {
+  cursor: pointer;
+  padding-block: 10px;
+}
+#sdlc-project-help {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+
+/* Everyday work first; secondary settings share one quiet disclosure. */
+#requirements-options,
+#record-options,
+.sdlc-stage-checklist {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+#requirements-options > summary,
+#record-options > summary,
+.sdlc-stage-checklist > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+#requirements-options > details {
+  margin-top: 14px;
+}
+#requirements-options .sdlc-generation-options,
+#requirements-options .rule-control {
+  box-shadow: none;
+}
+#record-options label {
+  margin-top: 12px;
+}
+.sdlc-workspace > .panel-head {
+  margin-bottom: 12px;
+}
+.sdlc-workspace > .panel-head h2 {
+  font-size: 1.35rem;
+}
+.sdlc-workspace > .panel-head p,
+#sdlc-step-number {
+  display: none;
+}
+
+/* Reduce nested cards and whitespace around the actual requirement editor. */
+#sdlc-requirements-editor #test-studio {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+#sdlc-requirements-editor .sdlc-requirements-input {
+  display: block;
+  padding: 0;
+  margin: 16px 0;
+  border: 0;
+  background: none;
+}
+.sdlc-source-baseline {
+  display: block;
+  padding: 12px 16px;
+  margin: 12px 0;
+  background: var(--surface);
+}
+.sdlc-source-baseline > summary {
+  cursor: pointer;
+}
+.sdlc-sequence .stage-tabs button {
+  min-height: 62px;
+}
+#sdlc-step-panel {
+  padding: 18px;
+}

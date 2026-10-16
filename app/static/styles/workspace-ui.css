@@ -1,0 +1,621 @@
+/* Shared presentation for every authenticated workspace page. Load after page styles. */
+:root {
+  --ui-card-radius: 14px;
+  --ui-card-padding: 24px;
+  --ui-section-gap: 24px;
+}
+.workspace-skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 10000;
+  padding: 12px 18px;
+  border-radius: 10px;
+  color: var(--surface);
+  background: var(--ink);
+  transform: translateY(-160%);
+}
+.workspace-skip-link:focus {
+  transform: translateY(0);
+}
+.workspace-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+:root body main .workspace-breadcrumbs li {
+  font-size: var(--text-control);
+}
+.workspace-breadcrumbs li + li::before {
+  content: "/";
+  margin-right: 8px;
+  color: var(--muted);
+}
+.workspace-breadcrumbs a {
+  color: var(--primary-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.topbar .workspace-breadcrumbs ~ .eyebrow {
+  display: none;
+}
+.topbar .page-intro {
+  max-width: 72ch;
+}
+:root body main :is(.panel, .knowledge-card, .pm-card, .section, .sdlc-delivery-board) {
+  border: 1px solid var(--line);
+  border-radius: var(--ui-card-radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+:root
+  body
+  main
+  :is(.knowledge-card, .pm-card, .section, .users-card, .sdlc-workspace, .sdlc-delivery-board) {
+  padding: var(--ui-card-padding);
+}
+:root body main :is(.explore-banner, .explore-page .hero, .pm-heading) {
+  border-radius: var(--ui-card-radius);
+  box-shadow: none;
+}
+:root body.explore-page .hero :is(h1, h2) {
+  color: #f5fcff;
+  margin: 12px 0;
+  font-size: var(--text-section);
+  line-height: 1.35;
+}
+:root body.explore-page main .section {
+  margin-block: var(--ui-section-gap);
+}
+:root body main :is(.section-heading, .panel-head) {
+  gap: 16px;
+}
+:root body main :is(.section, .knowledge-card, .pm-card) > :is(h2, h3):first-child {
+  margin-top: 0;
+}
+:root body main :is(.field-help, .option-help, .section-copy) {
+  color: var(--muted);
+}
+:root body main :is(input, textarea, select):disabled {
+  opacity: 1;
+  color: var(--muted);
+  background-color: var(--surface-soft);
+  cursor: not-allowed;
+}
+/* Multi-select is a list, so it must not inherit the height or chevron of a dropdown. */
+:root body select[multiple] {
+  height: auto !important;
+  min-height: 132px !important;
+  padding: 8px !important;
+  background-image: none;
+  appearance: auto;
+}
+:root body select[multiple] option {
+  padding: 8px;
+  border-radius: 6px;
+}
+:root body main textarea:not(.code-editor) {
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface);
+  color: var(--ink);
+}
+:root body main :is(.users-table, .pm-table-wrap, .table-wrap) {
+  border-radius: 10px;
+}
+:root body main table {
+  border-collapse: collapse;
+}
+:root body main :is(th, td) {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+:root body main th {
+  color: var(--ink-soft);
+  background: var(--surface-soft);
+}
+:root body main tbody tr:last-child td {
+  border-bottom: 0;
+}
+:root body main tbody tr:hover {
+  background: var(--surface-soft);
+}
+:root body main details > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+}
+:root body main details > summary:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+/* Lifecycle decisions are the primary task; history and maintenance use disclosure. */
+:root body #project-lifecycle {
+  display: block;
+  margin: 24px 0;
+  padding: var(--ui-card-padding);
+  background: var(--surface);
+  border-radius: var(--ui-card-radius);
+}
+:root body #project-lifecycle > h3 {
+  margin: 4px 0 12px;
+  font-size: var(--text-section);
+}
+#project-lifecycle > details {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.lifecycle-next-action {
+  padding: 16px 20px;
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  background: var(--surface-tint);
+}
+.lifecycle-next-action h4 {
+  margin: 0 0 6px;
+}
+.lifecycle-next-action p {
+  margin: 0;
+}
+.lifecycle-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+.lifecycle-action-grid > form {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+#project-lifecycle form {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+#project-lifecycle form[hidden] {
+  display: none;
+}
+#project-lifecycle form :is(h4, p) {
+  margin: 0;
+}
+#project-lifecycle form label {
+  display: grid;
+  gap: 6px;
+}
+#project-lifecycle form :is(input, select, textarea) {
+  width: 100%;
+}
+#project-lifecycle textarea {
+  margin: 0;
+  min-height: 104px;
+}
+#project-lifecycle form > button {
+  justify-self: start;
+}
+#lifecycle-status {
+  color: var(--ink-soft);
+}
+#lifecycle-timeline {
+  max-height: 320px;
+  margin: 8px 0;
+}
+#lifecycle-timeline [aria-current="step"] {
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 0 8px 8px 0;
+}
+#lifecycle-item-form {
+  margin: 20px 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#lifecycle-item-form label:has(textarea),
+#lifecycle-item-form label:has(select[multiple]),
+#lifecycle-item-form > button {
+  grid-column: 1 / -1;
+}
+#lifecycle-audit,
+#lifecycle-work-items {
+  overflow-wrap: anywhere;
+}
+#lifecycle-work-items pre {
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow: auto;
+}
+#lifecycle-queue {
+  display: grid;
+  gap: 12px;
+}
+#lifecycle-queue > p {
+  margin: 0;
+}
+#lifecycle-queue a {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+}
+#lifecycle-queue a:hover,
+#lifecycle-queue a:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+@media (max-width: 760px) {
+  :root {
+    --ui-card-padding: 18px;
+    --ui-section-gap: 18px;
+  }
+  .lifecycle-action-grid,
+  #lifecycle-item-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root body main :is(.explore-banner, .pm-heading) {
+    padding: 24px;
+  }
+  .lifecycle-action-grid > form {
+    padding: 16px;
+  }
+  :root body main :is(input, textarea, select) {
+    font-size: 16px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .workspace-skip-link {
+    display: none;
+  }
+}
+
+/* A common badge silhouette keeps status meaning separate from page styling. */
+:root body :is(.pm-badge, .status-badge, .review-badge, .sdlc-run-badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Supporting callouts use the same navy/teal identity as the workspace. */
+:root body main .api-cta {
+  border: 1px solid var(--line);
+  border-radius: var(--ui-card-radius);
+  background: linear-gradient(120deg, #10263e, #17575a);
+  color: #f5fcff;
+}
+:root body main .api-cta p {
+  color: #d4e4eb;
+}
+
+/* SDLC uses the same numbered, focused step pattern as requirements-to-test design. */
+.sdlc-sequence {
+  margin: 24px 0;
+}
+.sdlc-sequence .stage-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.sdlc-sequence .stage-tabs button {
+  min-height: 82px;
+}
+.sdlc-step-number {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  font-weight: 700;
+}
+.sdlc-sequence [aria-current="step"] .sdlc-step-number {
+  color: #fff;
+  background: var(--primary-button);
+  border-color: var(--primary-button);
+}
+#sdlc-step-panel {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+#sdlc-step-panel h3 {
+  margin: 6px 0 12px;
+}
+#sdlc-step-view-note {
+  color: var(--muted);
+}
+.sdlc-step-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+  margin: 20px 0;
+}
+:root body main .sdlc-step-stages li {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: var(--text-control);
+}
+.sdlc-step-stages [aria-current="step"] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-weight: 650;
+}
+.sdlc-sequence-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+#sdlc-agent-tools {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+#sdlc-agent-tools > summary {
+  font-weight: 650;
+}
+#project-lifecycle .lifecycle-action-grid[hidden],
+#project-lifecycle .lifecycle-next-action[hidden] {
+  display: none;
+}
+#lifecycle-item-form > .sdlc-actions {
+  grid-column: 1 / -1;
+}
+@media (max-width: 760px) {
+  .sdlc-sequence .stage-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #sdlc-step-panel {
+    padding: 18px;
+  }
+  .sdlc-sequence .stage-tabs button {
+    padding: 12px 8px;
+    gap: 8px;
+  }
+}
+@media (max-width: 760px) {
+  .sdlc-sequence .stage-tabs {
+    display: flex;
+    overflow-x: auto;
+    max-width: 100%;
+    scroll-snap-type: x proximity;
+  }
+  .sdlc-sequence .stage-tabs button {
+    flex: 0 0 190px;
+    scroll-snap-align: start;
+  }
+  .sdlc-sequence .stage-tabs button > span:last-child {
+    min-width: 0;
+  }
+}
+
+/* The source editor belongs to the first lifecycle step. */
+#sdlc-requirements-editor .composer {
+  width: 100%;
+  min-width: 0;
+  margin: 16px 0;
+  box-shadow: none;
+}
+.sdlc-workspace > .sdlc-project-controls {
+  margin: 16px 0 8px;
+}
+.nav-specialist-tools {
+  min-width: 0;
+  margin-top: 8px;
+}
+.nav-specialist-tools > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.nav-specialist-tools > summary:focus-visible {
+  outline: 2px solid var(--teal, #007e87);
+  outline-offset: -2px;
+}
+
+/* Shared record workbench: one list, one editable detail, contextual review. */
+.record-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+.record-toolbar label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.record-workbench {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.65fr) minmax(0, 1.6fr);
+  gap: 20px;
+  align-items: start;
+}
+.record-list {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.record-row {
+  text-align: left;
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  white-space: normal;
+  height: auto;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.record-row[aria-pressed="true"] {
+  outline: 2px solid var(--teal, #007e87);
+  outline-offset: -2px;
+}
+.record-row small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.record-detail {
+  min-width: 0;
+}
+.record-detail p,
+#record-traceability {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+#record-traceability {
+  display: grid;
+  gap: 8px;
+}
+#record-traceability button {
+  white-space: normal;
+  height: auto;
+  text-align: left;
+}
+.record-detail form {
+  display: grid;
+  gap: 12px;
+}
+.record-detail form label {
+  display: grid;
+  gap: 6px;
+}
+.record-detail h4 {
+  margin: 20px 0 10px;
+}
+.record-suggestion {
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.record-suggestion button {
+  margin: 8px 6px 0 0;
+}
+#record-versions p {
+  white-space: pre-wrap;
+}
+@media (max-width: 900px) {
+  .record-workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.workspace-command {
+  width: min(620px, calc(100vw - 32px));
+  max-height: 80vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.workspace-command::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+.command-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.workspace-command label {
+  display: grid;
+  gap: 8px;
+}
+.command-results {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+}
+.command-results button {
+  text-align: left;
+  height: auto;
+  white-space: normal;
+}
+.record-matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.record-matrix-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.record-matrix-wrap th,
+.record-matrix-wrap td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.record-matrix-wrap button {
+  display: block;
+  margin-bottom: 6px;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}
+#lifecycle-queue article {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+#lifecycle-queue article > .sdlc-actions {
+  margin-top: 10px;
+}
+.record-row {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 48px;
+  font: inherit;
+}
+.record-row:hover,
+.record-row[aria-pressed="true"] {
+  background: var(--primary-soft);
+}
+.record-row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.record-detail form label[hidden] {
+  display: none;
+}

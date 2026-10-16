@@ -15,6 +15,7 @@ a.button {
   touch-action: manipulation;
 }
 button:is(.primary, .secondary, .quiet-button, .stop, .inspect-button),
+:is(.suite-menu, .suite-jira) > summary.secondary,
 a.button {
   box-sizing: border-box;
   min-height: 44px;
@@ -55,6 +56,7 @@ a.button.primary:hover,
   transform: none;
 }
 button:is(.secondary, .inspect-button),
+:is(.suite-menu, .suite-jira) > summary.secondary,
 a.button.secondary {
   color: var(--ink-soft, var(--ink, #34384e));
   border-color: var(--line-strong, var(--line, #d7dae6));
@@ -62,6 +64,7 @@ a.button.secondary {
   box-shadow: none;
 }
 button:is(.secondary, .inspect-button):hover:not(:disabled),
+:is(.suite-menu, .suite-jira) > summary.secondary:hover:not(.is-disabled),
 a.button.secondary:hover {
   color: var(--ink, #171a2b);
   border-color: var(--muted, #72778c);
@@ -92,6 +95,7 @@ button.generation-action-button--cancel:hover:not(:disabled) {
   background: color-mix(in srgb, var(--danger, #c33d55) 14%, var(--surface, #fff));
 }
 button:focus-visible,
+:is(.suite-menu, .suite-jira) > summary:focus-visible,
 a.button:focus-visible,
 select:focus-visible,
 button.password-toggle:focus-visible,

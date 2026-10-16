@@ -1,0 +1,249 @@
+{
+  "date": "2026-10-16",
+  "scope": "Inline requirements review through human stakeholder approval; shared record workbench",
+  "python": {
+    "passed": 818,
+    "skipped": 149,
+    "warnings": 1
+  },
+  "browser": {
+    "shared_layouts_legacy_and_contextual": 22,
+    "live_BA_stakeholder_and_lifecycle": 2,
+    "responsive_chromium_webkit": 8,
+    "distinct_total": 32,
+    "final_focused_journeys": 4
+  },
+  "reqnroll": {
+    "executed": 53,
+    "outcomes": {
+      "Passed": 53
+    },
+    "cases": [
+      {
+        "name": "DiscoverSevenSDLCStageAgentsWithEnforcedProviderModels",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"lead\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"release_manager\",\"19\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"non-functional\",\"13\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "PreserveVersionHistoryWithoutTransferringApprovalToARevision",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"short-brief\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownAgentDeliveryRunsReturnAClearNotFoundResponse",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InvitedDevelopersCanDiscussRequirementsButCannotAcceptBASuggestions",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineRequirementReviewRetainsDiscussionAndExactApprovedVersions",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"business_stakeholder\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "CompleteEveryHumanLifecycleHandoffAndRetainAttributableApprovals",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"non-functional\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"users\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"logs\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"resume\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-provider\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "StaleReviewCommentsCannotOverwriteNewerRequirementContext",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"automation\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"product_owner\",\"17\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"functional\",\"11\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "EvidenceIsMandatoryAndConcurrentDecisionsCannotOverwriteProgress",
+        "outcome": "Passed"
+      },
+      {
+        "name": "OrderedSDLCStepsComeFromAuthoritativeWorkflowAndFollowRejectionHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"lead\",\"14\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"user-guide\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ExtendTheAgentCatalogueWithoutRemovingTestingAgentsOrModelPolicy",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"index\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-target\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"documentation\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"cancel\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "StakeholderRejectionReturnsWorkToClarificationAndBlocksAdvancement",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"ba\",\"10\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ProjectMembershipDoesNotGrantADeveloperBATransitionAuthority",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectAStaleRequirementsWrite",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"release_manager\",\"9\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"developer\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"knowledge\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InventedAgentSuggestionsCannotBeRecordedAsReviewedOutput",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"business_stakeholder\",\"16\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"admin\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DefectsReturnToDevelopmentAndRequireASeparateQARetest",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"product_owner\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"functional\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"automation\",\"12\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DownstreamStagesCannotIntroduceIndependentScope",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ReadyStoriesRequireTheAccountableUpstreamRefinementHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ServeAConsistentAccessibleWorkspacePage(\"api-docs\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"admin\",\"15\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnApprovedBaselineFlagsPreviousEvidenceAndResetsApprovalWork",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"ba\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectARunAgainstAnOutdatedRequirementsBaseline",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RequirementRevisionsRetainStoryAndTestTraceabilityAndFlagChangeImpacts",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RequirementsMustExistBeforeAgentsCanStart",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnAccountRoleRevokesItsExistingSession(\"developer\",\"18\",null)",
+        "outcome": "Passed"
+      }
+    ]
+  },
+  "validation_boundaries": [
+    "Isolated SQLite databases and local validation server",
+    "Synthetic AI/evidence used only in explicit test fixtures",
+    "No live AI, target-suite, CI, UAT or deployment success inferred",
+    "No production deployment or destructive migration"
+  ],
+  "checks": [
+    "Scoped Ruff/format",
+    "Scoped mypy for four modules",
+    "Changed JavaScript syntax",
+    "Workbench/shared CSS Prettier",
+    "git diff --check"
+  ]
+}

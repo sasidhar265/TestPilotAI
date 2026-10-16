@@ -7,6 +7,13 @@ AGENT_DIRECTORY = Path(__file__).parent.parent / ".github" / "agents"
 PROFILE_DIRECTORY = Path(__file__).parent.parent / ".github" / "agent-profiles"
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
+    "sdlc-planning": "sdlc-planning.agent.md",
+    "sdlc-design": "sdlc-design.agent.md",
+    "sdlc-development": "sdlc-development.agent.md",
+    "sdlc-code-review": "sdlc-code-review.agent.md",
+    "sdlc-release": "sdlc-release.agent.md",
+    "sdlc-operations": "sdlc-operations.agent.md",
+
     "business-analyst": "business-analyst.agent.md",
     "requirements-validation": "requirements-validation.agent.md",
     "story-generator": "story-generator.agent.md",

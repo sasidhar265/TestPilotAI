@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261014-sdlc-navigation" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261016-inline-review" />
   </head>
   <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
@@ -47,27 +48,32 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
-            <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
-              <div class="nav-children" id="quality-navigation" hidden>
+            <div class="nav-group sdlc-navigation">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="sdlc-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/sdlc"><span>SDLC workflow</span></a>
+                <a class="nav-item" href="/project-dashboard"><span>Project dashboard</span></a>
+                <span class="nav-stage-label">Planning &amp; BA</span>
+                <a class="nav-item" href="/sdlc?stage=planning"><span>Planning</span></a>
+                <a class="nav-item" href="/sdlc?stage=requirements"><span>Business analysis</span></a>
                 <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <span class="nav-stage-label">Design &amp; development</span>
+                <a class="nav-item" href="/sdlc?stage=design"><span>Architecture</span></a>
+                <a class="nav-item" href="/sdlc?stage=development"><span>Development</span></a>
+                <span class="nav-stage-label">Testing</span>
                 <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
                 <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
-                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
                 <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/progress"><span>Execution reports</span></a>
+                <a class="nav-item" href="/quality-lifecycle"><span>Coverage &amp; traceability</span></a>
+                <span class="nav-stage-label">Release &amp; operations</span>
+                <a class="nav-item" href="/sdlc?stage=release"><span>Release</span></a>
+                <a class="nav-item" href="/sdlc?stage=operations"><span>Operations</span></a>
+                <a class="nav-item" href="/usage"><span>AI usage</span></a>
               </div>
             </div>
-            <a class="nav-item" href="/progress"
-              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
-            >
-            <a class="nav-item" href="/quality-lifecycle"
-              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
-            >
-            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -201,14 +207,14 @@
           <header class="hero" id="overview">
             <div class="hero-copy">
               <span class="eyebrow">Application guide</span>
-              <h1>Your guide to confident finance testing.</h1>
+              <h2>Your guide to confident finance testing.</h2>
               <p>
                 Auto Finance Quality helps you create manual test cases and automation scenarios,
                 check requirement coverage, and export test files. Start with a vehicle finance
                 requirement, quotation BRD or Jira story.
               </p>
               <div class="actions">
-                <a class="button primary" href="/">Open Quality workspace →</a
+                <a class="button primary" href="/">Open SDLC requirements →</a
                 ><a class="button secondary" href="#workflow">Get started</a>
               </div>
             </div>
@@ -246,7 +252,7 @@
               <span class="section-number">01</span>
               <div>
                 <h2>Create your first test suite</h2>
-                <p>Follow these steps in Quality workspace.</p>
+                <p>Follow these steps in the SDLC requirements and testing stages.</p>
               </div>
             </div>
             <ol class="guide-steps">
@@ -673,13 +679,15 @@
     </div>
 
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261016-sdlc-entry" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261016-sdlc-entry" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/documentation.js?v=20260912-planning-documents" defer></script>
+    <script src="/static/scripts/documentation.js?v=20261016-headings" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
-    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261016-inline-review" defer></script>
+    <script src="/static/scripts/workspace-chrome.js?v=20261016-sdlc-entry" defer></script>
+    <script src="/static/scripts/workbench-shell.js?v=20261016-inline-review" defer></script>
   </body>
 </html>

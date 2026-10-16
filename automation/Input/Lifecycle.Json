@@ -1,0 +1,61 @@
+{
+  "decision": {
+    "decision": "approved",
+    "comment": "BDD synthetic human decision; no external approval or execution claimed"
+  },
+  "rejection": {
+    "decision": "changes_requested",
+    "comment": "BDD synthetic review requires correction before progression"
+  },
+  "evidence": {
+    "reference": "bdd-fixture://local-evidence",
+    "outcome": "passed",
+    "comment": "Synthetic BDD human attestation; not a real test or deployment result"
+  },
+  "requirement": {
+    "base_version": 0,
+    "kind": "requirement",
+    "title": "BDD synthetic requirement"
+  },
+  "story": {
+    "base_version": 0,
+    "kind": "story",
+    "title": "BDD synthetic linked story",
+    "acceptance_criteria": [
+      "BDD supplied acceptance criterion"
+    ],
+    "estimate": 3
+  },
+  "test_case": {
+    "base_version": 0,
+    "kind": "test_case",
+    "title": "BDD synthetic linked test"
+  },
+  "sequence": {
+    "phase_ids": [
+      "requirements",
+      "business-approval",
+      "backlog",
+      "development",
+      "qa",
+      "release",
+      "deployment",
+      "closure"
+    ]
+  },
+  "inline-comment": {
+    "base_version": 1,
+    "action": "comment",
+    "comment": "BDD synthetic clarification on the reviewed requirement version"
+  },
+  "inline-suggestion": {
+    "base_version": 1,
+    "action": "use_draft",
+    "comment": "BDD deliberately nonexistent source must be rejected",
+    "source": {
+      "stage": "requirements",
+      "version": 1,
+      "task": "nonexistent-bdd-task"
+    }
+  }
+}

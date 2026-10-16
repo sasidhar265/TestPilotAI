@@ -1,7 +1,44 @@
-const roleLabels = {ba: "Business analyst", functional_tester: "Functional tester", automation_tester: "Automation tester", non_functional_tester: "Non-functional tester", test_lead: "Test lead", admin: "Admin"};
+const roleLabels = {
+  business_stakeholder: "Business stakeholder",
+  product_owner: "Product owner / Scrum master",
+  developer: "Developer",
+  release_manager: "Release manager / DevOps",
+  ba: "Business analyst",
+  functional_tester: "Functional tester",
+  automation_tester: "Automation tester",
+  non_functional_tester: "Non-functional tester",
+  test_lead: "Test lead",
+  admin: "Admin",
+};
 const status = document.getElementById("users-status"),
   list = document.getElementById("users-list"),
   form = document.getElementById("create-user");
+const roleDescriptions = {
+  ba: "Reviews requirements and clarifications before stakeholder approval.",
+  business_stakeholder:
+    "Approves business requirements and records user acceptance testing decisions.",
+  product_owner:
+    "Refines the backlog, sets priorities and estimates, and plans sprint assignments.",
+  developer: "Implements assigned stories, records development evidence, and resolves defects.",
+  functional_tester:
+    "Designs and executes manual tests, records defects, and retests fixes. The QA lead owns final sign-off.",
+  automation_tester:
+    "Creates and runs automation, records test evidence, and retests fixes. The QA lead owns final sign-off.",
+  non_functional_tester:
+    "Reviews performance and database testing using the available specialist tools.",
+  test_lead:
+    "Coordinates QA and records QA sign-off. Business and release approvals have separate accountable owners.",
+  release_manager:
+    "Reviews release readiness and owns staging validation, production approval, and deployment handoffs.",
+  admin:
+    "Manages accounts and can perform stage-owner actions. Human evidence and approval gates still apply.",
+};
+function describeRole() {
+  document.getElementById("role-help").textContent =
+    roleDescriptions[form.elements.role.value] || "Select a role to see its responsibilities.";
+}
+form.elements.role.addEventListener("change", describeRole);
+describeRole();
 let currentUsername = "";
 async function request(url, options = {}) {
   const response = await fetch(url, options);
@@ -98,6 +135,7 @@ function resetEditor() {
   editingUsername = null;
   form.reset();
   form.elements.username.readOnly = false;
+  describeRole();
   form.elements.password.required = true;
   document.getElementById("create-title").textContent = "Create user";
   document.getElementById("password-help").textContent =
@@ -114,6 +152,7 @@ function editUser(user) {
   form.elements.username.value = user.username;
   form.elements.username.readOnly = true;
   form.elements.role.value = user.role;
+  describeRole();
   form.elements.enabled.value = String(Boolean(user.enabled));
   form.elements.password.required = false;
   document.getElementById("password-help").textContent =

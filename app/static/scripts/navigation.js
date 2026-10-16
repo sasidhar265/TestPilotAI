@@ -5,6 +5,28 @@
   if (!sidebar || !toggle || !content) return;
   // Keep the existing destinations and permissions; group infrequent tools together.
   const nav = sidebar.querySelector(".primary-nav");
+  // Keep one primary journey, with existing specialist destinations available on demand.
+  const deliveryNav = document.getElementById("sdlc-navigation");
+  if (deliveryNav) {
+    const tools = document.createElement("details");
+    tools.className = "nav-specialist-tools";
+    const summary = document.createElement("summary");
+    summary.textContent = "Specialist tools";
+    tools.append(summary);
+    [...deliveryNav.children].forEach((item) => {
+      if (item.matches('a[href="/"]')) {
+        item.remove();
+        return;
+      }
+      if (!item.matches('a[href="/sdlc"], a[href="/project-dashboard"]')) tools.append(item);
+    });
+    const sourceTool = document.createElement("a");
+    sourceTool.className = "nav-item";
+    sourceTool.href = "/?view=requirements";
+    sourceTool.innerHTML = "<span>Requirements</span>";
+    tools.insertBefore(sourceTool, summary.nextSibling);
+    deliveryNav.append(tools);
+  }
   const financeNavigation = document.getElementById("finance-navigation");
   if (financeNavigation && !financeNavigation.querySelector('[href="/auto-finance-guide"]')) {
     const guide = document.createElement("a");
@@ -17,6 +39,7 @@
   }
   financeNavigation?.querySelector('a[href="/products"]')?.remove();
   const labels = {
+    "/sdlc": "Project workspace",
     "/project-dashboard": "Project dashboard",
     "/progress": "Execution reports",
     "/quality-lifecycle": "Coverage & traceability",
@@ -34,11 +57,13 @@
     label.textContent = label.classList.contains("explore-nav-label") ? "Reference" : "Work";
   });
   const helpLinks = ["/static/user-guide.html", "/documentation", "/logs", "/docs"]
-    .map((path) => nav.querySelector(`a[href="${path}"]`)).filter(Boolean);
+    .map((path) => nav.querySelector(`a[href="${path}"]`))
+    .filter(Boolean);
   if (helpLinks.length) {
     const group = document.createElement("div");
     group.className = "nav-group";
-    group.innerHTML = '<button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="help-navigation"><span class="nav-icon" aria-hidden="true">?</span><span>Help &amp; diagnostics</span><span class="nav-chevron" aria-hidden="true">⌄</span></button><div class="nav-children" id="help-navigation" hidden></div>';
+    group.innerHTML =
+      '<button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="help-navigation"><span class="nav-icon" aria-hidden="true">?</span><span>Help &amp; diagnostics</span><span class="nav-chevron" aria-hidden="true">⌄</span></button><div class="nav-children" id="help-navigation" hidden></div>';
     helpLinks.forEach((link) => {
       link.querySelector(".nav-icon")?.remove();
       group.lastElementChild.append(link);
@@ -53,10 +78,17 @@
       const target = new URL(link.href);
       const defaultView = target.pathname === "/" ? "requirements" : "saved";
       const view = target.searchParams.get("view") || defaultView;
-      const active = location.pathname === target.pathname &&
-        (target.pathname === "/knowledge" ? document.body.dataset.knowledgeView || "saved" : new URLSearchParams(location.search).get("view") || defaultView) === view;
+      const active =
+        location.pathname === target.pathname &&
+        (target.pathname !== "/sdlc" ||
+          (new URLSearchParams(location.search).get("stage") || "") ===
+            (target.searchParams.get("stage") || "")) &&
+        (target.pathname === "/knowledge"
+          ? document.body.dataset.knowledgeView || "saved"
+          : new URLSearchParams(location.search).get("view") || defaultView) === view;
       link.classList.toggle("active", active);
       if (active) link.setAttribute("aria-current", "page");
+      if (active) link.closest("details")?.setAttribute("open", "");
       current ||= active;
     });
     children.hidden = !current;
@@ -67,7 +99,9 @@
       if (!mobile.matches && sidebar.dataset.collapsed === "true") {
         desktopCollapsed = false;
         setCollapsed(false);
-        try { localStorage.setItem(storageKey, "false"); } catch {}
+        try {
+          localStorage.setItem(storageKey, "false");
+        } catch {}
         children.hidden = false;
       } else children.hidden = !children.hidden;
       parent.setAttribute("aria-expanded", String(!children.hidden));

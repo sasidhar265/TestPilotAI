@@ -1,0 +1,80 @@
+{
+  "recorded_at": "2026-10-16T15:38:57.808852+00:00",
+  "scope": "Presentation only; existing backend workflow and access rules preserved",
+  "reqnroll": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "report": "/var/folders/81/nywc67wn7_30ryhqp3mccnth0000gn/T/qls-lifecycle-validation-1zwvvrzi/bdd-results/ui-presentation.trx",
+    "scenarios": [
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"api-docs\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"documentation\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"index\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"logs\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"users\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"knowledge\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ServeAConsistentAccessibleWorkspacePage(\"user-guide\",\"6\",null)",
+        "outcome": "Passed"
+      }
+    ]
+  },
+  "python": {
+    "passed": 813,
+    "skipped": 144,
+    "warnings": 1,
+    "failed": 0
+  },
+  "browser": {
+    "shared_layout_workspace_theme_and_sdlc": {
+      "passed": 18,
+      "failed": 0
+    },
+    "final_shared_component_recheck": {
+      "passed": 8,
+      "failed": 0
+    },
+    "chromium_webkit_phone_width": {
+      "passed": 40,
+      "failed": 0,
+      "deselected": 36
+    },
+    "live_lifecycle_journey": {
+      "passed": 1,
+      "failed": 0
+    },
+    "canonical_account_route_recheck": {
+      "passed": 5,
+      "failed": 0,
+      "deselected": 79
+    }
+  },
+  "checks": {
+    "ruff": "passed",
+    "javascript_syntax": "passed",
+    "diff_whitespace": "passed",
+    "pinned_prettier": "3.6.2; formatted changed scripts, shared CSS, docs and fixtures"
+  },
+  "notes": [
+    "Browser fixtures use intercepted empty data; live lifecycle uses an isolated local server and synthetic accounts.",
+    "No real production data, external AI calls or deployment actions were used."
+  ]
+}

@@ -35,6 +35,7 @@
     document.querySelectorAll("[data-automation-control]").forEach(element => restrict(element, access.automation));
     ["open-script-pack", "script-pack-dialog"].forEach(id => restrict(document.getElementById(id), access.non_functional));
     document.querySelectorAll('[data-suite-action="open-script-pack"]').forEach(element => restrict(element, access.non_functional));
+    restrict(document.getElementById("save-business-rules"), !["ba", "business_stakeholder", "product_owner", "developer", "release_manager"].includes(document.body.dataset.role));
     const target = document.getElementById("output-target");
     if (target) {
       const permitted = access.generation_targets;

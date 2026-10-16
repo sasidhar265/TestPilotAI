@@ -1,0 +1,30 @@
+{
+  "index": {
+    "path": "/",
+    "noStore": true
+  },
+  "documentation": {
+    "path": "/documentation",
+    "noStore": true
+  },
+  "knowledge": {
+    "path": "/knowledge",
+    "noStore": true
+  },
+  "logs": {
+    "path": "/logs",
+    "noStore": true
+  },
+  "users": {
+    "path": "/admin/users",
+    "noStore": true
+  },
+  "api-docs": {
+    "path": "/docs",
+    "noStore": true
+  },
+  "user-guide": {
+    "path": "/static/user-guide.html",
+    "noStore": false
+  }
+}

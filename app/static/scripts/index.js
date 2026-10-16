@@ -1005,6 +1005,18 @@ async function saveSharedRules(options = {}) {
   return rules;
 }
 async function resolveBusinessRules(options = {}) {
+  if (options.persistShared === false) {
+    await sharedRulesReady;
+    if (attachedBusinessRulesFile) {
+      const form = new FormData(); form.append("file", attachedBusinessRulesFile);
+      const response = await upload("/api/business-rules/document", form, options);
+      const rules = (await response.json()).business_rules;
+      clearBusinessRulesFile();
+      $("business-rules").value = rules.map((rule) => `${rule.id}: ${rule.description}`).join("\n");
+    }
+    $("rule-save-state").textContent = "Rules included in this project source; shared rules unchanged";
+    return parseBusinessRules();
+  }
   await saveSharedRules(options);
   return [];
 }
@@ -1489,7 +1501,7 @@ function renderAgentWorkflow() {
     ? generationStages[run.kind]?.label || "Agent operation"
     : "Review the BRD or generate stories from the shared requirement source.";
   const steps = run ? [...run.agents.values()] : [
-    {agent: "Review BRD", summary: "Senior business analyst reviews scope, domain knowledge and testability.", status: "Available"},
+    {agent: "Review requirements", summary: "Senior business analyst reviews scope, domain knowledge and testability.", status: "Available"},
     {agent: "Generate stories", summary: "Story Agent creates source-grounded stories and acceptance criteria.", status: "Available"},
   ];
   $("agent-workflow-steps").innerHTML = steps.length ? steps.map((event, index) => {

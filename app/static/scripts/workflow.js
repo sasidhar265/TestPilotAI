@@ -392,7 +392,9 @@
         await upload("/api/workflow/requirements/document", form, transportOptions())
       ).json();
       current();
-      description = [description, result.description].filter(Boolean).join("\n\n");
+      description = description.endsWith(result.description)
+        ? description
+        : [description, result.description].filter(Boolean).join("\n\n");
       uploadedBrdText = result.description;
       uploadedBrdReceipt = result.uploaded_brd_receipt;
       latestBrdText = uploadedBrdText;
@@ -402,13 +404,13 @@
     if (description.length > 30000)
       throw new Error("Split the requirements into batches of at most 30,000 characters.");
     current();
-    await resolveBusinessRules(transportOptions());
+    await resolveBusinessRules({ ...transportOptions(), persistShared: false });
     current();
     return {
       description,
       business_rules: parseBusinessRules(),
       llm_model: $("llm-model").value || "auto-fallback",
-      additional_context: "",
+      additional_context: $("sdlc-constraints")?.value || "",
       finance_calculation: window.financeCalculationContext?.() || null,
       finance_product_id: $("finance-domain-product")?.value || null,
       finance_journey_ids: $("finance-domain-journey")?.value
@@ -418,6 +420,18 @@
       uploaded_brd_receipt: uploadedBrdReceipt,
     };
   }
+  window.prepareSdlcRequirements = async () => {
+    const source = await readRequirementSource(() => {});
+    const request = { ...requestOptions(), ...source };
+    if (!attachedFile && state.request?.description === request.description) {
+      request.uploaded_brd_text = state.request.uploaded_brd_text || null;
+      request.uploaded_brd_receipt = state.request.uploaded_brd_receipt || null;
+    }
+    if (JSON.stringify(state.request) !== JSON.stringify(request)) invalidate(2);
+    state.request = request;
+    $("description").value = request.description;
+    return request;
+  };
   function renderRequirementsValidation(report) {
     savedRequirementsReport = report;
     recordReturnedEvidence("Requirements Validation Agent", report.status,
@@ -597,27 +611,7 @@
     (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      work(
-        "Reading source requirements…",
-        async (current) => {
-          const source = await readRequirementSource(current);
-          invalidate(2);
-          state.request = source;
-          status("Story Agent is converting requirements into stories…");
-          const result = await post("stories", requestOptions());
-          current();
-          state.stories = result;
-          if (result.generation_source === "organizational-memory") {
-            showKnowledgeNotice({ ...result, knowledge_stage: "stories" });
-          }
-          renderStories();
-          status("Stories ready. Review, edit and accept each story to continue.");
-          show(2, !activeGeneration?.background);
-          if (!activeGeneration?.background)
-            workspace.scrollIntoView({ behavior: "smooth", block: "start" });
-        },
-        "stories",
-      );
+      window.startRequirementsDelivery?.();
     },
     true,
   );
@@ -1143,16 +1137,7 @@
   };
   $("stage-refresh-execution").onclick = () =>
     work("Refreshing feature execution plan…", refreshExecution, "execution-plan");
-  $("stage-run").onclick = () =>
-    work(
-      "ReqnRoll run in progress. Waiting for actual case results…",
-      async (current) => {
-        state.runReport = null;
-        renderPlan(true);
-        $("stage-execution-results").replaceChildren();
-        try {
-          const report = await post("execute", { suite, request: reviewSourceRequest });
-          current();
+  function renderRunReport(report) {
           $("stage-execution-results").innerHTML =
             `<div class="run-result-heading"><div><span class="section-kicker">LATEST RUN</span><h3>Execution results</h3></div><span class="outcome-badge ${outcomeClass(report.status)}">${esc(report.status)}</span></div>
             <dl class="run-result-metrics"><div><dt>Passed</dt><dd>${esc(report.passed ?? "—")}</dd></div><div><dt>Failed</dt><dd>${esc(report.failed ?? "—")}</dd></div><div><dt>Skipped</dt><dd>${esc(report.skipped ?? "—")}</dd></div></dl>` +
@@ -1163,11 +1148,23 @@
               )
               .join("") +
             (report.error ? `<p class="run-result-error">${esc(report.error)}</p>` : "");
-          state.runReport = report;
           $("stage-execution-results").insertAdjacentHTML(
             "beforeend",
             `<details><summary>Runner output</summary><pre class="stage-run-output">${esc(report.output || "No additional output")}</pre></details>`,
           );
+  }
+  $("stage-run").onclick = () =>
+    work(
+      "ReqnRoll run in progress. Waiting for actual case results…",
+      async (current) => {
+        state.runReport = null;
+        renderPlan(true);
+        $("stage-execution-results").replaceChildren();
+        try {
+          const report = await post("execute", { suite, request: reviewSourceRequest });
+          current();
+          state.runReport = report;
+          renderRunReport(report);
           state.plan.runStatus = `Run ${report.status} · see runner-reported case results below`;
           status(
             `ReqnRoll run ${report.status}. Results below are reported by the configured project.`,
@@ -1204,36 +1201,42 @@
   // Tab-scoped, account-scoped recovery for links that load another document.
   let draftKey = null;
   let restoringDraft = false;
-  const draftControls = ["description", "business-rules", "finance-domain-product", "finance-domain-journey", "manual-testing-type", "llm-model", "generation-target"];
+  const draftControls = ["sdlc-constraints", "sdlc-target", "description", "business-rules", "finance-domain-product", "finance-domain-journey", "manual-testing-type", "llm-model", "generation-target"];
+  function workspaceSnapshot() {
+    const controls = Object.fromEntries(draftControls.filter(id => $(id)).map(id => [id, $(id).value]));
+    return { version: 1, controls, state: {...state, busy:false,
+      acceptedStories:[...state.acceptedStories], jiraStories:[...state.jiraStories],
+      dirtyStories:[...state.dirtyStories], acceptedScenarios:[...state.acceptedScenarios],
+      dirtyScenarios:[...state.dirtyScenarios]}, suite, validationReport, reviewSourceRequest,
+      executionSummary, stepDefinitionArtifact, savedBaReport, savedRequirementsReport, latestBrdText,
+      editorDrafts: [...document.querySelectorAll('[data-story-index] textarea, [data-scenario-index] textarea')].map(control => ({
+        kind: control.closest('[data-story-index]') ? 'story' : 'scenario',
+        index: control.closest('[data-story-index], [data-scenario-index]').dataset.storyIndex ?? control.closest('[data-scenario-index]').dataset.scenarioIndex,
+        field: control.dataset.field, value: control.value,
+      })),
+      caseSelections: [...document.querySelectorAll("#cases .case-check")].map(control => control.checked) };
+  }
+  window.exportTestingWorkspace = workspaceSnapshot;
+  window.testingWorkspaceBusy = () => state.busy || Boolean(activeGeneration);
   function saveWorkspaceDraft() {
     if (!draftKey || restoringDraft) return;
-    try {
-      const controls = Object.fromEntries(draftControls.filter(id => $(id)).map(id => [id, $(id).value]));
-      const data = { version: 1, controls, state: {...state, busy:false,
-        acceptedStories:[...state.acceptedStories], jiraStories:[...state.jiraStories],
-        dirtyStories:[...state.dirtyStories], acceptedScenarios:[...state.acceptedScenarios],
-        dirtyScenarios:[...state.dirtyScenarios]}, suite, validationReport, reviewSourceRequest,
-        executionSummary, stepDefinitionArtifact, savedBaReport, savedRequirementsReport, latestBrdText,
-        caseSelections: [...document.querySelectorAll("#cases .case-check")].map(control => control.checked),
-        feedback: Object.fromEntries(["stage-execution-results", "stage-manual"].map(id => [id, $(id).innerHTML])) };
-      sessionStorage.setItem(draftKey, JSON.stringify(data));
-    } catch { /* Storage may be unavailable or full; current-page work remains usable. */ }
+    try { sessionStorage.setItem(draftKey, JSON.stringify(workspaceSnapshot())); }
+    catch { /* Project persistence remains available if browser storage is full. */ }
   }
   window.addEventListener("pagehide", saveWorkspaceDraft);
   window.addEventListener("workspace-page-changed", saveWorkspaceDraft);
   document.addEventListener("click", event => {
     if (event.target.closest("a[href]")) saveWorkspaceDraft();
   });
-  window.loadWorkspaceProfile().then(profile => {
-    if (!profile.username || profile.is_guest) return;
-    draftKey = `quality-workspace-draft:v1:${profile.username}`;
-    const stored = sessionStorage.getItem(draftKey);
-    if (!stored || state.busy || activeGeneration || state.request || savedBaReport) return;
+  window.restoreTestingWorkspace = (draft) => {
+    if (state.busy || activeGeneration) throw new Error("Wait for generation to finish before restoring a project");
     restoringDraft = true;
     try {
-      const draft = JSON.parse(stored);
-      if (draft.version !== 1) return;
+      if (draft.version !== 1 || !draft.state) throw new Error("Unsupported workspace snapshot");
       for (const [id, value] of Object.entries(draft.controls || {})) if ($(id)) $(id).value = value;
+      invalidate(1);
+      savedBaReport = null;
+      $("ba-report").hidden = true;
       if (draft.suite) render(draft.suite);
       Object.assign(state, draft.state, {busy:false});
       for (const name of ["acceptedStories", "jiraStories", "acceptedScenarios"]) state[name] = new Map(draft.state[name]);
@@ -1247,13 +1250,30 @@
       latestBrdText = draft.latestBrdText;
       if (state.stories) renderStories();
       if (state.scenarios) renderScenarios();
+      for (const edit of draft.editorDrafts || []) {
+        const card = [...document.querySelectorAll(`[data-${edit.kind}-index]`)].find(card => card.dataset[`${edit.kind}Index`] === String(edit.index));
+        const control = card && [...card.querySelectorAll('textarea')].find(control => control.dataset.field === edit.field);
+        if (control) control.value = edit.value;
+      }
       if (draft.savedBaReport) renderBaReport(draft.savedBaReport);
       if (draft.savedRequirementsReport) renderRequirementsValidation(draft.savedRequirementsReport);
       if (draft.stepDefinitionArtifact) renderStepDefinitions(draft.stepDefinitionArtifact);
       if (state.plan) renderPlan();
-      for (const [id, html] of Object.entries(draft.feedback || {})) if ($(id)) $(id).innerHTML = html;
+      if (suite) manualMarkup();
+      if (state.runReport) renderRunReport(state.runReport);
       if (location.pathname === "/") show(({stories:2,scenarios:3,"test-cases":4,execution:5,automation:6})[document.body.dataset.qualityView] || 1, false);
       sync();
+    } finally { restoringDraft = false; }
+    saveWorkspaceDraft();
+  };
+  window.loadWorkspaceProfile().then(profile => {
+    if (!profile.username || profile.is_guest) return;
+    draftKey = `quality-workspace-draft:v1:${profile.username}`;
+    const stored = sessionStorage.getItem(draftKey);
+    if (!stored || state.busy || activeGeneration || state.request || savedBaReport) return;
+    restoringDraft = true;
+    try {
+      window.restoreTestingWorkspace(JSON.parse(stored));
       status("Restored your workspace results and feedback from this browser tab.");
     } catch { sessionStorage.removeItem(draftKey); }
     finally { restoringDraft = false; }

@@ -227,3 +227,26 @@ dotnet test QualityLifecycle.Automation.csproj --filter FullyQualifiedName~RoleS
 
 Permitted generation probes deliberately use an invalid BRD and expect schema validation rather
 than invoking an AI provider. These checks verify authorization, not generated-suite execution.
+
+## Agent-driven SDLC API scenarios
+
+`Features/SDLC.feature` uses `Input/SDLC.Json`, `SdlcRequestBuilder`,
+`SdlcService` (the shared System.Net.Http.HttpClient transport) and
+`SdlcStepDefinition`. It checks stage-agent/model discovery, immutable version/review
+history for Requirements baselines, stale-write rejection, missing/outdated baseline
+rejection, agent ownership of downstream outputs and invalid launch boundaries. It makes no provider
+calls and does not deploy applications. Preserve the other features when running:
+
+```bash
+dotnet test automation/QualityLifecycle.Automation.csproj --filter FullyQualifiedName~AgentDrivenSDLC
+```
+
+The default command without a filter continues to discover the complete pack.
+
+The Human governed project lifecycle feature includes inline-review API contracts for
+immutable record history, version-bound discussion, attributable stakeholder approval,
+stale-review rejection, invited developer restrictions and nonexistent AI-source rejection.
+LifecycleRequestBuilder reads the synthetic review fixtures in Input/Lifecycle.Json;
+LifecycleGovernanceService uses injected HttpClient instances. Dashboard metrics are
+checked against the same accessible work-item records. These local contract scenarios
+are not execution of generated target application suites or real provider/deployment runs.

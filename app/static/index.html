@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/styles/index.css?v=20261001-validation" />
     <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261014-sdlc-navigation" />
     <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20261013-script-option" />
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261013-modern-dialog" />
     <link rel="stylesheet" href="/static/styles/workflow.css?v=20261013-indeterminate" />
     <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
-    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20261014-suite-actions" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260927-output-tabs" />
     <link rel="stylesheet" href="/static/styles/project-dashboard.css?v=20261001-project" />
     <link rel="stylesheet" href="/static/styles/execution-logs.css?v=20260927-live-activity" />
@@ -32,8 +32,10 @@
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
     <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
-    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261014-suite-actions" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+      <link rel="stylesheet" href="/static/styles/sdlc.css?v=20261016-simplified-workspace" />
+    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261016-inline-review" />
   </head>
   <body data-access-pending="true">
     <div class="app-shell">
@@ -61,27 +63,32 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
-            <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
-              <div class="nav-children" id="quality-navigation" hidden>
+            <div class="nav-group sdlc-navigation">
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <div class="nav-children" id="sdlc-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/sdlc"><span>SDLC workflow</span></a>
+                <a class="nav-item" href="/project-dashboard"><span>Project dashboard</span></a>
+                <span class="nav-stage-label">Planning &amp; BA</span>
+                <a class="nav-item" href="/sdlc?stage=planning"><span>Planning</span></a>
+                <a class="nav-item" href="/sdlc?stage=requirements"><span>Business analysis</span></a>
                 <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <span class="nav-stage-label">Design &amp; development</span>
+                <a class="nav-item" href="/sdlc?stage=design"><span>Architecture</span></a>
+                <a class="nav-item" href="/sdlc?stage=development"><span>Development</span></a>
+                <span class="nav-stage-label">Testing</span>
                 <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
                 <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
-                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
                 <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/progress"><span>Execution reports</span></a>
+                <a class="nav-item" href="/quality-lifecycle"><span>Coverage &amp; traceability</span></a>
+                <span class="nav-stage-label">Release &amp; operations</span>
+                <a class="nav-item" href="/sdlc?stage=release"><span>Release</span></a>
+                <a class="nav-item" href="/sdlc?stage=operations"><span>Operations</span></a>
+                <a class="nav-item" href="/usage"><span>AI usage</span></a>
               </div>
             </div>
-            <a class="nav-item" href="/progress"
-              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
-            >
-            <a class="nav-item" href="/quality-lifecycle"
-              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
-            >
-            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -162,7 +169,7 @@
         <aside class="guest-banner" role="status">
           <strong>Guest access · View only</strong>
           <span
-            >You can preview the Quality workspace. Sign in to access workspace data, execution
+            >You can preview the SDLC requirements and testing stages. Sign in to access workspace data, execution
             history and reports.</span
           >
           <a href="/login">Sign in</a>
@@ -783,15 +790,27 @@
                   <span class="section-kicker">Business analysis</span>
                   <h2>Add requirements</h2>
                   <p>
-                    Paste a vehicle finance requirement or attach your quotation BRD. Review
-                    stories, scenarios and test cases, then capture execution evidence.
+                    Enter requirements or attach a BRD. These inputs drive every stage of the SDLC.
                   </p>
                 </div>
-                <span class="secure">PRIVATE BY DESIGN</span>
+
               </div>
 
 
 
+            <div class="sdlc-project-controls">
+              <label>Project<select id="sdlc-project" aria-describedby="sdlc-project-help"><option value="">Select a project</option></select></label>
+              <details id="sdlc-create-panel" open><summary>New project</summary><form id="sdlc-create"><label>Project name<input id="sdlc-name" maxlength="160" required /></label><button class="primary" type="submit">Create project</button></form></details>
+              <small id="sdlc-project-help">Requirements, stories, tests and approvals are saved together in this project.</small>
+            </div>
+            <p id="sdlc-status" role="status" aria-live="polite">Select or create a project to start.</p>
+              <section class="sdlc-mission sdlc-requirements-input" aria-label="Requirements-led delivery">
+                <p>Save your requirements to this project. Review AI suggestions before approving them.</p>
+                <label for="sdlc-constraints">Technical and delivery constraints<textarea id="sdlc-constraints" rows="3" maxlength="100000" placeholder="Stack, integrations, API contracts, security, performance and deployment constraints"></textarea></label>
+                <label>Delivery target<select id="sdlc-target"><option value="design">Validated plan, BA and design</option><option value="tested">Implemented and BDD-tested candidate</option><option value="staging">Deploy and verify in staging</option><option value="production">Release and verify in PROD</option></select></label>
+                <div class="sdlc-actions"><button class="primary" id="sdlc-save-requirements" type="button">Save requirements</button><button class="secondary" id="sdlc-start-delivery" type="button">Save and ask AI to help</button><a class="button secondary" href="/sdlc">View current SDLC step →</a></div>
+                <p id="sdlc-requirements-status" role="status" aria-live="polite"></p>
+              </section>
               <form id="generate-form">
                 <label class="field-label" for="description"
                   >Requirements or acceptance criteria</label
@@ -801,7 +820,7 @@
                     id="description"
                     minlength="10"
                     aria-describedby="description-help"
-                    placeholder="Example: Test PCP quotation validation for deposit, term and annual mileage using the approved limits, request contract and expected financial results…"
+                    placeholder="Describe the business goal, who will use the feature, the expected behaviour and acceptance criteria, or attach your BRD using the + button…"
                   ></textarea>
                   <span class="file-preview attached-requirement hidden" id="file-preview"
                     ><span class="file-badge" id="file-type"></span
@@ -892,8 +911,7 @@
                   </div>
                 </div>
                 <p class="field-help" id="description-help">
-                  Include the finance product, customer context, vehicle details and approved
-                  business rules. Supply expected calculations and limits where applicable.
+                  Describe what users need and what a successful outcome looks like. You can also upload a document using +.
                 </p>
 
 
@@ -901,12 +919,12 @@
                 <details class="rule-control" id="rule-control">
                   <summary>
                     <span
-                      ><b>Shared business rules</b
-                      ><small>Add approved rules for this workspace</small></span
+                      ><b>Business rules for this source</b
+                      ><small>Include approved rules with your project source</small></span
                     ><span class="rule-count" id="rule-count">0 rules</span>
                   </summary>
                   <div class="rule-editor">
-                    <label class="field-label" for="business-rules">Shared business rules</label>
+                    <label class="field-label" for="business-rules">Business rules for this source</label>
                     <div class="rule-textarea-wrap">
                       <textarea
                         id="business-rules"
@@ -953,9 +971,8 @@
                     <p class="field-help">
                       Enter one rule per line using <code>BR-ID: description</code>. Rules are
                       validated, sent to the Business Rules Agent, and must be traced by generated
-                      tests. Rules are saved in
-                      <code>.github/agents/business-rules.agent.md</code> and shared across this
-                      workspace. Generation saves this editor first.
+                      tests. Project source saves include these rules without changing the shared rules.
+                      Authorised users can publish shared rules separately using Save shared rules.
                     </p>
                     <div class="rule-actions">
                       <button class="secondary" id="save-business-rules" type="button">
@@ -1019,12 +1036,12 @@
                     </fieldset>
                   </div>
                   <div class="generation-actions">
-                    <button class="secondary" id="ba-review" type="button">Review BRD</button>
+                    <button class="secondary" id="ba-review" type="button">Review requirements</button>
                     <button class="stop hidden" id="stop-generation" type="button">
                       <span class="stop-icon"></span><span>Stop</span>
                     </button>
                     <button class="primary" id="generate" type="submit" disabled>
-                      <span>Generate stories</span><span class="arrow">→</span>
+                      <span>Generate from requirements</span><span class="arrow">→</span>
                     </button>
                   </div>
                 </div>
@@ -1053,7 +1070,7 @@
               </details>
               <div class="run-state" aria-live="polite">
                 <div class="status" id="status">
-                  <span class="status-dot"></span>Agent ready. Add requirements to begin.
+                  <span class="status-dot"></span>Add requirements to get started.
                 </div>
                 <div class="timer hidden" id="timer" role="timer">00:00</div>
               </div>
@@ -1354,6 +1371,37 @@
               <button class="secondary" type="button" data-suite-action="view-csharp-pack" disabled>View automation pack</button>
               <button class="secondary" type="button" data-suite-action="download-csharp-pack" disabled>Download automation pack</button>
               <button class="primary" type="button" data-suite-action="open-script-pack" disabled>Build test scripts</button>
+            </div>
+          </section>
+        </div>
+        <div data-workspace-page="/sdlc" hidden>
+          <section class="panel sdlc-workspace" aria-labelledby="sdlc-heading">
+            <div class="panel-head"><div><h2 id="sdlc-heading">Project workspace</h2><p>Add requirements, review the work, and follow your next action.</p></div></div>
+            <div id="sdlc-content" hidden>
+              <details class="sdlc-mission sdlc-source-baseline"><summary>Saved requirements preview</summary><p id="sdlc-source-summary">Save Requirements to begin the lifecycle.</p><a class="button primary" href="/?view=requirements">Open Requirements →</a></details>
+              <details id="sdlc-agent-tools"><summary>AI activity and results</summary><section class="sdlc-delivery-board" aria-labelledby="sdlc-delivery-heading">
+                <div class="sdlc-stage-head"><div><p class="eyebrow">Agent control centre</p><h3 id="sdlc-delivery-heading">Delivery pipeline</h3></div><span class="sdlc-run-badge" id="sdlc-run-status">Ready for a mission</span></div>
+                <div class="sdlc-environments" id="sdlc-environments" aria-label="Delivery environment configuration"></div>
+                <div class="sdlc-agent-grid" id="sdlc-agent-grid"></div>
+                <div class="sdlc-run-toolbar"><label>Delivery run<select id="sdlc-runs"><option value="">No delivery runs yet</option></select></label><button class="secondary" type="button" id="sdlc-cancel-run" disabled>Stop delivery</button><button class="secondary" type="button" id="sdlc-resume-run" hidden>Resume from failed gate</button><a class="button secondary" id="sdlc-bundle" hidden>Download delivery bundle</a></div>
+                <p id="sdlc-run-error" class="sdlc-gate-error" role="alert" hidden></p>
+                <div class="sdlc-evidence-grid"><section><h3>Agent activity</h3><ol id="sdlc-run-events" class="sdlc-event-list"><li>Start a mission to see agent ownership and quality gate evidence.</li></ol></section><section><h3>Delivery evidence</h3><div id="sdlc-run-evidence"><p>Source changes, build results, BDD outcomes and deployment receipts will appear here.</p></div></section></div>
+              </section>
+              </details><details class="sdlc-artifact-ledger"><summary>Documents and version history</summary>
+              <nav class="sdlc-stages" aria-label="Agent artifact categories"></nav>
+              <div class="sdlc-stage-head"><h3 id="sdlc-stage-title">Planning</h3><span id="sdlc-version"></span></div>
+              <p id="sdlc-stage-help"></p>
+              <div id="sdlc-testing" hidden><p>Use the existing requirements, stories, scenarios, test cases and execution workflow. Save its current state to this project and restore it after reloading.</p>
+                <div class="sdlc-actions"><a class="button secondary" href="/?view=requirements">Open testing workflow</a><button class="secondary" type="button" id="sdlc-save-workflow">Save testing workspace</button><button class="secondary" type="button" id="sdlc-restore-workflow">Restore testing workspace</button></div>
+              </div>
+              <div id="sdlc-repository" hidden><button class="secondary" type="button" id="sdlc-read-repository">Read repository evidence</button><pre id="sdlc-repository-evidence"></pre></div>
+              <label for="sdlc-document">Stage document</label><textarea id="sdlc-document" rows="18" readonly></textarea>
+              <p class="hint">Agents produce these versioned outputs from Requirements. Change the source in Requirements to revise the lifecycle.</p>
+              <label for="sdlc-links">Traceability · source artifact versions<select id="sdlc-links" disabled multiple aria-describedby="sdlc-links-help"></select></label><small id="sdlc-links-help">These links record the exact source versions consumed by the agent.</small>
+              <div class="sdlc-actions"><button class="secondary" type="button" id="sdlc-template" hidden disabled>Start from stage template</button><button class="primary" type="button" id="sdlc-save" hidden disabled>Save new version</button></div>
+              <div class="sdlc-review"><label for="sdlc-review-comment">Review comment<input id="sdlc-review-comment" maxlength="4000" /></label><div class="sdlc-actions"><button class="secondary" type="button" id="sdlc-approve">Approve version</button><button class="secondary" type="button" id="sdlc-changes">Request changes</button></div></div>
+              <h3>Version history and reviews</h3><div id="sdlc-history"></div>
+              </details>
             </div>
           </section>
         </div>
@@ -2178,14 +2226,14 @@
       </section>
     </dialog>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261016-sdlc-entry" defer></script>
     <script src="/static/scripts/operation-progress.js?v=20261013-indeterminate" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261013-recovery-navigation" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261016-sdlc-entry" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261016-sdlc-entry" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/index.js?v=20261013-approved-history-v2" defer></script>
+    <script src="/static/scripts/index.js?v=20261016-simplified-workspace" defer></script>
     <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
@@ -2196,11 +2244,17 @@
     <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261013-approved-history-v2" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261016-inline-review" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261013-approved-history-v2" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
-    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261016-inline-review" defer></script>
+      <script src="/static/scripts/project-lifecycle.js?v=20261016-simplified-workspace" defer></script>
+      <script src="/static/scripts/sdlc-sequence.js?v=20261016-simplified-workspace" defer></script>
+      <script src="/static/scripts/sdlc.js?v=20261016-inline-review" defer></script>
+      <script src="/static/scripts/sdlc-delivery.js?v=20261014" defer></script>
+    <script src="/static/scripts/workspace-chrome.js?v=20261016-simplified-workspace" defer></script>
+    <script src="/static/scripts/workbench-shell.js?v=20261016-inline-review" defer></script>
   </body>
 </html>

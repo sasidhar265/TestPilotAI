@@ -153,7 +153,8 @@ function renderMarkdown(source) {
     }
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     if (heading) {
-      const level = heading[1].length;
+      // Documents are embedded beneath the page and section headings.
+      const level = heading[1].length + 2;
       html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
       index++;
       continue;

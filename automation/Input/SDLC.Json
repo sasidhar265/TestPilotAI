@@ -1,0 +1,63 @@
+{
+  "project": {
+    "name": "BDD agent delivery project"
+  },
+  "planning": {
+    "content": {
+      "document": "Deliver the approved requirements with traceable agent evidence.",
+      "source_request": {
+        "description": "Deliver the approved requirements with traceable agent evidence.",
+        "llm_model": "codex"
+      }
+    },
+    "base_version": 0,
+    "links": []
+  },
+  "planning-revision": {
+    "content": {
+      "document": "Revised delivery scope retains all approved requirements and tests.",
+      "source_request": {
+        "description": "Revised delivery scope retains all approved requirements and tests.",
+        "llm_model": "codex"
+      }
+    },
+    "base_version": 1,
+    "links": []
+  },
+  "approval": {
+    "version": 1,
+    "decision": "approved",
+    "comment": "BDD version-specific review evidence"
+  },
+  "short-brief": {
+    "brief": "short",
+    "target": "design",
+    "llm_model": "codex"
+  },
+  "invalid-target": {
+    "brief": "Build a delivery workflow with traceable acceptance criteria.",
+    "target": "unconfigured-target",
+    "llm_model": "codex"
+  },
+  "invalid-provider": {
+    "brief": "Build a delivery workflow with traceable acceptance criteria.",
+    "target": "design",
+    "llm_model": "account-default"
+  },
+  "empty": {},
+  "missing-source": {
+    "requirements_version": 1,
+    "target": "design"
+  },
+  "stale-source": {
+    "requirements_version": 1,
+    "target": "design"
+  },
+  "downstream": {
+    "content": {
+      "document": "Unapproved independent design scope"
+    },
+    "base_version": 0,
+    "links": []
+  }
+}

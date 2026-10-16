@@ -101,11 +101,13 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Sole AI runtime" not in response.text
     assert "Execution topology" not in response.text
     assert 'id="output-target"' in response.text
-    assert '<option value="manual">Functional</option>' in response.text
+    assert '<option value="manual">Manual functional tests</option>' in response.text
     assert "Normal steps" not in response.text
-    automation_option = '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
+    automation_option = (
+        '<option value="automation" selected>Automated tests (BDD / Gherkin)</option>'
+    )
     assert automation_option in response.text
-    assert '<option value="both">Both (Automation + Functional)</option>' in response.text
+    assert '<option value="both">Manual + automated tests</option>' in response.text
     assert 'id="timer" role="timer"' in response.text
     assert 'id="download-feature"' in response.text
     assert 'id="generate-step-definitions"' in response.text
@@ -237,7 +239,7 @@ def test_documentation_page_is_not_cached() -> None:
     assert 'id="profile-toggle"' in response.text
     assert 'class="profile-signout" id="logout"' in response.text
     assert 'href="/static/styles/documentation.css?v=20260912-clear-guide"' in response.text
-    assert 'src="/static/scripts/documentation.js?v=20260912-planning-documents"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=20261016-headings"' in response.text
     assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
 
 
@@ -285,7 +287,7 @@ def test_health_reports_configuration() -> None:
     assert response.json()["active_agent"] == "Resilient AI Test Designer"
     assert response.json()["agent_runtime_id"] == "automatic-fallback"
     assert response.json()["copilot_model"] == "claude-haiku-4.5"
-    assert response.json()["openai_model"] == "gpt-5.4"
+    assert response.json()["openai_model"] == get_settings().openai_model
     assert "gemini_model" in response.json()
     assert isinstance(response.json()["gemini_configured"], bool)
     assert "gemini_api_key" not in response.json()
@@ -384,7 +386,23 @@ def test_http_baseline_security_and_correlation_headers() -> None:
 def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     response = client.get("/api/agents")
     assert response.status_code == 200
-    agents = response.json()
+    catalogue = response.json()
+    assert [agent["id"] for agent in catalogue[:7]] == [
+        "sdlc-planning",
+        "sdlc-requirements",
+        "sdlc-design",
+        "sdlc-development",
+        "sdlc-testing",
+        "sdlc-release",
+        "sdlc-operations",
+    ]
+    ba = next(agent for agent in catalogue if agent["id"] == "business-analyst")
+    assert ba["kind"] == "validator"
+    agents = [
+        agent
+        for agent in catalogue
+        if not agent["id"].startswith("sdlc-") and agent["id"] != "business-analyst"
+    ]
     assert [agent["kind"] for agent in agents] == [
         "input",
         "business-rules",

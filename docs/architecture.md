@@ -2,9 +2,12 @@
 
 ## Runtime policy
 
-GitHub Copilot is the sole approved AI runtime. `AgentRegistry` fails closed when an adapter
-declares any other runtime ID. The agent contract separates application logic from the SDK,
-improves testability, and makes capabilities explicit; it does not enable runtime selection.
+The testing `AgentRegistry` restricts its adapters to the approved Copilot runtime.
+Artifact and SDLC generation also use explicit provider routes through
+`ArtifactGenerationRunner`. Codex always uses `gpt-6-astra`; Copilot always uses
+`claude-haiku-4.5`, including retries and repairs. Only `auto-fallback` permits
+cross-provider fallback. Human lifecycle decisions use the project workflow service,
+not agent output. See [SDLC workflow](SDLC_WORKFLOW.md).
 
 ## Functional agents
 

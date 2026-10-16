@@ -7,8 +7,13 @@ from urllib.parse import urlparse
 
 import pytest
 
+from app.config import Settings
+from app.services.sdlc_delivery import capabilities as sdlc_capabilities
+
 PAGES = {
     "/": "index.html",
+    "/sdlc": "index.html",
+    "/sdlc?stage=design": "index.html",
     "/?view=stories": "index.html",
     "/?view=scenarios": "index.html",
     "/?view=test-cases": "index.html",
@@ -17,7 +22,7 @@ PAGES = {
     "/static/user-guide.html": "user-guide.html",
     "/knowledge": "knowledge.html",
     "/logs": "logs.html",
-    "/users": "users.html",
+    "/admin/users": "users.html",
     "/docs": "api-docs.html",
     "/project-dashboard": "index.html",
     "/progress": "index.html",
@@ -45,6 +50,10 @@ def mobile_route(route):
     }
     if path == "/api/auth/profile":
         data = {"display_name": "Reviewer", "initials": "RE", "is_admin": True}
+    elif path == "/api/sdlc/projects":
+        data = []
+    elif path == "/api/sdlc/agents":
+        data = sdlc_capabilities(Settings(_env_file=None, runtime_config_path=None))
     elif path in {"/api/agents", "/api/admin/users"}:
         data = []
     elif path == "/api/logs":
@@ -100,11 +109,18 @@ def test_mobile_navigation_and_page_layout(path, engine, width, height):
         page.route("**/*", mobile_route)
         page.goto("http://localhost" + path)
         pw.expect(page.locator(".workflow-shortcuts")).to_have_count(0)
-        if urlparse(path).path == "/":
+        if urlparse(path).path == "/" and "view=" in path:
             pw.expect(page.locator(".workflow-navigation")).to_be_visible()
             pw.expect(page.locator(".workflow-navigation .stage-tabs > button")).to_have_count(6)
         else:
-            pw.expect(page.locator(".workflow-navigation")).to_have_count(0)
+            pw.expect(page.locator(".workflow-navigation")).to_be_hidden()
+        pw.expect(page.locator('.nav-parent[aria-controls="sdlc-navigation"]')).to_have_count(1)
+        assert (
+            page.locator('.primary-nav a[href="/progress"]').evaluate(
+                "link => link.closest('.nav-children').id"
+            )
+            == "sdlc-navigation"
+        )
         toggle = page.locator("#sidebar-toggle")
         pw.expect(toggle).to_have_attribute("aria-expanded", "false")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path

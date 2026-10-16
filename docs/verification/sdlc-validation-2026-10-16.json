@@ -1,0 +1,210 @@
+{
+  "recorded_at": "2026-10-16T15:16:59.559531+00:00",
+  "environment": "Isolated local FastAPI/SQLite server on 127.0.0.1:8768; synthetic accounts and evidence only",
+  "reqnroll": {
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0,
+    "trx_path": "/var/folders/81/nywc67wn7_30ryhqp3mccnth0000gn/T/qls-lifecycle-validation-_c9aw4jl/bdd-results/lifecycle-governance.trx",
+    "scenarios": [
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"functional\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "DiscoverSevenSDLCStageAgentsWithEnforcedProviderModels",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"business_stakeholder\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"automation\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"admin\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ExtendTheAgentCatalogueWithoutRemovingTestingAgentsOrModelPolicy",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ReadyStoriesRequireTheAccountableUpstreamRefinementHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RequirementRevisionsRetainStoryAndTestTraceabilityAndFlagChangeImpacts",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "UnknownAgentDeliveryRunsReturnAClearNotFoundResponse",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"non-functional\",\"13\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"developer\",\"18\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"ba\",\"10\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "StakeholderRejectionReturnsWorkToClarificationAndBlocksAdvancement",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "EvidenceIsMandatoryAndConcurrentDecisionsCannotOverwriteProgress",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-target\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"lead\",\"14\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"ba\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ProjectMembershipDoesNotGrantADeveloperBATransitionAuthority",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"invalid-provider\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"product_owner\",\"17\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"release_manager\",\"9\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"business_stakeholder\",\"16\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"admin\",\"15\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RejectARunAgainstAnOutdatedRequirementsBaseline",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "DownstreamStagesCannotIntroduceIndependentScope",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"lead\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RejectAStaleRequirementsWrite",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"release_manager\",\"19\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"functional\",\"11\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "DefectsReturnToDevelopmentAndRequireASeparateQARetest",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"product_owner\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"resume\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnAccountRoleRevokesItsExistingSession(\"automation\",\"12\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "CompleteEveryHumanLifecycleHandoffAndRetainAttributableApprovals",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "ChangingAnApprovedBaselineFlagsPreviousEvidenceAndResetsApprovalWork",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "UnknownRunOperationsDoNotStartWorkersOrExecuteCommands(\"cancel\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "PreserveVersionHistoryWithoutTransferringApprovalToARevision",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"developer\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "AuthorizedAndRestrictedOperationsFollowTheAssignedRole(\"non-functional\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RejectInvalidDeliveryMissionsBeforeRunningAgents(\"short-brief\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "scenario": "RequirementsMustExistBeforeAgentsCanStart",
+        "outcome": "Passed"
+      }
+    ]
+  },
+  "python": {
+    "passed": 813,
+    "skipped": 136,
+    "failed": 0,
+    "warnings": 1,
+    "command": "APP_PASSWORD='' SESSION_SECRET='' API_AUTH_TOKEN='' .venv/bin/pytest -q --disable-warnings --tb=short"
+  },
+  "browser": {
+    "initial_broad_run": {
+      "passed": 84,
+      "failed": 3
+    },
+    "corrected_targeted_run": {
+      "passed": 3,
+      "failed": 0
+    },
+    "note": "Three initial failures corrected; final affected cases passed. Broader mobile, shared view and theme cases passed in the first run."
+  },
+  "checks": {
+    "ruff": "passed",
+    "changed_python_format": "passed",
+    "compileall": "passed",
+    "javascript_syntax": "passed",
+    "wheel_build": "passed",
+    "scoped_mypy": "10 changed modules passed",
+    "repository_mypy": "40 errors in 12 other modules"
+  },
+  "not_verified": [
+    "Live provider generation",
+    "Generated application automation suites in target environments",
+    "Remote PR/build synchronisation",
+    "Real UAT",
+    "Staging or production deployment"
+  ]
+}

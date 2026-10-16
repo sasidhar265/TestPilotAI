@@ -1,7 +1,7 @@
 """Authorize operations independently of the controls displayed in the browser."""
 
 import hmac
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request
 
@@ -47,6 +47,43 @@ BA_WRITES = frozenset(
 
 def operation_allowed(role: str, path: str, method: str, view: str = "") -> bool:
     access = capabilities(role)
+    if path.startswith("/api/sdlc/") and (
+        path.endswith(
+            (
+                "/lifecycle",
+                "/transitions",
+                "/evidence",
+                "/members",
+                "/queue",
+                "/work-items",
+                "/detail",
+                "/annotations",
+            )
+        )
+    ):
+        return role in {
+            "admin",
+            "test_lead",
+            "ba",
+            "functional_tester",
+            "automation_tester",
+            "non_functional_tester",
+            "business_stakeholder",
+            "product_owner",
+            "developer",
+            "release_manager",
+        }
+    if role in {"business_stakeholder", "product_owner", "developer", "release_manager"}:
+        if method in {"GET", "HEAD", "OPTIONS"}:
+            return not (path.startswith("/api/admin/") or path == "/admin/users")
+        return path == "/api/auth/logout" or (
+            path.startswith("/api/sdlc/")
+            and (
+                path.endswith("/artifacts/workflow")
+                or (role == "release_manager" and path.endswith(("/runs", "/cancel", "/resume")))
+                or (role == "developer" and path.endswith(("/cancel", "/resume")))
+            )
+        )
     if role in {"admin", "test_lead"}:
         return not (role != "admin" and (path.startswith("/api/admin/") or path == "/admin/users"))
     if path.startswith("/api/admin/") or path == "/admin/users":
@@ -61,6 +98,21 @@ def operation_allowed(role: str, path: str, method: str, view: str = "") -> bool
         return access["automation"]
     if path == "/" and view in {"scenarios", "test-cases"}:
         return access["test_cases"]
+    if path.startswith("/api/sdlc/") and method not in {"GET", "HEAD", "OPTIONS"}:
+        permitted_stages = {
+            "ba": ("requirements-input", "workflow"),
+            "functional_tester": ("testing", "workflow"),
+            "automation_tester": ("testing", "workflow"),
+            "non_functional_tester": ("testing", "workflow"),
+        }.get(role, ())
+        return bool(permitted_stages) and (
+            path.endswith("/projects")
+            or (
+                role == "ba"
+                and (path.endswith("/runs") or path.endswith("/cancel") or path.endswith("/resume"))
+            )
+            or any(path.endswith("/artifacts/" + stage) for stage in permitted_stages)
+        )
     if role == "ba":
         if path in {"/quality-lifecycle", "/progress"}:
             return False
@@ -71,9 +123,13 @@ def operation_allowed(role: str, path: str, method: str, view: str = "") -> bool
     return role in {"ba", "functional_tester", "automation_tester", "non_functional_tester"}
 
 
-def payload_allowed(role: str, path: str, payload: dict) -> bool:
+def payload_allowed(role: str, path: str, payload: dict[str, Any]) -> bool:
     if role in {"admin", "test_lead"}:
         return True
+    if path.startswith("/api/sdlc/") and path.endswith("/runs"):
+        return role == "release_manager" or (
+            role == "ba" and payload.get("target", "design") == "design"
+        )
     request = payload.get("request", payload)
     if path in GENERATION_PATHS:
         if not isinstance(request, dict):

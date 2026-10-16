@@ -14,7 +14,8 @@ USER_SCHEMA = """(
             username TEXT PRIMARY KEY COLLATE NOCASE,
             display_name TEXT NOT NULL, password_hash TEXT NOT NULL,
             role TEXT NOT NULL CHECK(role IN ('admin', 'test_lead', 'ba',
-                'functional_tester', 'automation_tester', 'non_functional_tester')),
+                'functional_tester', 'automation_tester', 'non_functional_tester',
+                'business_stakeholder', 'product_owner', 'developer', 'release_manager')),
             enabled INTEGER NOT NULL DEFAULT 1, version INTEGER NOT NULL DEFAULT 1,
             first_name TEXT NOT NULL DEFAULT '', last_name TEXT NOT NULL DEFAULT ''
         )"""
@@ -36,13 +37,13 @@ def migrate_user_schema(connection: sqlite3.Connection) -> None:
                 (first, last, row["username"]),
             )
     schema = connection.execute("SELECT sql FROM sqlite_master WHERE name = 'users'").fetchone()[0]
-    if "'ba'" not in schema:
+    if "'release_manager'" not in schema:
         if not connection.in_transaction:
             connection.execute("BEGIN IMMEDIATE")
         schema = connection.execute(
             "SELECT sql FROM sqlite_master WHERE name = 'users'"
         ).fetchone()[0]
-        if "'ba'" not in schema:
+        if "'release_manager'" not in schema:
             connection.execute(f"CREATE TABLE users_roles {USER_SCHEMA}")
             connection.execute("""INSERT INTO users_roles
                 SELECT username, display_name, password_hash,

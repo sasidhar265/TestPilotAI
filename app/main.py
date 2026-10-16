@@ -36,6 +36,7 @@ from app.agents.reqnroll_step_definition_agent import (
 from app.agents.reqnroll_validation import implementation_findings
 from app.agents.requirements_validation import RequirementsBlocked, RequirementsValidationAgent
 from app.agents.runner import CopilotGenerationError
+from app.agents.sdlc_agent import SDLC_DESCRIPTORS
 from app.agents.test_case_generator_agent import (
     AutomationTestCaseGeneratorAgent,
     ManualTestCaseGeneratorAgent,
@@ -106,6 +107,7 @@ from app.observability import (
 from app.protected_memory import MemoryProtectionError
 from app.role_access import enforce_role_access
 from app.script_packs import router as script_pack_router
+from app.sdlc_routes import router as sdlc_router
 from app.services import MultiAgentTestPipeline, TestGenerationService
 from app.services.accepted_outputs import AcceptanceError, AcceptedOutputService
 from app.services.dashboard import DashboardStore, suite_details
@@ -140,7 +142,7 @@ app = FastAPI(
     lifespan=memory_lifespan,
     title="Quality Lifecycle Studio API",
     version="0.1.0",
-    description="Governed multi-agent conversion of product requirements into validated tests.",
+    description="Agent-led SDLC from BA and architecture to code, tests and verified release.",
     docs_url=None,
     redoc_url=None if settings_at_startup.is_production else "/redoc",
     openapi_url="/openapi.json",
@@ -157,6 +159,7 @@ app.include_router(user_router)
 app.include_router(workspace_router)
 app.include_router(stlc_router)
 app.include_router(workflow_router)
+app.include_router(sdlc_router)
 app.include_router(script_pack_router)
 app.include_router(finance_router)
 
@@ -367,6 +370,7 @@ async def logout() -> Response:
     return response
 
 
+@app.get("/sdlc", include_in_schema=False)
 @app.get("/project-dashboard", include_in_schema=False)
 @app.get("/progress", include_in_schema=False)
 @app.get("/quality-lifecycle", include_in_schema=False)
@@ -538,6 +542,7 @@ async def list_agents() -> list[dict[str, object]]:
     return [
         agent.model_dump(mode="json")
         for agent in (
+            *SDLC_DESCRIPTORS,
             InputAgent.descriptor,
             BusinessRulesAgent.descriptor,
             RequirementsValidationAgent.descriptor,
