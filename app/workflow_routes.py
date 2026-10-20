@@ -13,7 +13,11 @@ from pydantic import ValidationError
 
 from app.agents.business_analyst import BAReport, BusinessAnalystAgent
 from app.agents.context_converter_agent import ContextConverterAgent
-from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
+from app.agents.requirements_validation import (
+    RequirementsBlocked,
+    RequirementsReport,
+    RequirementsValidationAgent,
+)
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_validator import TestCaseValidatorAgent
 from app.agents.workflow_agent import WorkflowAgent, test_case_request
@@ -31,6 +35,9 @@ from app.observability import (
 from app.pdf_exporter import brd_draft_to_pdf
 from app.services import MultiAgentTestPipeline
 from app.services.document_ingestion import DocumentIngestionError, DocumentIngestionService
+from app.services.requirements_reviews import record_assessment
+from app.services.sdlc import SDLCStore
+from app.stlc_routes import Actor
 from app.uploaded_brd import issue_brd_receipt
 from app.workflow_models import (
     JiraStoriesRequest,
@@ -106,10 +113,18 @@ async def read_document(file: UploadFile, settings: Config) -> dict[str, str]:
 
 
 @router.post("/ba-review", response_model=BAReport)
-async def ba_review(request: GenerateRequest, settings: Config) -> BAReport:
+async def ba_review(request: GenerateRequest, settings: Config, actor: Actor) -> BAReport:
     with stage_operation("BA Agent review"):
         try:
-            return await BusinessAnalystAgent(settings).review(request)
+            report = await BusinessAnalystAgent(settings).review(request)
+            record_assessment(
+                SDLCStore(settings.organizational_memory_path),
+                actor,
+                request,
+                "business_analysis",
+                report.model_dump(mode="json"),
+            )
+            return report
         except (CopilotGenerationError, RuntimeError, ValueError) as error:
             raise HTTPException(
                 503, "BA review unavailable. Check provider access and retry."
@@ -117,9 +132,29 @@ async def ba_review(request: GenerateRequest, settings: Config) -> BAReport:
 
 
 @router.post("/validate-requirements", response_model=RequirementsReport)
-async def validate_requirements(request: GenerateRequest, settings: Config) -> RequirementsReport:
+async def validate_requirements(
+    request: GenerateRequest, settings: Config, actor: Actor
+) -> RequirementsReport:
     with stage_operation("Requirements validation"):
-        return await RequirementsValidationAgent(settings).require(request)
+        try:
+            report = await RequirementsValidationAgent(settings).require(request)
+        except RequirementsBlocked as error:
+            record_assessment(
+                SDLCStore(settings.organizational_memory_path),
+                actor,
+                request,
+                "alignment",
+                error.report.model_dump(mode="json"),
+            )
+            raise
+        record_assessment(
+            SDLCStore(settings.organizational_memory_path),
+            actor,
+            request,
+            "alignment",
+            report.model_dump(mode="json"),
+        )
+        return report
 
 
 @router.post("/brd/pdf")

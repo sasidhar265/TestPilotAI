@@ -1,3 +1,52 @@
+# Implementation progress — 17 October 2026
+
+## 19 October 2026 — inline BA review vertical slice
+
+Inspected existing BA/domain retrieval, exact-source handoff, provider/runtime policy,
+SQLite project models, role middleware, lifecycle gates and the BA screen before extending
+them. Added **Review existing BRD · BA view** using the saved baseline and in-house
+auto-finance knowledge. Implemented strict schema/evidence validation, persisted background
+runs, source navigation, requirement/proposal comparison, finding filters, six human actions,
+clarification, reanalysis, version impact/history and explicit human BA sign-off. Proposals
+never overwrite approved source documents or advance stakeholder approval automatically.
+
+See [implementation and limits](INLINE_BA_REVIEW.md). Verification details are recorded in
+`docs/verification/inline-ba-review-2026-10-19.json`; synthetic provider tests are explicitly
+distinguished from live provider availability checks. Existing automation scenarios and
+approved quotation input are preserved. No production deployment is claimed.
+
+Verification: 143 focused Python tests and 13 browser regressions passed. The isolated
+authenticated browser flow passed with desktop three-column and mobile layout checks.
+ReqnRoll discovered/executed/passed all 38 affected scenarios: 20 new inline-review cases,
+15 existing lifecycle cases and 3 preserved BA-input cases. A separate real Codex
+`gpt-6-astra` check returned source-validated findings and BLOCKED readiness for a synthetic
+PCP BRD missing GMFV/calculation decisions. Earlier timed-out or invalid live responses
+were rejected; synthetic-provider acceptance is not presented as live model reasoning.
+
+## Audit and priorities
+
+Inspected the existing frontend routes, shared shell, API/services, SQLite models, lifecycle policy, role middleware, agent runners, native entry points, automation and CI. The existing 25-stage engine remains authoritative. See [actual-versus-expected matrix](INTEGRATION_GAPS.md), [workflow](SDLC_WORKFLOW.md), [screens](UI_SCREEN_MATRIX.md) and [permissions](ROLE_PERMISSIONS.md).
+
+## Increment 1 — requirements and business approval
+
+**Problems:** validation reports existed only as browser drafts; source handoff did not persist the reviewed BRD; project/BA controls were hidden; Business Approval lacked a version-bound review context.
+
+**Changes:** added an incremental server-assessment table and provenance service; matched reports to the effective source and project membership; added exact-baseline approval context; blocked positive approval/deployment on unresolved current-source assessments; captured assessment IDs in human decisions. New assessments invalidate open optimistic decision revisions without advancing stages. Reused existing backend role, evidence, rejection and human-session gates.
+
+Requirements now saves the exact explicitly validated source before navigation, requires a selected project, and restores BA handoff actions once a baseline exists. The approval page shows saved BRD/version, source-grounded BA/domain/alignment findings, readiness blockers, requirement versions, clarification entry points and attributable human decision history. Responsive layouts and existing sidebar/design patterns are retained. No model policy, secret or environment configuration was changed.
+
+**Modules:** `requirements_reviews.py`, `workflow_routes.py`, `sdlc.py`, `project_lifecycle.py`, central lifecycle navigation policy, requirements/project/approval scripts, shared CSS and asset versions. ReqnRoll scenario, bindings, request builder, service and approved input fixture were extended; existing scenarios were preserved.
+
+**Verification:** full default Python suite: 824 passed, 164 skipped, one collection warning. Changed backend regression subset: 18 passed. Actual ReqnRoll: 18 discovered/executed/passed, zero skipped or failed; see [per-scenario evidence](verification/approval-bdd-2026-10-17.json). Test server uses temporary isolated data; no deployment or generated-suite execution is claimed. Ruff lint, JavaScript syntax and diff-whitespace checks pass. Browser regression: 28 passed, covering desktop/mobile approval, blocked approval and rework, saved requirements handoff, refresh persistence, navigation, explicit validation, summary/report handling and inline workbench behavior. Screenshots were visually reviewed.
+
+**Remaining:** configured live-provider journeys, generated automation against target environments, remote pipeline/deployment validation, automatic legacy-store reconciliation and human-reviewed documentation publication. Scoped mypy follows existing modules and reports 28 existing errors in ten modules; whole-tree formatting also flags four untouched files (`agent_instructions.py`, `observability.py`, `test_usage_dashboard_browser.py`, `export_auto_finance_guide.py`). These are retained as baseline issues, not represented as clean checks.
+
+## Requirements layout follow-up
+
+Removed duplicate Project/New project controls and their setup status from Requirements. The header project link opens Documents and version history, where project selection and creation remain available. Exact-source persistence and backend approval rules are unchanged.
+
+## Preserved earlier implementation record
+
 # Implementation progress
 
 ## 1. Workflow, identity and deployment controls

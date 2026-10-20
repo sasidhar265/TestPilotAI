@@ -7,6 +7,8 @@ from typing import Any
 from uuid import uuid4
 
 from app.lifecycle_workflow import GATES, PHASES, WORKFLOW, can_act
+from app.services.ba_handoff import backlog_drafting
+from app.services.requirements_reviews import approval_context
 from app.services.sdlc import SDLCError, SDLCStore
 
 
@@ -98,8 +100,10 @@ class ProjectLifecycle:
                 missing_evidence=missing,
                 can_act=can_act(role, state["stage"]),
                 pending_approval=policy["human_approval"],
+                approval_context=approval_context(db, project, state, events),
                 item_transitions={key: sorted(value) for key, value in ITEM_TRANSITIONS.items()},
                 item_links={key: sorted(value) for key, value in ITEM_LINKS.items()},
+                backlog_drafting=backlog_drafting(db, project, state["baseline"], role),
                 work_item_types=[
                     kind for kind, roles in ITEM_ROLES.items() if role == "admin" or role in roles
                 ],
@@ -163,6 +167,16 @@ class ProjectLifecycle:
             if not state["baseline"]:
                 raise SDLCError("Save Requirements before advancing")
             rejected = payload["decision"] == "changes_requested"
+            if stage == "ba_validation" and not rejected:
+                from app.services.ba_reviews import review_blockers
+
+                blockers = review_blockers(db, project, state["baseline"])
+                if blockers:
+                    raise SDLCError(" ".join(blockers))
+            if stage == "stakeholder_approval" and not rejected:
+                context = approval_context(db, project, state, [])
+                if context["blockers"]:
+                    raise SDLCError(" ".join(context["blockers"]))
             target = policy["reject_to"] if rejected else policy["next"]
             if target is None:
                 raise SDLCError("No allowed transition from this stage")
@@ -218,6 +232,14 @@ class ProjectLifecycle:
                 artifact_version=state["baseline"],
                 artifact_versions=artifact_versions,
                 work_item_versions=work_item_versions,
+                assessment_ids={
+                    kind: data["id"]
+                    for kind, data in approval_context(db, project, state, [])[
+                        "assessments"
+                    ].items()
+                }
+                if stage == "stakeholder_approval"
+                else {},
                 work_item=project,
                 decision=payload["decision"],
                 comment=payload["comment"],
@@ -243,6 +265,10 @@ class ProjectLifecycle:
             if state["stage"] != required[environment]:
                 raise SDLCError(
                     f"Human release workflow must reach {required[environment]} before deployment"
+                )
+            if approval_context(db, project, state, [])["blockers"]:
+                raise SDLCError(
+                    "Resolve current-source requirements review blockers before deployment"
                 )
             if revision is not None:
                 candidate = {}

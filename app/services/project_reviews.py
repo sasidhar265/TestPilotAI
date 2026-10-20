@@ -42,6 +42,10 @@ class ProjectReviews:
             return []
         if role == "developer" and item["kind"] == "story":
             return ["status", "references"]
+        if role == "ba" and item["kind"] == "story":
+            return [
+                field for field in EDIT_FIELDS if field not in {"estimate", "assignee", "sprint"}
+            ]
         return list(EDIT_FIELDS)
 
     @staticmethod

@@ -1,0 +1,43 @@
+{
+  "scope": "Modal project selection after sign-in and within the authenticated workspace",
+  "browser_checks_passed": 26,
+  "browser_coverage": [
+    "Required modal after sign-in",
+    "Native modal and keyboard focus containment",
+    "Inline Change project with Cancel and focus restoration",
+    "No unsaved input loss on Cancel",
+    "No browser draft leakage across project switches",
+    "Project loading failure and retry",
+    "Existing access, session expiry and storage errors",
+    "Light/dark responsive layout",
+    "Existing pipeline, upload and BA review flows"
+  ],
+  "live_browser_check": "Passed against temporary local FastAPI with generated credentials and isolated SQLite data, including popup cancellation and sign-out",
+  "reqnroll": {
+    "suite": "HumanGovernedProjectLifecycle",
+    "counts": {
+      "total": "15",
+      "executed": "15",
+      "passed": "15",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    }
+  },
+  "static_checks": [
+    "JavaScript syntax",
+    "Ruff",
+    "git diff --check"
+  ],
+  "execution_boundary": "Repository lifecycle governance fixtures; no generated automation pack or production deployment executed"
+}

@@ -190,3 +190,11 @@ and unresolved inputs. A completed BDD run requires actual discovered/executed r
 pack in its configured environment; repository smoke tests do not establish generated-suite
 execution. Generation agents must not execute code during generation: use the governed execution
 stage for the approved pack and report blocked configuration honestly.
+
+## Generated C# validation
+
+C# automation files are checked by both Tree-sitter and Roslyn before acceptance.
+Tree-sitter enforces thin bindings; Roslyn parses every C# file, including services,
+builders and models. Repair compiler diagnostics without removing existing scenarios or
+changing approved input contracts. Roslyn parsing does not establish semantic compilation
+or a passing BDD run: build and execute the configured pack separately.

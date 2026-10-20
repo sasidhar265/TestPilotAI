@@ -13,13 +13,14 @@
     <div class="lifecycle-action-grid">
     <form id="lifecycle-evidence"><h4>Record evidence</h4>
       <p>Human attestation of an existing artifact or result. References are not independently verified by this form.</p>
-      <label>Evidence type<select name="kind" required></select></label>
-      <label>Artifact / work item / result reference<input name="reference" required maxlength="2000"></label>
-      <label>Outcome<select name="outcome"><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option></select></label>
-      <label>Evidence notes<textarea name="comment" required maxlength="4000"></textarea></label>
+      <label><span id="lifecycle-evidence-type-label">Evidence type</span><select name="kind" required></select></label>
+      <label><span id="lifecycle-evidence-reference-label">Artifact / work item / result reference</span><input name="reference" required maxlength="2000"></label>
+      <label><span id="lifecycle-evidence-outcome-label">Outcome</span><select name="outcome"><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option></select></label>
+      <label><span id="lifecycle-evidence-notes-label">Evidence notes</span><textarea name="comment" required maxlength="4000"></textarea></label>
       <button class="primary" type="submit">Record evidence</button></form>
-    <form id="lifecycle-decision"><h4>Human decision</h4>
-      <label>Decision and actionable feedback<textarea name="comment" required maxlength="4000"></textarea></label>
+    <form id="lifecycle-decision"><h4>Your decision</h4>
+      <p id="lifecycle-decision-help"></p>
+      <label><span id="lifecycle-decision-label">Review comment</span><textarea name="comment" required maxlength="4000" aria-describedby="lifecycle-decision-help"></textarea></label>
       <div class="sdlc-actions"><button class="primary" name="decision" value="approved" type="submit">Complete stage</button>
       <button name="decision" value="changes_requested" type="submit" class="secondary">Request rework</button></div></form>
     </div><details><summary>Review evidence and decision history</summary><div id="lifecycle-audit"></div></details>
@@ -73,16 +74,56 @@
     phaseIsCurrent = true,
     recordDirty = false;
   const get = (id) => document.getElementById(id);
+  window.projectLifecycleSnapshot = () => ({ project, state });
   function setBusy(value) {
     loading = value;
     panel.inert = value;
+    for (const id of ["lifecycle-decision", "lifecycle-evidence"]) get(id).inert = value;
     panel.setAttribute("aria-busy", String(value));
     get("lifecycle-decision").querySelector('[value="approved"]').disabled =
-      value || !state || Boolean(state.missing_evidence.length);
+      value || !state || Boolean(state.missing_evidence.length) ||
+      (state.stage === "stakeholder_approval" && Boolean(state.approval_context?.blockers?.length));
   }
   const message = (text) => {
     get("lifecycle-status").textContent = text;
+    const decisionStatus = get("ba-decision-status");
+    if (decisionStatus) decisionStatus.textContent = text;
   };
+  function simplifyReviewControls() {
+    const reviewing = document.body.dataset.sdlcPhase === "business-approval";
+    panel.querySelector(":scope > h3").textContent = reviewing ? "Supporting records and history" : "Your next action";
+    if (!state) return;
+    const current = state.definition.find(item => item.id === state.stage);
+    const decision = get("lifecycle-decision");
+    const evidence = get("lifecycle-evidence");
+    const reviewIsCurrent = ["requirements", "business-approval"].includes(state.phase);
+    decision.hidden = !state.can_act || !state.baseline || !current.next || (reviewing && !reviewIsCurrent);
+    decision.querySelector("h4").textContent = reviewing ? "Your decision" : "Human decision";
+    get("lifecycle-decision-label").textContent = reviewing ? "Your feedback" : "Decision and actionable feedback";
+    get("lifecycle-decision-help").textContent = reviewing
+      ? state.stage === "stakeholder_approval"
+        ? "Approve this BRD to let the product owner start the backlog, or explain what needs to change."
+        : state.stage === "ba_validation"
+          ? "Finish the BA review to request business approval, or send the BRD back with the changes needed."
+          : "Explain what you reviewed and any changes needed before continuing."
+      : "";
+    decision.querySelector('[value="approved"]').textContent = reviewing
+      ? state.stage === "stakeholder_approval" ? "Approve BRD"
+        : state.stage === "ba_validation" ? "Send for business approval" : "Continue review"
+      : state.pending_approval ? "Approve this version" : "Complete stage";
+    decision.querySelector('[value="changes_requested"]').textContent = reviewing ? "Request changes" : "Request rework";
+    evidence.querySelector("h4").textContent = reviewing ? "Add the missing review evidence" : "Record evidence";
+    evidence.querySelector("p").textContent = reviewing
+      ? "Link to the review or document you checked and explain the outcome. The link is recorded for the approver; this form does not verify it."
+      : "Human attestation of an existing artifact or result. References are not independently verified by this form.";
+    evidence.querySelector('button[type="submit"]').textContent = reviewing ? "Save review evidence" : "Record evidence";
+    get("lifecycle-evidence-type-label").textContent = reviewing ? "What did you review?" : "Evidence type";
+    get("lifecycle-evidence-reference-label").textContent = reviewing ? "Review or document link" : "Artifact / work item / result reference";
+    get("lifecycle-evidence-outcome-label").textContent = reviewing ? "Review result" : "Outcome";
+    get("lifecycle-evidence-notes-label").textContent = reviewing ? "What did you check?" : "Evidence notes";
+    evidence.hidden = !state.can_act || !state.baseline || !current.evidence.length ||
+      (reviewing && (!state.missing_evidence.length || !reviewIsCurrent));
+  }
   async function api(path, payload) {
     const response = await fetch(`/api/sdlc${path}`, {
       method: payload ? "POST" : "GET",
@@ -112,6 +153,8 @@
         return;
       }
       state = result;
+      renderBacklogHandoff();
+      panel.dataset.baseline = String(state.baseline);
       get("record-member-options").replaceChildren(
         ...[
           ...new Set([
@@ -122,7 +165,7 @@
           ]),
         ].map((username) => new Option(username, username)),
       );
-      itemsPanel.open = true;
+      if (document.body.dataset.sdlcPhase !== "business-approval") itemsPanel.open = true;
       const current = state.definition.find((item) => item.id === state.stage);
       const readable = (value) =>
         value
@@ -173,9 +216,11 @@
       get("lifecycle-decision").querySelector('[value="approved"]').textContent =
         state.pending_approval ? "Approve this version" : "Complete stage";
       get("lifecycle-decision").querySelector('[value="approved"]').disabled =
-        loading || Boolean(state.missing_evidence.length);
+        loading || Boolean(state.missing_evidence.length) ||
+        (state.stage === "stakeholder_approval" && Boolean(state.approval_context?.blockers?.length));
       get("lifecycle-decision").querySelector('[value="changes_requested"]').hidden =
         !current.reject_to;
+      simplifyReviewControls();
       const audit = get("lifecycle-audit");
       audit.replaceChildren();
       for (const item of [...state.evidence, ...state.audit].sort((a, b) =>
@@ -202,6 +247,88 @@
       if (request === sequence) message(error.message);
     }
   }
+  window.refreshProjectReview = refresh;
+  const canDraftBacklog = () => panel.dataset.phase === "backlog" && Boolean(state?.backlog_drafting?.allowed);
+  const canEditRecords = () => phaseIsCurrent || canDraftBacklog();
+  const backlogHandoff = document.createElement("section");
+  backlogHandoff.id = "backlog-story-handoff";
+  backlogHandoff.innerHTML = '<h3>Create user stories</h3><p id="backlog-story-status" role="status"></p><button id="backlog-create-story" class="primary" type="button">Create user story</button>';
+  itemsPanel.before(backlogHandoff);
+  const recordDetail = itemsPanel.querySelector(".record-detail");
+  const recordDetailHome = document.createComment("Record editor location outside Backlog");
+  recordDetail.before(recordDetailHome);
+  let backlogEditorOpen = false;
+  const backlogSaveStatus = document.createElement("p");
+  backlogSaveStatus.id = "backlog-save-status";
+  backlogSaveStatus.setAttribute("role", "status");
+  backlogHandoff.append(backlogSaveStatus);
+  const backlogStories = document.createElement("section");
+  backlogStories.id = "backlog-created-stories";
+  backlogStories.innerHTML = '<h3>Created user stories</h3><p id="backlog-story-count" role="status"></p><div id="backlog-story-list"></div>';
+  backlogHandoff.after(backlogStories);
+  function renderBacklogHandoff() {
+    const backlog = panel.dataset.phase === "backlog";
+    backlogHandoff.hidden = !backlog;
+    backlogStories.hidden = !backlog;
+    if (backlog) backlogHandoff.append(recordDetail);
+    else recordDetailHome.after(recordDetail);
+    recordDetail.hidden = backlog && !backlogEditorOpen;
+    get("lifecycle-item-form").querySelector('button[type="submit"]').textContent = backlog ? "Save story" : "Save changes";
+    renderBacklogStories();
+    get("backlog-story-status").textContent = state?.backlog_drafting?.reason || "Complete the current BRD AI review and BA sign-off first.";
+    get("backlog-create-story").disabled = !canDraftBacklog() || loading;
+  }
+  get("backlog-create-story").onclick = () => {
+    if (!canDraftBacklog() || recordDirty) { message("Save or clear your current draft before creating a story."); return; }
+    backlogEditorOpen = true;
+    recordDetail.hidden = false;
+    backlogSaveStatus.textContent = "";
+    get("lifecycle-item-select").value = "";
+    editItem();
+    const form = get("lifecycle-item-form");
+    form.elements.kind.value = "story";
+    configureFields();
+    for (const option of form.elements.links.options) {
+      const source = items.find(item => item.id === option.value);
+      option.selected = source?.kind === "requirement" && !source.impacted;
+    }
+    form.elements.references.value = `BRD v${state.baseline} · BA review ${state.backlog_drafting.review_id}`;
+    itemsPanel.open = true;
+    form.elements.title.focus();
+    recordDirty = true;
+  };
+
+  function renderBacklogStories() {
+    const stories = items.filter(item => item.kind === "story");
+    get("backlog-story-count").textContent = `${stories.length} saved ${stories.length === 1 ? "story" : "stories"}`;
+    const list = get("backlog-story-list");
+    list.replaceChildren();
+    if (!stories.length) {
+      list.append(node("p", "No user stories yet. Select Create user story to add one here after BA sign-off."));
+      return;
+    }
+    for (const story of [...stories].reverse()) {
+      const card = node("article");
+      card.className = "backlog-story-card";
+      card.dataset.storyId = story.id;
+      card.append(node("h4", story.title),
+        node("p", `${story.status} · v${story.version} · BRD v${story.baseline}${story.impacted ? " · Impact review required" : ""}`),
+        node("p", story.description || "No description supplied."));
+      if (story.acceptance_criteria.length) {
+        card.append(node("h5", "Acceptance criteria"));
+        const criteria = node("ul");
+        story.acceptance_criteria.forEach(text => criteria.append(node("li", text)));
+        card.append(criteria);
+      }
+      const open = node("button", "Review or edit story");
+      open.type = "button"; open.className = "secondary";
+      open.onclick = () => {
+        if (openRecord(story.id)) recordDetail.scrollIntoView({ block: "start" });
+      };
+      card.append(open); list.append(card);
+    }
+  }
+
   let detailSequence = 0,
     detail = null,
     amending = false;
@@ -216,18 +343,20 @@
     const allowed = (state?.work_item_types || []).filter(
       (kind) =>
         (!visibleKinds || visibleKinds.includes(kind)) &&
+        (panel.dataset.phase !== "backlog" || kind === "story") &&
+        !(currentRole === "ba" && kind === "story" && !state?.backlog_drafting?.allowed) &&
         !(currentRole === "developer" && kind === "story"),
     );
     for (const option of form.elements.kind.options)
       option.disabled = !allowed.includes(option.value);
-    form.hidden = !state?.baseline || (!item && (!phaseIsCurrent || !allowed.length));
+    form.hidden = !state?.baseline || (!item && (!canEditRecords() || !allowed.length));
     [...form.elements].forEach((element) => {
       element.disabled = false;
     });
     get("record-context").textContent = item
-      ? `${item.kind.replaceAll("_", " ")} · v${item.version} · ${item.approved ? "Business approved" : "Not business approved"}${item.impacted ? " · Impact review required" : ""}`
+      ? `${item.kind.replaceAll("_", " ")} · v${item.version} · ${item.approved ? "Business approved" : "Not business approved"}${item.ai_origin ? ` · AI draft from BRD v${item.ai_origin.baseline} · Review before use` : ""}${item.impacted ? " · Impact review required" : ""}`
       : "Create a draft record linked to the saved requirements baseline.";
-    get("record-new").disabled = !state?.baseline || !phaseIsCurrent || !allowed.length;
+    get("record-new").disabled = !state?.baseline || !canEditRecords() || !allowed.length;
     if (allowed.length) form.elements.kind.value = allowed[0];
     recordDirty = false;
     if (item)
@@ -277,7 +406,10 @@
       kind = form.elements.kind.value;
     for (const field of ["estimate", "sprint"])
       form.elements[field].closest("label").hidden = !["story", "epic"].includes(kind);
-    form.elements.assignee.closest("label").hidden = kind === "requirement";
+    form.elements.assignee.closest("label").hidden = kind === "requirement" || (currentRole === "ba" && kind === "story");
+    if (currentRole === "ba" && kind === "story") {
+      for (const field of ["estimate", "sprint"]) form.elements[field].closest("label").hidden = true;
+    }
     form.elements.acceptance_criteria.closest("label").hidden = kind === "documentation";
     for (const option of form.elements.links.options) {
       const linked = items.find((row) => row.id === option.value);
@@ -320,9 +452,9 @@
         "links",
         "references",
       ])
-        form.elements[field].disabled = !result.editable_fields.includes(field) || !phaseIsCurrent;
+        form.elements[field].disabled = !result.editable_fields.includes(field) || !canEditRecords();
       form.querySelector('button[type="submit"]').hidden =
-        !result.editable_fields.length || !phaseIsCurrent;
+        !result.editable_fields.length || !canEditRecords();
       for (const option of form.elements.status.options)
         option.disabled = !result.statuses.includes(option.value);
       for (const option of form.elements.links.options) {
@@ -492,6 +624,10 @@
       const phase = state.phases.find((entry) => entry.record_kinds.includes(target.kind));
       if (phase) window.navigateWorkspace(`/sdlc?phase=${encodeURIComponent(phase.id)}`, false);
     }
+    if (panel.dataset.phase === "backlog" && target.kind === "story") {
+      backlogEditorOpen = true;
+      recordDetail.hidden = false;
+    }
     const select = get("lifecycle-item-select");
     if (![...select.options].some((option) => option.value === identifier))
       select.add(new Option(items.find((row) => row.id === identifier).title, identifier));
@@ -653,6 +789,7 @@
     }
     if (!list.children.length)
       list.textContent = "No matching records. Create a record or change the filters.";
+    renderBacklogStories();
     if (!recordDirty && get("record-search") !== document.activeElement) editItem();
   }
   get("record-search").oninput = renderItems;
@@ -699,17 +836,26 @@
     }
   });
   window.addEventListener("sdlc-phase-selected", (event) => {
+    panel.dataset.phase = event.detail.phase.id;
+    simplifyReviewControls();
     get("lifecycle-records-summary").textContent =
-      `${event.detail.phase.label}: work items`;
+      event.detail.phase.id === "business-approval" ? "Requirements and discussion" : `${event.detail.phase.label}: work items`;
+    if (event.detail.phase.id === "business-approval" && itemsPanel.dataset.phase !== "business-approval" && !recordDirty)
+      itemsPanel.open = false;
+    itemsPanel.dataset.phase = event.detail.phase.id;
     visibleKinds = event.detail.phase.record_kinds;
-    phaseIsCurrent = event.detail.current;
+    // BA review owns the human review forms, including the initial analysis handoff.
+    // The server still checks the actual stage, role and evidence on every action.
+    phaseIsCurrent = event.detail.current ||
+      (event.detail.phase.id === "business-approval" && state?.phase === "requirements");
     panel.querySelector(".lifecycle-action-grid").hidden = !phaseIsCurrent;
-    panel.querySelector(".lifecycle-next-action").hidden = !phaseIsCurrent;
+    panel.querySelector(".lifecycle-next-action").hidden = !phaseIsCurrent || event.detail.phase.id === "business-approval";
+    renderBacklogHandoff();
     renderItems();
   });
   get("lifecycle-item-form").onsubmit = async (event) => {
     event.preventDefault();
-    if (loading || !project || !state || (!phaseIsCurrent && !amending)) return;
+    if (loading || !project || !state || (!canEditRecords() && !amending)) return;
     setBusy(true);
     const form = event.currentTarget;
     const item = items.find((row) => row.id === get("lifecycle-item-select").value);
@@ -730,9 +876,15 @@
       get("lifecycle-item-select").add(new Option(saved.title, saved.id));
       get("lifecycle-item-select").value = saved.id;
       await refresh();
+      if (panel.dataset.phase === "backlog" && saved.kind === "story") {
+        backlogSaveStatus.textContent = "Story saved. It appears in Created user stories below.";
+        backlogEditorOpen = false;
+        recordDetail.hidden = true;
+      }
       window.dispatchEvent(new Event("lifecycle-updated"));
     } catch (error) {
       message(error.message);
+      if (panel.dataset.phase === "backlog") backlogSaveStatus.textContent = error.message;
     } finally {
       setBusy(false);
     }
@@ -776,16 +928,19 @@
     recordDirty = false;
     visibleKinds = null;
     phaseIsCurrent = true;
+    backlogEditorOpen = false;
+    backlogSaveStatus.textContent = "";
     if (!project) window.dispatchEvent(new CustomEvent("sdlc-lifecycle-loaded", { detail: null }));
     refresh();
   });
   window.addEventListener("workspace-role-ready", refresh);
+  window.addEventListener("requirements-assessment-updated", refresh);
   const dashboard = document.querySelector('[data-workspace-page="/project-dashboard"]');
   if (dashboard) {
     const queue = document.createElement("section");
     queue.className = "panel";
     queue.innerHTML =
-      '<h2>Project lifecycle queue</h2><p>Current lifecycle and accountable work across your projects.</p><label>Show projects<select id="lifecycle-queue-filter"><option value="all">All projects</option><option value="action">Needs my action</option><option value="approval">My pending approvals</option><option value="blocked">Missing required evidence</option></select></label><div id="lifecycle-queue" role="status"></div>';
+      '<h2>Project lifecycle queue</h2><p>Current lifecycle and accountable work across your projects.</p><label>Show projects<select id="lifecycle-queue-filter"><option value="all">All projects</option><option value="action">Needs my action</option><option value="approval">My pending approvals</option><option value="blocked">Needs attention</option></select></label><div id="lifecycle-queue" role="status"></div>';
     dashboard.prepend(queue);
     async function refreshQueue() {
       try {
@@ -798,7 +953,8 @@
             filter === "all" ||
             (filter === "action" && row.lifecycle.can_act) ||
             (filter === "approval" && row.lifecycle.can_act && row.lifecycle.pending_approval) ||
-            (filter === "blocked" && row.lifecycle.missing_evidence.length),
+            (filter === "blocked" && (row.lifecycle.missing_evidence.length ||
+              row.lifecycle.approval_context?.blockers?.length)),
         )) {
           const p = document.createElement("article"),
             link = document.createElement("a");
@@ -807,7 +963,8 @@
           const openProject = async (phase) => {
             try {
               await window.sdlcSelectProject(row.project.id);
-              window.navigateWorkspace(phase ? `/sdlc?phase=${phase}` : "/sdlc");
+              window.navigateWorkspace(phase === "documents" ? "/sdlc?view=documents"
+                : phase ? `/sdlc?phase=${phase}` : "/sdlc");
             } catch (error) {
               message(error.message);
             }
@@ -818,6 +975,8 @@
             openProject();
           };
           p.append(link);
+          for (const blocker of row.lifecycle.approval_context?.blockers || [])
+            p.append(node("p", blocker));
           if (row.metrics) {
             const metrics = document.createElement("div");
             metrics.className = "sdlc-actions";
@@ -827,7 +986,7 @@
               ["stories", "Stories", "backlog"],
               ["test_cases", "Test cases", "qa"],
               ["open_defects", "Open defects", "qa"],
-              ["documentation", "Documents", row.lifecycle.phase],
+              ["documentation", "Documents", "documents"],
             ]) {
               const button = node("button", `${label}: ${row.metrics[key]}`);
               button.type = "button";

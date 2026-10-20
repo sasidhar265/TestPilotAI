@@ -303,7 +303,7 @@ COMPANY_DOCUMENTS = {
 @app.get("/login", include_in_schema=False)
 async def login_page(request: Request) -> Response:
     if valid_session(request.cookies.get(SESSION_COOKIE, ""), settings_at_startup):
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/select-project", status_code=303)
     if settings_at_startup.temporary_guest_access_active:
         html = LOGIN.read_text().replace('id="guest-entry" hidden', 'id="guest-entry"')
         deadline = settings_at_startup.temporary_guest_access_until
@@ -368,6 +368,11 @@ async def logout() -> Response:
     response.delete_cookie(SESSION_COOKIE, path="/", samesite="strict")
     response.delete_cookie(GUEST_COOKIE, path="/", samesite="strict")
     return response
+
+
+@app.get("/select-project", include_in_schema=False)
+async def select_project_page() -> FileResponse:
+    return FileResponse(INDEX.with_name("select-project.html"), headers=HTML_HEADERS)
 
 
 @app.get("/sdlc", include_in_schema=False)

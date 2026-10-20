@@ -9,6 +9,8 @@ const username = document.getElementById("username");
 const password = document.getElementById("password");
 const passwordToggle = document.getElementById("password-toggle");
 const forgotPassword = document.getElementById("forgot-password");
+if (new URLSearchParams(location.search).get("reason") === "expired")
+  status.textContent = "Your session expired. Sign in again to continue.";
 
 passwordToggle.addEventListener("click", () => {
   const reveal = password.type === "password";
@@ -95,8 +97,14 @@ form.addEventListener("submit", async (event) => {
       error.invalidCredentials = response.status === 401;
       throw error;
     }
-    status.textContent = "Authenticated. Opening your workspace…";
-    window.location.replace("/");
+    try {
+      for (const key of Object.keys(sessionStorage)) {
+        if (key.startsWith("sdlc-active-project:") || key.startsWith("quality-workspace-draft:"))
+          sessionStorage.removeItem(key);
+      }
+    } catch { throw new Error("Your browser blocked session storage. Allow storage for this site to continue."); }
+    status.textContent = "Authenticated. Choose your project to continue…";
+    window.location.replace("/select-project");
   } catch (error) {
     showError(error.message, Boolean(error.invalidCredentials));
     button.disabled = false;

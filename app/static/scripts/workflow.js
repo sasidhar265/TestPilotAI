@@ -18,6 +18,13 @@
   };
   let savedBaReport = null;
   let savedRequirementsReport = null;
+  let summaryError = "";
+  let summarySourceKey = null;
+  let documentReadCache = null;
+  let attachmentSource = null;
+  let nextRequirementsStage = null;
+  let validatedSourceKey = null;
+  let requirementsHandoffPending = false;
   const tabs = [...document.querySelectorAll("[data-stage]")];
   const workspace = document.querySelector(".stage-workspace");
   workspace.before(document.querySelector(".studio-layout"));
@@ -104,7 +111,13 @@
     workspace.hidden = state.stage === 1 || state.stage === 6;
     syncGenerateAvailability();
     $("generate").disabled ||= state.busy;
-    $("validate-requirements").disabled = state.busy || Boolean(activeGeneration);
+    $("validate-requirements").disabled ||= state.busy;
+    $("stop-generation").disabled = !activeGeneration || Boolean(activeGeneration.cancelled);
+    const reportDownload = $("download-brd-report");
+    if (reportDownload) reportDownload.disabled = state.busy || !(savedBaReport || savedRequirementsReport);
+    const nextStage = $("requirements-next-stage");
+    if (nextStage) nextStage.disabled = state.busy || requirementsHandoffPending || !savedRequirementsReport ||
+      (window.roleCanNavigate && !window.roleCanNavigate(nextStage.dataset.destination));
     $("ba-review").disabled = state.busy || Boolean(activeGeneration);
     $("stage-stories").disabled = state.busy || !state.request || Boolean(state.stories);
     $("stage-stories").textContent = state.stories ? "Stories created ✓" : "Create stories →";
@@ -253,14 +266,18 @@
   function sourceChanged() {
     savedBaReport = null;
     savedRequirementsReport = null;
+    summaryError = "";
+    summarySourceKey = null;
+    validatedSourceKey = null;
+    attachmentSource = null;
     revision += 1;
     syncAgentWorkflow();
     latestBrdText = null;
     $("ba-report").hidden = true;
     $("ba-status").textContent = "Source changed. Run BA review again for the current input.";
     $("requirements-validation-report").hidden = true;
-    if (!state.request) return;
     invalidate(1);
+    saveWorkspaceDraft();
     status("Requirements changed. Generate stories again to refresh downstream stages.");
   }
   ["description", "business-rules", "requirement-file", "business-rules-file"].forEach((id) =>
@@ -388,16 +405,25 @@
     if (selected) {
       const form = new FormData();
       form.append("file", selected);
-      const result = await (
-        await upload("/api/workflow/requirements/document", form, transportOptions())
-      ).json();
+      const result = documentReadCache?.file === selected
+        ? documentReadCache.result
+        : await (await upload("/api/workflow/requirements/document", form, transportOptions())).json();
       current();
+      documentReadCache = { file: selected, result };
       description = description.endsWith(result.description)
         ? description
         : [description, result.description].filter(Boolean).join("\n\n");
       uploadedBrdText = result.description;
       uploadedBrdReceipt = result.uploaded_brd_receipt;
       latestBrdText = uploadedBrdText;
+      attachmentSource = { description, uploaded_brd_text: uploadedBrdText,
+        uploaded_brd_receipt: uploadedBrdReceipt };
+    } else if (window.requirementAttachmentMetadata?.()) {
+      const savedSource = attachmentSource || state.request;
+      if (!savedSource?.uploaded_brd_receipt) throw new Error("Upload the BRD again to restore its readable source.");
+      description = savedSource.description;
+      uploadedBrdText = savedSource.uploaded_brd_text;
+      uploadedBrdReceipt = savedSource.uploaded_brd_receipt;
     }
     if (description.length < 10)
       throw new Error("Enter at least 10 characters or attach a readable BRD.");
@@ -420,81 +446,180 @@
       uploaded_brd_receipt: uploadedBrdReceipt,
     };
   }
-  window.prepareSdlcRequirements = async () => {
+  window.prepareSdlcRequirements = async (requireValidated = false) => {
     const source = await readRequirementSource(() => {});
+    const currentReport = savedRequirementsReport;
+    const sameReview = currentReport && validatedSourceKey === JSON.stringify(source);
+    if (requireValidated && !sameReview) throw new Error("Validate the current BRD before saving this approval handoff.");
     const request = { ...requestOptions(), ...source };
     if (!attachedFile && state.request?.description === request.description) {
       request.uploaded_brd_text = state.request.uploaded_brd_text || null;
       request.uploaded_brd_receipt = state.request.uploaded_brd_receipt || null;
     }
     if (JSON.stringify(state.request) !== JSON.stringify(request)) invalidate(2);
+    if (sameReview) {
+      savedRequirementsReport = currentReport;
+      renderBrdResult();
+    }
     state.request = request;
-    $("description").value = request.description;
+    $("description").value = window.requirementAttachmentMetadata?.() ? "" : request.description;
     return request;
   };
+  window.prepareReviewedRequirements = () => window.prepareSdlcRequirements(true);
   function renderRequirementsValidation(report) {
     savedRequirementsReport = report;
     recordReturnedEvidence("Requirements Validation Agent", report.status,
       `Returned alignment report: ${report.message} Regulatory compliance: ${report.regulatory_compliance || "not assessed"}.`,
       (report.sources || []).map((s) => `${s.title || s.id} · ${s.id} · v${s.version || "not supplied"}`));
-    const panel = $("requirements-validation-report");
-    panel.hidden = false;
-    panel.dataset.status = report.status;
-    const brdText =
-      latestBrdText || (attachedFile ? Object.values(report.requirements || {}).join("\n") : "");
-    const findings = (report.findings || []).filter((finding) => finding.status !== "aligned");
-    const suggestions = findings
-      .map(
-        (finding) =>
-          `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p><p><strong>Suggested fix:</strong> ${esc(finding.suggested_change || "Review this requirement with the business owner and clarify the expected behavior.")}</p>${(finding.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</li>`,
-      )
-      .join("");
-    const uploadHelp = report.message.includes("verification failed")
-      ? "The uploaded document could not be verified. Re-upload the BRD and validate again."
-      : "Review the suggested changes with the business owner, update the BRD, then upload it and validate again.";
-    const showDraft = report.status === "blocked" && Boolean(brdText);
-    panel.innerHTML = `<strong>${esc(report.message)}</strong>${report.status === "blocked" ? `<div class="requirements-fix-guidance"><h4>How to fix the BRD</h4><p>${esc(uploadHelp)}</p>${suggestions ? `<ul>${suggestions}</ul>` : ""}</div>` : ""}${showDraft ? `<div class="requirements-draft-actions"><button type="button" class="secondary" id="preview-brd-draft" aria-expanded="false" aria-controls="brd-draft-preview">Preview proposed BRD</button><button type="button" class="secondary" id="download-brd-draft">Download proposed BRD</button></div><div id="brd-draft-preview" hidden><label for="brd-draft-text">Proposed BRD draft · review and edit before download</label><textarea id="brd-draft-text" spellcheck="true"></textarea><small>Suggestions are review notes. The extracted requirement text is preserved until you edit this draft.</small></div>` : ""}<small>Business alignment assessment · Regulatory compliance not assessed.</small>`;
-    if (showDraft) {
-      const notes = findings
-        .map(
-          (finding) =>
-            `### ${finding.requirement_id} · ${finding.status}\nCurrent requirement: ${report.requirements?.[finding.requirement_id] || "See the original BRD"}\nReason: ${finding.reason}\nSuggested fix: ${finding.suggested_change || "Clarify the expected behavior with the business owner."}`,
-        )
-        .join("\n\n");
-      const draft = `# Proposed BRD revision\n\n## Extracted requirements\n\n${brdText}\n\n## Validation review notes\n\n${notes || uploadHelp}\n`;
-      const preview = panel.querySelector("#brd-draft-preview");
-      panel.querySelector("#brd-draft-text").value = draft;
-      panel.querySelector("#preview-brd-draft").onclick = (event) => {
-        preview.hidden = !preview.hidden;
-        event.currentTarget.setAttribute("aria-expanded", String(!preview.hidden));
-        if (!preview.hidden) panel.querySelector("#brd-draft-text").focus();
-      };
-      panel.querySelector("#download-brd-draft").onclick = () => {
-        const draftText = panel.querySelector("#brd-draft-text").value;
-        if (!draftText.trim() || draftText.length > 50000) {
-          status("The proposed BRD must contain 1 to 50,000 characters before download.");
-          return;
-        }
-        try {
-          BrdPdf.download(
-            draftText,
-            `${(attachedFile?.name || "requirements").replace(/\.[^.]+$/, "")}-proposed-brd.pdf`,
-          );
-        } catch {
-          status("The PDF could not be created. Try a shorter BRD draft.");
-        }
-      };
-    }
+    renderBrdResult();
     if (report.status !== "aligned") {
       state.plan = null;
       sync();
     }
   }
+  function renderBrdResult() {
+    const report = savedRequirementsReport;
+    const summary = savedBaReport;
+    const panel = $("requirements-validation-report");
+    panel.hidden = false;
+    const resultState = summaryError ? "incomplete"
+      : report?.status === "aligned" && ["blocked", "needs_clarification"].includes(summary?.outcome)
+        ? "needs_clarification" : report?.status || "reviewed";
+    panel.dataset.status = resultState;
+    const findings = (report?.findings || []).filter((finding) => finding.status !== "aligned");
+    const list = (items) => (items || []).length
+      ? `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>` : "<p>Not specified in the BRD.</p>";
+    const domain = summary?.domain_validation;
+    panel.innerHTML = `<div class="brd-result-heading"><h3>Validation result &amp; summary</h3><span class="status-badge">${esc(resultState.replaceAll("_", " "))}</span><button type="button" class="secondary" id="download-brd-report">Download detailed report</button></div>
+      ${domainMetricsMarkup(summary)}
+      ${summary ? `<section class="brd-summary"><h4>BRD summary</h4><p>${esc(summary.summary)}</p><div class="brd-summary-grid"><div><h4>Business objectives</h4>${list(summary.objectives)}</div><div><h4>Scope</h4>${list(summary.scope)}</div></div></section>` : `<p class="brd-review-error">${esc(summaryError || "A BRD summary has not been generated for this source.")}</p>`}
+      <section class="brd-alignment"><h4>Approved-source validation</h4><p>${esc(report?.message || "Not run yet. Select Validate requirements to check approved-source alignment.")}</p>${findings.length ? `<ul>${findings.map((finding) => `<li><b>${esc(finding.requirement_id)} · ${esc(finding.status)}</b><p>${esc(finding.reason)}</p></li>`).join("")}</ul>` : ""}</section>
+      ${summary ? `<section class="brd-domain-review"><h4>Auto-finance domain review</h4><p>${esc(String(domain?.status || "not_reported").replaceAll("_", " "))} · ${esc(domain?.topics_reviewed ?? 0)} topics reviewed${domain ? ` · ${esc(domain.gaps)} gaps · ${esc(domain.conflicts)} conflicts` : ""}</p><dl class="brd-domain-scope"><div><dt>Product</dt><dd>${esc(summary.domain_scope?.product || "Not specified")}</dd></div><div><dt>Journeys</dt><dd>${esc(summary.domain_scope?.journeys?.join(", ") || "Not specified")}</dd></div></dl>
+      ${(summary.domain_checks || []).filter((check) => ["gap", "conflict"].includes(check.status)).map((check) => `<article class="brd-domain-finding"><strong>${esc(check.topic_id)} · ${esc(check.status)}</strong><p>${esc(check.reason)}</p>${(check.evidence || []).map((source) => `<blockquote>${esc(source.source_id)}: ${esc(source.quote)}</blockquote>`).join("")}</article>`).join("")}
+      <details><summary>Knowledge considered</summary><ul>${(summary.knowledge_sources || []).map((source) => `<li>${esc(source.title)} · ${esc(source.version)} · ${esc(String(source.authority).replaceAll("_", " "))}</li>`).join("")}</ul>${list(summary.knowledge_limitations?.length ? summary.knowledge_limitations : ["Domain references inform review; approved business sources govern alignment."])}</details></section>` : ""}`;
+    if (report && nextRequirementsStage) {
+      const destination = `/sdlc?phase=${encodeURIComponent(nextRequirementsStage.id)}`;
+      const footer = document.createElement("div");
+      footer.className = "brd-next-stage";
+      const button = document.createElement("button");
+      button.id = "requirements-next-stage";
+      button.className = "primary";
+      button.type = "button";
+      button.dataset.destination = destination;
+      button.textContent = `Next stage: ${nextRequirementsStage.label} →`;
+      button.disabled = state.busy || requirementsHandoffPending || (window.roleCanNavigate && !window.roleCanNavigate(destination));
+      const notice = document.createElement("p");
+      notice.id = "requirements-handoff-status";
+      notice.setAttribute("role", "status");
+      notice.setAttribute("aria-live", "polite");
+      notice.textContent = requirementsHandoffPending ? "Saving the reviewed BRD before opening the next stage…" : "";
+      button.onclick = async () => {
+        if (requirementsHandoffPending) return;
+        requirementsHandoffPending = true;
+        notice.textContent = "Saving the reviewed BRD before opening the next stage…";
+        sync();
+        try {
+          await window.persistReviewedRequirements();
+          window.navigateWorkspace(destination);
+          if (location.pathname + location.search !== destination)
+            throw new Error($("lifecycle-status")?.textContent || "Save or clear any open record draft before continuing.");
+        } catch (error) {
+          status(error.message);
+          const currentNotice = $("requirements-handoff-status");
+          if (currentNotice) currentNotice.textContent = error.message;
+        } finally { requirementsHandoffPending = false; sync(); }
+      };
+      footer.append(button, notice);
+      panel.append(footer);
+    }
+    $("download-brd-report").disabled = state.busy || !(summary || report);
+    $("download-brd-report").onclick = downloadBrdReport;
+  }
+  function updateRequirementsNextStage(phases) {
+    if (!Array.isArray(phases)) return;
+    const index = (phases || []).findIndex((phase) => phase.id === "requirements");
+    nextRequirementsStage = index >= 0 ? phases[index + 1] || null : null;
+    if (savedRequirementsReport) renderBrdResult();
+  }
+  window.addEventListener("sdlc-policy-loaded", (event) =>
+    updateRequirementsNextStage(event.detail?.phases));
+  window.addEventListener("sdlc-lifecycle-loaded", (event) =>
+    updateRequirementsNextStage(event.detail?.state?.phases));
+  function domainCoverage(summary) {
+    const domain = summary?.domain_validation;
+    const value = domain?.alignment_percent;
+    return domain?.evidence_verified === true && domain.alignment_assessable > 0 &&
+      typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100
+        ? value : null;
+  }
+  function domainMetricsMarkup(summary) {
+    const domain = summary?.domain_validation;
+    const score = domainCoverage(summary);
+    const coverage = score === null ? "Not assessable"
+      : `${domain.covered} of ${domain.alignment_assessable} topics fully covered`;
+    const reasons = score === null ? [] : (summary?.domain_checks || []).filter(check =>
+      ["gap", "conflict"].includes(check.status));
+    const sources = new Map((summary?.knowledge_sources || []).map(source => [source.id, source.title]));
+    const metric = (label, value) => `<div><dt>${esc(label)}</dt><dd>${esc(value ?? "Unavailable")}</dd></div>`;
+    return `<section class="brd-metrics" aria-label="BRD domain metrics"><div class="brd-confidence"><span>Domain topic coverage</span><strong id="brd-domain-coverage">${esc(coverage)}</strong>${score === null ? "<p>No verified, assessable domain evidence was returned.</p>" : `<meter min="0" max="100" value="${score}" aria-label="Fully covered domain topics">${score}%</meter><p>${esc(score)}% of assessable topics are fully covered. A topic with any unresolved gap receives no coverage credit, even when some requirements are addressed.</p>${score === 0 ? "<p>No assessed topic is fully covered yet. Review the gaps below; this does not mean the BRD has no relevant requirements or business value.</p>" : ""}`}</div>
+      <dl class="brd-metric-grid">${metric("Topics reviewed", domain?.topics_reviewed)}${metric("Covered", domain?.covered)}${metric("BRD gaps", domain?.brd_gaps)}${metric("Conflicts", domain?.conflicts)}${metric("Knowledge gaps", domain?.knowledge_gaps)}${metric("Outside scope", domain?.not_applicable)}</dl>
+      <p class="brd-score-basis">${esc(domain?.alignment_assessable ?? 0)} assessable topics · ${esc(domain?.alignment_unassessable ?? 0)} unassessable topics. Knowledge gaps and outside-scope topics are excluded from the score. A high score does not grant business approval.</p>
+      ${reasons.length ? `<div class="brd-coverage-reasons"><h4>What prevents full coverage?</h4><ul>${reasons.map(check => `<li><strong>${esc(sources.get(check.topic_id) || check.topic_id)} · ${check.gap_origin === "domain_knowledge" ? "Knowledge unavailable · excluded from coverage" : check.status === "conflict" ? "Conflict" : "BRD gap"}</strong><p>${esc(check.reason)}</p><p>Next step: ${esc(check.recommendation || "Review this topic with the BA.")}</p></li>`).join("")}</ul></div>` : ""}</section>`;
+  }
+  function downloadBrdReport() {
+    const summary = savedBaReport;
+    const alignment = savedRequirementsReport;
+    const preview = $("requirements-validation-report").cloneNode(true);
+    preview.querySelectorAll("button, .brd-sample-metrics, .brd-next-stage").forEach((element) => element.remove());
+    preview.querySelectorAll("details").forEach((element) => { element.open = true; });
+    const title = (value) => String(value || "Not supplied").replaceAll("_", " ");
+    const evidence = (items) => (items || []).map((item) => `<blockquote><strong>${esc(item.source_id)}</strong>: ${esc(item.quote)}</blockquote>`).join("");
+    const reviews = (items, heading) => `<section><h2>${esc(heading)}</h2>${(items || []).length ? items.map((item) => `<article><h3>${esc(item.title || item.topic_id || title(item.area))}</h3><p><strong>${esc(title(item.status || item.severity))}</strong></p><p>${esc(item.reason)}</p>${item.recommendation ? `<p><strong>Recommendation:</strong> ${esc(item.recommendation)}</p>` : ""}${item.document_quote ? `<blockquote>BRD: ${esc(item.document_quote)}</blockquote>` : ""}${evidence(item.evidence)}</article>`).join("") : "<p>No entries returned.</p>"}</section>`;
+    const data = {
+      business_analysis: summary, approved_source_validation: alignment,
+      review_error: summaryError || null,
+      reviewed_source: summarySourceKey ? JSON.parse(summarySourceKey) : null,
+    };
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>BRD validation and domain review report</title><style>
+      *{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#203247;font:15px/1.65 system-ui,sans-serif}main{max-width:1100px;margin:32px auto;padding:32px;background:white}h1{font-size:28px}h2{margin-top:32px}h3{font-size:18px}article{padding:16px 0;border-bottom:1px solid #dce4ed}p,li,dd{overflow-wrap:anywhere}blockquote{border-left:3px solid #087e83;padding-left:14px;margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f7;padding:16px}.brd-metric-grid,.brd-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}dd{margin:4px 0}dt{font-weight:600}.brd-confidence strong{display:block;font-size:32px}meter{width:100%}@media(max-width:600px){main{margin:0;padding:20px}}@media print{body{background:white}main{margin:0;padding:0}article{break-inside:avoid}}</style></head><body><main><h1>BRD validation and auto-finance domain review</h1><p>Assessment: ${esc(summary?.assessed_at || alignment?.assessed_at || "Timestamp not supplied")}</p>${preview.innerHTML}
+      ${reviews(summary?.areas, "All BRD review areas")}${reviews(summary?.findings, "All BA findings and recommendations")}${reviews(summary?.domain_checks, "All auto-finance domain checks")}
+      <h2>Complete assessment data and source traceability</h2><p>Includes scope, knowledge metadata, limitations, questions, next steps, approved-source findings, source versions and document fingerprints as returned by the review.</p><pre>${esc(JSON.stringify(data, null, 2))}</pre></main></body></html>`;
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "BRD-validation-and-domain-review.html";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  async function reviewBrdSource(source, current) {
+    const key = JSON.stringify(source);
+    if (summarySourceKey === key && savedBaReport) return;
+    summaryError = "";
+    savedBaReport = null;
+    try {
+      const report = await post("ba-review", source);
+      current();
+      if (!report.summary || !report.domain_validation) throw new Error("The BRD review did not return a summary and domain assessment.");
+      savedBaReport = report;
+      summarySourceKey = key;
+    } catch (error) {
+      current();
+      summaryError = `BRD summary and domain review unavailable: ${error.message}`;
+    }
+    renderBrdResult();
+  }
+  window.addEventListener("requirements-source-ready", () => {
+    status("Source ready. Select an LLM and click Validate requirements to generate the BRD summary and run validation.");
+  });
   window.addEventListener("requirements-validation", (event) => {
     renderRequirementsValidation(event.detail);
     if (event.detail.status === "blocked") {
-      window.navigateWorkspace("/?view=requirements", false);
-      $("requirements-validation-report").closest("details").open = true;
+      const showingRequirements =
+        (location.pathname === "/" && document.body.dataset.qualityView === "requirements") ||
+        (location.pathname === "/sdlc" && document.body.dataset.sdlcPhase === "requirements");
+      if (!showingRequirements) window.navigateWorkspace("/?view=requirements", false);
+      const disclosure = $("requirements-validation-report").closest("details");
+      if (disclosure) disclosure.open = true;
     }
   });
   function renderBaReport(report) {
@@ -519,8 +644,9 @@
       : report.outcome !== "ready_for_business_review" || majors || domain?.gaps || domain?.conflicts || report.areas.some(area => area.status === "gap") || report.open_questions.length
         ? "Needs refinement" : knowledgeIncomplete ? "Provisional fit — knowledge incomplete" : "Ready for business review";
     const alignmentHtml = `<section class="ba-alignment-summary" aria-label="BRD alignment and business fit">
-      <div class="ba-summary-grid"><article><span class="section-kicker">Domain alignment</span>
-      <h3>${domain?.alignment_percent == null ? "Not assessable" : `${esc(domain.alignment_percent)}%`}</h3>
+      <div class="ba-summary-grid"><article><span class="section-kicker">Domain topic coverage</span>
+      <h3>${domainCoverage(report) === null ? "Not assessable" : `${esc(domain.covered)} of ${esc(domain.alignment_assessable)} topics fully covered`}</h3>
+      ${domainCoverage(report) === null ? "" : `<p>${esc(domainCoverage(report))}% of assessable topics are fully covered.</p>`}
       <p>${esc(domain?.covered || 0)} covered / ${esc(domain?.alignment_assessable || 0)} assessable in-scope topics.</p>
       <p class="field-help">${esc(domain?.alignment_method || "Alignment score was not reported. Rerun BA review.")} Outside-scope topics are excluded. Missing knowledge is unassessable, rather than a BRD failure.</p>
       <p>${esc(domain?.alignment_unassessable || 0)} topics cannot be assessed because domain knowledge is missing.</p></article>
@@ -598,6 +724,8 @@
     work("Validating business alignment…", async (current) => {
       $("requirements-validation-report").hidden = true;
       const source = await readRequirementSource(current);
+      await reviewBrdSource(source, current);
+      validatedSourceKey = JSON.stringify(source);
       const report = await post("validate-requirements", {
         ...source,
         generation_target: selectedGenerationTarget(),
@@ -605,13 +733,14 @@
       current();
       renderRequirementsValidation(report);
       status(report.message);
-    });
+    }, "requirements-validation");
   $("generate-form").addEventListener(
     "submit",
     (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.startRequirementsDelivery?.();
+      if (document.activeElement === $("jira-source-key")) $("load-jira").click();
+      else $("validate-requirements").click();
     },
     true,
   );
@@ -1204,11 +1333,13 @@
   const draftControls = ["sdlc-constraints", "sdlc-target", "description", "business-rules", "finance-domain-product", "finance-domain-journey", "manual-testing-type", "llm-model", "generation-target"];
   function workspaceSnapshot() {
     const controls = Object.fromEntries(draftControls.filter(id => $(id)).map(id => [id, $(id).value]));
-    return { version: 1, controls, state: {...state, busy:false,
+    return { version: 1, controls, sourceAttachment: window.requirementAttachmentMetadata?.(),
+      attachmentSource: window.requirementAttachmentMetadata?.() ? attachmentSource : null, state: {...state, busy:false,
       acceptedStories:[...state.acceptedStories], jiraStories:[...state.jiraStories],
       dirtyStories:[...state.dirtyStories], acceptedScenarios:[...state.acceptedScenarios],
       dirtyScenarios:[...state.dirtyScenarios]}, suite, validationReport, reviewSourceRequest,
       executionSummary, stepDefinitionArtifact, savedBaReport, savedRequirementsReport, latestBrdText,
+      validatedSourceKey, summarySourceKey, summaryError,
       editorDrafts: [...document.querySelectorAll('[data-story-index] textarea, [data-scenario-index] textarea')].map(control => ({
         kind: control.closest('[data-story-index]') ? 'story' : 'scenario',
         index: control.closest('[data-story-index], [data-scenario-index]').dataset.storyIndex ?? control.closest('[data-scenario-index]').dataset.scenarioIndex,
@@ -1219,7 +1350,7 @@
   window.exportTestingWorkspace = workspaceSnapshot;
   window.testingWorkspaceBusy = () => state.busy || Boolean(activeGeneration);
   function saveWorkspaceDraft() {
-    if (!draftKey || restoringDraft) return;
+    if (!draftKey || restoringDraft || window.projectContextSwitching || window.workspaceSessionEnding) return;
     try { sessionStorage.setItem(draftKey, JSON.stringify(workspaceSnapshot())); }
     catch { /* Project persistence remains available if browser storage is full. */ }
   }
@@ -1239,6 +1370,8 @@
       $("ba-report").hidden = true;
       if (draft.suite) render(draft.suite);
       Object.assign(state, draft.state, {busy:false});
+      attachmentSource = draft.attachmentSource || (draft.sourceAttachment ? state.request : null);
+      window.restoreRequirementAttachment?.(draft.sourceAttachment, attachmentSource);
       for (const name of ["acceptedStories", "jiraStories", "acceptedScenarios"]) state[name] = new Map(draft.state[name]);
       for (const name of ["dirtyStories", "dirtyScenarios"]) state[name] = new Set(draft.state[name]);
       document.querySelectorAll("#cases .case-check").forEach((control, index) => {
@@ -1248,6 +1381,9 @@
       reviewSourceRequest = draft.reviewSourceRequest;
       executionSummary = draft.executionSummary;
       latestBrdText = draft.latestBrdText;
+      validatedSourceKey = draft.validatedSourceKey || null;
+      summarySourceKey = draft.summarySourceKey || null;
+      summaryError = draft.summaryError || "";
       if (state.stories) renderStories();
       if (state.scenarios) renderScenarios();
       for (const edit of draft.editorDrafts || []) {
@@ -1257,6 +1393,7 @@
       }
       if (draft.savedBaReport) renderBaReport(draft.savedBaReport);
       if (draft.savedRequirementsReport) renderRequirementsValidation(draft.savedRequirementsReport);
+      if (draft.savedBaReport || draft.savedRequirementsReport) renderBrdResult();
       if (draft.stepDefinitionArtifact) renderStepDefinitions(draft.stepDefinitionArtifact);
       if (state.plan) renderPlan();
       if (suite) manualMarkup();

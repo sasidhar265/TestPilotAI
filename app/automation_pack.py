@@ -36,6 +36,8 @@ def csharp_assets(suite: TestSuite, notes: list[str]) -> dict[str, str]:
         "README.md": (
             "# Automation Framework\n\n"
             "Requires .NET 8+. Review generated code and configure the target environment.\n"
+            "Generation uses Tree-sitter binding checks and Roslyn C# syntax diagnostics. "
+            "These do not replace dependency resolution, compilation or ReqnRoll execution.\n"
             "Run `dotnet test Automation.csproj --results-directory TestResults/Reports`.\n"
             "The project automatically loads Features, StepDefinitions and Hooks and copies "
             "Input/TestData.Json to the output directory. Reqnroll owns scenario-scoped "

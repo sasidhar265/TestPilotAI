@@ -25,6 +25,7 @@ from app.automation_pack import csharp_assets
 from app.config import Settings
 from app.models import ExecutionMode, LlmModel, TestSuite
 from app.quotation_contract import quotation_feature, quotation_sources
+from app.roslyn_syntax import csharp_syntax_findings
 
 logger = logging.getLogger(__name__)
 _GHERKIN_STEP = re.compile(r"^\s*(Given|When|Then|And|But)\s+(.+?)\s*$")
@@ -163,6 +164,14 @@ class ReqnRollStepDefinitionAgent:
             if path not in existing
         )
         validate_layout(artifact.files)
+        findings = csharp_syntax_findings(artifact.files)
+        if findings:
+            raise IncompleteImplementationError(findings, artifact.notes, len(artifact.coverage))
+        artifact.notes.insert(
+            0,
+            "C# source checked with Tree-sitter and Roslyn syntax diagnostics. "
+            "Project compilation and ReqnRoll execution must still run in the target environment.",
+        )
         return artifact
 
     async def _generate_sources(self, request: StepDefinitionRequest) -> StepDefinitionArtifact:

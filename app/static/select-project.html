@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#f1f5f8">
+    <meta name="description" content="Choose an authorised project to open your delivery workspace.">
+    <title>Choose your project — Auto Finance Quality</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/styles/login.css">
+    <link rel="stylesheet" href="/static/styles/theme.css">
+    <link rel="stylesheet" href="/static/styles/controls.css">
+    <link rel="stylesheet" href="/static/styles/login-modern.css">
+    <link rel="stylesheet" href="/static/styles/typography.css">
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261020-safe-action-wrap">
+    <link rel="stylesheet" href="/static/styles/copyright.css">
+    <link rel="stylesheet" href="/static/styles/project-selection.css?v=20261019-project-dialog">
+  </head>
+  <body class="project-selection-page">
+    <div class="selection-shell">
+      <header class="selection-header">
+        <a class="brand" href="/select-project" aria-label="Auto Finance Quality home">
+          <span class="brand-mark" aria-hidden="true">Q</span>
+          <span><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span>
+        </a>
+      </header>
+      <main id="selection-main" tabindex="-1">
+        <section class="selection-welcome"><h2>Your delivery workspace</h2><p>Choose a project to continue with requirements, reviews, tests and release evidence.</p></section>
+        <noscript>Enable JavaScript to select your project and open the workspace.</noscript>
+      </main>
+      <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
+    </div>
+    <dialog id="project-picker" class="project-picker" aria-modal="true" aria-labelledby="selection-title" aria-describedby="selection-intro">
+      <div class="project-picker-heading"><p class="eyebrow">Your workspace</p><button id="project-cancel" class="secondary" type="button" hidden>Cancel</button></div>
+      <h1 id="selection-title" tabindex="-1">Choose your project</h1>
+      <p id="selection-intro" class="selection-intro">Loading your account and available projects…</p>
+      <p id="selection-status" role="status" aria-live="polite"></p>
+      <button id="selection-retry" type="button" class="secondary" hidden>Retry loading projects</button>
+      <form id="project-selection" hidden>
+        <label for="project-choice">Project</label>
+        <select id="project-choice" aria-describedby="project-choice-help" required><option value="">Choose a project</option></select>
+        <small id="project-choice-help">Only projects available to your account appear here.</small>
+        <button id="project-continue" class="primary" type="submit" disabled>Open workspace <span aria-hidden="true">→</span></button>
+      </form>
+      <section id="project-empty" hidden><h2>No projects available</h2><p id="project-empty-help">Ask your administrator or project owner to add you to a project.</p></section>
+      <details id="project-create-panel" hidden>
+        <summary>Create a project</summary>
+        <form id="project-create">
+          <label for="project-name">Project name</label>
+          <input id="project-name" required maxlength="160" autocomplete="off" placeholder="Enter a project name">
+          <button id="project-create-button" class="primary" type="submit">Create and open workspace</button>
+        </form>
+      </details>
+      <footer class="project-picker-actions">
+        <div class="theme-settings selection-appearance" data-picker-standalone>
+          <button id="theme-gear" class="secondary" type="button" aria-expanded="false" aria-controls="theme-menu">Appearance</button>
+          <div class="theme-menu" id="theme-menu" hidden>
+            <strong>Appearance</strong><p>Choose how your workspace looks.</p>
+            <div class="theme-options"><button type="button" data-theme-option="light">Light</button><button type="button" data-theme-option="dark">Dark</button><button type="button" data-theme-option="system">System</button></div>
+          </div>
+        </div>
+        <button id="project-signout" type="button" class="secondary">Sign out</button>
+      </footer>
+    </dialog>
+    <script src="/static/scripts/theme.js" defer></script>
+    <script src="/static/scripts/project-selection.js?v=20261020-session-cleanup" defer></script>
+  </body>
+</html>

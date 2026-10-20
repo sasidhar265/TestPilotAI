@@ -261,13 +261,36 @@ public sealed class LifecycleGovernanceService : IDisposable
         await Reject();
         AssertStatus(201);
         await Refresh();
-        Assert.That(state["phase"]!.GetValue<string>(), Is.EqualTo("requirements"));
+        Assert.That(state["phase"]!.GetValue<string>(), Is.EqualTo("business-approval"));
         Assert.That(state["stage"]!.GetValue<string>(), Is.EqualTo("clarification"));
     }
     public async Task Cleanup()
     {
         if (username.Length > 0)
             await Send(admin, new(HttpMethod.Delete, $"/api/admin/users/{username}"));
+    }
+    public async Task AssertApprovalContext()
+    {
+        await Send(admin, LifecycleRequestBuilder.BrowserDraft(project));
+        Assert.That(status, Is.EqualTo(201));
+        await Refresh();
+        var context = state["approval_context"]!.AsObject();
+        Assert.That(context["source"]!["version"]!.GetValue<int>(), Is.EqualTo(1));
+        Assert.That(context["source"]!["content"]!["document"]!.GetValue<string>(),
+            Is.EqualTo(LifecycleRequestBuilder.Fixture("SDLC.Json", "planning")["content"]!["document"]!.GetValue<string>()));
+        Assert.That(context["assessments"]!.AsObject().Count, Is.Zero);
+        Assert.That(context["drafts_are_approval_evidence"]!.GetValue<bool>(), Is.False);
+        await CompleteThrough("backlog_generation");
+        var decision = state["approval_context"]!["decisions"]!.AsArray().Single()!;
+        Assert.That(decision["human"]!.GetValue<bool>(), Is.True);
+        Assert.That(decision["actor"]!.GetValue<string>(), Is.EqualTo(RoleAccessFixtureUtility.AdminUser));
+        Assert.That(decision["baseline"]!.GetValue<int>(), Is.EqualTo(1));
+        await ChangeSource();
+        AssertStatus(201);
+        await Refresh();
+        Assert.That(state["approval_context"]!["source"]!["version"]!.GetValue<int>(), Is.EqualTo(2));
+        Assert.That(state["approval_context"]!["decisions"]![0]!["baseline"]!.GetValue<int>(), Is.EqualTo(1));
+        await AssertQueue();
     }
     public void Dispose()
     {

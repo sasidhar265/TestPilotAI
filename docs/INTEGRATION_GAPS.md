@@ -1,68 +1,27 @@
-# Actual versus expected audit
+# Integration gaps and implementation matrix
 
-Inspected 2026-10-16. Existing uncommitted SDLC implementation is preserved.
+Audit baseline: existing FastAPI/Pydantic Python application, SQLite persistence, vanilla HTML/CSS/JavaScript SPA shell, native mobile clients, ReqnRoll C# automation and GitHub Actions. Existing working integrations and stores are retained.
 
-| Area / actual                                                                     | Expected / correction                                                                   | Modules                                           | Priority / dependency          |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------ |
-| FastAPI, vanilla JS shared shell, SQLite stores; seven agent stages               | Keep stack; add authoritative human lifecycle separate from agent run status            | services/sdlc*, sdlc_routes, static/scripts/sdlc* | P0                             |
-| Immutable project revisions and reviews, optimistic writes                        | Atomic guarded transitions, current-baseline approvals, rejection and audit             | services/sdlc, lifecycle workflow                 | P0                             |
-| Owner-private projects                                                            | Explicit project membership plus existing account roles                                 | users, roles, role_access, sdlc_routes            | P0                             |
-| BA + four testing roles + admin                                                   | Add stakeholder, PO, developer, release manager without changing existing role meanings | users, roles, users UI                            | P0                             |
-| Server-configured build, preview, staging, production commands and receipts       | Human release gates checked when commands execute; no configuration-only approval       | sdlc_delivery, sdlc_tools                         | P0                             |
-| /sdlc stage ledger and agent board; /project-dashboard uses separate STLC records | Shared lifecycle state and role queue visible in existing screens                       | index, sdlc UI, dashboard                         | P1 / workflow                  |
-| / requirements upload, BA validation, stories, scenarios, test generation         | Versioned human handoffs across requirements, backlog, sprint, QA, release              | workflow.js, sdlc routes, workflow UI             | P1 / workflow                  |
-| STLC requirement/test/defect store and SDLC revisions are independent             | Explicit versioned links and change-impact flags; eventual durable record-ID bridge     | services/stlc, sdlc                               | P1                             |
-| /documentation is reference material; saved artifacts in ledger /knowledge        | Project documentation and source links accessible throughout lifecycle                  | sdlc ledger, documentation                        | P1                             |
-| Copilot/Codex provider policy already enforced by model_policy                    | Preserve gpt-6-astra / claude-haiku-4.5 on retries and repairs                          | model_policy, agent runners                       | Existing; regression           |
-| No general remote PR/build synchronisation                                        | Show supplied evidence as human attestation; never pretend provider verification        | Jira, sdlc_tools, release UI                      | P2 / credentials and contracts |
-| Existing repository ReqnRoll pack, Python and opt-in Playwright checks            | Execute changed pack against isolated server; record actual counts                      | automation, tests                                 | P0 / implementation            |
+| Area | Existing | Expected / actual gap | Correction | Modules | Priority / dependency |
+| --- | --- | --- | --- | --- | --- |
+| Workflow engine | 25 backend stages, eight navigation phases, role/evidence gates and rework | Generic entry/exit copy; UI navigation is sometimes mistaken for advancement | Keep lifecycle policy authoritative; display actual stage, owner, criteria and decision eligibility | lifecycle_workflow.py, project_lifecycle.py, project-lifecycle.js | P0 |
+| Requirements handoff | Upload/Jira, selected LLM, domain review, alignment and report export | Results remain browser drafts; project/source controls hidden; next-stage navigation does not persist baseline | Restore compact project context; save exact reviewed source before handoff; expose only matching server-produced review data | workflow_routes.py, sdlc.js, workflow.js, requirements_reviews.py | P0 |
+| Business approval | Versioned lifecycle decisions and record discussions | Approval screen does not show a coherent source, BA/domain/alignment assessment, prerequisites or attributable decision history | Add version-bound approval context from server; render review workspace using existing decision endpoints | project_lifecycle.py, project-lifecycle.js, workspace-ui.css | P0; requirements persistence |
+| Approvals / security | Human-session requirement, backend roles, optimistic revisions, current-baseline evidence | Broad artifact-review route and requirement membership must be checked alongside lifecycle gate; browser drafts are not authoritative reports | Preserve human gate; identify report origin and stale review; verify member isolation and version rejection | role_access.py, sdlc_routes.py, services | P0 |
+| Dashboard / queues | Project lifecycle queue plus separate legacy STLC dashboard | Similar metrics describe different stores and can imply a shared approval state | Use lifecycle queue for authoritative project status; label legacy test-design summaries; refresh queues after decisions | project-lifecycle.js, project-dashboard.js | P1 |
+| Backlog / development | Epics/stories, priorities, estimates, assignment, dependency rules, version history | Generic workbench; requires actual project records and configured repository/CI | Reuse record workbench and policy gates; expose real records and capability failures | project_work_items.py, project_reviews.py, sdlc_tools.py | P1 |
+| QA / defects | Test design, generated packs, real configured BDD runner, linked defects and retest rules | Target execution unavailable without configured environment; repository smoke is not generated-suite evidence | Preserve runner/gates; run affected repository BDD and document external target dependencies | automation/, services/stlc.py, agents | P1 |
+| Release / operations | Human QA/release/production gates, revision-bound build/test/deploy checks | Real PR/build/deployment info requires repository commands and hooks | Preserve fail-closed tools and approval gates; never simulate configured-service results | sdlc_delivery.py, sdlc_tools.py | P1; external configuration |
+| Documents | Dedicated version-history navbar view; immutable artifacts and review history | Generic documents do not necessarily have links to all requirements | Keep documentation across phases and show captured version links | sdlc.js, project_work_items.py | P1 |
+| Agents | Existing lifecycle/test/domain agents and fixed provider model policy | Agent results must be distinguished from human approval and retained across sessions | Reuse server review agents; persist report provenance; keep model restrictions | agents/, model_policy.py, requirements_reviews.py | P0/P1 |
+| Navigation / mobile | Policy-derived stage links, documents view, responsive drawer | Duplicate specialist views and generic headings; missing contextual approval content | Improve existing pages and preserve compatibility routes | navigation.js, sdlc-sequence.js, workspace-pages.js | P1 |
 
-External execution requires configured provider access, repository, build/preview commands,
-target environment and deployment receipts. Local checks cannot establish a real production release.
+## External dependencies
 
-## Implemented corrections
+No production deployment is authorised by this task. Live LLM outputs require the selected provider account and mandatory model access. Jira requires its configured credentials/project. Actual PR/build/BDD/deployment evidence requires the existing configured repository, commands, target environment and hooks. Missing integrations must remain explicitly unavailable. No environment files or secrets will be changed.
 
-P0 workflow, current-baseline human decisions, cross-role project membership, new account
-roles, server-side role checks and command-boundary release controls are implemented.
-P1 shared lifecycle queue, timeline, persisted linked records and source-change impact
-indicators are implemented in existing screens. API and browser evidence is recorded in
-IMPLEMENTATION_PROGRESS.md.
+The code inventory covers frontend routes and shared shell, workflow and SDLC APIs, SQLite stores, role middleware, agent runners, deployment tools, native client entry points, automation packs and CI workflows. Existing lifecycle/role/traceability tests already exercise A–F with explicitly synthetic evidence; these tests do not establish external deployment success.
 
-## Remaining boundaries
+## Retained boundaries
 
-- Agent artifacts and STLC records retain their existing IDs and version histories. Human
-  users can link their references to project work items. Automatic conversion/reconciliation
-  across these stores is not implemented; importing or overwriting user records by heuristic
-  name matching would be unsafe.
-- PR/build/pipeline references entered in project records are human attestations. They are
-  not a newly installed remote Git integration. Existing configured command evidence remains
-  separately visible; live remote synchronisation requires a chosen provider and credentials.
-- Project documentation is versioned and traceable in the project workspace; the existing
-  /documentation page remains a reference centre. Automatic publication is not performed.
-- Live AI generation, generated-suite execution against its target application, real UAT,
-  staging and production verification require configured providers/environments and human
-  approvals. Unit fixtures and local BDD attestations do not establish those outcomes.
-- Whole-repository mypy has existing errors outside the changed workflow modules. Scoped
-  type checking covers all ten changed backend modules successfully.
-
-
-### UI entry correction (2026-10-16)
-
-Requirements entry now sits within SDLC Step 1; bare signed-in home opens the
-workflow. Project selection remains visible across steps, and specialist tools are
-secondary navigation. This resolves the split entry experience without replacing
-existing editors, APIs, stored records or human approval gates. External integration
-and generated-artifact conversion gaps above remain open.
-
-### Inline product workbench increment
-
-Completed: inline record editing, version-bound review threads, contextual review of
-existing agent tasks, explicit suggestion-to-draft save, linked-defect creation, record
-history/traceability, approval inbox filtering and real project-record dashboard counts.
-
-Still open: structured extraction of every BRD finding into individual requirement
-records; provider-backed conversational assistance/token streaming in every role panel;
-remote PR/build/deployment synchronization beyond configured local tools and supplied
-references; automatic conversion of every agent output into governed backlog/test records.
-These are not represented as completed integrations. Existing agent run/retry controls
-and target-environment execution remain available under their original configuration gates.
+Automatic reconciliation between legacy SDLC and STLC record identifiers remains incomplete; explicit traceability links are supported. Remote PR/build synchronisation requires provider configuration. Documentation publication remains a human-reviewed action. Live AI, configured generated-suite execution, UAT and deployment success require their real accounts, target environments and human decisions; local regression fixtures do not establish those outcomes.

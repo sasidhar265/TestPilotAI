@@ -7,6 +7,7 @@ import re
 from typing import TYPE_CHECKING
 
 from app.automation_style import step_style_findings
+from app.roslyn_syntax import csharp_syntax_findings
 
 if TYPE_CHECKING:
     from app.agents.reqnroll_step_definition_agent import StepDefinitionArtifact
@@ -58,7 +59,7 @@ def implementation_findings(
     *,
     detailed_diagnostics: bool = True,
 ) -> list[str]:
-    findings: list[str] = []
+    findings: list[str] = csharp_syntax_findings(artifact.files)
     methods: dict[str, set[str]] = {}
     paths: set[str] = set()
     for file in artifact.files:

@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from app.agents.business_analyst import AREAS, BAAssessment, BADomainCheck, BusinessAnalystAgent
 from app.agents.requirements_validation import Evidence
+from app.business_delivery import BusinessDeliverable
 from app.config import Settings
 from app.domain_knowledge import guide_knowledge_sources
 from app.models import GenerateRequest
@@ -112,6 +113,30 @@ def test_verified_business_knowledge_can_support_owner_review(tmp_path):
     )
     assert report.outcome == "ready_for_business_review"
     assert any(s["id"] == "POLICY" for s in report.knowledge_sources)
+
+
+@pytest.mark.parametrize("verified", [True, False])
+def test_business_deliverables_require_actual_brd_evidence(tmp_path, verified):
+    reviewer = agent(tmp_path, approved=True)
+    value = assessment()
+    value.business_deliverables = [
+        BusinessDeliverable(
+            expectation="Validate quotation deposits",
+            deliverable="Deposit validation rules",
+            business_benefit="Clearer quotation handling",
+            delivery_impact="Resolve deposit rules before implementation",
+            benefit_basis="inferred_requires_confirmation",
+            document_quote=DOCUMENT if verified else "This quotation does not exist in the BRD.",
+        )
+    ]
+    reviewer.runner.generate_structured = AsyncMock(return_value=value)
+    if not verified:
+        with pytest.raises(ValueError, match="business deliverable BRD quotation"):
+            asyncio.run(reviewer.review(GenerateRequest(description=DOCUMENT)))
+        return
+    report = asyncio.run(reviewer.review(GenerateRequest(description=DOCUMENT)))
+    assert report.business_deliverables[0].success_measure is None
+    assert report.business_deliverables[0].benefit_basis == "inferred_requires_confirmation"
 
 
 @pytest.mark.parametrize("kind", ["document_quote", "evidence", "coverage"])

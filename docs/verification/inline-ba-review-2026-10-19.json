@@ -1,0 +1,233 @@
+{
+  "recorded_at": "2026-10-19T21:00:11.501456+00:00",
+  "scope": "First complete inline BA review workflow and source-grounded analysis contract",
+  "python": {
+    "passed": 143,
+    "command": ".venv/bin/pytest -q tests/test_inline_ba_review.py tests/test_business_analyst.py tests/test_requirements_review_context.py tests/test_project_lifecycle.py tests/test_model_policy.py tests/test_agent_instructions.py",
+    "log": "/tmp/ba-review-unit.log"
+  },
+  "browser_regression": {
+    "passed": 13,
+    "log": "/tmp/ba-review-regression.log"
+  },
+  "live_authenticated_browser": {
+    "status": "passed",
+    "covers": [
+      "Saved baseline review",
+      "Source navigation",
+      "Persisted rejection and reload",
+      "Review-status filter",
+      "Human BA sign-off and reload",
+      "Three columns at 1440px",
+      "No overflow at 1440/768/390px"
+    ],
+    "screenshots": [
+      "/tmp/ba-inline-review-1440.png",
+      "/tmp/ba-inline-review-768.png",
+      "/tmp/ba-inline-review-390.png"
+    ]
+  },
+  "reqnroll": {
+    "counters": {
+      "total": "38",
+      "executed": "38",
+      "passed": "38",
+      "failed": "0",
+      "error": "0",
+      "timeout": "0",
+      "aborted": "0",
+      "inconclusive": "0",
+      "passedButRunAborted": "0",
+      "notRunnable": "0",
+      "notExecuted": "0",
+      "disconnected": "0",
+      "warning": "0",
+      "completed": "0",
+      "inProgress": "0",
+      "pending": "0"
+    },
+    "results": [
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"api-validation\",\"INCOMPLETE_BUSINESS_RULE\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ProjectMembershipDoesNotGrantADeveloperBATransitionAuthority",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectAnInvalidBAReviewSource(\"short-description\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"regulated-status\",\"COMPLIANCE_REVIEW_REQUIRED\",\"5\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"pch-maintenance\",\"CALCULATION_GAP\",\"3\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "CancellationLeavesAPersistentCancelledRunWithoutApproval",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"revised-brd\",\"AMBIGUITY\",\"7\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineHumanActionsPersistWithAttributedBeforeAndAfterEvidence(\"resolve\",\"RESOLVED\",\"18\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "HumanSignoffIsVersion_BoundAndStaleDecisionsCannotOverwriteIt",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"unknown-product\",\"UNSUPPORTED_ASSUMPTION\",\"9\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RequirementRevisionsRetainStoryAndTestTraceabilityAndFlagChangeImpacts",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ReadyStoriesRequireTheAccountableUpstreamRefinementHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectAnInvalidBAReviewSource(\"missing-description\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineHumanActionsPersistWithAttributedBeforeAndAfterEvidence(\"comment\",\"PENDING\",\"17\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineRequirementReviewRetainsDiscussionAndExactApprovedVersions",
+        "outcome": "Passed"
+      },
+      {
+        "name": "RejectAnInvalidBAReviewSource(\"forged-upload\",\"2\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"pcp-gmfv\",\"CALCULATION_GAP\",\"0\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"rejected-proposal\",\"AMBIGUITY\",\"6\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ExtendTheAgentCatalogueWithoutRemovingTestingAgentsOrModelPolicy",
+        "outcome": "Passed"
+      },
+      {
+        "name": "CompleteEveryHumanLifecycleHandoffAndRetainAttributableApprovals",
+        "outcome": "Passed"
+      },
+      {
+        "name": "StakeholderRejectionReturnsWorkToClarificationAndBlocksAdvancement",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineHumanActionsPersistWithAttributedBeforeAndAfterEvidence(\"edit\",\"EDITED_DRAFT\",\"15\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ChangingAnApprovedBaselineFlagsPreviousEvidenceAndResetsApprovalWork",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineHumanActionsPersistWithAttributedBeforeAndAfterEvidence(\"clarify\",\"CLARIFICATION_REQUESTED\",\"16\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "BusinessApprovalContextRetainsTheBRDVersionAndRejectsBrowserDraftProvenance",
+        "outcome": "Passed"
+      },
+      {
+        "name": "DefectsReturnToDevelopmentAndRequireASeparateQARetest",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InvitedDevelopersCanDiscussRequirementsButCannotAcceptBASuggestions",
+        "outcome": "Passed"
+      },
+      {
+        "name": "OrderedSDLCStepsComeFromAuthoritativeWorkflowAndFollowRejectionHandoffs",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"prompt-injection\",\"UNSUPPORTED_ASSUMPTION\",\"8\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InlineHumanActionsPersistWithAttributedBeforeAndAfterEvidence(\"accept\",\"ACCEPTED_DRAFT\",\"14\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"duplicate\",\"DUPLICATE\",\"4\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "EvidenceIsMandatoryAndConcurrentDecisionsCannotOverwriteProgress",
+        "outcome": "Passed"
+      },
+      {
+        "name": "ReviewActionsRequireAHumanBARoleAndProjectMembership",
+        "outcome": "Passed"
+      },
+      {
+        "name": "AutomotiveFinanceFindingsRetainExactSourceEvidenceAndTypedOutcomes(\"term-conflict\",\"CONFLICT\",\"1\",null)",
+        "outcome": "Passed"
+      },
+      {
+        "name": "StaleReviewCommentsCannotOverwriteNewerRequirementContext",
+        "outcome": "Passed"
+      },
+      {
+        "name": "CriticalCalculationGapsCannotBeBypassedByMarkingAFindingResolved",
+        "outcome": "Passed"
+      },
+      {
+        "name": "BARejectionPersistsAndIsNotAutomaticallyReappliedByReanalysis",
+        "outcome": "Passed"
+      },
+      {
+        "name": "InventedAgentSuggestionsCannotBeRecordedAsReviewedOutput",
+        "outcome": "Passed"
+      }
+    ],
+    "trx": "/tmp/ba-review-bdd-results/inline-ba-review.trx",
+    "environment": "Temporary real authenticated app/SQLite; only provider analysis replaced with explicitly synthetic acceptance output",
+    "runner": "tests/support/run_ba_review_acceptance.py"
+  },
+  "live_provider": {
+    "status": "LIVE_PROVIDER_PASSED",
+    "provider": "codex",
+    "model": "gpt-6-astra",
+    "readiness": "BLOCKED",
+    "finding_types": [
+      "CALCULATION_GAP",
+      "DATA_GAP",
+      "INCOMPLETE_BUSINESS_RULE",
+      "AMBIGUITY",
+      "INTEGRATION_DEPENDENCY",
+      "NON_FUNCTIONAL_GAP",
+      "COMPLIANCE_REVIEW_REQUIRED"
+    ]
+  },
+  "earlier_live_attempts": [
+    "120-second provider timeout; no completed output accepted",
+    "Longer attempt returned invalid evidence anchors; rejected after bounded repair. Prompt then clarified the BRD source ID contract."
+  ],
+  "limits": [
+    "One synthetic live-provider BRD does not prove exhaustive analytical quality",
+    "Original PDF/Word page metadata unavailable; extracted-text line references used",
+    "Background job state is durable but provider calls do not resume after process restart",
+    "No independent executable financial formula verification added",
+    "No production deployment or business/regulatory approval claimed"
+  ]
+}

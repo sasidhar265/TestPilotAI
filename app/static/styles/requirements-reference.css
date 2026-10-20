@@ -1,0 +1,114 @@
+/* Main-branch Requirements presentation, reusing current workflow controls. */
+.requirements-reference-intro { display: none; }
+body[data-workspace-path="/sdlc"][data-sdlc-phase="requirements"] .requirements-reference-intro,
+body[data-workspace-path="/"][data-quality-view="requirements"] .requirements-reference-intro {
+  display: grid;
+  gap: 22px;
+  margin-bottom: 24px;
+}
+:root body .requirements-reference-intro .finance-hero {
+  display: grid !important;
+  margin: 0;
+  border-radius: 24px;
+  padding: 36px 40px;
+  min-height: 300px;
+}
+:root body .requirements-reference-intro .finance-hero h2 {
+  color: #f5fcff;
+  font-size: var(--text-section);
+  line-height: 1.35;
+  margin-block: 22px 16px;
+}
+:root body .requirements-reference-intro .workspace-context-bar {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.1fr) minmax(0, 3fr);
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.requirements-reference-intro .workspace-context-intro { min-width: 0; }
+.requirements-reference-intro .workspace-context-intro h2 { margin-block: 10px 4px; }
+.requirements-reference-intro .workspace-context-intro p { margin: 0; color: var(--muted); }
+.requirements-reference-intro .context-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.requirements-reference-intro .context-list > div {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 12px;
+}
+.requirements-reference-intro .context-list dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+body[data-sdlc-phase="requirements"][data-sdlc-view="workflow"] main .sdlc-workspace {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+body[data-sdlc-phase="requirements"] #sdlc-step-panel > :is(.sdlc-heading-with-info, #sdlc-step-description, #sdlc-responsibilities, .delivery-documentation) {
+  display: none;
+}
+:root body #sdlc-requirements-editor #test-studio {
+  margin: 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--primary);
+  border-radius: 20px;
+  background: var(--surface);
+}
+:root body #sdlc-requirements-editor .composer > .panel-head {
+  display: flex;
+  align-items: start;
+  margin-bottom: 26px;
+}
+#sdlc-requirements-editor .panel-head h2 { margin-block: 8px; }
+#sdlc-requirements-editor .panel-head p { margin: 0; max-width: 65ch; color: var(--muted); }
+:root body #sdlc-requirements-editor #description {
+  min-height: 200px;
+  border-radius: 10px !important;
+  background: var(--surface-soft);
+}
+:root body #sdlc-requirements-editor #add-requirement-source {
+  inset: auto 12px 12px auto;
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 23px;
+}
+#sdlc-requirements-editor #character-count { right: 68px; bottom: 24px; }
+#sdlc-requirements-editor #source-state { left: 18px; max-width: calc(100% - 170px); }
+#sdlc-requirements-editor #requirement-source-menu { inset: auto 12px 66px auto; }
+#sdlc-requirements-editor .requirements-actions {
+  margin-top: 22px;
+  border: 0;
+  padding: 0;
+  grid-template-columns: minmax(160px, 1fr) auto;
+}
+#sdlc-requirements-editor .requirements-model-feedback { margin-top: 12px; }
+#sdlc-requirements-editor #requirements-validation-report { margin-block: 22px 0; }
+@media (max-width: 900px) {
+  :root body .requirements-reference-intro .workspace-context-bar { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  :root body .requirements-reference-intro .finance-hero { padding: 26px 22px; min-height: 0; }
+  :root body #sdlc-requirements-editor #test-studio { padding: 20px 16px; border-radius: 16px; }
+  :root body #sdlc-requirements-editor .composer > .panel-head { flex-wrap: wrap; }
+  .requirements-reference-intro .context-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #sdlc-requirements-editor .requirements-actions { grid-template-columns: minmax(0, 1fr); }
+  #sdlc-requirements-editor #source-state { bottom: 68px; max-width: calc(100% - 36px); }
+}
+.requirements-agent-activity { display: none; }
+body[data-sdlc-phase="requirements"] .requirements-agent-activity {
+  display: block;
+}
+body[data-sdlc-phase="requirements"] .workflow-pipeline-summary > :not(.requirements-agent-activity) {
+  display: none;
+}
+:root body .requirements-agent-activity .agent-route-card {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}

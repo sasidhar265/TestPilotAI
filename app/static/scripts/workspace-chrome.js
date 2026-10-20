@@ -26,7 +26,13 @@
     heading.after(intro);
   }
   const descriptions = {
-    "/": "Start with a project and its requirements. Save a version, review the analysis, then follow the delivery workflow.",
+    "/sdlc?view=pipeline":
+      "Review delivery agents, run activity and recorded evidence. Human approval stays in the stage workspace.",
+    "/sdlc?view=documents":
+      "Browse documents, saved versions and review history for your selected workspace.",
+    "/?view=requirements":
+      "Upload a document or read a Jira ticket, select an LLM, and validate your requirements.",
+    "/": "Add requirements, save a version, review the analysis, then follow the delivery workflow.",
     "/?view=stories":
       "Turn reviewed requirements into stories with clear acceptance criteria before creating tests.",
     "/?view=scenarios":
@@ -36,7 +42,7 @@
     "/?view=automation": "Inspect and download automation files for your approved test cases.",
     "/?view=execution": "Run approved tests and inspect recorded execution results and failures.",
     "/sdlc":
-      "Choose a project, add your requirements, and follow the next action shown below.",
+      "Navigate the SDLC stages from the sidebar to review and complete your work.",
     "/project-dashboard":
       "See current project stages, pending decisions, and the work that needs your attention.",
     "/progress": "Review recorded test runs, failures, and execution reports.",
@@ -65,6 +71,8 @@
     if (!suppliedIntro) {
       const view = new URLSearchParams(location.search).get("view");
       intro.textContent =
+        (location.pathname === "/sdlc" && document.body.dataset.sdlcPhase === "requirements"
+          ? descriptions["/?view=requirements"] : null) ||
         descriptions[`${location.pathname}?view=${view}`] ||
         descriptions[location.pathname] ||
         "Review the information below and choose the action for your role.";

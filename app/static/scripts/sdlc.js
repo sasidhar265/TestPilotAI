@@ -1,7 +1,13 @@
 /* Persistent SDLC records share the existing quality workspace without changing its gates. */
 (() => {
+  document.documentElement.dataset.projectContext = "pending";
   const byId = (id) => document.getElementById(id);
   const stages = {
+    "requirements-input": [
+      "Saved BRD",
+      "Read or download the exact saved BRD baseline. BA business reports and metrics are available under BA review & approval → Business documents.",
+      "",
+    ],
     planning: [
       "Planning",
       "Inspect the agent-produced outcomes, scope, milestones, dependencies and risks.",
@@ -49,43 +55,146 @@
     workflowReady = false,
     autosaveBlocked = false;
   const emptyWorkspace = structuredClone(window.exportTestingWorkspace());
+  const emptyDocument = document.createElement("p");
+  emptyDocument.id = "sdlc-document-empty";
+  emptyDocument.setAttribute("role", "status");
+  byId("sdlc-document").after(emptyDocument);
+  const artifactText = item => item.content.document || item.content.source_request?.description ||
+    JSON.stringify(item.content, null, 2);
   const projectLink = document.createElement("a");
-  projectLink.href = "/sdlc";
-  projectLink.className = "button secondary";
-  projectLink.textContent = "SDLC projects";
-  document.querySelector(".topbar .top-actions").prepend(projectLink);
+  projectLink.href = "/select-project";
+  projectLink.className = "profile-link";
+  projectLink.textContent = "Change project";
+  document.getElementById("logout").before(projectLink);
+  const workspaceError = document.createElement("p");
+  workspaceError.className = "workspace-save-error";
+  workspaceError.setAttribute("role", "alert");
+  workspaceError.hidden = true;
+  document.querySelector(".topbar").after(workspaceError);
+  let pickerAssets = null;
+  function loadPickerAssets() {
+    if (pickerAssets) return pickerAssets;
+    let timeout;
+    const deadline = new Promise((resolve, reject) => {
+      timeout = setTimeout(() => reject(new DOMException("Project selection timed out", "TimeoutError")), 20000);
+    });
+    const requests = Promise.all([
+      new Promise((resolve, reject) => {
+        const style = document.createElement("link");
+        style.rel = "stylesheet";
+        style.href = "/static/styles/project-selection.css?v=20261019-project-dialog";
+        style.onload = resolve;
+        style.onerror = () => { style.remove(); reject(new Error("Unable to load project selection. Retry Change project.")); };
+        document.head.append(style);
+      }),
+      window.mountProjectPicker ? Promise.resolve() : new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "/static/scripts/project-selection.js?v=20261020-session-cleanup";
+        script.onload = resolve;
+        script.onerror = () => { script.remove(); reject(new Error("Unable to load project selection. Retry Change project.")); };
+        document.body.append(script);
+      }),
+    ]);
+    pickerAssets = Promise.race([requests, deadline]).finally(() => clearTimeout(timeout))
+      .catch((error) => { pickerAssets = null; throw error; });
+    return pickerAssets;
+  }
+  projectLink.addEventListener("click", async (event) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    if (projectLink.getAttribute("aria-disabled") === "true") return;
+    if (!window.dispatchEvent(new CustomEvent("sdlc-phase-changing", { cancelable: true }))) {
+      workspaceError.textContent = "Finish or save your current work before changing projects.";
+      workspaceError.hidden = false;
+      return;
+    }
+    workspaceError.hidden = true;
+    projectLink.setAttribute("aria-disabled", "true");
+    try {
+      const response = await fetch("/select-project", { signal: AbortSignal.timeout(20000) });
+      if (response.status === 401 || new URL(response.url).pathname === "/login") {
+        window.location.replace("/login?reason=expired");
+        return;
+      }
+      if (!response.ok) throw new Error("Unable to load project selection. Retry Change project.");
+      const content = new DOMParser().parseFromString(await response.text(), "text/html");
+      const picker = content.getElementById("project-picker");
+      if (!picker) throw new Error("Project selection could not be loaded. Refresh the page and try again.");
+      picker.querySelectorAll("[data-picker-standalone]").forEach((node) => node.remove());
+      await loadPickerAssets();
+      document.body.append(picker);
+      document.getElementById("profile-panel").classList.add("hidden");
+      document.getElementById("profile-toggle").setAttribute("aria-expanded", "false");
+      window.mountProjectPicker(picker, {
+        onCancel: () => {},
+        onClose: () => {
+          picker.remove();
+          projectLink.removeAttribute("aria-disabled");
+          document.getElementById("profile-toggle").focus();
+        },
+        onSelect: (selected) => {
+          if (selected.id === snapshot?.project.id) { picker.close(); return; }
+          // The departing workspace must not restore its draft into the newly selected project.
+          window.projectContextSwitching = true;
+          window.location.replace("/sdlc");
+        },
+      });
+    } catch (error) {
+      projectLink.removeAttribute("aria-disabled");
+      document.getElementById("project-picker")?.remove();
+      document.body.classList.remove("project-picker-open");
+      workspaceError.textContent = error.name === "TimeoutError"
+        ? "Loading project selection timed out. Check your connection and retry."
+        : error instanceof TypeError ? "Unable to load project selection. Check your connection and retry Change project."
+        : error.message;
+      workspaceError.hidden = false;
+    }
+  });
   const status = (value) => {
     byId("sdlc-status").textContent = value;
     projectLink.title = value;
-    if (/unable|newer|failed|reload|denied|permit/i.test(value))
-      projectLink.textContent = "SDLC · save needs attention";
   };
   const latest = (name) => snapshot?.artifacts.find((item) => item.stage === name);
   const projectKey = () => `sdlc-active-project:${account}`;
   async function api(path, payload) {
     const response = await fetch(`/api/sdlc${path}`, {
       method: payload ? "POST" : "GET",
+      signal: AbortSignal.timeout(20000),
       headers: { "Content-Type": "application/json" },
       ...(payload ? { body: JSON.stringify(payload) } : {}),
     });
-    const data = await response.json();
-    if (!response.ok)
-      throw new Error(
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) window.location.replace("/login?reason=expired");
+    if (!response.ok) {
+      const error = new Error(
         typeof data.detail === "string"
           ? data.detail
           : "Unable to save. Check the required fields.",
       );
+      error.status = response.status;
+      throw error;
+    }
     return data;
   }
-  async function work(action) {
+  async function work(action, background = false) {
     if (pending) return;
     pending = true;
+    if (!background) workspaceError.hidden = true;
     byId("sdlc-create").querySelector('button[type="submit"]').disabled = true;
     byId("sdlc-project").disabled = true;
     try {
       await action();
     } catch (error) {
       status(error.message);
+      workspaceError.textContent = error.name === "TimeoutError"
+        ? "The request timed out. Retry your action when the connection is available."
+        : error.message;
+      workspaceError.hidden = false;
+      if (snapshot && [403, 404].includes(error.status)) {
+        sessionStorage.removeItem(projectKey());
+        byId("sdlc-content").inert = true;
+        window.location.replace("/select-project?reason=unavailable");
+      }
     } finally {
       pending = false;
       byId("sdlc-create").querySelector('button[type="submit"]').disabled = false;
@@ -101,7 +210,6 @@
       createPanel.open = !snapshot;
       createPanel.dataset.project = projectId;
     }
-    projectLink.textContent = snapshot ? `Project: ${snapshot.project.name}` : "SDLC projects";
     if (!snapshot) {
       window.dispatchEvent(new CustomEvent("sdlc-project-loaded", { detail: null }));
       return;
@@ -120,7 +228,10 @@
     const artifact = latest(stage);
     byId("sdlc-stage-title").textContent = stages[stage][0];
     byId("sdlc-stage-help").textContent = stages[stage][1];
-    byId("sdlc-document").value = artifact?.content.document || "";
+    byId("sdlc-document").value = artifact ? artifactText(artifact) : "";
+    byId("sdlc-document").hidden = !artifact;
+    emptyDocument.hidden = Boolean(artifact);
+    emptyDocument.textContent = `No ${stages[stage][0].toLowerCase()} document has been saved for this project. This archive shows saved outputs only; opening it does not generate a document.`;
     repository = artifact?.content.repository || null;
     byId("sdlc-repository-evidence").textContent = repository
       ? JSON.stringify(repository, null, 2)
@@ -170,8 +281,24 @@
       summary.textContent = `${item.stage} v${item.version} · ${item.author} · ${new Date(item.created_at).toLocaleString()}`;
       details.append(summary);
       const text = document.createElement("pre");
-      text.textContent = item.content.document || "Saved testing workspace snapshot";
+      text.textContent = artifactText(item);
       details.append(text);
+      const download = document.createElement("button");
+      download.type = "button";
+      download.className = "secondary";
+      download.textContent = `Download ${stages[item.stage]?.[0] || item.stage} v${item.version}`;
+      download.onclick = () => {
+        const plainText = Boolean(item.content.document || item.content.source_request?.description);
+        const url = URL.createObjectURL(new Blob([artifactText(item)], {
+          type: plainText ? "text/plain;charset=utf-8" : "application/json",
+        }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${item.stage}-v${item.version}.${plainText ? "txt" : "json"}`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+      details.append(download);
       for (const link of item.links) {
         const p = document.createElement("p");
         p.textContent = `Depends on ${link.stage} v${link.version}${latest(link.stage)?.version !== link.version ? " · newer source available; review impact" : ""}`;
@@ -186,6 +313,7 @@
       }
       history.append(details);
     }
+    if (!history.children.length) history.textContent = `No saved versions for ${stages[stage][0].toLowerCase()} yet.`;
     dirty = false;
     window.dispatchEvent(new CustomEvent("sdlc-project-loaded", { detail: snapshot }));
   }
@@ -198,7 +326,7 @@
     }
     const sameProject = snapshot?.project.id === identifier;
     snapshot = identifier ? await api(`/projects/${identifier}`) : null;
-    if (identifier) localStorage.setItem(projectKey(), identifier);
+    if (identifier) sessionStorage.setItem(projectKey(), identifier);
     if (!sameProject) workflowReady = false;
     autosaveBlocked = false;
     render();
@@ -208,13 +336,16 @@
     const select = byId("sdlc-project");
     select.replaceChildren(new Option("Select a project", ""));
     projects.forEach((project) => select.add(new Option(project.name, project.id)));
-    const chosen = preferred || localStorage.getItem(projectKey());
+    const chosen = preferred || sessionStorage.getItem(projectKey());
     select.value = projects.some((project) => project.id === chosen) ? chosen : "";
-    await load(select.value);
-    if (snapshot && latest("workflow")) {
-      window.restoreTestingWorkspace(latest("workflow").content);
-      workflowReady = true;
+    if (!select.value) {
+      sessionStorage.removeItem(projectKey());
+      window.location.replace(chosen ? "/select-project?reason=unavailable" : "/select-project");
+      return;
     }
+    await load(select.value);
+    // Browser drafts recover navigation within this login. Saved project history
+    // is restored only through the explicit Restore action, never on sign-in.
   }
   window.sdlcSelectProject = refreshProjects;
   const nav = document.querySelector(".sdlc-stages");
@@ -229,7 +360,8 @@
         status("Save your document before switching stages.");
         return;
       }
-      window.navigateWorkspace(`/sdlc?stage=${name}`, false);
+      const archive = new URLSearchParams(location.search).get("view") === "documents";
+      window.navigateWorkspace(`/sdlc?${archive ? "view=documents&" : ""}stage=${name}`, false);
     };
     nav.append(button);
   }
@@ -354,11 +486,27 @@
     }
     status("Testing workspace saved to your active project.");
   };
+  window.persistReviewedRequirements = async () => {
+    if (!snapshot) throw new Error("Select or create a project above before continuing to Business approval.");
+    if (pending || window.testingWorkspaceBusy()) throw new Error("Wait for the current action to finish.");
+    const source = await window.prepareReviewedRequirements();
+    const existing = latest("requirements-input")?.content.source_request;
+    if (!existing || Object.keys(source).some((key) => JSON.stringify(source[key]) !== JSON.stringify(existing[key]))) {
+      await saveArtifact("requirements-input", { source_request: source });
+    }
+    workflowReady = true;
+    await window.sdlcSaveWorkflow();
+    render();
+    window.dispatchEvent(new Event("lifecycle-updated"));
+    return latest("requirements-input");
+  };
   function selectRouteStage(focus = false) {
     if (location.pathname !== "/sdlc") return;
-    const requested = new URLSearchParams(location.search).get("stage");
-    if (!requested || !Object.hasOwn(stages, requested)) return;
-    if (stage !== requested) {
+    let requested = new URLSearchParams(location.search).get("stage");
+    const documentsView = new URLSearchParams(location.search).get("view") === "documents";
+    if (documentsView && !requested) requested = "requirements-input";
+    if (!documentsView && (!requested || !Object.hasOwn(stages, requested))) return;
+    if (requested && Object.hasOwn(stages, requested) && stage !== requested) {
       stage = requested;
       render();
     }
@@ -396,16 +544,27 @@
     true,
   );
   setInterval(() => {
-    if (!pending) work(() => window.sdlcSaveWorkflow());
+    if (!pending && snapshot) work(() => window.sdlcSaveWorkflow(), true);
   }, 5000);
   window
     .loadWorkspaceProfile()
     .then((profile) => {
       account = profile.username || "local";
       if (profile.is_guest) {
+        document.documentElement.dataset.projectContext = "ready";
         projectLink.hidden = true;
         document.querySelector('.primary-nav a[href="/sdlc"]').hidden = true;
-      } else work(() => refreshProjects());
+      } else work(async () => {
+        try {
+          await refreshProjects();
+          if (snapshot) document.documentElement.dataset.projectContext = "ready";
+        } catch (error) {
+          if (error.status === 401) return;
+          if ([403, 404].includes(error.status)) sessionStorage.removeItem(projectKey());
+          window.location.replace("/select-project?reason=unavailable");
+        }
+      });
     })
-    .catch((error) => status(error.message));
+    .catch((error) => window.location.replace(error.status === 401
+      ? "/login?reason=expired" : "/select-project?reason=unavailable"));
 })();

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-project-context="pending">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,7 +18,7 @@
       body[data-workspace-path="/auto-finance-guide"] .topbar { display: none !important; }
       #auto-finance-guide-frame { display: block; width: 100%; min-height: 600px; border: 0; background: transparent; }
     </style>
-    <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261013-modern-dialog" />
+    <link rel="stylesheet" href="/static/styles/generation-overview.css?v=20261020-operation-review" />
     <link rel="stylesheet" href="/static/styles/workflow.css?v=20261013-indeterminate" />
     <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20261014-suite-actions" />
@@ -31,11 +31,12 @@
     <link rel="stylesheet" href="/static/styles/guest.css?v=20260927-privacy" />
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
     <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
-    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
-    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261014-suite-actions" />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261017-taste" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261020-safe-action-wrap" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
       <link rel="stylesheet" href="/static/styles/sdlc.css?v=20261016-simplified-workspace" />
-    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261016-inline-review" />
+    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261021-updated-brd-revalidation" />
+    <link rel="stylesheet" href="/static/styles/requirements-reference.css?v=20261020-single-activity-panel" />
   </head>
   <body data-access-pending="true">
     <div class="app-shell">
@@ -64,7 +65,7 @@
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
             <div class="nav-group sdlc-navigation">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workflow</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
               <div class="nav-children" id="sdlc-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
                 <a class="nav-item" href="/sdlc"><span>SDLC workflow</span></a>
@@ -805,10 +806,8 @@
             </div>
             <p id="sdlc-status" role="status" aria-live="polite">Select or create a project to start.</p>
               <section class="sdlc-mission sdlc-requirements-input" aria-label="Requirements-led delivery">
-                <p>Save your requirements to this project. Review AI suggestions before approving them.</p>
                 <label for="sdlc-constraints">Technical and delivery constraints<textarea id="sdlc-constraints" rows="3" maxlength="100000" placeholder="Stack, integrations, API contracts, security, performance and deployment constraints"></textarea></label>
                 <label>Delivery target<select id="sdlc-target"><option value="design">Validated plan, BA and design</option><option value="tested">Implemented and BDD-tested candidate</option><option value="staging">Deploy and verify in staging</option><option value="production">Release and verify in PROD</option></select></label>
-                <div class="sdlc-actions"><button class="primary" id="sdlc-save-requirements" type="button">Save requirements</button><button class="secondary" id="sdlc-start-delivery" type="button">Save and ask AI to help</button><a class="button secondary" href="/sdlc">View current SDLC step →</a></div>
                 <p id="sdlc-requirements-status" role="status" aria-live="polite"></p>
               </section>
               <form id="generate-form">
@@ -820,7 +819,7 @@
                     id="description"
                     minlength="10"
                     aria-describedby="description-help"
-                    placeholder="Describe the business goal, who will use the feature, the expected behaviour and acceptance criteria, or attach your BRD using the + button…"
+                    placeholder="Describe your requirements and acceptance criteria, or use + to upload a document or read from Jira…"
                   ></textarea>
                   <span class="file-preview attached-requirement hidden" id="file-preview"
                     ><span class="file-badge" id="file-type"></span
@@ -878,12 +877,12 @@
                       <span class="source-icon document-icon">↑</span>
                       <span class="upload-copy" id="upload-copy"
                         ><b>Upload document</b
-                        ><small>Attach now and process during generation</small></span
+                        ><small>PDF, Word, Excel, Pages, Numbers or image</small></span
                       >
                     </label>
                     <button class="source-menu-option" id="show-jira-link" type="button">
                       <span class="source-icon">J</span
-                      ><span><b>Link Jira ticket</b><small>Issue key or browse link</small></span>
+                      ><span><b>Read from Jira</b><small>Issue key or browse link</small></span>
                       <span class="menu-chevron" aria-hidden="true">›</span>
                     </button>
                     <div class="jira-link-panel hidden" id="jira-link-panel">
@@ -896,8 +895,8 @@
                         ‹
                       </button>
                       <span
-                        ><b>Link Jira ticket</b
-                        ><small>Paste an issue key or full browse URL</small></span
+                        ><b>Read from Jira</b
+                        ><small>Enter an issue key or paste a Jira link</small></span
                       >
                       <div class="jira-row">
                         <input
@@ -905,13 +904,13 @@
                           type="text"
                           placeholder="PROJ-123 or paste Jira link"
                           aria-label="Source Jira issue key or URL"
-                        /><button class="secondary" id="load-jira" type="button">Connect</button>
+                        /><button class="secondary" id="load-jira" type="button">Read from Jira</button>
                       </div>
                     </div>
                   </div>
                 </div>
                 <p class="field-help" id="description-help">
-                  Describe what users need and what a successful outcome looks like. You can also upload a document using +.
+                  Use + to add a document or Jira ticket. You can review and edit Jira text before validating.
                 </p>
 
 
@@ -1016,7 +1015,7 @@
                       </select>
                     </fieldset>
                     <fieldset class="generation-select-control">
-                      <legend>AI provider</legend>
+                      <legend>Select LLM</legend>
                       <select
                         id="llm-model"
                         name="llm_model"
@@ -1057,8 +1056,8 @@
                       cases or generated-suite execution can proceed.
                     </p>
                   </div>
-                  <button class="secondary" id="validate-requirements" type="button">
-                    Check approved-source alignment
+                  <button class="primary" id="validate-requirements" type="button">
+                    Validate requirements
                   </button>
                   <div
                     id="requirements-validation-report"
@@ -1079,17 +1078,17 @@
             <div class="agent-workflow-sidebar">
               <section class="agent-route-card" aria-labelledby="agent-workflow-title">
                 <div class="agent-route-heading">
-                  <h2 id="agent-workflow-title">Your agent workflow</h2>
-                  <span class="agent-route-badge">Ready</span>
+                  <h2 id="agent-workflow-title">Requirements activity</h2>
+                  <span class="agent-route-badge">Not started</span>
                 </div>
-                <p class="agent-route-orchestrator">Choose an action in Requirements</p>
+                <p class="agent-route-orchestrator">Select Validate requirements to begin</p>
                 <p id="agent-workflow-summary" aria-live="polite"></p>
                 <ol id="agent-workflow-steps" aria-label="Current agent activity"></ol>
                 <div class="agent-route-note">
                   <span aria-hidden="true">◇</span>
                   <p>
-                    <strong>Current action and agent updates.</strong><br />Only agents reported for this
-                    operation appear while it runs.
+                    <strong>AI checks. People approve.</strong><br />During validation, this panel shows
+                    reported agent activity. Completing an AI check does not approve the BRD.
                   </p>
                 </div>
               </section>
@@ -1376,18 +1375,21 @@
         </div>
         <div data-workspace-page="/sdlc" hidden>
           <section class="panel sdlc-workspace" aria-labelledby="sdlc-heading">
-            <div class="panel-head"><div><h2 id="sdlc-heading">Project workspace</h2><p>Add requirements, review the work, and follow your next action.</p></div></div>
+            <div class="panel-head"><div><h2 id="sdlc-heading">Delivery workspace</h2><p>Add requirements, review the work, and follow your next action.</p></div></div>
             <div id="sdlc-content" hidden>
               <details class="sdlc-mission sdlc-source-baseline"><summary>Saved requirements preview</summary><p id="sdlc-source-summary">Save Requirements to begin the lifecycle.</p><a class="button primary" href="/?view=requirements">Open Requirements →</a></details>
               <details id="sdlc-agent-tools"><summary>AI activity and results</summary><section class="sdlc-delivery-board" aria-labelledby="sdlc-delivery-heading">
                 <div class="sdlc-stage-head"><div><p class="eyebrow">Agent control centre</p><h3 id="sdlc-delivery-heading">Delivery pipeline</h3></div><span class="sdlc-run-badge" id="sdlc-run-status">Ready for a mission</span></div>
+                <p id="sdlc-pipeline-scope"></p>
+                <div class="sdlc-actions"><a class="button secondary" id="sdlc-pipeline-overview" href="/sdlc?view=pipeline">View complete delivery pipeline</a><a class="button secondary" href="/sdlc?phase=requirements">Prepare requirements</a></div>
                 <div class="sdlc-environments" id="sdlc-environments" aria-label="Delivery environment configuration"></div>
                 <div class="sdlc-agent-grid" id="sdlc-agent-grid"></div>
                 <div class="sdlc-run-toolbar"><label>Delivery run<select id="sdlc-runs"><option value="">No delivery runs yet</option></select></label><button class="secondary" type="button" id="sdlc-cancel-run" disabled>Stop delivery</button><button class="secondary" type="button" id="sdlc-resume-run" hidden>Resume from failed gate</button><a class="button secondary" id="sdlc-bundle" hidden>Download delivery bundle</a></div>
                 <p id="sdlc-run-error" class="sdlc-gate-error" role="alert" hidden></p>
                 <div class="sdlc-evidence-grid"><section><h3>Agent activity</h3><ol id="sdlc-run-events" class="sdlc-event-list"><li>Start a mission to see agent ownership and quality gate evidence.</li></ol></section><section><h3>Delivery evidence</h3><div id="sdlc-run-evidence"><p>Source changes, build results, BDD outcomes and deployment receipts will appear here.</p></div></section></div>
               </section>
-              </details><details class="sdlc-artifact-ledger"><summary>Documents and version history</summary>
+              </details><details class="sdlc-artifact-ledger"><summary>Saved project documents and versions</summary>
+              <p>Browse saved BRD and agent document versions. Empty categories mean that no document has been saved yet. BA business reports and metrics are available in BA review &amp; approval → Business documents.</p>
               <nav class="sdlc-stages" aria-label="Agent artifact categories"></nav>
               <div class="sdlc-stage-head"><h3 id="sdlc-stage-title">Planning</h3><span id="sdlc-version"></span></div>
               <p id="sdlc-stage-help"></p>
@@ -1983,27 +1985,21 @@
     >
       <div class="generation-dialog">
         <header class="operation-dialog-header">
-        <span class="operation-dialog-eyebrow">Workflow activity</span>
-        <div class="generation-orbit" aria-hidden="true">
-          <span></span><span></span><span></span><b>✦</b>
+        <div class="operation-dialog-topline">
+          <span class="operation-dialog-eyebrow">Workflow activity</span>
+          <span id="operation-state" class="operation-state" role="status">Preparing</span>
         </div>
-        <span class="section-kicker" id="generation-agent-label">DecisionAgent is working</span>
+        <div class="operation-dialog-heading">
+        <span class="operation-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3.5h7l4 4V20H7zM14 3.5V8h4M10 12h5M10 15.5h5"/></svg></span>
+        <div>
+        <span class="section-kicker" id="generation-agent-label">Workflow coordinator</span>
         <h2 id="generation-overlay-title">Generating test cases</h2>
         <p id="generation-overlay-message">
           The specialist agents are designing and validating your coverage.
         </p>
+        </div></div>
         </header>
         <div class="operation-dialog-body">
-        <dl class="generation-overview" aria-label="Operation overview">
-          <div><dt>Operation</dt><dd id="generation-overview-status">Preparing</dd></div>
-          <div><dt>Result</dt><dd id="generation-overview-output">Not available yet</dd></div>
-          <div><dt>Checks</dt><dd id="generation-overview-validation">Not reported yet</dd></div>
-        </dl>
-        <p id="generation-service-caption" class="generation-service-caption">Checking the selected generation service…</p>
-        <p id="generation-next-step" class="generation-next-step" role="status">Keep this page open, or continue in the background.</p>
-        <div class="generation-agent-pulse" aria-label="Generation stages">
-          <span>Analyze</span><span>Design</span><span>Validate</span>
-        </div>
         <div id="generation-progress-slot">
         <section
           id="generation-progress-panel"
@@ -2027,6 +2023,24 @@
           </details>
         </section>
         </div>
+        <section class="operation-context" aria-labelledby="operation-context-title">
+          <h3 id="operation-context-title">Review context</h3>
+          <dl>
+            <div><dt>Source</dt><dd id="operation-source">Current requirements</dd></div>
+            <div><dt>Business scope</dt><dd id="operation-scope">As supplied in the requirements</dd></div>
+            <div class="operation-expected-output"><dt>What you’ll receive</dt><dd id="operation-output">Review findings and source references</dd></div>
+          </dl>
+          <ul id="operation-review-focus" aria-label="Review focus"></ul>
+        </section>
+        <dl class="generation-overview" aria-label="Operation overview">
+          <div><dt>Operation</dt><dd id="generation-overview-status">Preparing</dd></div>
+          <div><dt>Result</dt><dd id="generation-overview-output">Not available yet</dd></div>
+          <div><dt>Checks</dt><dd id="generation-overview-validation">Not reported yet</dd></div>
+        </dl>
+        <p id="generation-next-step" class="generation-next-step" role="status">Keep this page open, or continue in the background.</p>
+        <div class="generation-agent-pulse" aria-label="Generation stages">
+          <span>Analyze</span><span>Design</span><span>Validate</span>
+        </div>
         <details class="generation-validation" aria-labelledby="generation-validation-title">
           <summary id="generation-validation-title">Checks &amp; source references</summary>
           <div id="generation-validation-evidence" aria-live="polite">
@@ -2034,6 +2048,7 @@
           </div>
         </details>
         <details class="generation-request-details"><summary>Provider &amp; request details</summary>
+        <p id="generation-service-caption" class="generation-service-caption">Checking the selected generation service…</p>
         <dl class="generation-llm-details" aria-label="Active LLM details">
           <div>
             <dt>Provider</dt>
@@ -2225,15 +2240,15 @@
         <pre id="script-pack-content" tabindex="0" aria-label="Generated script preview"></pre>
       </section>
     </dialog>
-    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/user-profile.js?v=20261019-project-selection" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261016-sdlc-entry" defer></script>
     <script src="/static/scripts/operation-progress.js?v=20261013-indeterminate" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261016-sdlc-entry" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261016-sdlc-entry" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261019-pipeline-views" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261020-focused-ba-review" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/index.js?v=20261016-simplified-workspace" defer></script>
+    <script src="/static/scripts/auth.js?v=20261020-session-cleanup" defer></script>
+    <script src="/static/scripts/index.js?v=20261021-revised-brd-editor" defer></script>
     <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
@@ -2244,17 +2259,19 @@
     <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261016-inline-review" defer></script>
-    <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261020-handoff-recovery" defer></script>
+    <script src="/static/scripts/finance-explorer.js?v=20261020-requirements-reference" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261013-approved-history-v2" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261019-pipeline-views" defer></script>
     <script src="/static/scripts/role-access.js?v=20261016-inline-review" defer></script>
-      <script src="/static/scripts/project-lifecycle.js?v=20261016-simplified-workspace" defer></script>
-      <script src="/static/scripts/sdlc-sequence.js?v=20261016-simplified-workspace" defer></script>
-      <script src="/static/scripts/sdlc.js?v=20261016-inline-review" defer></script>
-      <script src="/static/scripts/sdlc-delivery.js?v=20261014" defer></script>
-    <script src="/static/scripts/workspace-chrome.js?v=20261016-simplified-workspace" defer></script>
-    <script src="/static/scripts/workbench-shell.js?v=20261016-inline-review" defer></script>
+      <script src="/static/scripts/ba-review-navigation.js?v=20261020-signed-business-documents" defer></script>
+      <script src="/static/scripts/project-lifecycle.js?v=20261020-inline-backlog-stories" defer></script>
+      <script src="/static/scripts/sdlc-sequence.js?v=20261020-signed-business-documents" defer></script>
+      <script src="/static/scripts/sdlc.js?v=20261020-document-archive" defer></script>
+      <script src="/static/scripts/sdlc-delivery.js?v=20261020-ba-progress-navigation" defer></script>
+    <script src="/static/scripts/workspace-chrome.js?v=20261019-pipeline-views" defer></script>
+    <script src="/static/scripts/business-approval.js?v=20261020-ai-analysis-progress" defer></script>
+    <script src="/static/scripts/ba-inline-review.js?v=20261021-updated-brd-revalidation" defer></script>
   </body>
 </html>

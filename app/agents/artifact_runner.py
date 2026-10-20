@@ -94,6 +94,7 @@ class ArtifactGenerationRunner:
         failures: list[str] = []
         purpose = {
             "BAAssessment": "business analyst review",
+            "BAReviewOutput": "inline business analyst review",
             "AlignmentAssessment": "requirements alignment",
             "Stories": "stories and acceptance criteria",
             "Scenarios": "scenario coverage",

@@ -1,8 +1,14 @@
 /* One profile request per page, shared by account displays and access controls. */
 (() => {
   let profileRequest;
-  window.loadWorkspaceProfile = () => profileRequest ||= fetch("/api/auth/profile").then(response => {
-    if (!response.ok) throw new Error("Profile unavailable");
+  window.loadWorkspaceProfile = () => profileRequest ||= fetch("/api/auth/profile", {
+    signal: AbortSignal.timeout(20000),
+  }).then(response => {
+    if (!response.ok) {
+      const error = new Error("Profile unavailable");
+      error.status = response.status;
+      throw error;
+    }
     return response.json();
   });
   window.renderWorkspaceProfile = profile => {

@@ -4,15 +4,18 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal, TypeVar
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.auth import SESSION_COOKIE, session_username
+from app.ba_review_models import BRDRevisionRequest, FindingDecision, ReviewSignoff, ReviewStart
 from app.config import Settings, get_settings
 from app.models import GenerateRequest
 from app.role_access import principal_role
 from app.sdlc_models import DeliveryMission, DeliveryStart
+from app.services.ba_documents import business_documents
+from app.services.ba_reviews import BAReviews
 from app.services.project_lifecycle import ProjectLifecycle
 from app.services.project_work_items import ProjectWorkItems
 from app.services.sdlc import SDLCError, SDLCStore, repository_snapshot
@@ -61,13 +64,165 @@ def perform(action: Callable[[], T]) -> T:
     except PermissionError as error:
         raise HTTPException(403, str(error)) from error
     except SDLCError as error:
-        code = 404 if str(error) in {"Project not found", "Delivery run not found"} else 409
+        code = (
+            404
+            if str(error) in {"Project not found", "Delivery run not found", "BA review not found"}
+            else 409
+        )
         raise HTTPException(code, str(error)) from error
 
 
 @router.get("/projects")
 def projects(store: Store, actor: Actor) -> list[dict[str, Any]]:
     return store.projects(actor)
+
+
+def ba_identity(request: Request, settings: Settings) -> tuple[str, bool]:
+    return principal_role(request, settings) or "", bool(
+        session_username(request.cookies.get(SESSION_COOKIE, ""), settings)
+    )
+
+
+@router.get("/projects/{identifier}/ba-reviews")
+def ba_reviews(
+    identifier: str,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    return perform(lambda: BAReviews(store, settings).snapshot(identifier, actor))
+
+
+@router.get("/projects/{identifier}/ba-documents")
+def download_ba_documents(
+    identifier: str,
+    store: Store,
+    actor: Actor,
+    document: Literal["all", "business-review", "metrics", "brd", "history"] = "all",
+) -> Response:
+    data, filename, media = perform(lambda: business_documents(store, identifier, actor, document))
+    return Response(
+        data,
+        media_type=media,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/projects/{identifier}/ba-reviews/{review_id}")
+def ba_review_detail(
+    identifier: str,
+    review_id: str,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    return perform(lambda: BAReviews(store, settings).snapshot(identifier, actor, review_id))
+
+
+@router.post("/projects/{identifier}/ba-reviews", status_code=202)
+def start_ba_review(
+    identifier: str,
+    payload: ReviewStart,
+    request: Request,
+    background: BackgroundTasks,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    role, human = ba_identity(request, settings)
+    service = BAReviews(store, settings)
+    run, created = perform(lambda: service.start(identifier, actor, role, payload, human=human))
+    if created:
+        background.add_task(
+            service.execute_revalidation if run.get("brd_revision") else service.execute,
+            identifier,
+            actor,
+            run["id"],
+        )
+    return dict(run=run, created=created)
+
+
+@router.post("/projects/{identifier}/ba-reviews/{review_id}/decisions")
+def ba_finding_decision(
+    identifier: str,
+    review_id: str,
+    payload: FindingDecision,
+    request: Request,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    role, human = ba_identity(request, settings)
+    return perform(
+        lambda: BAReviews(store, settings).decide(
+            identifier, actor, role, review_id, payload, human=human
+        )
+    )
+
+
+@router.post("/projects/{identifier}/ba-reviews/{review_id}/revised-brd", status_code=202)
+def revise_ba_brd(
+    identifier: str,
+    review_id: str,
+    payload: BRDRevisionRequest,
+    request: Request,
+    background: BackgroundTasks,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    role, human = ba_identity(request, settings)
+    service = BAReviews(store, settings)
+    source = perform(
+        lambda: service.revise_brd(
+            identifier, actor, role, review_id, payload.revision, human=human
+        )
+    )
+    run, created = perform(
+        lambda: service.start(
+            identifier, actor, role, ReviewStart(baseline=source["version"]), human=human
+        )
+    )
+    if created:
+        background.add_task(service.execute_revalidation, identifier, actor, run["id"])
+    return dict(source=source, run=run, created=created)
+
+
+@router.post("/projects/{identifier}/ba-reviews/{review_id}/signoff")
+def ba_signoff(
+    identifier: str,
+    review_id: str,
+    payload: ReviewSignoff,
+    request: Request,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    role, human = ba_identity(request, settings)
+    return perform(
+        lambda: BAReviews(store, settings).signoff(
+            identifier, actor, role, review_id, payload, human=human
+        )
+    )
+
+
+@router.post("/projects/{identifier}/ba-reviews/{review_id}/cancel")
+def cancel_ba_review(
+    identifier: str,
+    review_id: str,
+    request: Request,
+    store: Store,
+    actor: Actor,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict:
+    role, human = ba_identity(request, settings)
+    return perform(
+        lambda: BAReviews(store, settings).cancel(identifier, actor, role, review_id, human=human)
+    )
 
 
 @router.post("/projects", status_code=201)

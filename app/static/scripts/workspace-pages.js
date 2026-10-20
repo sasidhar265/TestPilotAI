@@ -1,7 +1,7 @@
 /* Switch focused views without replacing the shared workflow or its drafts. */
 (() => {
   const titles = {
-    "/sdlc": "Project workspace",
+    "/sdlc": "SDLC workflow",
     "/project-dashboard": "Project dashboard",
     "/": "Requirements",
     "/progress": "Execution reports",
@@ -50,6 +50,9 @@
     )
       history.replaceState(null, "", "/sdlc" + location.search);
     const path = location.pathname;
+    const sdlcView = new URLSearchParams(location.search).get("view");
+    document.body.dataset.sdlcView = path === "/sdlc" && ["documents", "pipeline"].includes(sdlcView)
+      ? sdlcView : "workflow";
     document.body.dataset.workspacePath = path;
     const requested = new URLSearchParams(location.search).get("view") || "requirements";
     const view =
@@ -103,6 +106,12 @@
       const active =
         link.pathname === path &&
         (path !== "/sdlc" ||
+          (new URL(link.href).searchParams.get("view") || "") ===
+            (new URLSearchParams(location.search).get("view") || "")) &&
+        (path !== "/sdlc" ||
+          (new URL(link.href).searchParams.get("phase") || "") ===
+            (new URLSearchParams(location.search).get("phase") || "")) &&
+        (path !== "/sdlc" ||
           (new URL(link.href).searchParams.get("stage") || "") ===
             (new URLSearchParams(location.search).get("stage") || "")) &&
         (path !== "/" || (new URL(link.href).searchParams.get("view") || "requirements") === view);
@@ -133,7 +142,11 @@
     });
     const selectedStage = new URLSearchParams(location.search).get("stage");
     const title =
-      path === "/"
+      document.body.dataset.sdlcView === "pipeline"
+        ? "Delivery pipeline"
+        : document.body.dataset.sdlcView === "documents"
+        ? "Documents and version history"
+        : path === "/"
         ? views[view]
         : path === "/sdlc" && Object.hasOwn(sdlcStages, selectedStage)
           ? sdlcStages[selectedStage]

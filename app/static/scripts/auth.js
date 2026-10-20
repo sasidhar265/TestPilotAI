@@ -52,6 +52,11 @@ const closeButton = document.getElementById("close-session");
 async function signOut() {
   if (signingOut) return;
   signingOut = true;
+  window.workspaceSessionEnding = true;
+  for (const key of Object.keys(sessionStorage)) {
+    if (key.startsWith("quality-workspace-draft:") || key.startsWith("sdlc-active-project:"))
+      sessionStorage.removeItem(key);
+  }
   try {
     await fetch("/api/auth/logout", { method: "POST" });
   } finally {

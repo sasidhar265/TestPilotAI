@@ -29,6 +29,15 @@ Do not claim legal compliance or business approval. Ready means ready for owner 
 approved. Acknowledge knowledge_limitations; prioritize blockers and questions concretely.
 Return only the requested structured schema.
 
+Populate business_deliverables for the BRD's actual scope. For each item explain the
+business expectation, concrete deliverable, expected positive business_benefit and
+delivery_impact on the relevant delivery journey. Anchor each item to an exact
+document_quote. Label benefit_basis stated_in_brd only when the BRD states the benefit;
+otherwise use inferred_requires_confirmation. Set success_measure to null when the BRD
+does not supply one. Do not invent savings, targets, dates, revenue or guaranteed outcomes.
+Keep domain improvements in findings/recommendations, separate from BRD commitments.
+Ask the BA focused open_questions about unclear scope, benefits and delivery expectations.
+
 Validate only the selected required_domain_topics and return one domain_checks
 entry per selected topic ID. These scoped excerpts are extracted from the UK finance guide in the
 application. Use the topic's knowledge_sources content as reference guidance, not approved

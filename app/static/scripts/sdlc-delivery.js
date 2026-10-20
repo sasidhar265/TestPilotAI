@@ -2,13 +2,119 @@
 (() => {
   const el = (id) => document.getElementById(id);
   let baseline = null;
-  let lastRunView = null;
+  let phase = null;
+  let lifecycle = null;
   let clientError = null;
   let project = null,
     run = null,
     configuration = null,
     pollBusy = false,
     starting = false;
+  const viewTabs = document.createElement("nav");
+  viewTabs.className = "sdlc-progress-navigation";
+  viewTabs.setAttribute("aria-label", "Workflow progress");
+  viewTabs.innerHTML = '<a id="sdlc-view-progress">View progress →</a>';
+  el("sdlc-content").prepend(viewTabs);
+  const summary = document.createElement("aside");
+  summary.className = "workflow-pipeline-summary";
+  summary.setAttribute("aria-labelledby", "workflow-pipeline-heading");
+  summary.innerHTML = '<h3 id="workflow-pipeline-heading">Application workflow</h3><p id="workflow-pipeline-status" role="status"></p><ol id="workflow-pipeline-agents" aria-label="Application workflow stages"></ol><p class="field-help">Workflow status follows human handoffs. AI run progress does not grant approval.</p>';
+  const requirementsActivity = document.createElement("div");
+  requirementsActivity.className = "requirements-agent-activity";
+  requirementsActivity.append(document.querySelector(".agent-route-card"));
+  summary.prepend(requirementsActivity);
+  const workspace = document.querySelector(".sdlc-workspace");
+  const workflowLayout = document.createElement("div");
+  workflowLayout.className = "sdlc-workflow-layout";
+  workspace.before(workflowLayout);
+  workflowLayout.append(workspace, summary);
+  const isOverview = () => new URLSearchParams(location.search).get("view") === "pipeline" &&
+    !new URLSearchParams(location.search).has("phase") &&
+    !new URLSearchParams(location.search).has("stage");
+  const workflowStages = () => isOverview() || !phase ? null :
+    phase.agent_stages.length ? phase.agent_stages : phase.id === "business-approval" ? ["requirements"] : [];
+  const inScope = (stage) => workflowStages() === null || workflowStages().includes(stage);
+  const agentStatus = (stage) => run?.completed?.includes(stage) ? "passed" :
+    run?.stage === stage ? run.status : "waiting";
+  const environmentStages = {
+    repository: ["design", "development", "testing"], build: ["development", "testing"],
+    preview: ["development"], staging: ["release", "operations"],
+    production: ["release", "operations"], rollback: ["release", "operations"],
+  };
+  function updateView() {
+    const params = new URLSearchParams(location.search);
+    const pipeline = params.get("view") === "pipeline";
+    const requestedReview = params.get("review");
+    const review = phase?.id === "business-approval" && requestedReview
+      ? `&review=${encodeURIComponent(requestedReview === "progress" ? "overview" : requestedReview)}` : "";
+    const scopedUrl = `/sdlc?phase=${encodeURIComponent(phase?.id || "requirements")}${review}`;
+    const requirementsWorkspace = location.pathname === "/sdlc" &&
+      phase?.id === "requirements" && !pipeline;
+    summary.setAttribute("aria-labelledby", requirementsWorkspace ? "agent-workflow-title" : "workflow-pipeline-heading");
+    viewTabs.hidden = location.pathname !== "/sdlc" || params.get("view") === "documents" || phase?.id === "business-approval";
+    summary.hidden = params.get("view") === "documents";
+    workflowLayout.classList.toggle("pipeline-hidden", summary.hidden);
+    el("sdlc-view-progress").href = pipeline ? scopedUrl : `${scopedUrl}&view=pipeline`;
+    el("sdlc-view-progress").textContent = pipeline ? `← Back to ${phase?.label || "current stage"}` : "View progress →";
+    el("sdlc-pipeline-overview").hidden = isOverview();
+    el("sdlc-agent-tools").open = pipeline;
+    el("sdlc-agent-tools").hidden = requirementsWorkspace;
+    const scope = isOverview()
+      ? "All delivery agents, recorded activity and evidence for the selected run."
+      : `${phase?.label || "Current workflow"}: relevant agents, recorded activity and evidence. Stop and resume controls apply to the complete selected run.`;
+    const source = run?.mission.requirements_version
+      ? ` Requirements v${run.mission.requirements_version}; latest saved version: ${baseline?.version || "none"}.` : "";
+    el("sdlc-pipeline-scope").textContent = scope + source;
+    el("sdlc-environments").querySelectorAll("[data-environment]").forEach((item) => {
+      item.hidden = !(environmentStages[item.dataset.environment] || []).some(inScope);
+    });
+    if (pipeline && location.pathname === "/sdlc") {
+      const title = isOverview() ? "Delivery pipeline" : `${phase?.label || "Workflow"} · Delivery pipeline`;
+      document.querySelector(".topbar h1").textContent = title;
+      document.title = `${title} — Auto Finance Quality`;
+      const navigation = el("sdlc-pipeline-link");
+      if (isOverview()) { navigation.setAttribute("aria-current", "page"); navigation.classList.add("active"); }
+    }
+    const phases = configuration?.workflow?.phases || [];
+    const stageDefinition = configuration?.workflow?.definition || [];
+    const currentStage = stageDefinition.find((item) => item.id === lifecycle?.stage);
+    const currentPhase = phases.find((item) => item.id === lifecycle?.phase);
+    el("workflow-pipeline-status").textContent = clientError || (currentPhase
+      ? `Current stage: ${currentPhase.label}${currentStage ? ` · ${currentStage.label}` : ""}${lifecycle.pending_approval ? " · Human approval required" : ""}`
+      : "Prepare and save requirements to begin the workflow.");
+    const currentIndex = phases.findIndex((item) => item.id === lifecycle?.phase);
+    el("workflow-pipeline-agents").replaceChildren(...phases.map((item, index) => {
+      const entry = document.createElement("li");
+      entry.dataset.phase = item.id;
+      const link = document.createElement("a");
+      link.href = `/sdlc?phase=${encodeURIComponent(item.id)}`;
+      const number = cardText("span", String(index + 1).padStart(2, "0"), "pipeline-phase-number");
+      number.setAttribute("aria-hidden", "true");
+      const copy = document.createElement("span");
+      const status = !lifecycle ? "Awaiting workflow status" : item.id === lifecycle.phase
+        ? lifecycle.stage === "closed" ? "Release closed" : lifecycle.pending_approval
+          ? "Human approval required" : "Current workflow"
+        : index < currentIndex ? "Earlier workflow" : "Upcoming";
+      copy.append(cardText("strong", item.label), cardText("small", status));
+      if (item.id === lifecycle?.phase && currentStage) {
+        copy.append(cardText("small", `Active step: ${currentStage.label}`));
+        if (currentStage.roles?.length)
+          copy.append(cardText("small", `Owner: ${currentStage.roles.map((role) => role.replaceAll("_", " ")).join(", ")}`));
+      }
+      link.title = item.description;
+      if (item.id === phase?.id && !isOverview()) {
+        link.setAttribute("aria-current", "page");
+        const stages = item.agent_stages.length ? item.agent_stages : ["requirements"];
+        for (const agent of configuration.agents.filter((agent) => stages.includes(agent.stage)))
+          copy.append(cardText("small", `AI · ${agent.name}: ${agentStatus(agent.stage)}`, "pipeline-agent-status"));
+      }
+      if (item.id === lifecycle?.phase) entry.dataset.current = "true";
+      link.append(number, copy);
+      entry.append(link);
+      return entry;
+    }));
+    if (!configuration) el("workflow-pipeline-status").textContent = clientError || "Loading delivery agents…";
+  }
   const active = (value) => ["queued", "running", "cancelling"].includes(value?.status);
   async function api(path, body) {
     const response = await fetch(`/api/sdlc${path}`, {
@@ -27,6 +133,7 @@
     clientError = message;
     el("sdlc-run-error").hidden = !message;
     el("sdlc-run-error").textContent = message || "";
+    updateView();
   }
   function cardText(tag, text, className) {
     const node = document.createElement(tag);
@@ -35,24 +142,15 @@
     return node;
   }
   function render() {
-    const signature = run ? `${run.id}:${run.status}` : null;
-    if (signature && signature !== lastRunView)
-      document.getElementById("sdlc-agent-tools").open = true;
-    lastRunView = signature;
-    if (configuration?.workflow)
-      window.dispatchEvent(
-        new CustomEvent("sdlc-policy-loaded", { detail: configuration.workflow }),
-      );
+    updateView();
     const board = el("sdlc-agent-grid");
     board.replaceChildren();
     for (const [index, agent] of (configuration?.agents || []).entries()) {
-      const state = run?.completed?.includes(agent.stage)
-        ? "passed"
-        : run?.stage === agent.stage
-          ? run.status
-          : "waiting";
+      const state = agentStatus(agent.stage);
       const card = document.createElement("article");
       card.className = `sdlc-agent-card ${state}`;
+      card.dataset.stage = agent.stage;
+      card.hidden = !inScope(agent.stage);
       card.append(
         cardText(
           "span",
@@ -86,16 +184,6 @@
         ? `Requirements v${baseline.version} · ${baseline.content.document.slice(0, 240)}`
         : "Save Requirements to begin the lifecycle.";
     el("sdlc-run-status").dataset.status = run?.status || "ready";
-    el("sdlc-start-delivery").disabled =
-      !project ||
-      active(run) ||
-      starting ||
-      !["admin", "test_lead", "ba"].includes(document.body.dataset.role || "admin");
-    el("sdlc-save-requirements").disabled =
-      !project ||
-      active(run) ||
-      starting ||
-      !["admin", "test_lead", "ba"].includes(document.body.dataset.role || "admin");
     el("sdlc-cancel-run").disabled = !active(run) || run?.status === "cancelling";
     el("sdlc-resume-run").hidden = !["blocked", "failed", "interrupted"].includes(run?.status);
     el("sdlc-resume-run").disabled = Boolean(
@@ -113,7 +201,7 @@
     el("sdlc-run-error").textContent = run?.error || clientError || "";
     const activity = el("sdlc-run-events");
     activity.replaceChildren();
-    for (const event of (run?.events || []).slice(-40).reverse()) {
+    for (const event of (run?.events || []).filter((event) => inScope(event.stage)).slice(-40).reverse()) {
       const item = document.createElement("li");
       item.className = event.status;
       item.append(
@@ -132,14 +220,14 @@
       release = run?.artifacts?.release,
       operations = run?.artifacts?.operations;
     const rows = [];
-    if (development)
+    if (development && inScope("development"))
       rows.push(
         ["Candidate revision", development.revision],
         ["Changed files", String(development.files.length)],
         ["Build", `Exit ${development.build.exit_code}`],
         ["Independent review", development.review.passed ? "Passed" : "Failed"],
       );
-    if (testing)
+    if (testing && inScope("testing"))
       rows.push(
         [
           "Generated BDD execution",
@@ -147,13 +235,13 @@
         ],
         ["Execution scope", testing.execution.scope],
       );
-    if (release)
+    if (release && inScope("release"))
       rows.push(
         ["Promoted environment", release.environment],
         ["Staging receipt", release.staging.receipt.deployment_id],
       );
-    if (release?.production) rows.push(["PROD receipt", release.production.receipt.deployment_id]);
-    if (operations)
+    if (release?.production && inScope("release")) rows.push(["PROD receipt", release.production.receipt.deployment_id]);
+    if (operations && inScope("operations"))
       rows.push([
         "Service verification",
         `${operations.health.status} · ${operations.environment}`,
@@ -166,7 +254,8 @@
       list.append(item);
     });
     evidence.append(list);
-    const tasks = Object.values(run?.artifacts || {}).flatMap((value) => value.tasks || []);
+    const tasks = Object.entries(run?.artifacts || {}).filter(([stage]) => inScope(stage))
+      .flatMap(([, value]) => value.tasks || []);
     if (tasks.length) {
       evidence.append(cardText("h4", "Agent work breakdown"));
       const list = document.createElement("ul");
@@ -177,7 +266,7 @@
       );
       evidence.append(list);
     }
-    if (run?.blocking_evidence) {
+    if (run?.blocking_evidence && inScope(run.stage)) {
       const details = document.createElement("details");
       details.append(
         cardText("summary", "Blocking evidence"),
@@ -194,6 +283,7 @@
     render();
   }
   window.addEventListener("sdlc-project-loaded", async (event) => {
+    if (project?.id !== event.detail?.project?.id) lifecycle = null;
     project = event.detail?.project || null;
     baseline = event.detail?.artifacts?.find((item) => item.stage === "requirements-input") || null;
     el("sdlc-source-summary").textContent = baseline
@@ -217,6 +307,15 @@
       error(issue.message);
     }
   });
+  window.addEventListener("sdlc-phase-selected", (event) => {
+    phase = event.detail.phase;
+    render();
+  });
+  window.addEventListener("sdlc-lifecycle-loaded", (event) => {
+    lifecycle = event.detail?.state || null;
+    updateView();
+  });
+  window.addEventListener("workspace-page-changed", render);
   el("sdlc-runs").onchange = () =>
     showRun(el("sdlc-runs").value).catch((issue) => error(issue.message));
   async function saveRequirements() {
@@ -258,8 +357,6 @@
     }
   }
   window.startRequirementsDelivery = () => submit(true);
-  el("sdlc-save-requirements").onclick = () => submit(false);
-  el("sdlc-start-delivery").onclick = () => submit(true);
   el("sdlc-cancel-run").onclick = async () => {
     try {
       run = await api(`/runs/${run.id}/cancel`, {});
@@ -301,16 +398,18 @@
     .then((value) => {
       if (!value) return;
       configuration = value;
+      if (value.workflow) window.dispatchEvent(new CustomEvent("sdlc-policy-loaded", { detail: value.workflow }));
       const environments = el("sdlc-environments");
       environments.replaceChildren();
-      for (const [name, ready] of Object.entries(value.configured))
-        environments.append(
-          cardText(
+      for (const [name, ready] of Object.entries(value.configured)) {
+        const item = cardText(
             "span",
             `${name}: ${ready ? "connected" : "configuration required"}`,
             ready ? "connected" : "missing",
-          ),
-        );
+          );
+        item.dataset.environment = name;
+        environments.append(item);
+      }
       render();
     })
     .catch((issue) => error(issue.message));

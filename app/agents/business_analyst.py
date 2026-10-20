@@ -13,6 +13,7 @@ from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.requirements_validation import BusinessBaseline, Evidence
 from app.agents.runner import StructuredAgentDefinition
+from app.business_delivery import BusinessDeliverable, validate_business_deliverables
 from app.config import Settings
 from app.domain_knowledge import guide_knowledge_sources, scope_guide_sources
 from app.finance_domain import ground_request, load_domain_pack
@@ -66,6 +67,7 @@ class BAAssessment(ReviewModel):
     summary: str = Field(min_length=20, max_length=4000)
     objectives: list[str] = Field(max_length=30)
     scope: list[str] = Field(max_length=50)
+    business_deliverables: list[BusinessDeliverable] = Field(default_factory=list, max_length=50)
     areas: list[BAArea] = Field(min_length=8, max_length=8)
     findings: list[BAFinding] = Field(max_length=100)
     open_questions: list[str] = Field(max_length=50)
@@ -336,6 +338,7 @@ class BusinessAnalystAgent:
         document = " ".join(request.description.split())
 
         def validate(assessment: BAAssessment) -> BAAssessment:
+            validate_business_deliverables(assessment.business_deliverables, request.description)
             if {a.area for a in assessment.areas} != set(AREAS):
                 raise ValueError("Assess every review area exactly once.")
             for area in assessment.areas:

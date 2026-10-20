@@ -68,7 +68,7 @@
     });
   });
   byId("finance-start").addEventListener("click", () => {
-    window.navigateWorkspace("/");
+    window.navigateWorkspace(location.pathname === "/sdlc" ? "/sdlc?phase=requirements" : "/");
     byId("description").focus({ preventScroll: true });
     byId("test-studio").scrollIntoView({ block: "start" });
   });

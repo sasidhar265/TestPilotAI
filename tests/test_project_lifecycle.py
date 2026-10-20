@@ -339,5 +339,5 @@ def test_sequential_workspace_metadata_covers_all_stages_and_rework(project):
         flow.snapshot(identifier, "ba-user", "business_stakeholder")["phase"] == "business-approval"
     )
     advance(flow, identifier, "changes_requested")
-    assert flow.snapshot(identifier, "ba-user", "ba")["phase"] == "requirements"
+    assert flow.snapshot(identifier, "ba-user", "ba")["phase"] == "business-approval"
     assert store.snapshot(identifier, "ba-user")["project"]["id"] == identifier

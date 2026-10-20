@@ -44,6 +44,14 @@ class SDLCStore:
                 CREATE TABLE IF NOT EXISTS lifecycle_events (
                   sequence INTEGER PRIMARY KEY AUTOINCREMENT,
                   project TEXT NOT NULL, data TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS requirements_assessments (
+                  id TEXT PRIMARY KEY, actor TEXT NOT NULL, source_key TEXT NOT NULL,
+                  kind TEXT NOT NULL, data TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS ba_review_runs (
+                  id TEXT PRIMARY KEY, project TEXT NOT NULL, data TEXT NOT NULL);
+                CREATE INDEX IF NOT EXISTS ba_review_by_project ON ba_review_runs(project);
+                CREATE INDEX IF NOT EXISTS assessments_by_source
+                  ON requirements_assessments(source_key,kind);
                 CREATE TABLE IF NOT EXISTS projects (
                   id TEXT PRIMARY KEY, owner TEXT NOT NULL, data TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS revisions (
@@ -136,6 +144,7 @@ class SDLCStore:
         links: list[dict[str, Any]],
         *,
         run_id: str | None = None,
+        review_guard: tuple[str, int] | None = None,
     ) -> dict[str, Any]:
         if stage not in (*STAGES, "workflow", "requirements-input"):
             raise SDLCError("Unknown lifecycle stage")
@@ -148,6 +157,21 @@ class SDLCStore:
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             self.project(db, identifier, owner)
+            if review_guard is not None:
+                row = db.execute(
+                    "SELECT id,data FROM ba_review_runs WHERE project=? "
+                    "ORDER BY rowid DESC LIMIT 1",
+                    (identifier,),
+                ).fetchone()
+                review = json.loads(row[1]) if row else {}
+                if (
+                    not row
+                    or row[0] != review_guard[0]
+                    or review.get("revision") != review_guard[1]
+                    or review.get("status") != "completed"
+                    or review.get("baseline") != base_version
+                ):
+                    raise SDLCError("BA review changed. Reload before updating the BRD")
             active = db.execute(
                 "SELECT id FROM runs WHERE project=? AND status IN "
                 "('queued','running','cancelling')",

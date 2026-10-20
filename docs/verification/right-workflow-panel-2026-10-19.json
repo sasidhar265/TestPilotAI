@@ -1,0 +1,18 @@
+{
+  "scope": "Right-hand SDLC delivery workflow panel; presentation only",
+  "browser_checks_passed": 10,
+  "coverage": [
+    "All workflow phases remain available",
+    "Wide-screen right-hand container at 1280 and 1440 pixels",
+    "Stacked layout at 390 and 768 pixels",
+    "Stage selection and reload",
+    "Current human workflow remains distinct from the selected stage",
+    "Existing detailed pipeline filtering, upload and BA review flows"
+  ],
+  "execution_boundary": "Route-isolated Chromium with temporary stores and synthetic run fixtures; no generated pack, build or deployment executed",
+  "static_checks": [
+    "JavaScript syntax",
+    "Ruff",
+    "git diff --check"
+  ]
+}

@@ -47,6 +47,8 @@ BA_WRITES = frozenset(
 
 def operation_allowed(role: str, path: str, method: str, view: str = "") -> bool:
     access = capabilities(role)
+    if path.startswith("/api/sdlc/projects/") and "/ba-reviews" in path:
+        return method in {"GET", "HEAD", "OPTIONS"} or role in {"admin", "test_lead", "ba"}
     if path.startswith("/api/sdlc/") and (
         path.endswith(
             (

@@ -1,6 +1,6 @@
 /* Shared semantic type scale, loaded after page styles on every application page. */
 :root {
-  --font-ui: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: "Avenir Next", Avenir, "Segoe UI", ui-sans-serif, sans-serif;
   --text-body: 0.875rem;
   --text-control: 0.8125rem;
   --text-label: 0.75rem;
@@ -18,6 +18,7 @@
   font-weight: 700;
   text-transform: none;
   overflow-wrap: break-word;
+  text-wrap: balance;
 }
 :root body h1 { font-size: var(--text-title); line-height: 1.2; letter-spacing: -0.03em; }
 :root body h2 { font-size: var(--text-section); line-height: 1.3; letter-spacing: -0.02em; }
@@ -50,6 +51,9 @@
 }
 :root body main :is(table, summary) { font-size: var(--text-control); line-height: 1.5; }
 :root body main th { font-weight: 650; text-transform: none; letter-spacing: normal; }
+:root body main :is(table, .stage-count, .sdlc-step-number, .pm-metric, .metric-value) {
+  font-variant-numeric: tabular-nums;
+}
 :root body :is(small, .muted, .badge, .status-badge, .review-badge, .live-badge) {
   font-size: var(--text-label); line-height: 1.5; letter-spacing: normal;
 }

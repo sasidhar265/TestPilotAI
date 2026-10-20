@@ -288,6 +288,10 @@ function elapsed(ms) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 const generationStages = {
+  "requirements-validation": {
+    label: "Requirements validation", agent: "Requirements Validation Agent",
+    title: "Validating requirements", message: "Checking requirements against approved business sources.",
+  },
   "ba-review": {label: "BA review", agent: "BA Agent", title: "Reviewing BRD", message: "Assessing the BRD against available auto-finance knowledge."},
   stories: {
     label: "Story generation",
@@ -322,9 +326,42 @@ const generationStages = {
     runtime: true,
   },
 };
+const operationReviewContext = {
+  "requirements-validation": {
+    output: "A BRD summary, domain coverage and requirement alignment findings for BA review.",
+    focus: ["Review the BRD scope and business expectations", "Compare requirements with available business sources", "Identify gaps, conflicts and questions for the BA"],
+  },
+  "ba-review": {
+    output: "Business expectations, deliverables, expected benefits and domain suggestions for BA review.",
+    focus: ["Extract the intended business outcomes", "Review the relevant auto-finance domain", "Return recommendations with source references"],
+  },
+  stories: { output: "Draft user stories with acceptance criteria for your review.", focus: ["Read the supplied requirements", "Draft stories and acceptance criteria", "Check source traceability"] },
+  scenarios: { output: "Draft scenarios linked to the reviewed stories.", focus: ["Read accepted stories", "Build scenario coverage", "Check links to the source stories"] },
+  "test-cases": { output: "Test cases and validation findings for review.", focus: ["Read reviewed scenarios", "Create test steps and expected results", "Validate the generated coverage"] },
+  "execution-plan": { output: "An execution plan and any runtime prerequisites to resolve.", focus: ["Inspect the configured project", "Identify executable features", "Report execution readiness"] },
+  execution: { output: "Actual runner results, failure details and execution logs.", focus: ["Use the configured execution plan", "Run the selected features", "Collect runner-reported results"] },
+};
+function renderOperationContext(target) {
+  const context = operationReviewContext[target] || operationReviewContext["test-cases"];
+  const runtime = generationStages[target]?.runtime;
+  $("operation-context-title").textContent = runtime ? "Execution context" : "Review context";
+  $("operation-source").textContent = runtime ? suite?.feature_name || "Configured test project"
+    : window.requirementAttachmentMetadata?.()?.name || attachedFile?.name || "Current requirements";
+  const scope = ["finance-domain-product", "finance-domain-journey"].map(id => {
+    const control = $(id);
+    return control?.value ? control.selectedOptions[0]?.textContent : null;
+  }).filter(Boolean);
+  $("operation-scope").textContent = scope.join(" · ") || "As supplied in the requirements";
+  $("operation-output").textContent = context.output;
+  $("operation-review-focus").replaceChildren(...context.focus.map(text => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    return item;
+  }));
+}
 function showGenerationOverlay(target) {
   lastGenerationTarget = target;
-  stopGenerationHome.prepend($("stop-generation"));
+  stopGenerationHome.append($("stop-generation"));
   $("generation-progress-slot").append($("generation-progress-panel"));
   $("background-run-tray").hidden = true;
   const running = Boolean(activeGeneration) && generationFinishedAt === null;
@@ -361,13 +398,15 @@ function showGenerationOverlay(target) {
   const stage = generationStages[target];
   $("cancel-generation-overlay-label").textContent = stage?.runtime
     ? "Cancel operation"
-    : "Cancel generation";
+    : ["requirements-validation", "ba-review"].includes(target) ? "Stop review" : "Cancel generation";
   if (stage) {
-    $("generation-agent-label").textContent = `${stage.agent} is working`;
+    $("generation-agent-label").textContent = stage.agent;
     $("generation-overlay-title").textContent = stage.title;
     $("generation-overlay-message").textContent =
-      `${stage.message} You can run this in the background while keeping this page open.`;
+      stage.message;
   }
+  $("generation-agent-label").textContent = $("generation-agent-label").textContent.replace(/ is working$/, "");
+  renderOperationContext(target);
   if (generationFinishedAt !== null) {
     $("generation-agent-label").textContent = generationOperation.status;
     $("generation-overlay-title").textContent = `${stage?.label || "Generation"} · ${generationOperation.status}`;
@@ -408,8 +447,24 @@ function hideGenerationOverlay(releaseBusy = true) {
     window.dispatchEvent(new CustomEvent("workspace-busy-change", { detail: { busy: false } }));
 }
 $("cancel-generation-overlay").onclick = () => $("stop-generation").click();
+$("generation-overlay").addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    $("background-generation-overlay").click();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const controls = [...$("generation-overlay").querySelectorAll("button:not(:disabled), a[href], summary, [tabindex='0']")]
+    .filter(control => control.getClientRects().length);
+  const first = controls[0], last = controls.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault(); last?.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault(); first?.focus();
+  }
+});
 document.querySelector(".topbar").after($("background-run-tray"));
-const stopGenerationHome = $("stop-generation").parentElement;
+const stopGenerationHome = document.querySelector("#generate-form .generation-actions");
 function updateGenerationClock() {
   const value = `${elapsed((generationFinishedAt ?? performance.now()) - generationStartedAt)} elapsed`;
   $("generation-overlay-time").textContent = value;
@@ -430,7 +485,7 @@ function showBackgroundProgress() {
   $("dismiss-generation-progress").setAttribute("aria-label", "Dismiss generation progress");
   updateGenerationBanner();
   $("background-run-body").append($("generation-progress-panel"));
-  stopGenerationHome.prepend($("stop-generation"));
+  stopGenerationHome.append($("stop-generation"));
   $("background-run-title").textContent = generationStages[lastGenerationTarget]?.label || "Generation progress";
   $("background-run-summary").textContent = generationFinishedAt === null
     ? "Running in the background. Agent updates continue below."
@@ -619,8 +674,9 @@ function mergeSuites(first, expanded) {
 }
 function syncGenerateAvailability() {
   if (typeof syncReviewControls === "function") syncReviewControls();
-  const hasInput = Boolean(attachedFile || $("description").value.trim()),
+  const hasInput = Boolean(attachedFile || requirementAttachment || $("description").value.trim()),
     modelUnavailable = ["checking", "blocked"].includes($("llm-model").dataset.access);
+  $("validate-requirements").disabled = Boolean(activeGeneration) || !hasInput || modelUnavailable;
   $("generate").disabled =
     Boolean(activeGeneration || generationSubmitPending) ||
     !hasInput ||
@@ -632,6 +688,13 @@ function setDescription(value) {
   $("character-count").textContent = `${value.length} characters`;
   syncGenerateAvailability();
 }
+window.addEventListener("ba-brd-revised", (event) => {
+  const request = event.detail?.content?.source_request;
+  if (!request?.description) return;
+  window.restoreRequirementAttachment?.(null, request);
+  if (request.llm_model) $("llm-model").value = request.llm_model;
+  setDescription(request.description);
+});
 function showSourceChoices() {
   $("jira-link-panel").classList.add("hidden");
   $("show-jira-link").classList.remove("hidden");
@@ -641,12 +704,15 @@ function setSourceMenu(open) {
   $("add-requirement-source").setAttribute("aria-expanded", String(open));
   if (open) {
     showSourceChoices();
-    $("requirement-source-menu").querySelector("label,button")?.focus();
+    $("requirement-file").focus();
   }
 }
 $("add-requirement-source").onclick = () =>
   setSourceMenu($("requirement-source-menu").classList.contains("hidden"));
-$("close-requirement-source").onclick = () => setSourceMenu(false);
+$("close-requirement-source").onclick = () => {
+  setSourceMenu(false);
+  $("add-requirement-source").focus();
+};
 $("show-jira-link").onclick = () => {
   $("show-jira-link").classList.add("hidden");
   $("jira-link-panel").classList.remove("hidden");
@@ -657,7 +723,11 @@ $("jira-link-back").onclick = () => {
   $("show-jira-link").focus();
 };
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") setSourceMenu(false);
+  if (event.key === "Escape" && !$("requirement-source-menu").classList.contains("hidden")) {
+    event.stopPropagation();
+    setSourceMenu(false);
+    $("add-requirement-source").focus();
+  }
 });
 document.addEventListener("click", (event) => {
   if (
@@ -694,6 +764,8 @@ function recordOperationResult(stage, result) {
 }
 function renderGenerationOverview() {
   const finished = generationFinishedAt !== null;
+  $("operation-state").textContent = finished ? generationOperation.status : "In progress";
+  $("generation-overlay").dataset.state = finished ? generationOperation.status.toLowerCase() : "running";
   $("generation-overview-status").textContent = finished ? generationOperation.status : "In progress";
   $("generation-overview-output").textContent = generationResultSummary?.output || "Not available";
   const statuses = [...validationEvidence.values()].map((entry) => entry.status);
@@ -709,7 +781,8 @@ function renderGenerationOverview() {
       : "The operation stopped with an error. Open the activity log for details before retrying."
     : "Keep this page open. You can continue in the background or cancel the operation.";
   $("generation-view-result").hidden = !finished || !generationResultSummary;
-  $("generation-activity-count").textContent = `${$("generation-background-events").querySelectorAll("li:not(.empty-event)").length} updates`;
+  const updateCount = $("generation-background-events").querySelectorAll("li:not(.empty-event)").length;
+  $("generation-activity-count").textContent = `${updateCount} ${updateCount === 1 ? "update" : "updates"}`;
 }
 $("generation-view-result").addEventListener("click", () => {
   const stage = generationResultSummary?.stage;
@@ -826,6 +899,7 @@ function renderLifecycleEvents(events) {
     $("generation-background-events").querySelector(".empty-event")?.remove();
     lifecycleSequence = event.sequence;
     $("generation-current-agent").textContent = event.agent;
+    if (generationFinishedAt === null) $("generation-agent-label").textContent = event.agent;
     $("generation-current-activity").textContent = event.summary;
     $("generation-feed-health").textContent = event.timestamp
       ? `Last backend update: ${new Date(event.timestamp).toLocaleTimeString()}` : "Backend activity received";
@@ -860,7 +934,8 @@ async function pollLifecycle(requestId) {
           ? "Backend finished without reporting activity." : "Connected. Waiting for the backend to report its first activity.";
       if (data.complete) {
         $("live-agent-feed-state").textContent = "COMPLETE";
-        $("generation-background-state").textContent = "COMPLETE";
+        $("generation-background-state").textContent = activeGeneration && generationFinishedAt === null
+          ? "UP TO DATE" : "COMPLETE";
       }
     } catch {
       if (requestId === activeLifecycleRequestId)
@@ -914,30 +989,52 @@ async function stopLifecycleFeed(requestId) {
     $("generation-background-state").textContent = "STOPPED";
 }
 const requirementPlaceholder = $("description").getAttribute("placeholder") || "";
+let requirementAttachment = null;
+function renderRequirementAttachment(file) {
+  requirementAttachment = file;
+  $("description").hidden = false;
+  $("description").readOnly = Boolean(file);
+  if (file) $("description").value = "";
+  $("description").setAttribute("placeholder", file ? "" : requirementPlaceholder);
+  $("character-count").hidden = Boolean(file);
+  $("description").closest(".textarea-wrap").classList.toggle("has-attachment", Boolean(file));
+  $("file-preview").classList.toggle("hidden", !file);
+  $("add-requirement-source").hidden = Boolean(file);
+  $("source-state").hidden = Boolean(file);
+  $("source-state").textContent = "";
+  if (!file) return;
+  $("file-type").textContent = (file.name.split(".").pop() || "file").toUpperCase();
+  $("file-name").textContent = file.name;
+  $("file-size").textContent = file.size == null ? "Uploaded document" :
+    file.size < 1048576 ? `${Math.max(1, Math.round(file.size / 1024))} KB` :
+      `${(file.size / 1048576).toFixed(1)} MB`;
+}
+window.requirementAttachmentMetadata = () => requirementAttachment;
+window.restoreRequirementAttachment = (metadata, request) => {
+  attachedFile = null;
+  $("requirement-file").value = "";
+  renderRequirementAttachment(request?.uploaded_brd_receipt ?
+    metadata || { name: "Uploaded BRD", size: null } : null);
+};
 function showFile(file) {
   attachedFile = file;
   setDescription("");
   $("description").setAttribute("placeholder", "");
-  $("file-preview").classList.remove("hidden");
-  $("file-type").textContent = (file.name.split(".").pop() || "file").toUpperCase();
-  $("file-name").textContent = file.name;
-  $("file-size").textContent =
-    file.size < 1048576
-      ? `${Math.max(1, Math.round(file.size / 1024))} KB`
-      : `${(file.size / 1048576).toFixed(1)} MB`;
-  $("source-state").textContent = "Document attached · ready to read";
-  $("description").closest(".textarea-wrap").classList.add("has-attachment");
-  $("status").textContent = `${file.name} attached. Select Generate stories when ready.`;
+  renderRequirementAttachment({ name: file.name, size: file.size });
+  $("status").textContent = `${file.name} attached. Select Validate requirements when ready.`;
   syncGenerateAvailability();
   setSourceMenu(false);
+  window.dispatchEvent(new CustomEvent("requirements-source-ready"));
 }
 function clearFile() {
+  const hadAttachment = Boolean(requirementAttachment);
   attachedFile = null;
   $("requirement-file").value = "";
   $("description").setAttribute("placeholder", requirementPlaceholder);
-  $("file-preview").classList.add("hidden");
+  renderRequirementAttachment(null);
   $("source-state").textContent = "";
   $("description").closest(".textarea-wrap").classList.remove("has-attachment");
+  if (hadAttachment) setDescription("");
   syncGenerateAvailability();
 }
 const businessRulesPlaceholder = $("business-rules").getAttribute("placeholder") || "";
@@ -1070,7 +1167,13 @@ function jiraIssueKey(value) {
 }
 $("load-jira").onclick = async () => {
   const key = jiraIssueKey($("jira-source-key").value);
-  if (!key) return alert("Enter a Jira issue key or paste a valid Jira browse link.");
+  if (!key) {
+    $("status").textContent = "Enter a Jira issue key or paste a valid Jira browse link.";
+    $("jira-source-key").setAttribute("aria-invalid", "true");
+    $("jira-source-key").focus();
+    return;
+  }
+  $("jira-source-key").removeAttribute("aria-invalid");
   const button = $("load-jira");
   button.disabled = true;
   button.textContent = "Connecting…";
@@ -1088,13 +1191,14 @@ $("load-jira").onclick = async () => {
     setDescription(sections.join("\n\n"));
     $("source-state").textContent = `${requirement.issue_key} connected`;
     $("status").textContent =
-      `Loaded ${requirement.issue_key} with ${requirement.acceptance_criteria.length} acceptance criteria. Review it, then generate the suite.`;
+      `Loaded ${requirement.issue_key}. Review the text, then select Validate requirements.`;
     setSourceMenu(false);
+    window.dispatchEvent(new CustomEvent("requirements-source-ready"));
   } catch (error) {
     $("status").textContent = error.message;
   } finally {
     button.disabled = false;
-    button.textContent = "Connect";
+    button.textContent = "Read from Jira";
   }
 };
 $("requirement-file").addEventListener("change", (e) => {
@@ -1492,17 +1596,18 @@ function renderAgentWorkflow() {
   const run = agentWorkflowRun;
   const badge = document.querySelector(".agent-route-badge");
   const context = document.querySelector(".agent-route-orchestrator");
-  badge.textContent = run ? run.status : "Ready";
+  badge.textContent = run ? run.status : "Not started";
   badge.dataset.status = run?.status || "ready";
   context.textContent = run ? run.status === "Running"
     ? "Updates reported by the running agents" : "Recorded activity for this finished operation"
-    : "Choose an action in Requirements";
+    : "Select Validate requirements to begin";
   $("agent-workflow-summary").textContent = run
     ? generationStages[run.kind]?.label || "Agent operation"
-    : "Review the BRD or generate stories from the shared requirement source.";
+    : "AI prepares the BRD summary and alignment findings. Review the results, then use Next stage to save the BRD for BA review.";
   const steps = run ? [...run.agents.values()] : [
-    {agent: "Review requirements", summary: "Senior business analyst reviews scope, domain knowledge and testability.", status: "Available"},
-    {agent: "Generate stories", summary: "Story Agent creates source-grounded stories and acceptance criteria.", status: "Available"},
+    {agent: "Summarise the BRD", summary: "AI reviews business objectives, scope, domain gaps and testability.", status: "AI check"},
+    {agent: "Validate source alignment", summary: "AI checks requirements against approved sources and reports gaps or conflicts.", status: "AI check"},
+    {agent: "Review results and continue", summary: "You review the findings and select Next stage. The validated BRD is saved for BA review; approval is a separate human decision.", status: "Your action"},
   ];
   $("agent-workflow-steps").innerHTML = steps.length ? steps.map((event, index) => {
     const timestamp = event.timestamp ? new Date(event.timestamp) : null;

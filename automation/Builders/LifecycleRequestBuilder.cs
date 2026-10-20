@@ -21,6 +21,9 @@ public static class LifecycleRequestBuilder
     public static HttpRequestMessage Detail(string project, string item) =>
         new(HttpMethod.Get, $"/api/sdlc/projects/{project}/work-items/{item}/detail");
 
+    public static HttpRequestMessage BrowserDraft(string project) =>
+        Post($"projects/{project}/artifacts/workflow", Fixture("Lifecycle.Json", "untrusted-browser-report"));
+
     public static HttpRequestMessage Decision(string project, int revision, string fixture)
     {
         var body = Fixture("Lifecycle.Json", fixture);

@@ -23,6 +23,7 @@
   flex-direction:column; border:1px solid var(--line); border-radius:20px;
   box-shadow:0 24px 80px rgba(15,23,42,.28);
 }
+
 .operation-dialog-header { padding:24px 28px 20px; border-bottom:1px solid var(--line); background:var(--surface); }
 .operation-dialog-eyebrow { display:block; color:var(--muted); font-size:11px; font-weight:650; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; }
 #generation-agent-label { display:inline-flex; font-size:12px; letter-spacing:0; text-transform:none; color:var(--primary); background:var(--primary-soft); padding:5px 10px; border-radius:6px; }
@@ -62,3 +63,55 @@
   #generation-overlay .generation-background-process li { grid-template-columns:1fr auto; }
   #generation-overlay .generation-background-process li p { grid-column:1 / -1; grid-row:2; }
 }
+
+/* Workspace-aligned operation review, with a steady header and persistent actions. */
+#generation-overlay .generation-dialog { width:min(860px,100%); border-radius:18px; }
+.operation-dialog-topline { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+.operation-dialog-topline .operation-dialog-eyebrow { margin:0; font-size:12px; letter-spacing:0; text-transform:none; }
+.operation-state { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--primary); }
+.operation-state::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+#generation-overlay[data-state="running"] .operation-state::before { animation:operation-status-pulse 1.8s ease-in-out infinite; }
+#generation-overlay[data-state="failed"] .operation-state, #generation-overlay[data-state="error"] .operation-state { color:var(--danger,#b42335); }
+#generation-overlay[data-state="cancelled"] .operation-state { color:var(--muted); }
+.operation-dialog-heading { display:grid; grid-template-columns:48px minmax(0,1fr); align-items:start; gap:16px; }
+.operation-mark { display:grid; place-items:center; width:48px; height:48px; border:1px solid var(--line); border-radius:12px; color:var(--primary); background:var(--surface-soft); }
+.operation-mark svg { width:28px; height:28px; }
+#generation-agent-label { background:none; padding:0; border-radius:0; font-weight:600; font-size:12px; }
+#generation-overlay h2 { margin:6px 0 8px; font-size:clamp(21px,2.3vw,28px); font-weight:650; text-wrap:balance; }
+#generation-overlay #generation-overlay-message { max-width:65ch; text-wrap:pretty; }
+.operation-context { margin-bottom:22px; }
+#generation-progress-slot { margin-bottom:22px; }
+#generation-overlay .generation-progress-bar { background:var(--primary); }
+.operation-context h3 { margin:0 0 14px; font-size:13px; font-weight:650; }
+.operation-context dl { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px 24px; margin:0; }
+.operation-context dl > div { min-width:0; }
+.operation-context dt { color:var(--muted); font-size:12px; margin-bottom:5px; }
+.operation-context dd { margin:0; font-size:13px; font-weight:500; line-height:1.6; overflow-wrap:anywhere; }
+.operation-expected-output { grid-column:1 / -1; }
+#operation-review-focus { display:flex; flex-wrap:wrap; gap:8px 20px; margin:16px 0 0; padding:14px 0 0; border-top:1px solid var(--line); list-style:none; }
+#operation-review-focus li { display:flex; align-items:baseline; gap:8px; font-size:12px; line-height:1.6; color:var(--muted); }
+#operation-review-focus li::before { content:""; width:4px; height:4px; flex-shrink:0; border-radius:50%; background:var(--primary); }
+#generation-overlay .generation-overview { border-block:1px solid var(--line); gap:0; padding-block:14px; }
+#generation-overlay .generation-overview > div { background:none; border:0; border-radius:0; padding:0 18px; }
+#generation-overlay .generation-overview > div:first-child { padding-left:0; }
+#generation-overlay .generation-overview > div + div { border-left:1px solid var(--line); }
+#generation-overlay .generation-dialog-footer button:focus-visible, #generation-overlay summary:focus-visible, #generation-overlay a:focus-visible { outline:2px solid var(--primary); outline-offset:4px; }
+#generation-overlay .generation-dialog-footer button { transition:background-color .2s ease,transform .2s ease; }
+#generation-overlay .generation-dialog-footer button:active { transform:translateY(1px); }
+@keyframes operation-status-pulse { 50% { opacity:.35; } }
+@media(max-width:580px) {
+  .operation-dialog-heading { grid-template-columns:36px minmax(0,1fr); gap:12px; }
+  .operation-mark { width:36px; height:36px; border-radius:9px; }
+  .operation-mark svg { width:23px; height:23px; }
+  .operation-dialog-topline { margin-bottom:16px; }
+  .operation-context dl { grid-template-columns:minmax(0,1fr); gap:12px; }
+  #generation-overlay .generation-overview > div { padding:8px 0; }
+  #generation-overlay .generation-overview > div + div { border-left:0; }
+}
+@media(prefers-reduced-motion:reduce) {
+  #generation-overlay *, #generation-overlay *::before { animation:none !important; transition:none !important; }
+}
+
+#generation-overlay .generation-dialog { animation:operation-dialog-enter .24s ease-out; }
+@keyframes operation-dialog-enter { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { #generation-overlay .generation-dialog { animation:none; } }

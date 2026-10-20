@@ -79,8 +79,8 @@ PHASES: tuple[dict[str, Any], ...] = (
     dict(
         id="requirements",
         label="Requirements",
-        description="Upload the BRD, analyse requirements, and complete BA validation.",
-        stages=["brd_upload", "requirements_analysis", "ba_validation", "clarification"],
+        description="Upload the BRD and run initial requirements analysis.",
+        stages=["brd_upload", "requirements_analysis"],
         record_kinds=["requirement", "documentation"],
         agent_stages=["planning", "requirements"],
         links=[
@@ -90,14 +90,15 @@ PHASES: tuple[dict[str, Any], ...] = (
     ),
     dict(
         id="business-approval",
-        label="Business approval",
+        label="BA review & approval",
         description=(
-            "The business stakeholder reviews the validated requirements and records a decision."
+            "Review the saved BRD and AI findings, resolve clarifications, "
+            "and record the human BA decision."
         ),
-        stages=["stakeholder_approval"],
+        stages=["ba_validation", "clarification", "stakeholder_approval"],
         record_kinds=["requirement", "documentation"],
         agent_stages=[],
-        links=[dict(label="Review requirements source", href="/?view=requirements")],
+        links=[],
     ),
     dict(
         id="backlog",
@@ -114,7 +115,7 @@ PHASES: tuple[dict[str, Any], ...] = (
         ],
         record_kinds=["epic", "story", "documentation"],
         agent_stages=["requirements"],
-        links=[dict(label="Open story design", href="/?view=stories")],
+        links=[],
     ),
     dict(
         id="development",
@@ -194,6 +195,141 @@ PHASES: tuple[dict[str, Any], ...] = (
         ],
     ),
 )
+# Responsibility and artifact contracts are shared by navigation, project snapshots
+# and AI instructions. They describe ownership, never grant transition authority.
+DELIVERY_RESPONSIBILITIES = {
+    "requirements": dict(
+        ai=(
+            "Extract requirements from the PDF or Word BRD; identify gaps, ambiguities, "
+            "conflicts and dependencies."
+        ),
+        human=(
+            "The BA checks extraction against the source and confirms correctness before handoff."
+        ),
+        artifacts=["Versioned BRD", "Extracted requirements", "Gap and dependency analysis"],
+    ),
+    "business-approval": dict(
+        ai=(
+            "Recommend corrections and clarification questions with references to the "
+            "current BRD version."
+        ),
+        human=(
+            "The BA validates corrections; the business stakeholder signs off the "
+            "requirements baseline."
+        ),
+        artifacts=["BA validation", "Clarification decisions", "Requirements sign-off"],
+    ),
+    "backlog": dict(
+        ai=(
+            "Draft epics, user stories, acceptance criteria, priorities and estimates "
+            "from approved requirements."
+        ),
+        human=(
+            "The PO and team refine stories, agree priorities and estimates, and "
+            "approve sprint assignments."
+        ),
+        artifacts=["Epics and stories", "Acceptance criteria", "Refinement and planning decisions"],
+    ),
+    "development": dict(
+        ai=(
+            "Assist with implementation and unit tests; draft design notes and code "
+            "review findings."
+        ),
+        human=(
+            "The developer picks up an approved story, implements code, opens a pull "
+            "request and reviews changes."
+        ),
+        artifacts=[
+            "Design notes",
+            "Implementation and unit tests",
+            "Pull request and code review",
+            "Build evidence",
+        ],
+    ),
+    "qa": dict(
+        ai=(
+            "Draft test cases and API/UI automation; summarise execution evidence and "
+            "suggest defect investigations."
+        ),
+        human=(
+            "QA executes tests, investigates failures, manages defects, retests fixes "
+            "and provides QA sign-off."
+        ),
+        artifacts=[
+            "Test cases and automation drafts",
+            "Test execution evidence",
+            "Defects and retests",
+            "QA sign-off",
+        ],
+    ),
+    "release": dict(
+        ai=(
+            "Summarise business acceptance, regression and security evidence, release "
+            "risks and rollback readiness."
+        ),
+        human=(
+            "Business owners accept UAT; the release manager reviews readiness and "
+            "approves release progression."
+        ),
+        artifacts=[
+            "UAT acceptance",
+            "Regression and security evidence",
+            "Release checklist",
+            "Rollback plan",
+        ],
+    ),
+    "deployment": dict(
+        ai=(
+            "Prepare deployment and monitoring summaries from configured CI/CD receipts "
+            "and verification results."
+        ),
+        human=(
+            "The release manager validates staging, approves production deployment and "
+            "verifies monitoring and rollback readiness."
+        ),
+        artifacts=[
+            "Staging validation",
+            "Production approval",
+            "CI/CD deployment receipt",
+            "Monitoring and verification evidence",
+        ],
+    ),
+    "closure": dict(
+        ai=(
+            "Produce and update draft release notes, operational handover and "
+            "documentation from recorded evidence."
+        ),
+        human=(
+            "Artifact owners validate and publish documentation; the release manager "
+            "closes the release."
+        ),
+        artifacts=[
+            "Release notes",
+            "Operational handover",
+            "Validated documentation",
+            "Audit history",
+        ],
+    ),
+}
+DOCUMENTATION_POLICY = dict(
+    ai=(
+        "Produce and update draft artifacts throughout delivery, preserving source and "
+        "version references."
+    ),
+    human=(
+        "Artifact owners validate and publish drafts. AI generation does not constitute "
+        "approval or publication."
+    ),
+    artifacts=[
+        "Requirements traceability",
+        "Design notes",
+        "Test evidence",
+        "Release notes",
+        "Audit history",
+    ],
+)
 for _phase in PHASES:
+    _phase["responsibilities"] = DELIVERY_RESPONSIBILITIES[_phase["id"]]
+    _phase["documentation"] = DOCUMENTATION_POLICY
     for _stage in _phase["stages"]:
         WORKFLOW[_stage]["phase"] = _phase["id"]

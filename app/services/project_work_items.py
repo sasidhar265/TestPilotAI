@@ -5,6 +5,7 @@ from typing import Any
 from uuid import uuid4
 
 from app.lifecycle_workflow import WORKFLOW
+from app.services.ba_handoff import backlog_drafting
 from app.services.project_lifecycle import ProjectLifecycle, timestamp
 from app.services.sdlc import SDLCError, SDLCStore
 
@@ -20,7 +21,7 @@ ITEM_TRANSITIONS = {
 ITEM_ROLES = {
     "requirement": {"ba"},
     "epic": {"product_owner"},
-    "story": {"product_owner", "developer"},
+    "story": {"ba", "product_owner", "developer"},
     "test_case": {"functional_tester", "automation_tester", "test_lead"},
     "defect": {"functional_tester", "automation_tester", "test_lead", "developer"},
     "release": {"release_manager"},
@@ -104,6 +105,19 @@ class ProjectWorkItems:
             state = ProjectLifecycle.state(db, project)
             if not state["baseline"]:
                 raise SDLCError("Save Requirements before creating work items")
+            if kind == "story" and role == "ba":
+                gate = backlog_drafting(db, project, state["baseline"], role)
+                if not gate["allowed"]:
+                    raise SDLCError(gate["reason"])
+                if (
+                    payload["status"] not in {"draft", "blocked"}
+                    or payload["estimate"] is not None
+                    or payload["assignee"]
+                    or payload["sprint"]
+                ):
+                    raise PermissionError(
+                        "BA authors story drafts; product owners manage planning and readiness"
+                    )
             identifier = payload.get("id") or uuid4().hex
             previous = db.execute(
                 "SELECT data FROM work_items WHERE id=? AND project=?", (identifier, project)
@@ -233,6 +247,8 @@ class ProjectWorkItems:
                 author=actor,
                 updated_at=timestamp(),
             )
+            if current and current.get("ai_origin"):
+                data["ai_origin"] = current["ai_origin"]
             db.execute(
                 "INSERT OR REPLACE INTO work_items VALUES (?,?,?)",
                 (identifier, project, json.dumps(data)),

@@ -29,6 +29,7 @@ from app.config import Settings
 from app.models import ExecutionMode
 from app.observability import publish_lifecycle_event
 from app.quotation_contract import quotation_feature, quotation_instructions
+from app.roslyn_syntax import csharp_syntax_findings
 from app.workspace_policy import standards
 
 Language = Literal["csharp", "java", "python", "javascript", "typescript", "ruby"]
@@ -96,6 +97,9 @@ def safe_files(artifact: LanguageArtifact, *, detailed_diagnostics: bool = True)
         ):
             raise ValueError("Unsafe, duplicate or unsupported artifact file path")
         seen.add(file.path.casefold())
+    findings = csharp_syntax_findings(artifact.files)
+    if findings:
+        raise ValueError(" ".join(findings))
 
 
 class MultiLanguageAgent:

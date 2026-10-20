@@ -17,10 +17,10 @@
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
-    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
-    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261017-taste" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261020-safe-action-wrap" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
-    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261016-inline-review" />
+    <link rel="stylesheet" href="/static/styles/workspace-ui.css?v=20261020-inline-backlog-stories" />
   </head>
   <body class="explore-page" data-access-pending="true">
     <div class="shell">
@@ -49,7 +49,7 @@
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
             <div class="nav-group sdlc-navigation">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="sdlc-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>SDLC workflow</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
               <div class="nav-children" id="sdlc-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
                 <a class="nav-item" href="/sdlc"><span>SDLC workflow</span></a>
@@ -328,14 +328,13 @@
     </div>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261016-sdlc-entry" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261016-sdlc-entry" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261017-documents-nav" defer></script>
     <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261020-session-cleanup" defer></script>
     <script src="/static/scripts/logs.js?v=20261013-operation-activity" defer></script>
-    <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261017-documents-nav" defer></script>
     <script src="/static/scripts/role-access.js?v=20261016-inline-review" defer></script>
-    <script src="/static/scripts/workspace-chrome.js?v=20261016-sdlc-entry" defer></script>
-    <script src="/static/scripts/workbench-shell.js?v=20261016-inline-review" defer></script>
+    <script src="/static/scripts/workspace-chrome.js?v=20261017-documents-nav" defer></script>
   </body>
 </html>

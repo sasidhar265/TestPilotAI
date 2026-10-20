@@ -97,11 +97,8 @@ def test_inline_ba_review_stakeholder_approval_versions_and_traceability():
         )
         page.locator("#record-ai-panel summary").click()
         pw.expect(page.locator("#record-ai-suggestions")).to_contain_text("No current-baseline")
-        page.keyboard.press("Control+k")
-        pw.expect(page.locator(".workspace-command")).to_be_visible()
-        page.locator("#workspace-command-input").fill("Reviewable requirement")
-        page.keyboard.press("Enter")
-        pw.expect(page.locator(".workspace-command")).not_to_be_visible()
+        assert page.locator(".command-trigger, .workspace-command").count() == 0
+        assert page.get_by_role("link", name="Approval inbox", exact=True).count() == 0
         for stage in ["Business analyst validation", "Stakeholder approval"]:
             evidence = page.locator("#lifecycle-evidence")
             evidence.locator('[name="reference"]').fill("browser-fixture://inline-review")

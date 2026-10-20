@@ -115,3 +115,48 @@
 @media (min-width: 701px) {
   .suite-jira .jira-popover { top: calc(100% + 7px); }
 }
+
+/* Shared spacing must not replace each component's layout or button widths. */
+:root body main :is(.sdlc-actions, .sdlc-sequence-controls, .ba-review-section-actions,
+  .ba-finding-actions, .generation-actions, .users-form-actions, .ba-actions,
+  .rule-actions, .stage-actions, .actions, .execution-log-detail-actions) {
+  flex-wrap: wrap;
+  gap: var(--control-gap);
+}
+:root body main :is(.sdlc-actions, .sdlc-sequence-controls, .ba-review-section-actions,
+  .ba-finding-actions, .generation-actions, .users-form-actions, .ba-actions,
+  .rule-actions, .stage-actions, .actions, .execution-log-detail-actions)
+  > :is(button, a.button) {
+  min-width: 0;
+  max-width: 100%;
+  margin-block: 0;
+}
+:root body main :is(.sdlc-actions, .sdlc-sequence-controls, .ba-review-section-actions,
+  .ba-finding-actions, .generation-actions, .users-form-actions, .ba-actions,
+  .rule-actions, .stage-actions, .actions, .execution-log-detail-actions)
+  :is(button, a.button) { overflow-wrap: anywhere; }
+:root body main :is(.pm-toolbar, .record-toolbar, .sdlc-run-toolbar) {
+  gap: var(--control-gap);
+  min-width: 0;
+}
+/* Heading actions wrap below their text instead of squeezing or overlapping it. */
+:root body main :is(.panel-head, .section-heading, .stage-heading, .api-cta) {
+  flex-wrap: wrap;
+  gap: var(--control-gap);
+}
+:root body main :is(.panel-head, .section-heading, .stage-heading, .api-cta) > div {
+  min-width: 0;
+}
+:root body main .api-cta > div { flex: 1 1 18rem; }
+:root body main .api-cta > a.button {
+  align-self: center;
+  flex: 0 1 auto;
+}
+/* A hidden action group must remain hidden regardless of its layout class. */
+:root body main :is(.sdlc-actions, .generation-actions, .ba-actions, .actions)
+  :is(button, a.button):is([hidden], .hidden) { display: none; }
+:root body main :is(.sdlc-actions, .generation-actions, .ba-actions, .actions)
+  :is([hidden], .hidden) { display: none; }
+:root body main :is(.sdlc-actions, .generation-actions, .ba-actions, .actions):is([hidden], .hidden) {
+  display: none;
+}

@@ -81,3 +81,7 @@ Feature: Human governed project lifecycle
   Scenario: Invented agent suggestions cannot be recorded as reviewed output
     Given a signed-in lifecycle administrator has a requirements project
     Then an unknown inline AI suggestion is rejected without modifying the requirement
+
+  Scenario: Business approval context retains the BRD version and rejects browser draft provenance
+    Given a signed-in lifecycle administrator has a requirements project
+    Then business approval context ignores browser assessment claims and retains human version history

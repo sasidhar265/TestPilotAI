@@ -57,5 +57,21 @@
       "version": 1,
       "task": "nonexistent-bdd-task"
     }
+  },
+  "untrusted-browser-report": {
+    "content": {
+      "version": 1,
+      "state": {},
+      "savedBaReport": {
+        "summary": "Synthetic untrusted browser report; not server approval evidence",
+        "outcome": "ready_for_business_review"
+      },
+      "savedRequirementsReport": {
+        "status": "aligned",
+        "message": "Synthetic browser claim; must be ignored by lifecycle approval context"
+      }
+    },
+    "base_version": 0,
+    "links": []
   }
 }

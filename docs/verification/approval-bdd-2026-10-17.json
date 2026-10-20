@@ -1,0 +1,96 @@
+{
+  "environment": "isolated loopback FastAPI server and temporary SQLite data",
+  "scope": "repository lifecycle governance and BA input boundary; no generated suite or deployment executed",
+  "counts": {
+    "total": "18",
+    "executed": "18",
+    "passed": "18",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "results": [
+    {
+      "name": "CompleteEveryHumanLifecycleHandoffAndRetainAttributableApprovals",
+      "outcome": "Passed"
+    },
+    {
+      "name": "StakeholderRejectionReturnsWorkToClarificationAndBlocksAdvancement",
+      "outcome": "Passed"
+    },
+    {
+      "name": "InventedAgentSuggestionsCannotBeRecordedAsReviewedOutput",
+      "outcome": "Passed"
+    },
+    {
+      "name": "InlineRequirementReviewRetainsDiscussionAndExactApprovedVersions",
+      "outcome": "Passed"
+    },
+    {
+      "name": "RequirementRevisionsRetainStoryAndTestTraceabilityAndFlagChangeImpacts",
+      "outcome": "Passed"
+    },
+    {
+      "name": "RejectAnInvalidBAReviewSource(\"short-description\",\"1\",null)",
+      "outcome": "Passed"
+    },
+    {
+      "name": "ExtendTheAgentCatalogueWithoutRemovingTestingAgentsOrModelPolicy",
+      "outcome": "Passed"
+    },
+    {
+      "name": "ChangingAnApprovedBaselineFlagsPreviousEvidenceAndResetsApprovalWork",
+      "outcome": "Passed"
+    },
+    {
+      "name": "RejectAnInvalidBAReviewSource(\"forged-upload\",\"2\",null)",
+      "outcome": "Passed"
+    },
+    {
+      "name": "RejectAnInvalidBAReviewSource(\"missing-description\",\"0\",null)",
+      "outcome": "Passed"
+    },
+    {
+      "name": "ReadyStoriesRequireTheAccountableUpstreamRefinementHandoffs",
+      "outcome": "Passed"
+    },
+    {
+      "name": "OrderedSDLCStepsComeFromAuthoritativeWorkflowAndFollowRejectionHandoffs",
+      "outcome": "Passed"
+    },
+    {
+      "name": "EvidenceIsMandatoryAndConcurrentDecisionsCannotOverwriteProgress",
+      "outcome": "Passed"
+    },
+    {
+      "name": "BusinessApprovalContextRetainsTheBRDVersionAndRejectsBrowserDraftProvenance",
+      "outcome": "Passed"
+    },
+    {
+      "name": "InvitedDevelopersCanDiscussRequirementsButCannotAcceptBASuggestions",
+      "outcome": "Passed"
+    },
+    {
+      "name": "DefectsReturnToDevelopmentAndRequireASeparateQARetest",
+      "outcome": "Passed"
+    },
+    {
+      "name": "StaleReviewCommentsCannotOverwriteNewerRequirementContext",
+      "outcome": "Passed"
+    },
+    {
+      "name": "ProjectMembershipDoesNotGrantADeveloperBATransitionAuthority",
+      "outcome": "Passed"
+    }
+  ]
+}

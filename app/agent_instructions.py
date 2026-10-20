@@ -13,8 +13,8 @@ AGENT_FILES = {
     "sdlc-code-review": "sdlc-code-review.agent.md",
     "sdlc-release": "sdlc-release.agent.md",
     "sdlc-operations": "sdlc-operations.agent.md",
-
     "business-analyst": "business-analyst.agent.md",
+    "ba-inline-review": "ba-inline-review.agent.md",
     "requirements-validation": "requirements-validation.agent.md",
     "story-generator": "story-generator.agent.md",
     "scenario-generator": "scenario-generator.agent.md",
@@ -58,10 +58,21 @@ def load_agent_instructions(agent_id: str) -> str:
     filename = AGENT_FILES.get(agent_id)
     if filename is None:
         raise KeyError(f"Unknown Markdown agent: {agent_id}")
+    from app.lifecycle_workflow import DELIVERY_RESPONSIBILITIES, DOCUMENTATION_POLICY
+
+    responsibility_contract = "\n".join(
+        f"{phase}: AI: {policy['ai']} Human: {policy['human']}"
+        for phase, policy in DELIVERY_RESPONSIBILITIES.items()
+    )
     return "\n\n".join(
         [
             _instruction_body(AGENT_DIRECTORY / filename),
             _instruction_body(AGENT_DIRECTORY / "model-policy.md"),
+            "DELIVERY RESPONSIBILITY CONTRACT\n" + responsibility_contract,
+            "DOCUMENTATION: " + DOCUMENTATION_POLICY["ai"] + " " + DOCUMENTATION_POLICY["human"],
+            "Never treat generated drafts, recommendations or execution summaries as human "
+            "approval. Report missing evidence and unconfigured integrations as blockers; "
+            "never invent passing execution, published artifacts or deployment receipts.",
         ]
     )
 

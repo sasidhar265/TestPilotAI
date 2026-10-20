@@ -1,41 +1,22 @@
-# Roles and permissions
+# Role permissions
 
-Existing sessions and account administration remain authoritative. Global account role
-plus explicit project membership is required; membership never changes role permissions.
-The project owner adds existing enabled accounts through the project team form. Shared
-project access does not expose other owners' projects. Only the owner can invite members.
+Existing account roles are retained; no accounts or identity data are migrated. `app/roles.py` provides labels/capabilities, `app/role_access.py` authorises routes and `can_act` in the shared lifecycle policy authorises transitions. Project membership is also required.
 
-| Role                                  | Accountable lifecycle work                                                                                                |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| ba                                    | Upload, analysis, BA validation and clarification; requirement records                                                    |
-| business_stakeholder                  | Business approval and UAT                                                                                                 |
-| product_owner                         | Backlog generation/refinement, estimation, sprint assignment, UAT                                                         |
-| developer                             | Development, review, CI, defect resolution; existing story scope is PO-owned                                              |
-| functional_tester / automation_tester | QA testing, retesting, test and defect records; existing testing restrictions retained                                    |
-| non_functional_tester                 | Existing nonfunctional tools; no business/release approvals                                                               |
-| test_lead                             | QA sign-off, testing and defects; existing test-lead capabilities retained                                                |
-| release_manager                       | CI, release readiness/approval, staging, production approval, deployment, verification and closure; governed run recovery |
-| admin                                 | Account management and stage-owner override; still requires signed human session, evidence and release controls           |
+| Account role | Accountable lifecycle stages |
+| --- | --- |
+| Business stakeholder (`business_stakeholder`) | Stakeholder approval, Uat |
+| Product owner / Scrum master (`product_owner`) | Backlog generation, Backlog refinement, Prioritisation estimation, Sprint planning, Uat |
+| Developer (`developer`) | Development, Code review, Ci checks, Defect resolution |
+| Release manager / DevOps (`release_manager`) | Ci checks, Release readiness, Release approval, Staging validation, Production approval, Production deployment, Post deployment verification, Release closure, Closed |
+| Business analyst (`ba`) | Brd upload, Requirements analysis, Ba validation, Clarification |
+| Functional tester (`functional_tester`) | Qa testing, Qa retesting |
+| Automation tester (`automation_tester`) | Qa testing, Qa retesting |
+| Non-functional tester (`non_functional_tester`) | Testing work within existing capabilities; no separate sign-off grant |
+| Test lead (`test_lead`) | Qa testing, Qa retesting, Qa signoff |
+| Admin (`admin`) | All stages, with normal evidence and human-session checks |
 
-New role names use the existing Role contract, account form and safe account-table migration.
-Legacy testing role names remain valid. Lifecycle APIs enforce project access and role
-rules regardless of browser visibility. Service tokens remain privileged integrations but
-cannot attest evidence or submit human lifecycle decisions. Legacy artifact reviews are
-review notes and cannot substitute for any lifecycle approval.
+## Approval and record responsibilities
 
+Business Analyst maintains source-grounded requirements and BA evidence. After current-baseline human BA sign-off, the BA can create linked draft user stories in Backlog. BA drafting does not grant stakeholder approval or product-owner planning authority. Business Stakeholder approves or requests clarification. Product Owner refines and plans the backlog. Developer maintains implementation/reference status and resolves defects. Existing functional/automation tester roles represent QA engineers; Test Lead owns QA sign-off. Release Manager owns release and deployment gates. Administrators manage accounts and project owners manage membership.
 
-The SDLC landing page and persistent project selector are shared navigation. Moving
-the original requirements editor into Step 1 does not change its capabilities or
-backend authorization. Specialist links continue to use server-issued role visibility;
-previewing a numbered step grants no transition permission.
-
-### Inline review and contextual assistance
-
-All enabled project members may read scoped record history and post human-session
-clarification comments against the version they reviewed. Suggestion use/dismiss requires
-an editing role for that record kind, a current item version and a real current-baseline
-agent task source. Stakeholders do not acquire BA editing rights through discussions.
-Developers receive only status/reference edit fields for stories; the backend retains
-PO ownership of scope, priority, estimation, assignment and sprint changes. Global shared
-rule publication permissions are unchanged by project-scoped BRD saving. Requirement
-amendments retain the existing automatic review/approval invalidation rules.
+Record edits/comments/suggestion decisions use existing work-item permissions. Selecting a sidebar phase grants no new authority. Positive stakeholder approval is blocked by current-source server review blockers; rejection requires actionable comments and returns work to clarification.

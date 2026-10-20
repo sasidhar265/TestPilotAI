@@ -47,6 +47,8 @@ public sealed class LifecycleGovernanceStepDefinition : IDisposable
     public Task InlineDeveloper() => service.InlineDeveloper();
     [Then("an unknown inline AI suggestion is rejected without modifying the requirement")]
     public Task InlineUnknownSuggestion() => service.InlineUnknownSuggestion();
+    [Then("business approval context ignores browser assessment claims and retains human version history")]
+    public Task ApprovalContext() => service.AssertApprovalContext();
     [AfterScenario]
     public Task Cleanup() => service.Cleanup();
     public void Dispose() => service.Dispose();

@@ -26,6 +26,18 @@
     sourceTool.innerHTML = "<span>Requirements</span>";
     tools.insertBefore(sourceTool, summary.nextSibling);
     deliveryNav.append(tools);
+    const documentsLink = document.createElement("a");
+    documentsLink.id = "sdlc-documents-link";
+    documentsLink.className = "nav-item";
+    documentsLink.href = "/sdlc?view=documents";
+    documentsLink.innerHTML = "<span>Documents and version history</span>";
+    deliveryNav.prepend(documentsLink);
+    const pipelineLink = document.createElement("a");
+    pipelineLink.id = "sdlc-pipeline-link";
+    pipelineLink.className = "nav-item";
+    pipelineLink.href = "/sdlc?view=pipeline";
+    pipelineLink.innerHTML = "<span>Delivery progress</span>";
+    tools.append(pipelineLink);
   }
   const financeNavigation = document.getElementById("finance-navigation");
   if (financeNavigation && !financeNavigation.querySelector('[href="/auto-finance-guide"]')) {
@@ -39,7 +51,7 @@
   }
   financeNavigation?.querySelector('a[href="/products"]')?.remove();
   const labels = {
-    "/sdlc": "Project workspace",
+    "/sdlc": "SDLC overview",
     "/project-dashboard": "Project dashboard",
     "/progress": "Execution reports",
     "/quality-lifecycle": "Coverage & traceability",
@@ -201,11 +213,9 @@
       toggle.focus();
     }
   });
-  sidebar.querySelectorAll("a[href]").forEach((link) =>
-    link.addEventListener("click", () => {
-      if (mobile.matches) setCollapsed(true);
-    }),
-  );
+  sidebar.addEventListener("click", (event) => {
+    if (event.target.closest("a[href]") && mobile.matches) setCollapsed(true);
+  });
   const updateHeaderHeight = () => {
     if (mobile.matches) {
       const height = `${sidebar.getBoundingClientRect().height}px`;

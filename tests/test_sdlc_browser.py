@@ -1,5 +1,6 @@
 """Opt-in SDLC UI checks with a persistent store and isolated browser transport."""
 
+import json
 import mimetypes
 import os
 from pathlib import Path
@@ -164,10 +165,23 @@ def test_sdlc_project_review_and_reload(tmp_path, uploaded_brd):
         page = browser.new_page()
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/*", route_request)
+        project = store.create("Quotation SDLC", "reviewer")
+        page.add_init_script(
+            "sessionStorage.setItem('sdlc-active-project:reviewer', "
+            + json.dumps(project["id"])
+            + ")"
+        )
         page.goto("http://workspace/")
-        page.locator("#sdlc-name").fill("Quotation SDLC")
-        page.locator("#sdlc-create button").click()
+        assert page.locator(".sdlc-project-controls").is_hidden()
         page.wait_for_function("!document.querySelector('#sdlc-start-delivery').disabled")
+        # Existing delivery settings are restored from project context; Requirements
+        # no longer exposes the optional-settings disclosure.
+        page.evaluate("""() => {
+            const draft = window.exportTestingWorkspace();
+            draft.controls['sdlc-constraints'] = 'Use the approved quotation API contract';
+            draft.controls['sdlc-target'] = 'tested';
+            window.restoreTestingWorkspace(draft);
+        }""")
         page.locator("#description").fill("Persistent quotation requirements from the approved BRD")
         if uploaded_brd:
             page.locator('input[type="file"]').first.set_input_files(
@@ -180,11 +194,8 @@ def test_sdlc_project_review_and_reload(tmp_path, uploaded_brd):
                 }
             )
         assert page.locator("#requirements-options").get_attribute("open") is None
+        assert page.locator("#requirements-options").is_hidden()
         assert page.locator("#sdlc-target").is_hidden()
-        page.locator("#requirements-options > summary").click()
-        assert page.locator("#sdlc-target").is_visible()
-        page.locator("#sdlc-constraints").fill("Use the approved quotation API contract")
-        page.locator("#sdlc-target").select_option("tested")
         page.locator("#sdlc-save-requirements").click()
         page.wait_for_function(
             "document.querySelector('#sdlc-requirements-status').textContent.includes('v1 saved')"
@@ -193,10 +204,17 @@ def test_sdlc_project_review_and_reload(tmp_path, uploaded_brd):
         expected_source = (
             "Approved BRD document requirements" if uploaded_brd else "Persistent quotation"
         )
-        page.wait_for_function(
-            "expected => document.querySelector('#description').value.includes(expected)",
-            arg=expected_source,
-        )
+        if uploaded_brd:
+            page.wait_for_function("document.querySelector('#description').readOnly")
+            assert page.locator("#description").is_visible()
+            assert page.locator("#description").input_value() == ""
+            assert page.locator("#file-preview").is_visible()
+            assert page.locator("#file-name").inner_text() == "requirements.docx"
+        else:
+            page.wait_for_function(
+                "expected => document.querySelector('#description').value.includes(expected)",
+                arg=expected_source,
+            )
         assert (
             page.locator("#sdlc-constraints").input_value()
             == "Use the approved quotation API contract"
@@ -208,6 +226,7 @@ def test_sdlc_project_review_and_reload(tmp_path, uploaded_brd):
         assert page.locator(".sdlc-agent-card").count() == 7
         assert page.locator(".sdlc-agent-card.passed").count() == 3
         assert "SDLC_BUILD_COMMAND" in page.locator("#sdlc-run-error").inner_text()
+        page.locator("#sdlc-pipeline-link").click()
         assert page.locator("#sdlc-resume-run").is_visible()
         assert page.locator("#sdlc-brief").count() == 0
         assert page.locator("#sdlc-create").is_hidden()
@@ -215,8 +234,7 @@ def test_sdlc_project_review_and_reload(tmp_path, uploaded_brd):
         assert (
             page.locator("#sdlc-project").get_attribute("aria-describedby") == "sdlc-project-help"
         )
-        page.locator("#sdlc-create-panel summary").click()
-        assert page.locator("#sdlc-create").is_visible()
+        assert page.locator("#sdlc-create-panel").is_hidden()
         page.set_viewport_size({"width": 1440, "height": 1000})
         page.screenshot(path="/tmp/sdlc-agent-cockpit.png", full_page=True)
         page.reload()

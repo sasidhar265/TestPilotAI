@@ -37,3 +37,6 @@ mobile/ios/App/App/capacitor.config.json
 mobile/ios/App/Pods/
 mobile/ios/DerivedData/
 mobile/ios/**/xcuserdata/
+
+app/tools/roslyn/bin/
+app/tools/roslyn/obj/
