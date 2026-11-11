@@ -7,9 +7,10 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
-from playwright.async_api import async_playwright
+from playwright.async_api import Browser, Request, Response, async_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Utilities"))
 from PerformanceReportUtility import report
@@ -29,12 +30,12 @@ if (
     sys.exit("Set TARGET_BASE_URL to the actual HTTP(S) origin without credentials or a path.")
 run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
 output = root / "TestResults/Reports" / run_id
-samples = []
+samples: list[dict[str, Any]] = []
 
 
-async def user(browser, identifier, started):
+async def user(browser: Browser, identifier: int, started: float) -> None:
     await asyncio.sleep(identifier * config["ramp_seconds"] / config["threads"])
-    options = {"viewport": {"width": 1440, "height": 900}}
+    options: dict[str, Any] = {"viewport": {"width": 1440, "height": 900}}
     if os.environ.get("BROWSER_STORAGE_STATE"):
         options["storage_state"] = os.environ["BROWSER_STORAGE_STATE"]
     context = await browser.new_context(**options)
@@ -42,16 +43,16 @@ async def user(browser, identifier, started):
     page.set_default_timeout(config["timeout_ms"])
     for iteration in range(config["iterations"]):
         for check in checks:
-            errors = []
+            errors: list[str] = []
 
-            def on_error(error, captured=errors):
+            def on_error(error: Exception, captured: list[str] = errors) -> None:
                 captured.append(str(error))
 
-            def on_response(response, captured=errors):
+            def on_response(response: Response, captured: list[str] = errors) -> None:
                 if response.status >= 400:
                     captured.append("HTTP error response")
 
-            def on_request_failed(request, captured=errors):
+            def on_request_failed(request: Request, captured: list[str] = errors) -> None:
                 captured.append("Network request failed")
 
             page.on("pageerror", on_error)
@@ -128,7 +129,7 @@ async def user(browser, identifier, started):
     await context.close()
 
 
-async def main():
+async def main() -> None:
     async with async_playwright() as runtime:
         browser = await runtime.chromium.launch()
         try:

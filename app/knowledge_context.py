@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -23,7 +23,9 @@ class KnowledgePreviewRequest(BaseModel):
     request: GenerateRequest
 
 
-def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings: Settings) -> dict:
+def knowledge_context(
+    request: GenerateRequest, stage: KnowledgeStage, settings: Settings
+) -> dict[str, Any]:
     reviewer = BusinessAnalystAgent(settings)
     review_scope = None
     if stage == "ba-review":
@@ -31,7 +33,9 @@ def knowledge_context(request: GenerateRequest, stage: KnowledgeStage, settings:
     else:
         sources, _, limitations = reviewer.knowledge()
     topics = []
-    for source in [] if stage == "ba-review" else profile_knowledge_sources(settings.agent_profile):
+    for source in (
+        [] if stage == "ba-review" else profile_knowledge_sources(settings.agent_profile, settings)
+    ):
         content = source["content"]
         sections = []
         for part in re.split(r"(?m)^## ", content)[1:]:

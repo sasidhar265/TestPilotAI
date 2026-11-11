@@ -1204,7 +1204,7 @@
   // Tab-scoped, account-scoped recovery for links that load another document.
   let draftKey = null;
   let restoringDraft = false;
-  const draftControls = ["description", "business-rules", "finance-domain-product", "finance-domain-journey", "manual-testing-type", "llm-model", "generation-target"];
+  const draftControls = ["description", "business-rules", "finance-domain-product", "finance-domain-journey", "output-target", "manual-testing-type", "llm-model"];
   function saveWorkspaceDraft() {
     if (!draftKey || restoringDraft) return;
     try {
@@ -1219,6 +1219,9 @@
       sessionStorage.setItem(draftKey, JSON.stringify(data));
     } catch { /* Storage may be unavailable or full; current-page work remains usable. */ }
   }
+  document.addEventListener("change", event => {
+    if (draftControls.includes(event.target.id)) saveWorkspaceDraft();
+  });
   window.addEventListener("pagehide", saveWorkspaceDraft);
   window.addEventListener("workspace-page-changed", saveWorkspaceDraft);
   document.addEventListener("click", event => {
@@ -1233,7 +1236,16 @@
     try {
       const draft = JSON.parse(stored);
       if (draft.version !== 1) return;
-      for (const [id, value] of Object.entries(draft.controls || {})) if ($(id)) $(id).value = value;
+      if (draft.controls?.["output-target"] && [...$("output-target").options].some(option => option.value === draft.controls["output-target"])) {
+        $("output-target").value = draft.controls["output-target"];
+        syncManualTestingType();
+      }
+      for (const [id, value] of Object.entries(draft.controls || {})) {
+        const control = $(id);
+        if (id === "output-target" || !control) continue;
+        if (control.tagName === "SELECT" && (!value || ![...control.options].some(option => option.value === value))) continue;
+        control.value = value;
+      }
       if (draft.suite) render(draft.suite);
       Object.assign(state, draft.state, {busy:false});
       for (const name of ["acceptedStories", "jiraStories", "acceptedScenarios"]) state[name] = new Map(draft.state[name]);

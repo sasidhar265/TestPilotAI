@@ -12,7 +12,7 @@ from typing import Any, Protocol
 import httpx
 
 from app.agent_activity import await_agent_activity
-from app.agent_instructions import generation_agent_instructions
+from app.agent_instructions import generation_agent_instructions, with_runtime_guardrails
 from app.agents import AgentCapability, AgentDescriptor
 from app.agents.runner import (
     CopilotAgentRunner,
@@ -64,9 +64,20 @@ def copilot_error_message(error: Exception) -> str:
     return "GitHub Copilot generation failed. Check the server logs and Copilot CLI status."
 
 
-def system_prompt(request: GenerateRequest, profile: str = "auto-finance-quotation") -> str:
+def system_prompt(
+    request: GenerateRequest,
+    profile: str = "auto-finance-quotation",
+    settings: Settings | None = None,
+) -> str:
     """Load the complete behavioral policy from repository-owned Markdown."""
-    return generation_agent_instructions(request.generation_target.value, profile)
+    from app.config import get_settings
+    from app.knowledge_agents import published_context
+
+    configuration = (settings or get_settings()).model_copy(update={"agent_profile": profile})
+    return with_runtime_guardrails(
+        generation_agent_instructions(request.generation_target.value, profile, configuration)
+        + published_context(configuration, "test_cases")
+    )
 
 
 def _gherkin_from_case(case: TestCase) -> str:
@@ -193,7 +204,7 @@ class CopilotGenerator:
         runner = CopilotAgentRunner(self.settings, self.client_factory)
         suite = await runner.generate_structured(
             TEST_SUITE_AGENT,
-            instructions=system_prompt(request, self.settings.agent_profile),
+            instructions=system_prompt(request, self.settings.agent_profile, self.settings),
             prompt=user_prompt(request, phase, existing_titles),
             normalize=_normalize_suite_payload,
         )
@@ -225,7 +236,7 @@ class OpenAIGenerator:
             )
         body = {
             "model": self.settings.openai_model,
-            "instructions": system_prompt(request, self.settings.agent_profile),
+            "instructions": system_prompt(request, self.settings.agent_profile, self.settings),
             "input": user_prompt(request, phase, existing_titles),
             "store": False,
             "text": {
@@ -293,7 +304,9 @@ class GeminiGenerator:
             )
         body = {
             "systemInstruction": {
-                "parts": [{"text": system_prompt(request, self.settings.agent_profile)}]
+                "parts": [
+                    {"text": system_prompt(request, self.settings.agent_profile, self.settings)}
+                ]
             },
             "contents": [
                 {"role": "user", "parts": [{"text": user_prompt(request, phase, existing_titles)}]}
@@ -378,7 +391,7 @@ class CodexGenerator:
                 "Codex CLI is not installed or is not available on the server PATH."
             )
         prompt = (
-            system_prompt(request, self.settings.agent_profile)
+            system_prompt(request, self.settings.agent_profile, self.settings)
             + "\n\n"
             + user_prompt(request, phase, existing_titles)
         )

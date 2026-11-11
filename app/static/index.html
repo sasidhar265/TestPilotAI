@@ -4,12 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>Auto Finance Quality — Governed quality engineering</title>
+    <title>Requirements</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/index.css?v=20261001-validation" />
-    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
     <link rel="stylesheet" href="/static/styles/usage-dashboard.css?v=20260919" />
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=20260913-reporting" />
     <link rel="stylesheet" href="/static/styles/script-packs.css?v=20261013-script-option" />
@@ -34,6 +35,9 @@
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body data-access-pending="true">
     <div class="app-shell">
@@ -61,9 +65,6 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
             <div class="nav-group">
               <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
               <div class="nav-children" id="quality-navigation" hidden>
@@ -122,39 +123,7 @@
             <div class="status-line"><span class="pulse"></span><span>Copilot connected</span></div>
             <div class="model">SECURE LOCAL WORKSPACE</div>
           </div>
-          <div class="theme-settings">
-            <div
-              class="theme-menu"
-              id="theme-menu"
-              role="dialog"
-              aria-labelledby="theme-menu-title"
-              hidden
-            >
-              <strong id="theme-menu-title">Appearance</strong>
-              <span>Choose your workspace theme</span>
-              <div class="theme-options" role="group" aria-label="Color theme">
-                <button type="button" data-theme-option="light">
-                  <span aria-hidden="true">☀</span>Light
-                </button>
-                <button type="button" data-theme-option="dark">
-                  <span aria-hidden="true">◐</span>Dark
-                </button>
-                <button type="button" data-theme-option="system">
-                  <span aria-hidden="true">◫</span>System
-                </button>
-              </div>
-            </div>
-            <button
-              class="theme-gear"
-              id="theme-gear"
-              type="button"
-              aria-label="Open appearance settings"
-              aria-expanded="false"
-              aria-controls="theme-menu"
-            >
-              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
-            </button>
-          </div>
+
         </div>
       </aside>
 
@@ -2181,11 +2150,11 @@
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/operation-progress.js?v=20261013-indeterminate" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261013-recovery-navigation" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
-    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/index.js?v=20261013-approved-history-v2" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
+    <script src="/static/scripts/index.js?v=20261110-requirements-home" defer></script>
     <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
@@ -2196,11 +2165,12 @@
     <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261013-approved-history-v2" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261110-requirements-drafts" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261013-approved-history-v2" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
   </body>
 </html>

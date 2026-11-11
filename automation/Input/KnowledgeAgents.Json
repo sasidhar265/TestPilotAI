@@ -1,0 +1,26 @@
+{
+  "reference-contributor": {
+    "name": "BDD accessibility knowledge contributor",
+    "purpose": "Contribute approved accessibility review guidance to story generation.",
+    "domain": "General software quality",
+    "profile": "auto-finance-quotation",
+    "stages": ["stories"],
+    "source_reference": "Automation knowledge lifecycle fixture v1",
+    "instructions": "Use only the supplied reference guidance and report missing acceptance criteria without inventing requirements.",
+    "knowledge": "Review approved stories for observable keyboard access and accessible control names when accessibility is explicitly in scope."
+  },
+  "changed-reference": {
+    "name": "BDD accessibility knowledge contributor",
+    "purpose": "Contribute revised accessibility review guidance to story generation.",
+    "domain": "General software quality",
+    "profile": "auto-finance-quotation",
+    "stages": ["stories"],
+    "source_reference": "Automation knowledge lifecycle fixture v2",
+    "instructions": "Use supplied acceptance criteria and approved source evidence. Record owner questions for unspecified requirements.",
+    "knowledge": "Review approved stories for observable keyboard access, accessible control names and focus restoration when explicitly in scope."
+  },
+  "review": {
+    "note": "Reviewed the fixture source, workflow scope and source-grounding limitations.",
+    "approve_reference_use": true
+  }
+}

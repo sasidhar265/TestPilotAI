@@ -1,7 +1,7 @@
 """Authorize operations independently of the controls displayed in the browser."""
 
 import hmac
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request
 
@@ -71,7 +71,7 @@ def operation_allowed(role: str, path: str, method: str, view: str = "") -> bool
     return role in {"ba", "functional_tester", "automation_tester", "non_functional_tester"}
 
 
-def payload_allowed(role: str, path: str, payload: dict) -> bool:
+def payload_allowed(role: str, path: str, payload: dict[str, Any]) -> bool:
     if role in {"admin", "test_lead"}:
         return True
     request = payload.get("request", payload)

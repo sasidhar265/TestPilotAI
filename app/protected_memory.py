@@ -10,6 +10,7 @@ import sqlite3
 import tempfile
 import time
 from pathlib import Path
+from typing import cast
 
 from cryptography.fernet import Fernet, InvalidToken
 from filelock import FileLock
@@ -92,7 +93,7 @@ class MemoryProtection:
                 "python -m app.memory_admin migrate with a new destination."
             )
         try:
-            return self.cipher().decrypt(value[len(MAGIC) :])
+            return cast(bytes, self.cipher().decrypt(value[len(MAGIC) :]))
         except InvalidToken as error:
             raise MemoryProtectionError(
                 "Memory key mismatch or encrypted store corruption."

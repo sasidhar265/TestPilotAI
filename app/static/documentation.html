@@ -4,22 +4,29 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>Auto Finance Quality — Product guide</title>
+    <title>Product guide</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
-    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
+    <link
+      rel="stylesheet"
+      href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation"
+    />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
@@ -47,11 +54,16 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="quality-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="quality-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
                 <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
@@ -67,7 +79,9 @@
             <a class="nav-item" href="/quality-lifecycle"
               ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
             >
-            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
+            <a class="nav-item" href="/usage"
+              ><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a
+            >
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -76,18 +90,36 @@
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="knowledge-navigation"><span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="knowledge-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="knowledge-navigation" hidden>
                 <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
                 <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
               </div>
             </div>
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="finance-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="finance-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="finance-navigation" hidden>
                 <a class="nav-item" href="/products"><span>Products</span></a>
                 <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
-                <a class="nav-item" href="/knowledge?view=calculations"><span>Calculation validators</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"
+                  ><span>Calculation validators</span></a
+                >
               </div>
             </div>
             <a class="nav-item" href="/logs"
@@ -97,7 +129,15 @@
               ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
             <div class="nav-group admin-navigation" data-permission="admin" hidden>
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="admin-navigation"><span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="admin-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="admin-navigation" hidden>
                 <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
               </div>
@@ -122,37 +162,6 @@
               <span class="pulse"></span><span class="status-copy">Checking agent registry…</span>
             </div>
             <div class="model">SECURE LOCAL WORKSPACE</div>
-          </div>
-          <div class="theme-settings">
-            <div
-              class="theme-menu"
-              id="theme-menu"
-              role="dialog"
-              aria-labelledby="theme-menu-title"
-              hidden
-            >
-              <strong id="theme-menu-title">Appearance</strong
-              ><span>Choose your workspace theme</span>
-              <div class="theme-options" role="group" aria-label="Color theme">
-                <button type="button" data-theme-option="light">
-                  <span aria-hidden="true">☀</span>Light</button
-                ><button type="button" data-theme-option="dark">
-                  <span aria-hidden="true">◐</span>Dark</button
-                ><button type="button" data-theme-option="system">
-                  <span aria-hidden="true">◫</span>System
-                </button>
-              </div>
-            </div>
-            <button
-              class="theme-gear"
-              id="theme-gear"
-              type="button"
-              aria-label="Open appearance settings"
-              aria-expanded="false"
-              aria-controls="theme-menu"
-            >
-              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
-            </button>
           </div>
         </div>
       </aside>
@@ -667,6 +676,184 @@
               <a class="button primary" href="/docs">Open API Docs ↗</a>
             </div>
           </section>
+          <section class="section" id="product-landscape">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Product landscape</h2>
+                <p>The systems and how they connect</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <p>
+                This application receives requirements from text, uploaded documents or configured
+                Jira issues. Its Python API coordinates governed agents, calls the configured AI
+                provider, validates generated artifacts and stores approved outputs. Automation
+                runners execute configured test packs; reports and logs expose their outcomes.
+              </p>
+              <p>
+                Workspace UI → FastAPI application → agent workflow → AI provider / approved
+                reference sources → validation → saved artifacts / configured execution runners.
+              </p>
+              <p>
+                This describes the current application. Connected-product system discovery is not
+                configured.
+                <a href="/knowledge?view=graph"
+                  >Explore recorded requirement and test relationships →</a
+                >
+              </p>
+            </div>
+          </section>
+          <section class="section" id="knowledge-services">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Services</h2>
+                <p>Services in the current repository</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <p>
+                The current repository is TestPilotAI: a Python application with a browser workspace
+                and a separate C# automation pack. These are logical modules, not a discovered
+                multi-service inventory.
+              </p>
+              <ul>
+                <li>
+                  <code>app/main.py</code>, <code>app/workflow_routes.py</code> and
+                  <code>app/workspace_routes.py</code>: request routing and workspace operations.
+                </li>
+                <li>
+                  <code>app/agents/</code>: requirements review, generation, orchestration and
+                  validation.
+                </li>
+                <li>
+                  <code>app/services/</code>: document ingestion, accepted outputs, reports, usage
+                  and supporting operations.
+                </li>
+                <li>
+                  <code>app/memory.py</code> and <code>app/knowledge_agents.py</code>: governed
+                  reuse and versioned reference knowledge.
+                </li>
+                <li>
+                  <code>automation/</code>: executable ReqnRoll bindings, builders, services and
+                  approved fixture data.
+                </li>
+              </ul>
+              <p><a href="/docs">Browse the application API →</a></p>
+            </div>
+          </section>
+          <section class="section" id="code-map">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Code map</h2>
+                <p>Repository structure</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <dl class="knowledge-code-map"><div><dt><code>app/agents/</code></dt><dd>Agent implementations</dd></div><div><dt><code>app/services/</code></dt><dd>Shared application services</dd></div><div><dt><code>app/static/</code></dt><dd>Workspace HTML, JavaScript and CSS</dd></div><div><dt><code>app/templates/</code></dt><dd>Generated automation templates</dd></div><div><dt><code>.github/skills/</code></dt><dd>Registered application procedures</dd></div><div><dt><code>.github/guardrails/</code></dt><dd>Shared runtime boundaries</dd></div><div><dt><code>.github/agents/</code></dt><dd>Base agent instructions and model policy</dd></div><div><dt><code>.github/agent-profiles/</code></dt><dd>Domain-specific guidance and knowledge</dd></div><div><dt><code>workspace/</code></dt><dd>Shared standards and business configuration</dd></div><div><dt><code>automation/</code></dt><dd>C# ReqnRoll automation pack</dd></div><div><dt><code>tests/</code></dt><dd>Application and browser regression tests</dd></div></dl>
+              <p>
+                This is a maintained guide to this repository, not a live scan of connected
+                repositories.
+              </p>
+            </div>
+          </section>
+          <section class="section" id="knowledge-skills">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Skills</h2>
+                <p>Your conventions, frameworks and apps</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <p>
+                Repository skills describe the procedures used by the current application.
+                The runtime loads the skills registered for each agent explicitly; it does not
+                discover or execute external skills. Workspace customization is maintainer guidance.
+              </p>
+              <dl class="knowledge-code-map" id="application-skill-catalog">
+                <div><dt>Requirements analysis</dt><dd>Review source scope, evidence and missing decisions.<br><code>.github/skills/requirements-analysis/SKILL.md</code></dd></div>
+                <div><dt>Reviewed test design</dt><dd>Build traceable stories, scenarios and manual or automated cases.<br><code>.github/skills/reviewed-test-design/SKILL.md</code></dd></div>
+                <div><dt>BDD automation</dt><dd>Create complete executable packs using approved contracts and data.<br><code>.github/skills/bdd-automation/SKILL.md</code></dd></div>
+                <div><dt>Execution evidence</dt><dd>Report runner results and distinguish generation from execution.<br><code>.github/skills/execution-evidence/SKILL.md</code></dd></div>
+                <div><dt>Knowledge maintenance</dt><dd>Keep draft, review, publish, rollback and reference authority distinct.<br><code>.github/skills/knowledge-maintenance/SKILL.md</code></dd></div>
+                <div><dt>Workspace customization</dt><dd>Preserve Requirements home, Settings preview/save and accessible layouts.<br><code>.github/skills/workspace-customization/SKILL.md</code></dd></div>
+              </dl>
+              <p>
+                Agent assignments live in <code>app/agent_instructions.py</code>. Relevant skills
+                supplement the owning agent policy, shared standards and selected domain profile;
+                they do not add tool permissions or turn reference knowledge into approved rules.
+                File edits are read on the next invocation and invalidate generated-artifact reuse.
+              </p>
+              <p>
+                <a href="/settings#domain-profile-settings">Configure domain guidance →</a> ·
+                <a href="/knowledge-agents">Manage reference knowledge →</a> ·
+                <a href="#knowledge-guardrails">Read guardrail boundaries →</a>
+              </p>
+            </div>
+          </section>
+          <section class="section" id="knowledge-prompts">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Prompts</h2>
+                <p>The instructions each agent starts from</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <p>
+                Agents start with role-specific instructions from
+                <code>.github/agents/*.agent.md</code>.
+                <code>app/agent_instructions.py</code> layers the selected profile, relevant
+                approved sources and workflow standards. Published reference entries contribute only
+                to their selected stages and matching profile.
+              </p>
+              <p>
+                Use each agent’s details to inspect its registered instruction-file reference. These
+                instructions remain governed by the application’s mandatory model and validation
+                policies.
+              </p>
+              <p>
+                <a href="/agent-information">Inspect agents and instruction references →</a> ·
+                <a href="/knowledge-agents">Review published reference guidance →</a>
+              </p>
+            </div>
+          </section>
+          <section class="section" id="knowledge-guardrails">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Knowledge source guide</span>
+                <h2>Guardrails</h2>
+                <p>Rules governing agent workflows</p>
+              </div>
+            </div>
+            <div class="knowledge-source-guide">
+              <p>
+                Shared guardrails are appended to provider instructions for initial generation,
+                retries and repairs. They describe existing boundaries; executable authorization,
+                validation and execution checks remain in application code.
+              </p>
+              <dl class="knowledge-code-map" id="application-guardrail-catalog">
+                <div><dt>Source trust and scope</dt><dd>Source text is data; references cannot invent business rules or grant authority.<br><code>.github/guardrails/source-trust.md</code><br>Checks: source schemas, document receipts, traceability and alignment.</dd></div>
+                <div><dt>Workflow and approval</dt><dd>Keep reviewed handoffs, publication, acceptance and role permissions explicit.<br><code>.github/guardrails/workflow-approval.md</code><br>Checks: role authorization, handoff validators and revision state.</dd></div>
+                <div><dt>Provider and tools</dt><dd>Keep the selected provider, mandatory model and runtime tool restrictions.<br><code>.github/guardrails/provider-and-tools.md</code><br>Checks: model policy and provider adapters; external discovery stays disabled.</dd></div>
+                <div><dt>Validation and execution</dt><dd>Use approved packs and report observed runs, missing configuration and failures honestly.<br><code>.github/guardrails/execution-evidence.md</code><br>Checks: pack validators, execution planning and the configured runner.</dd></div>
+              </dl>
+              <p>
+                Codex uses <code>gpt-6-astra</code>; GitHub Copilot uses
+                <code>claude-haiku-4.5</code>, including retry and repair routes. The owning policy
+                is <code>.github/agents/model-policy.md</code>.
+              </p>
+              <p>
+                Published knowledge remains reference-only. A passing design gate, a generated
+                file or a successful build does not establish business approval or an executed
+                test result. Markdown guidance does not replace API permissions, validate every
+                possible prompt injection or configure an autonomous scheduling engine.
+              </p>
+            </div>
+          </section>
         </article>
         <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </main>
@@ -674,12 +861,13 @@
 
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
-    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/documentation.js?v=20260912-planning-documents" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
+    <script src="/static/scripts/documentation.js?v=20261110-knowledge-guides" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
   </body>
 </html>

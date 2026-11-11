@@ -1,0 +1,142 @@
+/* Shared spacing fixes verified across full workspace pages and narrow layouts. */
+@media screen {
+  :is(.app-shell, .docs-shell, .shell) > main,
+  .topbar > div,
+  .top-actions,
+  .panel-head > div,
+  .results-head > div,
+  .usage-heading > div,
+  .bdd-heading > div,
+  .knowledge-card .section-heading > div,
+  .pm-table-heading > div {
+    min-width: 0;
+  }
+  .topbar .top-actions {
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  :is(.panel-head, .results-head, .usage-heading, .bdd-heading, .pm-table-heading) {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  :is(.pm-toolbar, .usage-actions, .bdd-heading-actions, .log-controls, .log-page-controls) {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  :is(.pm-toolbar, .usage-actions) {
+    align-items: flex-end;
+  }
+  .workspace-context-bar .context-list :is(div, dt, dd) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .knowledge-card .section-heading {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .knowledge-card .section-heading > div {
+    flex: 1 1 220px;
+  }
+  .knowledge-card .section-heading > :is(button, a.button) {
+    flex: 0 0 auto;
+  }
+  .sidebar-header .brand > span:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  :is(.pm-toolbar, .graph-controls, .generation-options, .users-form) label {
+    min-width: 0;
+  }
+  .graph-toolbar > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .log-controls {
+    align-items: center;
+  }
+  @media (max-width: 700px) {
+    .knowledge-card .section-heading {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .knowledge-card .section-heading > div {
+      flex-basis: auto;
+      width: 100%;
+    }
+    :is(.panel-head, .results-head, .usage-heading, .bdd-heading, .pm-table-heading) {
+      row-gap: 16px;
+    }
+    .results-head .log-controls {
+      width: 100%;
+      justify-content: flex-start;
+    }
+    .log-controls > :is(button, details) {
+      flex: 1 1 auto;
+    }
+    .log-controls > details > summary {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .log-controls .count {
+      margin-left: 0;
+    }
+    .pm-toolbar {
+      gap: 12px;
+    }
+    .pm-toolbar > label {
+      width: 100%;
+    }
+    .pm-toolbar :is(input, select) {
+      width: 100%;
+    }
+    .graph-toolbar > div {
+      justify-content: flex-start;
+    }
+    .graph-tabs {
+      flex-wrap: wrap;
+      row-gap: 12px;
+    }
+  }
+  @media (max-width: 600px) {
+    .workspace-context-bar .context-list {
+      grid-template-columns: repeat(auto-fit, minmax(min(8.5rem, 100%), 1fr));
+    }
+  }
+  @media (max-width: 400px) {
+    .topbar .top-actions {
+      gap: 10px;
+    }
+    .log-controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .log-controls > .count {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+    .log-controls :is(button, summary) {
+      min-width: 0;
+      white-space: normal;
+    }
+  }
+}
+@media screen and (max-width: 700px) {
+  :root body .log-controls .log-view-menu > summary {
+    padding-inline: 8px !important;
+    gap: 6px;
+  }
+  .log-view-options,
+  .log-status-options {
+    box-sizing: border-box;
+    max-width: calc(100vw - 72px);
+  }
+  .log-status-options {
+    left: 0;
+    right: auto;
+  }
+}

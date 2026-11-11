@@ -40,3 +40,21 @@ and structural checks, routes requests, and runs tools. Markdown defines agent i
 it does not execute arbitrary code or replace those checks. JSON remains appropriate for API
 transport, generated artifacts, runtime configuration, and the approved quotation input payload;
 none of these is the editable shared business-rule store.
+
+## Application skills and shared guardrails
+
+Reusable procedures live in `.github/skills/<name>/SKILL.md`. The allowlisted `AGENT_SKILLS`
+registry in `app/agent_instructions.py` attaches relevant skills to canonical agents and aliases.
+`workspace-customization` is available for UI maintenance; it is not injected into test generation.
+
+Shared guardrails live in `.github/guardrails/`: source trust, workflow/approval boundaries,
+provider/tool policy and execution evidence. The provider boundaries append these policies after
+other instruction context, including retry and schema-repair calls. Direct suite generation uses
+the same policy. Copilot automatic skill discovery stays disabled; no file grants new tools.
+
+Skills and guardrails supplement executable checks and the mandatory model policy. Editing these
+Markdown files refreshes the next invocation and the generated-artifact reuse fingerprint;
+review-feedback records retain their existing separate identity. Keep business rules in their
+existing marked section, rather than declaring them in a skill or guardrail.
+
+Knowledge → Skills and Knowledge → Guardrails catalogue the files and their enforcement owners.

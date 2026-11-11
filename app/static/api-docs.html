@@ -4,13 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>Auto Finance Quality — API reference</title>
+    <title>API reference</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
     <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
@@ -22,6 +23,9 @@
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
@@ -49,9 +53,6 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
             <div class="nav-group">
               <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
               <div class="nav-children" id="quality-navigation" hidden>
@@ -112,37 +113,7 @@
             </div>
             <div class="model">WORKSPACE HELP</div>
           </div>
-          <div class="theme-settings">
-            <div
-              class="theme-menu"
-              id="theme-menu"
-              role="dialog"
-              aria-labelledby="theme-menu-title"
-              hidden
-            >
-              <strong id="theme-menu-title">Appearance</strong
-              ><span>Choose your workspace theme</span>
-              <div class="theme-options" role="group" aria-label="Color theme">
-                <button type="button" data-theme-option="light">
-                  <span aria-hidden="true">☀</span>Light</button
-                ><button type="button" data-theme-option="dark">
-                  <span aria-hidden="true">◐</span>Dark</button
-                ><button type="button" data-theme-option="system">
-                  <span aria-hidden="true">◫</span>System
-                </button>
-              </div>
-            </div>
-            <button
-              class="theme-gear"
-              id="theme-gear"
-              type="button"
-              aria-label="Open appearance settings"
-              aria-expanded="false"
-              aria-controls="theme-menu"
-            >
-              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
-            </button>
-          </div>
+
         </div>
       </aside>
 
@@ -210,13 +181,14 @@
 
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
-    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
     <script src="/static/vendor/swagger-ui/swagger-ui-bundle.js" defer></script>
     <script src="/static/scripts/api-docs.js" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
   </body>
 </html>

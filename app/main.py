@@ -5,6 +5,7 @@ import os
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -45,6 +46,7 @@ from app.agents.test_case_generator_agent import (
 )
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
 from app.agents.workflow_agent import SCENARIO_AGENT, STORY_AGENT
+from app.appearance import router as appearance_router
 from app.auth import (
     GUEST_COOKIE,
     SESSION_COOKIE,
@@ -61,10 +63,13 @@ from app.dependencies import (
     get_reqnroll_step_definition_agent,
     get_test_generation_service,
 )
+from app.domain_profiles import router as domain_profiles_router
 from app.exporter import suite_to_csv
 from app.finance_routes import router as finance_router
 from app.generator import FallbackGenerator, copilot_error_message
 from app.jira import JiraClient
+from app.knowledge_agents import KnowledgeAgentError
+from app.knowledge_agents import router as knowledge_agents_router
 from app.memory import OrganizationalMemory
 from app.memory_lifecycle import memory_lifespan
 from app.models import (
@@ -153,6 +158,9 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=settings_at_startup.allowed_host_list,
 )
+app.include_router(domain_profiles_router)
+app.include_router(knowledge_agents_router)
+app.include_router(appearance_router)
 app.include_router(user_router)
 app.include_router(workspace_router)
 app.include_router(stlc_router)
@@ -174,6 +182,12 @@ KNOWLEDGE = Path(__file__).parent / "static" / "knowledge.html"
 LOGIN = Path(__file__).parent / "static" / "login.html"
 logger = logging.getLogger(__name__)
 HTML_HEADERS = {"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"}
+
+
+class FinanceContextArgs(TypedDict, total=False):
+    finance_product_id: str | None
+    finance_journey_ids: list[str] | None
+    finance_calculation: dict[str, object] | None
 
 
 def parse_business_rule_lines(value: str) -> list[BusinessRule]:
@@ -397,6 +411,26 @@ async def api_documentation() -> FileResponse:
     )
 
 
+@app.exception_handler(KnowledgeAgentError)
+async def knowledge_agent_error(request: Request, error: KnowledgeAgentError) -> JSONResponse:
+    return JSONResponse(status_code=error.status, content={"detail": str(error)})
+
+
+@app.get("/knowledge-agents", include_in_schema=False)
+async def knowledge_agents_page() -> FileResponse:
+    return FileResponse(DOCUMENTATION.with_name("knowledge-agents.html"), headers=HTML_HEADERS)
+
+
+@app.get("/settings", include_in_schema=False)
+async def appearance_settings() -> FileResponse:
+    return FileResponse(DOCUMENTATION.with_name("settings.html"), headers=HTML_HEADERS)
+
+
+@app.get("/agent-information", include_in_schema=False)
+async def agent_information() -> FileResponse:
+    return FileResponse(DOCUMENTATION.with_name("agent-information.html"), headers=HTML_HEADERS)
+
+
 @app.get("/documentation", include_in_schema=False)
 async def documentation() -> FileResponse:
     return FileResponse(DOCUMENTATION, headers=HTML_HEADERS)
@@ -514,7 +548,13 @@ async def readiness(settings: Settings = Depends(get_settings)) -> dict[str, obj
     profile = (
         settings.copilot_working_directory / ".github" / "agent-profiles" / settings.agent_profile
     )
-    checks["agent_profile"] = profile.is_dir()
+    from app.domain_profiles import DomainProfileStore
+
+    checks["agent_profile"] = (
+        profile.is_dir()
+        or DomainProfileStore(settings.user_database_path).custom(settings.agent_profile)
+        is not None
+    )
     if settings.organizational_memory_enabled:
         memory_parent = settings.organizational_memory_path.parent
         try:
@@ -535,7 +575,7 @@ async def readiness(settings: Settings = Depends(get_settings)) -> dict[str, obj
 @app.get("/api/agents")
 async def list_agents() -> list[dict[str, object]]:
     """List the functional agents in execution order."""
-    return [
+    registered = [
         agent.model_dump(mode="json")
         for agent in (
             InputAgent.descriptor,
@@ -562,6 +602,27 @@ async def list_agents() -> list[dict[str, object]]:
             MetricsAgent.descriptor,
         )
     ]
+    from app.knowledge_agents import KnowledgeAgentStore
+
+    settings = get_settings()
+    for item in KnowledgeAgentStore(settings.user_database_path).inventory():
+        published = item["published"]
+        if published and published["definition"]["profile"] == settings.agent_profile:
+            definition = published["definition"]
+            registered.append(
+                {
+                    "id": item["id"],
+                    "name": definition["name"],
+                    "kind": "knowledge",
+                    "purpose": definition["purpose"],
+                    "runtime": "published-knowledge-context",
+                    "capabilities": definition["stages"],
+                    "instruction_file": (
+                        f"/knowledge-agents#{item['id']} · revision {published['revision']}"
+                    ),
+                }
+            )
+    return registered
 
 
 @app.get("/api/logs")
@@ -829,7 +890,7 @@ async def generate_from_document(
                 f"{settings_at_startup.max_upload_bytes}-byte limit."
             )
         rules = parse_business_rule_lines(business_rules)
-        calculation_context = None
+        calculation_context: dict[str, object] | None = None
         if finance_calculation:
             from pydantic import TypeAdapter
 
@@ -845,6 +906,15 @@ async def generate_from_document(
                 raise DocumentIngestionError(
                     "Invalid finance reference calculation context"
                 ) from None
+        finance_context: FinanceContextArgs = {}
+        if finance_product_id or finance_journey_ids or finance_calculation:
+            finance_context = {
+                "finance_product_id": finance_product_id or None,
+                "finance_journey_ids": [
+                    item.strip() for item in finance_journey_ids.split(",") if item.strip()
+                ],
+                "finance_calculation": calculation_context,
+            }
         result = await pipeline.run_document(
             filename,
             await file.read(),
@@ -854,17 +924,7 @@ async def generate_from_document(
             manual_testing_type,
             generation_target,
             llm_model,
-            **(
-                {
-                    "finance_product_id": finance_product_id or None,
-                    "finance_journey_ids": [
-                        item.strip() for item in finance_journey_ids.split(",") if item.strip()
-                    ],
-                    "finance_calculation": calculation_context,
-                }
-                if finance_product_id or finance_journey_ids or finance_calculation
-                else {}
-            ),
+            **finance_context,
         )
         document = result.document
         assert document is not None

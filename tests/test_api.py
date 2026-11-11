@@ -83,12 +83,12 @@ def test_login_page_presents_ai_test_generation_workspace() -> None:
     assert 'id="password-toggle"' in response.text
     assert 'id="forgot-password"' in response.text
     assert 'aria-label="Show password"' in response.text
-    assert 'id="theme-gear"' in response.text
-    assert 'id="theme-menu"' in response.text
-    assert 'data-theme-option="light"' in response.text
-    assert 'data-theme-option="dark"' in response.text
-    assert 'data-theme-option="system"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
+    assert 'id="theme-gear"' not in response.text
+    assert 'id="theme-menu"' not in response.text
+    assert 'data-theme-option="light"' not in response.text
+    assert 'data-theme-option="dark"' not in response.text
+    assert 'data-theme-option="system"' not in response.text
+    assert "/static/scripts/theme.js?" in response.text
     assert "styles/login-feedback.css?v=20260923-guest-entry" in response.text
 
 
@@ -101,11 +101,13 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "Sole AI runtime" not in response.text
     assert "Execution topology" not in response.text
     assert 'id="output-target"' in response.text
-    assert '<option value="manual">Functional</option>' in response.text
+    assert '<option value="manual">Manual functional tests</option>' in response.text
     assert "Normal steps" not in response.text
-    automation_option = '<option value="automation" selected>Automation (BDD / Gherkin)</option>'
+    automation_option = (
+        '<option value="automation" selected>Automated tests (BDD / Gherkin)</option>'
+    )
     assert automation_option in response.text
-    assert '<option value="both">Both (Automation + Functional)</option>' in response.text
+    assert '<option value="both">Manual + automated tests</option>' in response.text
     assert 'id="timer" role="timer"' in response.text
     assert 'id="download-feature"' in response.text
     assert 'id="generate-step-definitions"' in response.text
@@ -163,15 +165,15 @@ def test_home_has_format_radios_and_generation_timer() -> None:
     assert "STLC reporting" in response.text
     assert 'class="suite-approval"' in response.text
     assert 'id="context"' not in response.text
-    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
+    assert "/static/scripts/theme.js?" in response.text
     assert 'src="/static/scripts/index.js?v=' in response.text
     assert 'id="generate" type="submit" disabled' in response.text
     assert 'href="/static/styles/index.css?v=' in response.text
-    assert 'id="theme-gear"' in response.text
-    assert 'id="theme-menu"' in response.text
-    assert 'data-theme-option="light"' in response.text
-    assert 'data-theme-option="dark"' in response.text
-    assert 'data-theme-option="system"' in response.text
+    assert 'id="theme-gear"' not in response.text
+    assert 'id="theme-menu"' not in response.text
+    assert 'data-theme-option="light"' not in response.text
+    assert 'data-theme-option="dark"' not in response.text
+    assert 'data-theme-option="system"' not in response.text
     assert 'id="accept-selected"' in response.text
     assert 'id="accepted-by"' in response.text
     assert 'id="reviewer-error" role="alert"' in response.text
@@ -222,8 +224,8 @@ def test_logs_page_has_search_and_navigation() -> None:
     assert 'id="log-reference"' in response.text
     assert 'id="search-logs"' in response.text
     assert 'href="/documentation"' in response.text
-    assert 'id="theme-gear"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
+    assert 'id="theme-gear"' not in response.text
+    assert "/static/scripts/theme.js?" in response.text
 
 
 def test_documentation_page_is_not_cached() -> None:
@@ -233,12 +235,12 @@ def test_documentation_page_is_not_cached() -> None:
     assert response.headers["cache-control"] == "no-store, max-age=0"
     assert "How the application works" in response.text
     assert "/api/step-definitions/reqnroll" in response.text
-    assert 'id="theme-gear"' in response.text
+    assert 'id="theme-gear"' not in response.text
     assert 'id="profile-toggle"' in response.text
     assert 'class="profile-signout" id="logout"' in response.text
     assert 'href="/static/styles/documentation.css?v=20260912-clear-guide"' in response.text
-    assert 'src="/static/scripts/documentation.js?v=20260912-planning-documents"' in response.text
-    assert 'src="/static/scripts/theme.js?v=20260909-theme-flyout"' in response.text
+    assert 'src="/static/scripts/documentation.js?v=' in response.text
+    assert "/static/scripts/theme.js?" in response.text
 
 
 def test_logs_can_be_searched_by_failure_reference_id() -> None:
@@ -385,9 +387,11 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
     response = client.get("/api/agents")
     assert response.status_code == 200
     agents = response.json()
+    assert len(agents) == 22
     assert [agent["kind"] for agent in agents] == [
         "input",
         "business-rules",
+        "validator",
         "validator",
         "story-generator",
         "scenario-generator",
@@ -408,14 +412,14 @@ def test_agents_endpoint_lists_functional_pipeline_in_order() -> None:
         "bug-reporter",
         "metrics",
     ]
-    assert agents[16]["id"] == "execution-agent"
-    assert agents[17]["id"] == "automation-execution-agent"
-    assert agents[6]["runtime"] == "local-orchestrator"
-    assert agents[7]["runtime"] == "local-router"
-    assert agents[6]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
-    assert agents[7]["instruction_file"] == ".github/agents/reqforge.agent.md"
-    assert agents[12]["instruction_file"] == ".github/agents/context-converter.agent.md"
-    assert agents[13]["runtime"] == "local-sqlite"
+    assert agents[17]["id"] == "execution-agent"
+    assert agents[18]["id"] == "automation-execution-agent"
+    assert agents[7]["runtime"] == "local-orchestrator"
+    assert agents[8]["runtime"] == "local-router"
+    assert agents[7]["instruction_file"] == ".github/agents/testpilot-coordinator.agent.md"
+    assert agents[8]["instruction_file"] == ".github/agents/reqforge.agent.md"
+    assert agents[13]["instruction_file"] == ".github/agents/context-converter.agent.md"
+    assert agents[14]["runtime"] == "local-sqlite"
 
 
 def test_documentation_page_describes_agents_and_use_cases() -> None:

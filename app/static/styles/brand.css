@@ -1,0 +1,78 @@
+/* One brand layout for every page: a square mark beside a stacked title and tagline. */
+:root body .brand {
+  --brand-mark-size: 40px;
+  display: grid;
+  grid-template-columns: var(--brand-mark-size) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+:root body .sidebar-header .brand {
+  flex: 1 1 0%;
+}
+:root body .brand > .brand-mark {
+  display: grid;
+  place-items: center;
+  width: var(--brand-mark-size);
+  min-width: var(--brand-mark-size);
+  max-width: var(--brand-mark-size);
+  height: var(--brand-mark-size);
+  min-height: var(--brand-mark-size);
+  flex: 0 0 var(--brand-mark-size);
+  padding: 0;
+  overflow: hidden;
+}
+:root body .brand-mark > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+  border-radius: inherit;
+}
+:root body .brand > span:not(.brand-mark) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+:root body .brand strong,
+:root body .brand small {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+:root body .brand strong {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+:root body .brand small {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+:root body .brand small:empty {
+  display: none;
+}
+@media (min-width: 1081px) {
+  :root body .sidebar[data-collapsed="true"] .brand {
+    flex: 0 0 auto;
+    grid-template-columns: var(--brand-mark-size);
+    justify-content: center;
+    width: var(--brand-mark-size);
+  }
+  :root body .sidebar[data-collapsed="true"] .brand > span:not(.brand-mark) {
+    display: none;
+  }
+}

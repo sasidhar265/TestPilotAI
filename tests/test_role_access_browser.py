@@ -41,6 +41,10 @@ def test_role_choices_and_navigation(role):
         page.goto("http://localhost/")
         pw.expect(page.locator("body")).to_have_attribute("data-role", role)
         assert len(profile_requests) == 1
+        pw.expect(page.locator(".topbar h1")).to_have_text("Requirements")
+        pw.expect(page.locator("#stage-tab-1")).to_have_attribute("aria-selected", "true")
+        pw.expect(page.locator("#description")).to_be_visible()
+        pw.expect(page.get_by_role("link", name="New Chat", exact=True)).to_have_count(0)
         pw.expect(page.locator("#profile-name")).to_have_text("Role Reviewer")
         targets = page.locator("#output-target option").evaluate_all(
             "nodes => nodes.map(n => n.value)"
@@ -83,9 +87,8 @@ def test_role_choices_and_navigation(role):
             else:
                 pw.expect(page.locator("#run-repository-bdd")).to_be_hidden()
         if access["admin"]:
-            pw.expect(page.locator(".admin-navigation")).to_be_visible()
-            page.locator(".admin-navigation .nav-parent").click()
-            pw.expect(page.locator('.admin-navigation a[href="/admin/users"]')).to_be_visible()
+            page.get_by_role("button", name="Administration", exact=True).click()
+            pw.expect(page.locator('a.admin-navigation[href="/admin/users"]')).to_be_visible()
         else:
             pw.expect(page.locator(".admin-navigation")).to_be_hidden()
         page.goto("http://localhost/knowledge")

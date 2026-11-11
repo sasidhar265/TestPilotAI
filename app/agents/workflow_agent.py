@@ -38,7 +38,9 @@ class WorkflowAgent:
             self._story_evidence(request, result, passed=True)
             return result
 
-        sources, knowledge_fingerprint, limitations = self.business_analyst.knowledge()
+        sources, knowledge_fingerprint, limitations = self.business_analyst.knowledge(
+            stage="stories"
+        )
         publish_lifecycle_event(
             "Knowledge Agent",
             "prepare_story_knowledge",

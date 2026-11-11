@@ -23,6 +23,7 @@ from app.agents.test_case_validator import ValidationReport
 from app.automation_layout import layout_instructions, validate_layout
 from app.automation_pack import csharp_assets
 from app.config import Settings
+from app.knowledge_agents import published_context
 from app.models import ExecutionMode, LlmModel, TestSuite
 from app.quotation_contract import quotation_feature, quotation_sources
 
@@ -181,7 +182,8 @@ class ReqnRollStepDefinitionAgent:
         suite = request.suite.model_copy(update={"test_cases": automation_cases})
         source = suite.model_dump_json()
         instructions = (
-            step_definition_agent_instructions(self.settings.agent_profile)
+            step_definition_agent_instructions(self.settings.agent_profile, self.settings)
+            + published_context(self.settings, "automation")
             + layout_instructions()
             + implementation_approval_policy()
         )

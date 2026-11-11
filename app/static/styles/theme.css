@@ -171,3 +171,38 @@
   padding: 10px;
   font-size: 0.75rem;
 }
+
+/* Always available outside read-only previews and below modal overlays. */
+.floating-theme-toggle {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  line-height: 1;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--line-strong, var(--line));
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow-md, var(--shadow));
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+.floating-theme-toggle:hover {
+  background: var(--primary-soft);
+  transform: translateY(-2px);
+}
+.floating-theme-toggle:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-theme-toggle { transition: none; }
+}

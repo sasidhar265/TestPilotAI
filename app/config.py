@@ -232,5 +232,11 @@ class Settings(BaseSettings):
 
 
 @lru_cache
-def get_settings() -> Settings:
+def _base_settings() -> Settings:
     return Settings()
+
+
+def get_settings() -> Settings:
+    from app.domain_profiles import effective_settings
+
+    return effective_settings(_base_settings())

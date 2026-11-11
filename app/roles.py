@@ -1,6 +1,6 @@
 """Shared account roles and operation permissions for browser and API access."""
 
-from typing import Literal
+from typing import Literal, TypedDict
 
 Role = Literal[
     "ba", "functional_tester", "automation_tester", "non_functional_tester", "test_lead", "admin"
@@ -23,7 +23,20 @@ ROLE_TARGETS = {
 }
 
 
-def capabilities(role: str) -> dict:
+class RoleCapabilities(TypedDict):
+    home_path: str
+    role_label: str
+    generation_targets: list[str]
+    business_analysis: bool
+    stories: bool
+    scenarios: bool
+    test_cases: bool
+    automation: bool
+    non_functional: bool
+    admin: bool
+
+
+def capabilities(role: str) -> RoleCapabilities:
     targets = ROLE_TARGETS.get(role, [])
     return {
         "home_path": "/",

@@ -11,7 +11,8 @@ let guestWarningStage = 0;
 let guestWarningDismissTimer = null;
 const isGuest = document.body.dataset.guest === "true";
 
-window.loadWorkspaceProfile()
+window
+  .loadWorkspaceProfile()
   .then((profile) => {
     guestAccessUntil = Date.parse(profile?.guest_access_until || "") || 0;
   })
@@ -142,6 +143,9 @@ document.getElementById("logout")?.addEventListener("click", async () => {
 });
 
 setInterval(() => {
+  // The Settings page owns inactivity while its read-only preview is embedded.
+  if (window.parent !== window && new URLSearchParams(location.search).has("appearance-preview"))
+    return;
   if (isGuest && guestAccessUntil) {
     const remaining = guestAccessUntil - Date.now();
     if (remaining <= 0) {

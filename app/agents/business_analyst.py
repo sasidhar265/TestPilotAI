@@ -3,7 +3,7 @@
 import hashlib
 import json
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -14,7 +14,8 @@ from app.agents.artifact_runner import ArtifactGenerationRunner
 from app.agents.requirements_validation import BusinessBaseline, Evidence
 from app.agents.runner import StructuredAgentDefinition
 from app.config import Settings
-from app.domain_knowledge import guide_knowledge_sources, scope_guide_sources
+from app.domain_knowledge import DomainScope, guide_knowledge_sources, scope_guide_sources
+from app.domain_profiles import baseline_bytes
 from app.finance_domain import ground_request, load_domain_pack
 from app.models import GenerateRequest
 from app.observability import publish_lifecycle_event
@@ -101,7 +102,7 @@ class BADomainValidation(ReviewModel):
     alignment_method: str = "Covered / assessable in-scope topics × 100; equal topic weights."
 
 
-def alignment_metrics(checks: list[BADomainCheck]) -> dict:
+def alignment_metrics(checks: list[BADomainCheck]) -> dict[str, Any]:
     applicable = [c for c in checks if c.status != "not_applicable"]
     assessable = [
         c for c in applicable if not (c.status == "gap" and c.gap_origin == "domain_knowledge")
@@ -121,7 +122,7 @@ class BAReport(BAAssessment):
     knowledge_sources: list[dict[str, str]]
     knowledge_limitations: list[str]
     domain_validation: BADomainValidation
-    domain_scope: dict[str, str | list[str]]
+    domain_scope: DomainScope
     business_approval: Literal["not_granted"] = "not_granted"
     regulatory_compliance: Literal["not_assessed"] = "not_assessed"
 
@@ -142,15 +143,15 @@ class BusinessAnalystAgent:
         self.runner = ArtifactGenerationRunner(settings)
 
     def knowledge(
-        self, *, include_guide_units: bool = False
+        self, *, include_guide_units: bool = False, stage: str = "business_analysis"
     ) -> tuple[list[dict[str, str]], str, list[str]]:
         sources: list[dict[str, str]] = []
         limitations = []
-        path = self.settings.requirements_baseline_path
         try:
-            if path.stat().st_size > 500_000:
+            raw = baseline_bytes(self.settings)
+            if len(raw) > 500_000:
                 raise ValueError("Baseline too large")
-            baseline = BusinessBaseline.model_validate_json(path.read_bytes())
+            baseline = BusinessBaseline.model_validate_json(raw)
             today = datetime.now(UTC).date()
             sources.extend(
                 {
@@ -213,7 +214,9 @@ class BusinessAnalystAgent:
                 "title": self.settings.agent_profile,
                 "authority": "reference_only",
                 "owner": "Workspace profile",
-                "content": load_profile_instructions(self.settings.agent_profile),
+                "content": load_profile_instructions(
+                    self.settings.agent_profile, settings=self.settings
+                ),
             }
         )
         if self.settings.agent_profile == "auto-finance-quotation":
@@ -223,6 +226,9 @@ class BusinessAnalystAgent:
                 limitations.append(
                     "The UK finance guide reference topics are unavailable or invalid."
                 )
+        from app.knowledge_agents import published_reference_sources
+
+        sources.extend(published_reference_sources(self.settings, stage))
         if not any(s["authority"] == "approved_business_source" for s in sources):
             limitations.append(
                 "No effective approved business sources are available; "
@@ -236,7 +242,7 @@ class BusinessAnalystAgent:
 
     def review_knowledge(
         self, request: GenerateRequest
-    ) -> tuple[list[dict[str, str]], str, list[str], dict]:
+    ) -> tuple[list[dict[str, str]], str, list[str], DomainScope]:
         available, _, limitations = self.knowledge(include_guide_units=True)
         guide = [source for source in available if source["id"].startswith("UK-AUTO-FINANCE:")]
         selected, scope = scope_guide_sources(request, guide)

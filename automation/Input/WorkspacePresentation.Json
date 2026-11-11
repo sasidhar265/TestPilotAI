@@ -1,0 +1,10 @@
+{
+  "pages": {
+    "login": {"path":"/login","contains":["id=\"login-form\"","id=\"password-toggle\"","Every journey starts with a confident quote."],"excludes":["id=\"theme-gear\""]},
+    "home": {"path":"/","contains":["id=\"output-target\"","Manual functional tests","Automated tests (BDD / Gherkin)","Manual + automated tests","id=\"timer\""],"excludes":["id=\"theme-gear\""]},
+    "logs": {"path":"/logs","contains":["id=\"log-reference\"","id=\"search-logs\"","/static/scripts/theme.js?"],"excludes":["id=\"theme-gear\""]},
+    "documentation": {"path":"/documentation","contains":["How the application works","id=\"profile-toggle\"","/static/scripts/documentation.js?"],"excludes":["id=\"theme-gear\""]},
+    "settings": {"path":"/settings","contains":["data-theme-option=\"light\"","data-theme-option=\"dark\"","data-theme-option=\"system\"","id=\"domain-profile-choice\""],"excludes":["id=\"theme-gear\""]}
+  },
+  "catalog_ids": ["input-agent","business-rules-agent","requirements-validation-agent","business-analyst","story-generator-agent","scenario-generator-agent","knowledge-agent","orchestrator-agent","decision-agent","manual-test-case-generator-agent","manual-testing-specialist-agent","automation-test-case-generator-agent","test-case-validator-agent","context-converter-agent","output-agent","test-storage-agent","test-data-agent","execution-agent","automation-execution-agent","multi-language-agent","bug-reporter-agent","metrics-agent"]
+}

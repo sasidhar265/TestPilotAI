@@ -1,0 +1,401 @@
+.knowledge-agents-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.agent-eyebrow {
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.ka-heading,
+.ka-card-heading,
+.ka-dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.ka-heading {
+  margin-bottom: 24px;
+  align-items: center;
+}
+.ka-heading > div {
+  flex: 1 1 440px;
+  min-width: 0;
+}
+.ka-heading h2 {
+  margin: 10px 0;
+  font-size: 1.8rem;
+}
+.ka-heading p,
+.ka-help {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.8rem;
+}
+.ka-process {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.ka-process span,
+.ka-tags span,
+.ka-badge {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+.ka-process span:last-child {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.ka-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px;
+  margin: 24px 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.ka-toolbar label {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.ka-toolbar :is(input, select) {
+  width: 100%;
+}
+#ka-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 20px;
+}
+.ka-card,
+.ka-empty {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  min-width: 0;
+}
+.ka-card h3 {
+  margin: 0;
+}
+.ka-card p {
+  overflow-wrap: anywhere;
+}
+.ka-badge {
+  color: var(--primary);
+  white-space: nowrap;
+}
+.ka-tags,
+.ka-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.ka-card-actions {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.ka-dialog {
+  box-sizing: border-box;
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.ka-dialog::backdrop {
+  background: rgb(10 18 30 / 60%);
+  backdrop-filter: blur(4px);
+}
+.ka-dialog-heading h2 {
+  margin: 8px 0;
+}
+.ka-dialog-heading button {
+  flex: 0 0 44px;
+}
+.ka-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.ka-wide {
+  grid-column: 1 / -1;
+}
+.ka-dialog label:not(.ka-checkbox) {
+  display: grid;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.ka-dialog :is(input:not([type="checkbox"]), textarea) {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.ka-dialog textarea {
+  resize: vertical;
+}
+.ka-dialog fieldset {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.ka-dialog small {
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.ka-stage-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.ka-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.ka-checkbox input {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+}
+.ka-dialog-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ka-definition-preview > div {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.ka-definition-preview p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.ka-version {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 16px;
+}
+#ka-review-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+@media (max-width: 650px) {
+  .ka-form-grid,
+  .ka-stage-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ka-dialog {
+    padding: 18px;
+  }
+  .ka-card {
+    padding: 20px;
+  }
+  .ka-toolbar button {
+    width: 100%;
+  }
+}
+/* Keep form fields aligned independently of helper-text height. */
+.ka-form-grid {
+  align-items: start;
+  align-content: start;
+}
+.ka-dialog label:not(.ka-checkbox) {
+  min-width: 0;
+  align-content: start;
+  line-height: 1.5;
+}
+.ka-dialog :is(input:not([type="checkbox"]), textarea) {
+  font-weight: 400;
+  font-size: var(--text-control, 0.8125rem);
+  line-height: 1.6;
+}
+.ka-dialog .ka-checkbox {
+  align-items: flex-start;
+  min-height: 32px;
+}
+.ka-dialog .ka-checkbox input {
+  margin: 3px 0 0;
+  accent-color: var(--primary);
+}
+.ka-dialog legend {
+  padding-inline: 6px;
+  line-height: 1.5;
+}
+#ka-editor {
+  height: min(900px, calc(100dvh - 32px));
+  padding: 0;
+  overflow: hidden;
+}
+#ka-editor[open] {
+  display: flex;
+  flex-direction: column;
+}
+#ka-editor > .ka-dialog-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 16px;
+  padding: 24px 28px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+#ka-editor .ka-dialog-heading > div {
+  min-width: 0;
+}
+#ka-editor .ka-dialog-heading h2 {
+  margin: 8px 0 0;
+  line-height: 1.35;
+}
+#ka-editor .ka-dialog-heading button {
+  width: 44px;
+  height: 44px;
+  padding: 8px;
+}
+#ka-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+#ka-form .ka-form-grid {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  gap: 20px 24px;
+  scrollbar-gutter: stable;
+}
+#ka-editor-status {
+  margin: 0;
+  padding: 10px 28px;
+  font-size: 0.8rem;
+}
+#ka-editor-status:empty {
+  display: none;
+}
+#ka-form .ka-dialog-actions {
+  flex-shrink: 0;
+  padding: 16px 28px;
+  border-top: 1px solid var(--line);
+  align-items: center;
+  background: var(--surface);
+}
+@media (max-width: 650px) {
+  #ka-editor > .ka-dialog-heading {
+    padding: 18px;
+    gap: 12px;
+  }
+  #ka-form .ka-form-grid {
+    padding: 20px 18px;
+  }
+  #ka-form .ka-dialog-actions {
+    padding: 14px 18px;
+  }
+  #ka-editor-status {
+    padding: 10px 18px;
+  }
+}
+
+.ka-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+#ka-import-file[hidden] {
+  display: none;
+}
+
+.ka-comparison {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.ka-comparison h3 {
+  margin-top: 0;
+}
+.ka-comparison-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+.ka-comparison-controls label:not(.ka-checkbox) {
+  flex: 1 1 180px;
+}
+.ka-comparison-controls select {
+  width: 100%;
+}
+.ka-comparison-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.ka-comparison-fields {
+  display: grid;
+  gap: 20px;
+}
+.ka-comparison-field h4 {
+  margin: 0 0 10px;
+}
+.ka-comparison-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.ka-diff-pane {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.ka-diff-changed {
+  border-color: var(--primary);
+}
+.ka-diff-pane strong {
+  font-size: 0.75rem;
+}
+.ka-diff-pane p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 260px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+@media (max-width: 650px) {
+  .ka-comparison-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,59 @@
+/* Reserve shell geometry while the saved identity is loading. */
+:root[data-appearance-pending] :is(.brand, .primary-nav) {
+  visibility: hidden;
+}
+
+:root[data-custom-appearance] body,
+:root[data-custom-appearance] body :is(h1, h2, h3, h4, h5, h6, input, button, select, textarea) {
+  font-family: var(--font-ui) !important;
+}
+:root[data-custom-background] body,
+:root[data-custom-background] .workspace,
+:root[data-custom-background] .docs-main {
+  background: var(--workspace-background) !important;
+  background-image: none !important;
+}
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+.primary-nav .nav-icon {
+  flex-shrink: 0;
+}
+
+/* Custom backgrounds carry their own readable palette, independent of theme defaults. */
+:root[data-custom-background] .sidebar {
+  background: var(--surface);
+}
+:root[data-custom-background]
+  :is(.button.primary, .source-trigger:hover, .source-trigger[aria-expanded="true"]) {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+:root[data-custom-background] .topbar .top-actions :is(.avatar, .settings-shortcut) {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+:root[data-custom-background] .topbar .top-actions :is(.avatar, .settings-shortcut):hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+:root[data-custom-background] :is(button.primary, .workflow-step.active span, .workflow-card > span, .rule-attachment-trigger:hover, .suite-jira[open] > summary, .preview-logo) {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+:root[data-custom-background] .workflow-step.active {
+  background: var(--primary-soft);
+}
+:root[data-custom-background] .notification-count {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+:root[data-custom-background] .trust-note span {
+  background: var(--success-soft);
+  color: var(--success);
+}

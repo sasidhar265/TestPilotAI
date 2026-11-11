@@ -227,3 +227,62 @@ dotnet test QualityLifecycle.Automation.csproj --filter FullyQualifiedName~RoleS
 
 Permitted generation probes deliberately use an invalid BRD and expect schema validation rather
 than invoking an AI provider. These checks verify authorization, not generated-suite execution.
+
+## Knowledge agent lifecycle
+
+`Features/KnowledgeAgents.feature` covers drafts, review-before-publish, publication,
+draft isolation, rollback, withdrawal, stale edits, source-review acknowledgement,
+authentication, validated JSON import and rejection of model overrides. It uses the shared framework folders:
+`StepDefinitions/KnowledgeAgentStepDefinition.cs`, `Services/KnowledgeAgentService.cs`,
+`Builders/KnowledgeAgentRequestBuilder.cs`, `Models/KnowledgeAgentModel.cs`,
+`TestContext/KnowledgeAgentScenarioContext.cs` and `Input/KnowledgeAgents.Json`.
+Transport uses the shared `ApiService` and `System.Net.Http.HttpClient`; bindings contain
+no conditional branches. Existing repository scenarios are preserved.
+
+Run against a dedicated configured test application with API authentication enabled:
+
+```bash
+QUALITY_LIFECYCLE_BASE_URL=http://127.0.0.1:8001 \
+API_AUTH_TOKEN="$API_AUTH_TOKEN" \
+dotnet test automation/QualityLifecycle.Automation.csproj \
+  --filter FullyQualifiedName~KnowledgeAgentLifecycle \
+  --logger "trx;LogFileName=knowledge-agents.trx" \
+  --results-directory automation/TestResults/Reports/knowledge-agents
+```
+
+The scenarios create fixture knowledge definitions, then withdraw and delete only their
+own records in scenario cleanup. They require an administrator service token or browser
+session; the anonymous scenario intentionally omits both and requires HTTP 401. The model
+field rejection sends an intentionally unsupported definition field; no provider is called.
+These tests do not alter quotation payloads or validate an unrelated generated test pack.
+
+The current implementation was executed against an isolated full FastAPI test application:
+43 discovered/executed scenarios, 43 passed, 0 failed or skipped, verified from TRX counters:
+13 knowledge lifecycle/import, 8 domain profile, 16 existing script pack and 6 workspace
+presentation contracts.
+The local report is `TestResults/Reports/knowledge-agents/knowledge-agents.trx`.
+
+
+`Features/DomainProfiles.feature` covers creating and activating custom profiles,
+protected built-ins, baseline/model validation, stale updates and anonymous access.
+Its matching DomainProfile bindings, HttpClient service, request builder, model,
+scenario context and `Input/DomainProfiles.Json` are included. Cleanup restores the
+original selection and deletes only profiles created by the scenario.
+
+`Features/WorkspacePresentation.feature` covers five updated page contracts and
+the core agent catalogue. Matching WorkspacePresentation bindings, service, builder,
+model and `Input/WorkspacePresentation.Json` preserve executable API coverage for
+the updated Python assertions.
+
+Run all affected contracts against a dedicated configured application:
+
+```bash
+dotnet test automation/QualityLifecycle.Automation.csproj \
+  --filter 'FullyQualifiedName~KnowledgeAgentLifecycle|FullyQualifiedName~DomainProfileConfiguration|FullyQualifiedName~PerformanceAndDatabaseScriptPacks|FullyQualifiedName~WorkspacePresentationContracts' \
+  --logger "trx;LogFileName=knowledge-agents.trx" \
+  --results-directory automation/TestResults/Reports/knowledge-agents
+```
+
+Set `QUALITY_LIFECYCLE_BASE_URL` and `API_AUTH_TOKEN` as above. These runs exercise
+the repository API application; they do not establish results for separately generated
+customer packs or external AI providers.

@@ -1014,3 +1014,205 @@ The same workflow navigation is shown across all signed-in application pages, in
 Knowledge, runtime logs, documentation and Manage users. Supporting-page links open the corresponding
 workspace stage; workspace tabs retain current drafts and progress during view switches. The bar
 shows only the stages permitted by the account role and scrolls horizontally on smaller screens.
+
+## Workspace appearance settings
+
+Select the **Settings gear icon**, immediately left of the profile button, to customize the shared application title, subtitle, logo,
+workspace background, font family, base font size, sidebar labels and icons.
+Administrators can save changes or restore defaults; other signed-in users can view
+settings. Changes apply on saved settings and when workspace pages are opened or refreshed.
+Settings persist in `appearance.db` beside the configured user database. Include this
+file in deployment backups. Logos accept validated PNG, JPEG and WebP images up to
+500 KB and 2048 pixels per dimension. No external font or logo hosting is required.
+Workspace pages load saved appearance before revealing the brand and navigation labels,
+so built-in identity text does not flash between screens. Browser titles stay synchronized
+with the saved application name after page and hash navigation. Unsaved Settings drafts
+still apply only to the embedded preview. A shared brand layout keeps the logo square at
+40 pixels and stacks the title above the tagline with consistent spacing across pages.
+Long titles and taglines wrap without compressing the logo or overlapping the navigation toggle.
+
+Branding applies to signed-in workspace pages. It does not replace finance-specific
+business logic, approved domain knowledge, agent profiles or workflow policies. Those
+remain separately configured; changing navigation labels does not change permissions.
+
+Light, Dark and System appearance controls are available in **Settings → Appearance**.
+A custom workspace background automatically derives readable text, surfaces, borders,
+accents and status colours. Normal palette text targets a 4.5:1 contrast ratio against
+its backgrounds. Preview these changes before saving; reset restores theme defaults.
+A custom background takes precedence over the light/dark palette while selected.
+A floating sun/moon button in the bottom-right corner instantly switches between light
+and dark mode and saves the choice for this browser.
+Theme preferences are previewed before saving, are saved in the current browser and are available
+to all signed-in roles. Shared branding continues to require an administrator. The
+Settings live preview shows unsaved identity, colour, typography and navigation edits.
+
+The Settings preview embeds read-only main application screens. Unsaved changes stay
+inside that preview. **Save settings** publishes shared branding and applies the selected
+personal theme; **Save theme** is also available to users who cannot edit shared branding.
+Saved branding updates other open workspace tabs in the same browser. Use **View updated
+workspace** after saving to open the selected screen.
+
+## Application knowledge information
+
+Open **Knowledge → Knowledge information**. Administrators can add application knowledge: architecture, workflows, integrations,
+business rules, terminology, quality standards or other source-grounded context. Each entry is a
+knowledge contributor with its name, purpose, profile scope, workflow stages, source
+reference, guidance and reference text. No source-code edits or application restart
+are needed. Other signed-in roles can inspect and export definitions.
+
+1. **Save draft** creates a new version and leaves any published version active.
+2. **Review** shows the complete definition and requires a review note and explicit
+   approval of reference use. This records the authenticated reviewer; it does not
+   grant business-rule approval or replace the independent validation gates.
+3. **Publish to app** activates the latest reviewed version for new requests in its
+   selected stages and matching active profile. Publishing rejects stale revisions
+   and bounds reference context per stage. Existing in-flight requests are not rerun.
+4. **View / history** provides version snapshots, review notes and publication events.
+   Previously published versions can be activated again. **Withdraw** removes the
+   agent from new workflow requests. **Export** downloads a versioned JSON definition.
+
+Published contributors appear in **Agent information → Knowledge & delivery**.
+They supply reference knowledge and guidance to the existing governed generation
+pipeline; they do not install executable code, register new tools or replace its
+schemas and business logic. Codex remains pinned to `gpt-6-astra` and Copilot to
+`claude-haiku-4.5`, including retries and repairs. Model/provider fields cannot be
+added through knowledge definitions. Business-analysis/story reference citations
+retain source IDs, revision and reviewer metadata. Publication, withdrawal and
+rollback change the knowledge fingerprint used for generated-artifact reuse.
+
+Definitions, revisions and publishing history persist in `knowledge_agents.db`
+beside the configured user database. Include it in protected deployment backups;
+use reference material intended for the workspace and keep credentials out of it.
+A profile name scopes the contributor. Create and select profiles separately in
+Settings; selecting a profile keeps its approved baseline and contributor scope separate.
+
+“Publish” applies changes inside the application. It does not commit or push to Git.
+The browser-local custom definitions on Agent information remain reference-only
+and are separate from these server-persisted, published workflow contributors.
+
+The new API lifecycle is covered by the executable C# ReqnRoll pack documented in
+`automation/README.md`. Runtime contribution tests verify prompt inclusion and
+scope without making external AI calls; provider availability remains a deployment
+prerequisite for actual generation.
+
+
+## Import, compare and configure domains
+
+In **Knowledge → Knowledge information**, **Import JSON** validates a definition or an
+exported version before opening the editor. Imported definitions always start as
+new drafts; incoming IDs, approval records and publication state are not retained.
+Unsupported fields, including model overrides, are rejected. Save, review and
+publish explicitly before imported guidance contributes to new requests.
+
+**View / history** includes a side-by-side version comparison. Select any two
+revisions and optionally show unchanged fields; narrow screens stack the versions.
+Comparing versions does not publish or roll back either version.
+
+In **Settings → Domain profile**, administrators can create and edit a profile's
+name, guidance and structured baseline, then apply it to new requests. Saving a
+new profile does not activate it. Built-in profiles are protected. Baseline source
+review status and approval metadata are preserved and validated; creating a profile
+does not approve business rules. Non-finance profiles disable the finance-specific
+pack while retaining the shared governed workflow and mandatory AI models.
+Reopen the workspace after applying a profile to begin with fresh drafts.
+
+Profiles and the active selection persist in `domain_profiles.db` beside the user
+database. Include this file alongside `knowledge_agents.db` in deployment backups.
+These settings are workspace-wide and require administrator access to change.
+
+The browser regression suite uses a temporary database and real local application:
+
+```bash
+RUN_BROWSER_TESTS=1 .venv/bin/pytest tests/test_workspace_customization_browser.py -q
+```
+
+Install Playwright and its Chromium browser before running that opt-in suite. It
+covers publishing and rollback, JSON import, version comparison, responsive layouts,
+agent-directory controls, appearance preview/save and domain-profile selection.
+The ordinary Python suite isolates developer authentication and data stores.
+
+
+## Workspace navigation
+
+The sidebar starts with **Search navigation**, followed by the
+**Workspace** heading and Agents, Knowledge, Quality Engineering, Data,
+Delivery & Operations, AI Assure and Administration sections. Search filters
+navigation destinations, expands matching sections and respects role permissions.
+Escape clears the search; it does not search stored application content.
+
+Agents opens the four-column agent board directly, without child navigation items. Custom agents includes browser-local definitions and published knowledge
+contributors; browser-local definitions remain reference-only. Knowledge contains application knowledge and
+reference tools; Quality Engineering contains the requirements-to-automation views;
+Data contains saved outputs; Delivery & Operations contains execution and logs;
+AI Assure contains coverage/traceability and AI usage. Administration contains
+user management (administrators only), guides and API documentation.
+
+**Requirements** is the home page at `/` and opens after login for every role.
+Paste requirements or add a document or Jira source, choose the available test output,
+testing type and AI provider, then review the BRD or generate stories. Drafts remain
+available while navigating the workspace. Settings remains the gear beside the
+profile button.
+
+
+**Agents** uses a four-column board: Advice (decision support),
+Builders (artifact creation), Operators (controlled workflow operations), and Custom
+agents. Search sits at the top right, with function filters underneath. Each agent
+has an icon and opens its details on selection. The board adapts to two columns on
+smaller screens and one on phones.
+
+The Custom agents column displays published profile contributors and browser-local
+reference definitions. If empty, it shows **No custom agents** and **+ New**. New
+browser-local definitions can be created directly from the board and persist in this
+browser. Operators retain existing approval and permission controls; this grouping
+does not introduce unrestricted autonomous execution.
+
+
+## Knowledge navigation and search
+
+Knowledge groups its destinations into **Product understanding** (Knowledge,
+Product landscape, Services, Code map, Business view), **Memory** (Memory), and
+**Agent behavior** (Skills, Prompts, Guardrails). Sidebar search matches these
+subsection names as well as destination labels. Agents remains a direct link.
+
+Knowledge search combines accessible reference definitions (with draft/published
+state), profile reference documents, saved-record summaries, business rules and
+workspace standards. Source filtering and unavailable-source notices keep the
+search scope visible. Use **Manage knowledge** to create, review and publish entries.
+Saved artifact bodies are opened through their existing record views; search indexes
+the inventory summaries, not every saved artifact body or an arbitrary repository.
+
+Product landscape, Services, Code map and Agent behavior open maintained source
+guides for this application's architecture, repository, instructions and controls.
+They do not claim live discovery of external systems or repositories. Memory exposes
+existing saved workflow records; browser-flow and page capture per site/app is not
+configured. Guardrails documents the existing governed workflow, not a new schedule
+or chat execution engine. Existing graph, calculation and finance-guide routes remain
+available through the application and its source guides.
+
+
+**Knowledge** is now a direct sidebar destination, matching **Agents**. Its overview
+board contains Product understanding, Memory and Agent behavior columns, with nine
+linked tools, icons, search at the upper right and category filters underneath.
+Searching this board filters tools; the Knowledge tool opens the separate source
+content search. Existing tool links remain available from the board. The sidebar
+has no Knowledge child items, and Data still opens saved outputs directly.
+
+
+## Application skills and guardrails
+
+Knowledge → **Skills** and **Guardrails** list the repository-owned procedures and boundaries.
+Six skill files in `.github/skills/` cover requirements analysis, reviewed test design, BDD
+packs, execution evidence, knowledge maintenance and workspace customization. The last skill is
+maintainer guidance; relevant runtime agents receive the other registered skills explicitly.
+
+Four files in `.github/guardrails/` cover source trust, approval/role boundaries, provider/tool
+restrictions and truthful validation/execution evidence. Shared policy reaches initial calls,
+retries and repairs across the existing provider routes. Codex remains pinned to `gpt-6-astra`
+and Copilot to `claude-haiku-4.5`; external skill discovery and tool restrictions are unchanged.
+
+Edit the files to update guidance on the next invocation. Register a new skill in `SKILL_FILES`
+and `AGENT_SKILLS` in `app/agent_instructions.py`; files are not activated merely by uploading
+knowledge or adding an arbitrary directory. Skill/guardrail edits invalidate generated reuse,
+while existing feedback identity stays separate. These are prompt instructions backed by the
+application's existing validators and authorization checks, not a new policy interpreter or
+an autonomous execution service. See `.github/agents/README.md` for ownership and conventions.

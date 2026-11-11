@@ -13,7 +13,7 @@ from typing import Any
 import httpx
 
 from app.agent_activity import await_agent_activity
-from app.agent_instructions import load_agent_section
+from app.agent_instructions import load_agent_section, with_runtime_guardrails
 from app.agents.reqnroll_validation import IncompleteImplementationError
 from app.agents.runner import (
     CopilotAgentRunner,
@@ -48,6 +48,22 @@ class ArtifactGenerationRunner:
         validate: Callable[[OutputModel], OutputModel] | None = None,
         llm_model: LlmModel = LlmModel.AUTO_FALLBACK,
     ) -> OutputModel:
+        from app.knowledge_agents import published_context
+
+        stage = {
+            "BAAssessment": "business_analysis",
+            "AlignmentAssessment": "requirements",
+            "Stories": "stories",
+            "Scenarios": "scenarios",
+            "TestSuite": "test_cases",
+            "StepDefinitionArtifact": "automation",
+            "LanguageArtifact": "automation",
+        }.get(definition.output_model.__name__)
+        if stage and "PUBLISHED KNOWLEDGE CONTRIBUTOR CONTEXT" not in instructions:
+            instructions += published_context(self.settings, stage)
+
+        instructions = with_runtime_guardrails(instructions)
+
         async def copilot(current_prompt: str) -> OutputModel:
             return await self.copilot.generate_structured(
                 definition, instructions=instructions, prompt=current_prompt

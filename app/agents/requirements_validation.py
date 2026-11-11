@@ -13,6 +13,7 @@ from app.agents import AgentKind, FunctionalAgentDescriptor
 from app.agents.runner import StructuredAgentDefinition
 from app.agents.validation_evidence import functionality, labels
 from app.config import Settings, get_settings
+from app.domain_profiles import baseline_bytes
 from app.models import GenerateRequest
 from app.observability import publish_lifecycle_event
 from app.uploaded_brd import verify_brd_receipt
@@ -154,10 +155,9 @@ class RequirementsValidationAgent:
                 return report(
                     "Requirements blocked: split this source into at most 1,000 lines and rules."
                 )
-            path = self.settings.requirements_baseline_path
-            if path.stat().st_size > 500_000:
+            raw = baseline_bytes(self.settings)
+            if len(raw) > 500_000:
                 return report("Requirements blocked: approved business baseline exceeds 500 KB.")
-            raw = path.read_bytes()
             baseline_fingerprint = hashlib.sha256(raw).hexdigest()
             baseline = BusinessBaseline.model_validate_json(raw)
             today = datetime.now(UTC).date()
@@ -206,7 +206,7 @@ class RequirementsValidationAgent:
                     "approve and populate the requirements baseline."
                 )
             instructions = load_agent_instructions("requirements-validation")
-            context = load_profile_instructions(self.settings.agent_profile)
+            context = load_profile_instructions(self.settings.agent_profile, settings=self.settings)
             prompt = json.dumps(
                 {
                     "requirements": units,
@@ -246,7 +246,7 @@ class RequirementsValidationAgent:
                             "Requirements blocked: a source citation could not be verified."
                         )
             # Reject approval if the baseline changed while analysis was in flight.
-            if path.read_bytes() != raw:
+            if baseline_bytes(self.settings) != raw:
                 return report(
                     "Requirements blocked: the baseline changed during analysis. Validate again."
                 )

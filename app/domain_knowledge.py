@@ -4,6 +4,9 @@ import hashlib
 import re
 from html.parser import HTMLParser
 from pathlib import Path
+from typing import TypedDict
+
+from typing_extensions import TypedDict as ModelTypedDict
 
 from app.models import GenerateRequest
 
@@ -37,6 +40,23 @@ _VOID = {
 _BLOCK = {"h2", "h3", "h4", "p", "li", "tr", "dt", "dd", "summary", "div"}
 
 
+class GuideUnit(TypedDict):
+    title: str
+    content: str
+    references: list[str]
+
+
+class DomainScope(ModelTypedDict):
+    product: str
+    journeys: list[str]
+    vehicle_condition: str
+    scope_status: str
+    scope_basis: list[str]
+    included_topics: list[str]
+    excluded_topics: list[str]
+    excluded_journeys: list[str]
+
+
 class GuideTopics(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -44,15 +64,16 @@ class GuideTopics(HTMLParser):
         self.stack: list[tuple[str, bool]] = []
         self.parts: dict[str, list[str]] = {}
         self.references: dict[str, list[str]] = {}
-        self.units: dict[str, list[dict]] = {}
+        self.units: dict[str, list[GuideUnit]] = {}
         self.unit: tuple[str, int, int] | None = None
         self.unit_title = ""
         self.heading_start: int | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
-        if tag == "section" and values.get("id") in GUIDE_TOPICS:
-            self.current = values["id"]
+        identifier = values.get("id")
+        if tag == "section" and identifier is not None and identifier in GUIDE_TOPICS:
+            self.current = identifier
             self.parts[self.current] = []
             self.references[self.current] = []
             self.units[self.current] = []
@@ -78,7 +99,7 @@ class GuideTopics(HTMLParser):
             if tag in _BLOCK or tag == "br":
                 self.parts[self.current].append("\n")
             if tag == "a" and (values.get("href") or "").startswith("https://"):
-                self.references[self.current].append(values["href"])
+                self.references[self.current].append(values["href"] or "")
             if tag in {"td", "th"}:
                 self.parts[self.current].append(" | ")
 
@@ -190,7 +211,7 @@ _JOURNEY_STEPS = {
 
 def scope_guide_sources(
     request: GenerateRequest, sources: list[dict[str, str]]
-) -> tuple[list[dict[str, str]], dict[str, str | list[str]]]:
+) -> tuple[list[dict[str, str]], DomainScope]:
     """Select actual BRD scope; neighbouring lifecycle features do not become requirements."""
     import json
 
@@ -252,8 +273,7 @@ def scope_guide_sources(
             chosen = [
                 u
                 for u in units
-                if re.match(r"^(\d+)", u["title"])
-                and int(re.match(r"^(\d+)", u["title"])[1]) in steps
+                if (match := re.match(r"^(\d+)", u["title"])) is not None and int(match[1]) in steps
             ]
         elif topic == "costs" and (quotation or request.finance_calculation is not None):
             titles = (
@@ -330,7 +350,7 @@ def scope_guide_sources(
         scoped["selected_sections"] = "\n".join(u["title"] for u in chosen)
         scoped["fingerprint"] = hashlib.sha256(scoped["content"].encode()).hexdigest()
         selected.append(scoped)
-    scope = {
+    scope: DomainScope = {
         "product": ", ".join(products),
         "journeys": journeys,
         "vehicle_condition": vehicle,

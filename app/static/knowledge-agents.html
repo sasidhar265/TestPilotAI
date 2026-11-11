@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Knowledge information</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
+    <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link
+      rel="stylesheet"
+      href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation"
+    />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/knowledge-agents.css?v=20261110-comparison" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
+  </head>
+  <body class="explore-page" data-access-pending="true">
+    <div class="docs-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Auto Finance Quality home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="quality-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="quality-navigation" hidden>
+                <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
+                <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+              </div>
+            </div>
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
+            >
+            <a class="nav-item" href="/usage"
+              ><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a
+            >
+            <span class="nav-label explore-nav-label">Explore</span>
+            <a class="nav-item" href="/static/user-guide.html"
+              ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
+            >
+            <a class="nav-item" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="knowledge-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="knowledge-navigation" hidden>
+                <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
+                <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
+              </div>
+            </div>
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="finance-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="finance-navigation" hidden>
+                <a class="nav-item" href="/products"><span>Products</span></a>
+                <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"
+                  ><span>Calculation validators</span></a
+                >
+              </div>
+            </div>
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+            <a class="nav-item" href="/docs"
+              ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
+            >
+            <div class="nav-group admin-navigation" data-permission="admin" hidden>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="admin-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="admin-navigation" hidden>
+                <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
+              </div>
+            </div>
+          </nav>
+          <div class="side-status">
+            <div class="status-line" id="status">
+              <span class="pulse"></span><span class="status-copy">Checking agent registry…</span>
+            </div>
+            <div class="model">SECURE LOCAL WORKSPACE</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace docs-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Knowledge</div>
+            <h1>Knowledge information</h1>
+          </div>
+          <div class="top-actions">
+            <a class="api-link" href="/docs">API reference ↗</a>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
+          </div>
+        </header>
+
+        <article class="content knowledge-agents-page">
+          <section class="ka-heading">
+            <div>
+              <span class="agent-eyebrow">KNOWLEDGE WORKSPACE</span>
+              <h2>Build your application knowledge</h2>
+              <p>
+                Add application context, workflows, architecture, integrations, terminology and
+                business rules. Review each entry, then publish it to the stages that need it.
+              </p>
+            </div>
+            <div class="ka-heading-actions">
+              <input
+                type="file"
+                id="ka-import-file"
+                accept="application/json,.json"
+                hidden
+              /><button class="button" id="ka-import-button" type="button" disabled>
+                Import JSON
+              </button>
+              <button class="button primary" id="new-knowledge-agent" type="button" disabled>
+                ＋ Add knowledge
+              </button>
+            </div>
+          </section>
+          <div class="ka-process" aria-label="Publishing workflow">
+            <span>1 · Draft</span><span>2 · Review</span><span>3 · Publish to application</span>
+          </div>
+          <p class="ka-help">
+            Published entries provide application context to the existing AI workflow. Choose a topic,
+            include a source and explain how the information should be used. Business approval and
+            existing validation gates remain in place.
+          </p>
+          <div class="ka-toolbar">
+            <label
+              >Find knowledge<input
+                type="search"
+                id="ka-search"
+                placeholder="Search title, topic or purpose" /></label
+            ><label
+              >State<select id="ka-filter">
+                <option value="all">All knowledge</option>
+                <option value="active">Published</option>
+                <option value="draft">Draft changes</option>
+                <option value="reviewed">Ready to publish</option>
+              </select></label
+            ><button class="button" id="ka-refresh" type="button">↻ Refresh</button>
+          </div>
+          <p id="ka-access" class="ka-help"></p>
+          <p id="ka-status" role="status">Loading knowledge information…</p>
+          <div id="ka-list" aria-busy="true"></div>
+        </article>
+        <dialog class="ka-dialog" id="ka-editor" aria-labelledby="ka-editor-title">
+          <header class="ka-dialog-heading">
+            <div>
+              <span class="agent-eyebrow">APPLICATION KNOWLEDGE</span>
+              <h2 id="ka-editor-title">Create a draft</h2>
+            </div>
+            <button
+              type="button"
+              class="button"
+              data-close="ka-editor"
+              aria-label="Close knowledge editor"
+            >
+              ✕
+            </button>
+          </header>
+          <datalist id="ka-topics">
+            <option value="Application overview"></option>
+            <option value="Architecture"></option>
+            <option value="Business rules"></option>
+            <option value="Workflows"></option>
+            <option value="Integrations &amp; APIs"></option>
+            <option value="Data &amp; terminology"></option>
+            <option value="Quality standards"></option>
+            <option value="Operations &amp; support"></option>
+          </datalist>
+          <form id="ka-form">
+            <div class="ka-form-grid">
+              <label>Title<input name="name" required minlength="3" maxlength="100" /></label
+              ><label
+                >Topic / category<input
+                  name="domain"
+                  required
+                  minlength="2"
+                  maxlength="100"
+                  list="ka-topics"
+                  placeholder="e.g. Architecture, business rules, integrations"
+              /></label>
+              <label class="ka-wide"
+                >Purpose / application context<textarea
+                  name="purpose"
+                  required
+                  minlength="10"
+                  maxlength="1000"
+                  rows="2"
+                ></textarea>
+              </label>
+              <label
+                >Profile scope<input
+                  name="profile"
+                  required
+                  pattern="[a-z0-9][a-z0-9_-]*"
+                  maxlength="64"
+                /><small
+                  >Use the active profile to contribute to this workspace. Other profile scopes
+                  remain inactive here.</small
+                ></label
+              >
+              <label
+                >Source reference<input
+                  name="source_reference"
+                  required
+                  minlength="3"
+                  maxlength="1000"
+                  placeholder="Document title, version or approved source URL"
+              /></label>
+              <fieldset class="ka-wide">
+                <legend>Contribute to these workflow stages</legend>
+                <div id="ka-stages" class="ka-stage-options"></div>
+              </fieldset>
+              <label class="ka-wide"
+                >Usage guidance<textarea
+                  name="instructions"
+                  required
+                  minlength="20"
+                  maxlength="4000"
+                  rows="4"
+                  placeholder="Explain how this knowledge should be used. Application policies and approved contracts take precedence."
+                ></textarea>
+              </label>
+              <label class="ka-wide"
+                >Knowledge content<textarea
+                  name="knowledge"
+                  required
+                  minlength="20"
+                  maxlength="16000"
+                  rows="7"
+                  placeholder="Add source-grounded application details, processes, rules or reference material. Do not include credentials."
+                ></textarea>
+              </label>
+            </div>
+            <p id="ka-editor-status" role="status"></p>
+            <div class="ka-dialog-actions">
+              <button class="button primary" type="submit">Save draft</button
+              ><button class="button" type="button" data-close="ka-editor">Cancel</button>
+            </div>
+          </form>
+        </dialog>
+        <dialog class="ka-dialog" id="ka-review" aria-labelledby="ka-review-title">
+          <header class="ka-dialog-heading">
+            <h2 id="ka-review-title">Review knowledge entry</h2>
+            <button class="button" type="button" data-close="ka-review" aria-label="Close review">
+              ✕
+            </button>
+          </header>
+          <div id="ka-review-preview"></div>
+          <form id="ka-review-form">
+            <label
+              >Review note<textarea
+                name="note"
+                rows="3"
+                required
+                minlength="10"
+                maxlength="1000"
+                placeholder="Record what you checked and any usage limitations."
+              ></textarea></label
+            ><label class="ka-checkbox"
+              ><input type="checkbox" name="approve_reference_use" required />I reviewed this source
+              and guidance and approve its use as reference knowledge for the selected
+              stages.</label
+            >
+            <p id="ka-review-status" role="status"></p>
+            <button class="button primary" type="submit">Mark reviewed</button>
+          </form>
+        </dialog>
+        <dialog class="ka-dialog" id="ka-history" aria-labelledby="ka-history-title">
+          <header class="ka-dialog-heading">
+            <h2 id="ka-history-title">Versions & publishing history</h2>
+            <button class="button" type="button" data-close="ka-history" aria-label="Close history">
+              ✕
+            </button>
+          </header>
+          <div id="ka-history-content"></div>
+        </dialog>
+        <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
+      </main>
+    </div>
+
+    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
+    <script src="/static/scripts/knowledge-agents.js?v=20261110-knowledge-information" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
+  </body>
+</html>

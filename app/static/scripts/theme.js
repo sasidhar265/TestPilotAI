@@ -1,14 +1,9 @@
+/* Theme preferences are shared by Settings and the floating browser-local toggle. */
 (() => {
   const storageKey = "quality-lifecycle-studio-theme";
   const legacyStorageKey = "testpilot-theme";
   const allowedThemes = new Set(["light", "dark", "system"]);
-  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-  const gear = document.getElementById("theme-gear");
-  const menu = document.getElementById("theme-menu");
-  let preferredTheme = "system";
-  const menuHome = menu?.parentElement;
-  const menuSibling = menu?.nextSibling;
-
+  const systemTheme = matchMedia("(prefers-color-scheme: dark)");
   function readPreference() {
     try {
       const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey);
@@ -17,90 +12,66 @@
       return "system";
     }
   }
-
-  function resolvedTheme() {
-    return preferredTheme === "system" ? (systemTheme.matches ? "dark" : "light") : preferredTheme;
-  }
-
-  function applyTheme() {
-    const resolved = resolvedTheme();
+  let preferredTheme = readPreference();
+  function apply(value = preferredTheme) {
+    const resolved = value === "system" ? (systemTheme.matches ? "dark" : "light") : value;
     document.documentElement.dataset.theme = resolved;
-    const themeColor = document.querySelector('meta[name="theme-color"]');
-    if (themeColor) themeColor.content = resolved === "dark" ? "#10121a" : "#f5f6fa";
+    const toggle = document.getElementById("floating-theme-toggle");
+    if (toggle) {
+      const label = resolved === "dark" ? "Switch to light theme" : "Switch to dark theme";
+      toggle.setAttribute("aria-label", label);
+      toggle.title = label;
+      toggle.innerHTML = resolved === "dark"
+        ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z"/></svg>';
+    }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = resolved === "dark" ? "#10121a" : "#f5f6fa";
     document.querySelectorAll("[data-theme-option]").forEach((button) => {
-      const active = button.dataset.themeOption === preferredTheme;
+      const active = button.dataset.themeOption === value;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
   }
-
-  function closeMenu() {
-    if (!menu || !gear) return;
-    menu.hidden = true;
-    if (menu.classList.contains("theme-flyout")) {
-      menuHome.insertBefore(menu, menuSibling);
-      menu.classList.remove("theme-flyout");
-      menu.style.removeProperty("left");
-      menu.style.removeProperty("top");
-    }
-    gear.setAttribute("aria-expanded", "false");
-  }
-
-  preferredTheme = readPreference();
-  applyTheme();
-
-  gear?.addEventListener("click", () => {
-    if (!menu) return;
-    const opening = menu.hidden;
-    closeMenu();
-    if (
-      opening &&
-      gear.closest(".sidebar")?.dataset.collapsed === "true" &&
-      matchMedia("(min-width: 1081px)").matches
-    ) {
-      document.body.append(menu);
-      menu.classList.add("theme-flyout");
-      menu.hidden = false;
-      const anchor = gear.getBoundingClientRect();
-      const bounds = menu.getBoundingClientRect();
-      menu.style.left = `${Math.max(12, Math.min(anchor.right + 12, innerWidth - bounds.width - 12))}px`;
-      menu.style.top = `${Math.max(12, Math.min(anchor.bottom - bounds.height, innerHeight - bounds.height - 12))}px`;
-    }
-    menu.hidden = !opening;
-    gear.setAttribute("aria-expanded", String(opening));
-    if (opening) menu.querySelector(".active")?.focus();
-  });
-
-  menu?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-theme-option]");
-    if (!button) return;
-    preferredTheme = button.dataset.themeOption;
-    try {
-      localStorage.setItem(storageKey, preferredTheme);
-      localStorage.removeItem(legacyStorageKey);
-    } catch {}
-    applyTheme();
-    closeMenu();
-    gear?.focus();
-  });
-
-  document.addEventListener("click", (event) => {
-    if (!event.target.closest(".theme-settings") && !menu?.contains(event.target)) closeMenu();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && menu && !menu.hidden) {
-      closeMenu();
-      gear?.focus();
-    }
-  });
-  window.addEventListener("appearance-close", closeMenu);
-  window.addEventListener("resize", closeMenu);
+  window.workspaceTheme = {
+    get: () => preferredTheme,
+    preview: (value) => {
+      if (allowedThemes.has(value)) apply(value);
+    },
+    save: (value) => {
+      if (!allowedThemes.has(value)) return false;
+      try {
+        localStorage.setItem(storageKey, value);
+        localStorage.removeItem(legacyStorageKey);
+      } catch {
+        return false;
+      }
+      preferredTheme = value;
+      apply();
+      return true;
+    },
+  };
   systemTheme.addEventListener("change", () => {
-    if (preferredTheme === "system") applyTheme();
+    if (preferredTheme === "system") apply();
   });
   window.addEventListener("storage", (event) => {
-    if (event.key !== storageKey && event.key !== legacyStorageKey) return;
-    preferredTheme = readPreference();
-    applyTheme();
+    if (event.key === storageKey || event.key === legacyStorageKey || event.key === null) {
+      preferredTheme = readPreference();
+      apply();
+    }
   });
+  if (window.self === window.top && !new URLSearchParams(location.search).has("appearance-preview")) {
+    const toggle = document.createElement("button");
+    toggle.id = "floating-theme-toggle";
+    toggle.type = "button";
+    toggle.className = "floating-theme-toggle";
+    toggle.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      if (window.workspaceTheme.save(next)) {
+        window.dispatchEvent(new CustomEvent("workspace-theme-changed", { detail: next }));
+      }
+    });
+    document.body.append(toggle);
+  }
+  apply();
 })();

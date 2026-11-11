@@ -6,6 +6,7 @@ import os
 import re
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from app.agents.context_converter_agent import ContextConverterAgent
 from app.agents.test_case_validator import TestCaseValidatorAgent, ValidationReport
@@ -122,7 +123,7 @@ class AcceptedOutputService:
         return receipt
 
     @staticmethod
-    def validate_context(context: dict[str, object] | None) -> dict:
+    def validate_context(context: dict[str, object] | None) -> dict[str, Any]:
         """Preserve grounded stage evidence without promoting it into a business baseline."""
         if not context:
             return {}
@@ -164,7 +165,7 @@ class AcceptedOutputService:
         except ValueError as error:
             raise AcceptanceError("Workflow approval context is invalid: " + str(error)) from error
 
-    def inventory(self) -> list[dict]:
+    def inventory(self) -> list[dict[str, Any]]:
         """Accepted files are approval history even when AI reuse is disabled."""
         result = []
         for path in sorted(self.output_directory.glob("*-acceptance.json"), reverse=True)[:500]:
@@ -207,7 +208,7 @@ class AcceptedOutputService:
                 continue
         return result
 
-    def entry(self, identifier: str) -> dict | None:
+    def entry(self, identifier: str) -> dict[str, Any] | None:
         item = next((r for r in self.inventory() if r["artifact_id"] == identifier), None)
         if not item:
             return None

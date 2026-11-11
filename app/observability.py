@@ -21,6 +21,7 @@ from queue import Full, Queue
 from threading import Lock
 from types import TracebackType
 from typing import cast
+from urllib.parse import parse_qs
 from uuid import uuid4
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -124,6 +125,8 @@ class JsonFormatter(logging.Formatter):
 
 class NonBlockingConsoleHandler(QueueHandler):
     """Keep a stalled console from blocking request handling or cancellation."""
+
+    listener: QueueListener | None = None
 
     def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
         prepared = cast(logging.LogRecord, super().prepare(record))
@@ -556,10 +559,10 @@ class OrganizationHttpMiddleware:
                     b"form-action 'self'; object-src 'none'; img-src 'self' data:; "
                     b"script-src 'self'; style-src 'self' 'unsafe-inline'"
                 )
-                if (
-                    scope.get("path") == "/static/auto-finance-uk.html"
-                    and status_code in {200, 304}
-                ):
+                if scope.get("path") == "/static/auto-finance-uk.html" and status_code in {
+                    200,
+                    304,
+                }:
                     # Allow this exact script while retaining the single-file export.
                     guide = Path(__file__).parent / "static" / "auto-finance-uk.html"
                     script = (
@@ -581,15 +584,28 @@ class OrganizationHttpMiddleware:
                         b"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
                         b"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"
                     )
+                preview_frame = (
+                    scope.get("path") in {"/", "/project-dashboard"}
+                    and status_code == 200
+                    and parse_qs(scope.get("query_string", b"").decode("ascii", "ignore")).get(
+                        "appearance-preview"
+                    )
+                    == ["1"]
+                )
+                same_origin_frame = (
+                    scope.get("path") == "/static/auto-finance-uk.html" or preview_frame
+                )
+                if preview_frame:
+                    content_security_policy = content_security_policy.replace(
+                        b"frame-ancestors 'none'", b"frame-ancestors 'self'"
+                    )
                 response_headers.extend(
                     [
                         (b"x-request-id", request_id.encode("ascii")),
                         (b"x-content-type-options", b"nosniff"),
                         (
                             b"x-frame-options",
-                            b"SAMEORIGIN"
-                            if scope.get("path") == "/static/auto-finance-uk.html"
-                            else b"DENY",
+                            b"SAMEORIGIN" if same_origin_frame else b"DENY",
                         ),
                         (b"referrer-policy", b"no-referrer"),
                         (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),

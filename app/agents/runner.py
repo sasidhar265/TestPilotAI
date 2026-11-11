@@ -9,7 +9,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from app.agent_instructions import load_agent_section
+from app.agent_instructions import load_agent_section, with_runtime_guardrails
 from app.config import Settings
 from app.model_policy import COPILOT_MODEL
 from app.tls import configure_default_ca_bundle
@@ -96,6 +96,7 @@ class CopilotAgentRunner:
         if self.settings.copilot_github_token:
             client_options["github_token"] = self.settings.copilot_github_token
 
+        instructions = with_runtime_guardrails(instructions)
         supplied_tools = tools or []
         session_options: dict[str, Any] = {
             "system_message": {"mode": "append", "content": instructions},

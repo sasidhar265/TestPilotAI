@@ -24,6 +24,7 @@ class WorkflowKnowledgeAgent:
             protection=settings.memory_protection,
         )
         self.profile = settings.agent_profile
+        self.settings = settings
 
     def key(self, stage: str, source: BaseModel) -> str:
         # Preserve case, payload values, and reviewed text: these can change meaning.
@@ -34,7 +35,7 @@ class WorkflowKnowledgeAgent:
             "stage": stage,
             "source": source_payload,
             "profile": self.profile,
-            "policy": policy_fingerprint(),
+            "policy": policy_fingerprint(self.settings),
             "standards": standards("feature"),
             "rules": [rule.model_dump() for rule in load_business_rules()],
         }

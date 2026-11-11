@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Agent information</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/documentation.css?v=20260912-clear-guide" />
+    <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
+    <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
+    <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
+    <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
+    <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
+    <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
+    <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
+    <link
+      rel="stylesheet"
+      href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation"
+    />
+    <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/agent-information.css?v=20261110-functional-board" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
+  </head>
+  <body class="explore-page agent-information-page" data-access-pending="true">
+    <div class="docs-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/" aria-label="Auto Finance Quality home">
+            <span class="brand-mark" aria-hidden="true">Q</span>
+            <span
+              ><strong>Auto Finance Quality</strong><small>Vehicle finance testing</small></span
+            > </a
+          ><button
+            class="sidebar-toggle"
+            id="sidebar-toggle"
+            type="button"
+            aria-label="Collapse navigation"
+            aria-expanded="true"
+            aria-controls="sidebar-content"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            <span class="nav-label">Workspace</span>
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="quality-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="quality-navigation" hidden>
+                <a class="nav-item" href="/"><span>Requirements</span></a>
+                <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
+                <a class="nav-item" href="/?view=scenarios"><span>Scenarios</span></a>
+                <a class="nav-item" href="/?view=test-cases"><span>Test cases</span></a>
+                <a class="nav-item" href="/?view=execution"><span>Execution</span></a>
+                <a class="nav-item" href="/?view=automation"><span>Automation packs</span></a>
+              </div>
+            </div>
+            <a class="nav-item" href="/progress"
+              ><span class="nav-icon">▦</span><span>Progress &amp; execution</span></a
+            >
+            <a class="nav-item" href="/quality-lifecycle"
+              ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
+            >
+            <a class="nav-item" href="/usage"
+              ><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a
+            >
+            <span class="nav-label explore-nav-label">Explore</span>
+            <a class="nav-item" href="/static/user-guide.html"
+              ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
+            >
+            <a class="nav-item" href="/documentation"
+              ><span class="nav-icon">□</span><span>Documentation</span></a
+            >
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="knowledge-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="knowledge-navigation" hidden>
+                <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
+                <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
+              </div>
+            </div>
+            <div class="nav-group">
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="finance-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="finance-navigation" hidden>
+                <a class="nav-item" href="/products"><span>Products</span></a>
+                <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"
+                  ><span>Calculation validators</span></a
+                >
+              </div>
+            </div>
+            <a class="nav-item" href="/logs"
+              ><span class="nav-icon">⌁</span><span>Runtime logs</span></a
+            >
+            <a class="nav-item" href="/docs"
+              ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
+            >
+            <div class="nav-group admin-navigation" data-permission="admin" hidden>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="admin-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="nav-children" id="admin-navigation" hidden>
+                <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
+              </div>
+            </div>
+          </nav>
+          <div class="side-status">
+            <div class="status-line" id="status">
+              <span class="pulse"></span><span class="status-copy">Checking agent registry…</span>
+            </div>
+            <div class="model">SECURE LOCAL WORKSPACE</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace docs-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Work</div>
+            <h1>Agent information</h1>
+          </div>
+          <div class="top-actions">
+            <a class="api-link" href="/docs">API reference ↗</a>
+            <div class="profile-menu">
+              <button
+                class="avatar"
+                id="profile-toggle"
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded="false"
+                aria-controls="profile-panel"
+              >
+                ?
+              </button>
+              <section class="profile-panel hidden" id="profile-panel" aria-label="Profile menu">
+                <div>
+                  <span class="avatar profile-avatar" id="profile-avatar" aria-hidden="true"
+                    >?</span
+                  >
+                  <p>
+                    <strong id="profile-name">User</strong
+                    ><small id="profile-role">Workspace account</small>
+                  </p>
+                </div>
+                <a class="profile-signout hidden" id="manage-users" href="/admin/users"
+                  >Manage users</a
+                >
+                <button class="profile-signout" id="logout" type="button">
+                  <span aria-hidden="true">↪</span> Sign out
+                </button>
+              </section>
+            </div>
+          </div>
+        </header>
+
+        <article class="content agent-directory">
+          <section class="agent-directory-hero" aria-labelledby="agents-title">
+            <div>
+              <span class="agent-eyebrow">YOUR QUALITY TEAM</span>
+              <h2 id="agents-title">Meet your agents</h2>
+              <p>
+                Discover the specialists behind your workflow. Explore what each agent does and how
+                it supports your team.
+              </p>
+            </div>
+            <button class="button primary" id="open-custom-agent" type="button">
+              ＋ Add custom agent
+            </button>
+          </section>
+          <div class="agent-directory-stats" aria-label="Agent directory summary">
+            <div><strong id="registered-agent-count">—</strong><span>Registered agents</span></div>
+            <div>
+              <strong id="agent-category-count">—</strong><span>Functional categories</span>
+            </div>
+            <div><strong id="custom-agent-count">0</strong><span>Custom definitions</span></div>
+          </div>
+          <section class="agent-directory-tools" aria-label="Find agents">
+            <label class="agent-search-label" for="agent-search"
+              >Search agents<input
+                id="agent-search"
+                type="search"
+                placeholder="Search by name, purpose or capability…"
+            /></label>
+            <label for="agent-category"
+              >Category<select id="agent-category">
+                <option value="all">All categories</option>
+              </select></label
+            >
+            <button class="button" id="reload-agents" type="button">↻ Refresh</button>
+          </section>
+          <div class="agent-results-heading">
+            <p id="agent-summary" role="status">Loading registered agents…</p>
+            <div class="agent-section-actions">
+              <button class="button" id="expand-agent-sections" type="button">Expand all</button>
+              <button class="button" id="collapse-agent-sections" type="button">
+                Collapse all
+              </button>
+              <button class="button" id="clear-agent-filters" type="button" hidden>
+                Clear filters
+              </button>
+            </div>
+          </div>
+          <p class="agent-directory-message" id="agent-directory-message" role="status"></p>
+          <div id="agent-list" class="agent-directory-sections" aria-busy="true"></div>
+          <p class="agent-directory-note">
+            Registration describes an agent’s role; it does not mean every agent runs for every
+            request. Custom definitions are saved in this browser and are not connected to workflow
+            execution.
+          </p>
+        </article>
+        <dialog
+          class="agent-dialog agent-detail-dialog"
+          id="agent-detail-dialog"
+          aria-labelledby="agent-detail-title"
+        >
+          <header class="agent-dialog-header">
+            <span class="agent-eyebrow">AGENT INFORMATION</span
+            ><button
+              class="button"
+              type="button"
+              id="close-agent-details"
+              aria-label="Close agent details"
+            >
+              ✕
+            </button>
+          </header>
+          <h2 id="agent-detail-title"></h2>
+          <div id="agent-detail-content"></div>
+        </dialog>
+        <dialog class="agent-dialog" id="custom-agent-dialog" aria-labelledby="custom-agent-title">
+          <header class="agent-dialog-header">
+            <div>
+              <span class="agent-eyebrow">CUSTOM DEFINITIONS</span>
+              <h2 id="custom-agent-title">Add your own specialist</h2>
+            </div>
+            <button
+              class="button"
+              type="button"
+              id="close-custom-agent"
+              aria-label="Close custom agent form"
+            >
+              ✕
+            </button>
+          </header>
+          <p>
+            Create a reference definition for your team. It is saved in this browser and does not
+            execute as an AI agent.
+          </p>
+          <form id="custom-agent-form">
+            <label for="custom-agent-name"
+              >Agent name<input
+                id="custom-agent-name"
+                name="name"
+                maxlength="100"
+                required
+                placeholder="e.g. Accessibility reviewer"
+            /></label>
+            <label for="custom-agent-purpose"
+              >Purpose / functionality<textarea
+                id="custom-agent-purpose"
+                name="purpose"
+                maxlength="1000"
+                rows="3"
+                required
+                placeholder="What should this specialist help with?"
+              ></textarea>
+            </label>
+            <label for="custom-agent-instructions"
+              >Instructions<textarea
+                id="custom-agent-instructions"
+                name="instructions"
+                maxlength="10000"
+                rows="5"
+                required
+                placeholder="Describe its responsibilities and review criteria."
+              ></textarea>
+            </label>
+            <p id="custom-agent-status" role="status"></p>
+            <button class="button primary" type="submit">Save custom definition</button>
+          </form>
+        </dialog>
+        <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
+      </main>
+    </div>
+
+    <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
+    <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
+    <script src="/static/scripts/agent-information.js?v=20261110-agents-direct" defer></script>
+    <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
+    <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
+  </body>
+</html>

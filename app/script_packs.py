@@ -4,6 +4,7 @@ import io
 import json
 import re
 import zipfile
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal
@@ -71,7 +72,10 @@ class BrowserCheck(BaseModel):
     expected_status: int = Field(default=200, ge=100, le=599)
     max_response_ms: int = Field(gt=0, le=3600000)
 
-    _relative_path = field_validator("path")(HttpCheck.relative_path.__func__)
+    @field_validator("path")
+    @classmethod
+    def relative_path(cls, value: str) -> str:
+        return HttpCheck.relative_path(value)
 
 
 class ScriptPackRequest(StepDefinitionRequest):
@@ -133,7 +137,9 @@ def jmeter_plan(request: ScriptPackRequest) -> str:
     if request.duration_seconds:
         prop(group, "ThreadGroup.scheduler", "true", "boolProp")
         prop(group, "ThreadGroup.duration", request.duration_seconds)
-        loop.find("stringProp[@name='LoopController.loops']").text = "-1"
+        loop_count = loop.find("stringProp[@name='LoopController.loops']")
+        assert loop_count is not None
+        loop_count.text = "-1"
     cookies, _ = node(tree, "CookieManager", "Per-user cookies", "CookiePanel")
     ET.SubElement(cookies, "collectionProp", name="CookieManager.cookies")
     prop(cookies, "CookieManager.clearEachIteration", "false", "boolProp")
@@ -223,12 +229,13 @@ def database_script(request: ScriptPackRequest) -> str:
 
 def build_pack(request: ScriptPackRequest) -> ScriptPack:
     require_implementation_approval(request.validation)
-    checks = {
+    check_groups: dict[str, Sequence[HttpCheck | BrowserCheck | DatabaseCheck]] = {
         "jmeter": request.http_checks,
         "browser": request.browser_checks,
         "sql": request.database_checks,
         "oracle": request.database_checks,
-    }[request.target]
+    }
+    checks = check_groups[request.target]
     if not checks:
         raise ValueError("Supply at least one case mapping for the selected script type.")
     if (

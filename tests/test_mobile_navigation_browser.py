@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 
 import pytest
 
+from app.appearance import Appearance
+
 PAGES = {
     "/": "index.html",
     "/?view=stories": "index.html",
@@ -45,6 +47,8 @@ def mobile_route(route):
     }
     if path == "/api/auth/profile":
         data = {"display_name": "Reviewer", "initials": "RE", "is_admin": True}
+    elif path == "/api/appearance":
+        data = Appearance().model_dump(mode="json")
     elif path in {"/api/agents", "/api/admin/users"}:
         data = []
     elif path == "/api/logs":

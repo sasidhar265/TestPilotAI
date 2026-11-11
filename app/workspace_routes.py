@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from copy import deepcopy
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any, cast
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -86,17 +86,17 @@ async def knowledge_sources(
     )
     accepted = AcceptedOutputService(settings.accepted_output_directory).inventory()
     by_id = {item["artifact_id"]: item for item in outputs.entries()}
-    accepted_by_id = {}
+    accepted_by_id: dict[str, dict[str, Any]] = {}
     for item in accepted:
         accepted_by_id.setdefault(item["artifact_id"], item)
     by_id.update(accepted_by_id)
     return {
-        "domain_library": profile_knowledge_sources(settings.agent_profile),
+        "domain_library": profile_knowledge_sources(settings.agent_profile, settings),
         "enabled": settings.organizational_memory_enabled,
         "suite_count": memory.count(),
         "workflow_counts": memory.workflow_counts(),
         "approved_output_count": len(by_id),
-        "scenario_count": sum(int(item["cases"]) for item in by_id.values()),
+        "scenario_count": sum(int(cast(int, item["cases"])) for item in by_id.values()),
         "suites": memory.entries(),
         "approved_outputs": list(by_id.values()),
     }

@@ -5,22 +5,28 @@ import html
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 
-def percentile(values, percent):
+def percentile(values: list[float], percent: float) -> float:
     ordered = sorted(values)
     return ordered[max(0, math.ceil(len(ordered) * percent / 100) - 1)]
 
 
-def report(samples, config, output, metadata):
+def report(
+    samples: list[dict[str, Any]],
+    config: dict[str, Any],
+    output: str | Path,
+    metadata: dict[str, Any],
+) -> bool:
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     (output / "samples.json").write_text(json.dumps(samples, indent=2))
     measured = [s for s in samples if not s.get("warmup", False)]
-    grouped = {check["case_id"]: [] for check in config["checks"]}
+    grouped: dict[str, list[dict[str, Any]]] = {check["case_id"]: [] for check in config["checks"]}
     for sample in measured:
         grouped.setdefault(sample["case_id"], []).append(sample)
-    rows = []
+    rows: list[dict[str, Any]] = []
     for case_id, group in grouped.items():
         values = [s["elapsed_ms"] for s in group]
         errors = sum(not s["success"] for s in group)
@@ -29,7 +35,7 @@ def report(samples, config, output, metadata):
             if group
             else 0
         )
-        row = {
+        row: dict[str, Any] = {
             "case_id": case_id,
             "samples": len(group),
             "errors": errors,
@@ -77,7 +83,7 @@ def report(samples, config, output, metadata):
         writer.writeheader()
         writer.writerows(rows)
 
-    def escape(value):
+    def escape(value: object) -> str:
         return html.escape(str(value))
 
     head = "".join("<th>" + escape(c) + "</th>" for c in columns)
@@ -126,7 +132,7 @@ def report(samples, config, output, metadata):
     return passed
 
 
-def jtl_samples(path, warmup_seconds):
+def jtl_samples(path: str | Path, warmup_seconds: float) -> list[dict[str, Any]]:
     with Path(path).open() as stream:
         rows = list(csv.DictReader(stream))
     first = min((float(row["timeStamp"]) for row in rows), default=0)

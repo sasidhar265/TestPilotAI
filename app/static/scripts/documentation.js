@@ -254,3 +254,49 @@ if ("IntersectionObserver" in window) {
   );
   sections.forEach((section) => observer.observe(section));
 }
+
+// Focus Knowledge guide links so asynchronous content above cannot move their target.
+(() => {
+  const guideIds = new Set([
+    "product-landscape",
+    "knowledge-services",
+    "code-map",
+    "knowledge-skills",
+    "knowledge-prompts",
+    "knowledge-guardrails",
+  ]);
+  const content = document.querySelector("article.content");
+  const original = new Map([...content.children].map((child) => [child, child.hidden]));
+  const heading = document.querySelector(".topbar h1");
+  const eyebrow = document.querySelector(".topbar .eyebrow");
+  const originalHeading = heading.textContent;
+  const originalEyebrow = eyebrow.textContent;
+  const originalTitle = document.title;
+  const back = document.createElement("a");
+  back.className = "knowledge-back-link";
+  back.href = "/knowledge?view=overview";
+  back.textContent = "← Knowledge";
+  back.hidden = true;
+  document.querySelector(".topbar").after(back);
+  function showGuide() {
+    const id = location.hash.slice(1);
+    const target = guideIds.has(id) ? document.getElementById(id) : null;
+    back.hidden = !target;
+    for (const [child, hidden] of original) child.hidden = target ? child !== target : hidden;
+    if (target) {
+      document.body.dataset.knowledgeGuide = id;
+      heading.textContent = target.querySelector("h2").textContent;
+      eyebrow.textContent = "Knowledge / Source guide";
+      document.title = `${heading.textContent} — ${document.querySelector(".brand strong").textContent}`;
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    } else {
+      delete document.body.dataset.knowledgeGuide;
+      heading.textContent = originalHeading;
+      eyebrow.textContent = originalEyebrow;
+      document.title = originalTitle;
+    }
+  }
+  window.addEventListener("hashchange", showGuide);
+  window.addEventListener("load", showGuide, { once: true });
+  showGuide();
+})();

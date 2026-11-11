@@ -52,7 +52,9 @@ Pipeline = Annotated[MultiAgentTestPipeline, Depends(get_multi_agent_pipeline)]
 
 
 @router.post("/knowledge-context")
-async def preview_knowledge_context(request: KnowledgePreviewRequest, settings: Config) -> dict:
+async def preview_knowledge_context(
+    request: KnowledgePreviewRequest, settings: Config
+) -> dict[str, Any]:
     """Explain reference exposure without contacting a model or approving requirements."""
     try:
         return knowledge_context(request.request, request.stage, settings)

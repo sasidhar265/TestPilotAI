@@ -68,10 +68,7 @@ def test_focused_views_history_and_automation_preview():
         pw.expect(page.locator("#description")).to_have_value(draft)
         page.go_forward()
         pw.expect(page.locator("h1")).to_have_text("Stories")
-        finance_navigation = page.locator(".nav-parent", has_text="Auto finance")
-        if finance_navigation.get_attribute("aria-expanded") == "false":
-            finance_navigation.click()
-        page.get_by_role("link", name="UK finance guide", exact=True).click()
+        page.evaluate("window.navigateWorkspace('/auto-finance-guide')")
         guide = page.frame_locator("#auto-finance-guide-frame")
         guide.locator("#product-audience").select_option("business")
         pw.expect(guide.locator("#product-cards .card:visible")).to_have_count(9)
@@ -112,7 +109,7 @@ def test_focused_views_history_and_automation_preview():
         pw.expect(page.locator(".workflow-support-navigation")).to_have_count(0)
         page.reload()
         pw.expect(page.locator("#work-dashboard")).to_be_visible()
-        page.get_by_role("button", name="Quality workspace", exact=True).click()
+        page.get_by_role("button", name="Quality Engineering", exact=True).click()
         page.get_by_role("link", name="Test cases", exact=True).click()
         assert not errors, errors
         pw.expect(page.locator("#results")).to_be_visible()

@@ -9,13 +9,15 @@
     <link rel="shortcut icon" href="/static/favicon.svg?v=20260912" />
     <link rel="stylesheet" href="/static/styles/login.css?v=20260902-login-feedback" />
     <link rel="stylesheet" href="/static/styles/login-feedback.css?v=20260923-guest-entry" />
-    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/login-modern.css?v=20261010-signin-spacing" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body>
     <main class="login-shell">
@@ -149,40 +151,8 @@
         </button>
       </div>
     </div>
-    <div class="theme-settings">
-      <div
-        class="theme-menu"
-        id="theme-menu"
-        role="dialog"
-        aria-labelledby="theme-menu-title"
-        hidden
-      >
-        <strong id="theme-menu-title">Appearance</strong>
-        <span>Choose your workspace theme</span>
-        <div class="theme-options" role="group" aria-label="Color theme">
-          <button type="button" data-theme-option="light">
-            <span aria-hidden="true">☀</span>Light
-          </button>
-          <button type="button" data-theme-option="dark">
-            <span aria-hidden="true">◐</span>Dark
-          </button>
-          <button type="button" data-theme-option="system">
-            <span aria-hidden="true">◫</span>System
-          </button>
-        </div>
-      </div>
-      <button
-        class="theme-gear"
-        id="theme-gear"
-        type="button"
-        aria-label="Open appearance settings"
-        aria-expanded="false"
-        aria-controls="theme-menu"
-      >
-        <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
-      </button>
-    </div>
-    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
     <script src="/static/scripts/login.js?v=20260902-login-feedback" defer></script>
   </body>
 </html>

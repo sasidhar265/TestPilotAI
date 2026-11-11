@@ -1,0 +1,12 @@
+{
+  "profile": {
+    "id": "bdd-quality-domain",
+    "name": "BDD service quality domain",
+    "description": "Scope generation to supplied service requirements across sectors.",
+    "instructions": "Use only supplied requirements and approved source evidence. Do not infer finance rules or other unsupported domain constraints.",
+    "baseline": { "sources": [] },
+    "expected_revision": 0,
+    "review_note": "Reviewed domain guidance and preserved the empty unapproved business baseline.",
+    "confirmed": true
+  }
+}

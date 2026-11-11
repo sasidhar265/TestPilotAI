@@ -6,6 +6,7 @@ import sqlite3
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from app.agent_instructions import load_agent_section
 from app.models import GenerateRequest, GenerationSource, LlmModel, TestSuite
@@ -28,7 +29,7 @@ class OrganizationalMemory:
 
     @staticmethod
     def key_for(request: GenerateRequest, *, include_standards: bool = True) -> str:
-        normalized = {
+        normalized: dict[str, Any] = {
             "description": " ".join(request.description.casefold().split()),
             "additional_context": " ".join(request.additional_context.casefold().split()),
             "output_format": request.output_format.value,

@@ -4,25 +4,33 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f6f7fb" />
-    <title>Auto Finance Quality — Knowledge source</title>
+    <title>Knowledge source</title>
+    <script src="/static/scripts/appearance-init.js?v=20261110-branding-init"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=20260911" />
+    <link rel="stylesheet" href="/static/styles/knowledge-overview.css?v=20261110-alignment" />
     <link rel="stylesheet" href="/static/styles/knowledge.css?v=20260917" />
     <link rel="stylesheet" href="/static/styles/domain-library.css?v=20261013" />
     <link rel="stylesheet" href="/static/styles/knowledge-graph.css?v=20261009-finance-graph" />
     <link rel="stylesheet" href="/static/styles/workspace-shell.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/theme.css?v=20260909-theme-flyout" />
+    <link rel="stylesheet" href="/static/styles/theme.css?v=20261110-toggle-alignment" />
     <link rel="stylesheet" href="/static/styles/mobile.css?v=20260909-page-alignment" />
-    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261009-navigation-type" />
+    <link rel="stylesheet" href="/static/styles/navigation.css?v=20261110-requirements-home" />
     <link rel="stylesheet" href="/static/styles/controls.css?v=20260919-unified-buttons" />
     <link rel="stylesheet" href="/static/styles/finance-modern.css?v=20260922-profile" />
     <link rel="stylesheet" href="/static/styles/explore-modern.css?v=20260921" />
     <link rel="stylesheet" href="/static/styles/page-alignment.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/copyright.css?v=20260923" />
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
-    <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
+    <link
+      rel="stylesheet"
+      href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation"
+    />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
     <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
+    <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body class="explore-page" data-access-pending="true">
     <div class="docs-shell">
@@ -49,11 +57,16 @@
         <div class="sidebar-content" id="sidebar-content">
           <nav class="primary-nav" aria-label="Primary navigation">
             <span class="nav-label">Workspace</span>
-            <a class="nav-item" href="/project-dashboard"
-              ><span class="nav-icon">▥</span><span>Project dashboard</span></a
-            >
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="quality-navigation"><span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="quality-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">✦</span><span>Quality workspace</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="quality-navigation" hidden>
                 <a class="nav-item" href="/"><span>Requirements</span></a>
                 <a class="nav-item" href="/?view=stories"><span>Stories</span></a>
@@ -69,7 +82,9 @@
             <a class="nav-item" href="/quality-lifecycle"
               ><span class="nav-icon">◎</span><span>Quality lifecycle</span></a
             >
-            <a class="nav-item" href="/usage"><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a>
+            <a class="nav-item" href="/usage"
+              ><span class="nav-icon" aria-hidden="true">▤</span><span>Usage</span></a
+            >
             <span class="nav-label explore-nav-label">Explore</span>
             <a class="nav-item" href="/static/user-guide.html"
               ><span class="nav-icon" aria-hidden="true">?</span><span>User guide</span></a
@@ -78,18 +93,36 @@
               ><span class="nav-icon">□</span><span>Documentation</span></a
             >
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="knowledge-navigation"><span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="knowledge-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◈</span><span>Knowledge</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="knowledge-navigation" hidden>
                 <a class="nav-item" href="/knowledge"><span>Saved knowledge</span></a>
                 <a class="nav-item" href="/knowledge?view=graph"><span>Knowledge graph</span></a>
               </div>
             </div>
             <div class="nav-group">
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="finance-navigation"><span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="finance-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">◇</span><span>Auto finance</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="finance-navigation" hidden>
                 <a class="nav-item" href="/products"><span>Products</span></a>
                 <a class="nav-item" href="/knowledge?view=domain"><span>Domain pack</span></a>
-                <a class="nav-item" href="/knowledge?view=calculations"><span>Calculation validators</span></a>
+                <a class="nav-item" href="/knowledge?view=calculations"
+                  ><span>Calculation validators</span></a
+                >
               </div>
             </div>
             <a class="nav-item" href="/logs"
@@ -99,7 +132,15 @@
               ><span class="nav-icon" aria-hidden="true">⌘</span><span>API reference</span></a
             >
             <div class="nav-group admin-navigation" data-permission="admin" hidden>
-              <button class="nav-item nav-parent" type="button" aria-expanded="false" aria-controls="admin-navigation"><span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span><span class="nav-chevron" aria-hidden="true">⌄</span></button>
+              <button
+                class="nav-item nav-parent"
+                type="button"
+                aria-expanded="false"
+                aria-controls="admin-navigation"
+              >
+                <span class="nav-icon" aria-hidden="true">⚙</span><span>Admin actions</span
+                ><span class="nav-chevron" aria-hidden="true">⌄</span>
+              </button>
               <div class="nav-children" id="admin-navigation" hidden>
                 <a class="nav-item" href="/admin/users"><span>Manage users</span></a>
               </div>
@@ -108,33 +149,6 @@
           <div class="side-status">
             <div class="status-line"><span class="pulse"></span><span>Local diagnostics</span></div>
             <div class="model">SECURE LOCAL WORKSPACE</div>
-          </div>
-          <div class="theme-settings">
-            <button
-              class="theme-gear"
-              id="theme-gear"
-              type="button"
-              aria-label="Open appearance settings"
-              aria-expanded="false"
-              aria-controls="theme-menu"
-            >
-              <span aria-hidden="true">⚙</span><span class="mobile-control-label">Appearance</span>
-            </button>
-            <div
-              class="theme-menu"
-              id="theme-menu"
-              role="dialog"
-              aria-labelledby="theme-menu-title"
-              hidden
-            >
-              <strong id="theme-menu-title">Appearance</strong
-              ><span>Choose your workspace theme</span>
-              <div class="theme-options" role="group" aria-label="Color theme">
-                <button type="button" data-theme-option="light">☀ Light</button
-                ><button type="button" data-theme-option="dark">◐ Dark</button
-                ><button type="button" data-theme-option="system">◫ System</button>
-              </div>
-            </div>
           </div>
         </div>
       </aside>
@@ -178,7 +192,11 @@
             </div>
           </div>
         </header>
-        <section data-knowledge-view="saved" class="explore-banner" aria-labelledby="explore-banner-title">
+        <section
+          data-knowledge-view="saved"
+          class="explore-banner"
+          aria-labelledby="explore-banner-title"
+        >
           <div>
             <span class="explore-kicker">KNOWLEDGE LIBRARY</span>
             <h2 id="explore-banner-title">Turn reviewed work into reusable knowledge.</h2>
@@ -195,7 +213,11 @@
           </div>
           <span class="explore-banner-symbol" aria-hidden="true">◈</span>
         </section>
-        <section data-knowledge-view="graph" class="knowledge-card graph-card" aria-labelledby="graph-title">
+        <section
+          data-knowledge-view="graph"
+          class="knowledge-card graph-card"
+          aria-labelledby="graph-title"
+        >
           <div class="section-heading">
             <div>
               <span class="section-kicker">Connected evidence</span>
@@ -326,6 +348,65 @@
             · <a id="graph-log-link" href="/logs">View detailed runtime logs →</a>
           </p>
         </section>
+        <section
+          data-knowledge-view="overview"
+          class="knowledge-overview"
+          aria-labelledby="knowledge-overview-title"
+        >
+          <div class="knowledge-overview-heading">
+            <div>
+              <span class="section-kicker">YOUR WORKSPACE KNOWLEDGE</span>
+              <h2 id="knowledge-overview-title">Find the context behind your agents</h2>
+              <p>Understand your product, explore saved memory and review how agents work.</p>
+            </div>
+            <div class="knowledge-overview-controls">
+              <label for="knowledge-board-search"
+                >Search knowledge tools<input
+                  type="search"
+                  id="knowledge-board-search"
+                  placeholder="Search tools, topics or purpose"
+              /></label>
+              <div
+                id="knowledge-board-filters"
+                role="group"
+                aria-label="Filter knowledge categories"
+              ></div>
+            </div>
+          </div>
+          <p id="knowledge-board-status" class="section-copy" role="status"></p>
+          <div id="knowledge-board" class="knowledge-board"></div>
+        </section>
+        <section
+          data-knowledge-view="search"
+          class="knowledge-card"
+          aria-labelledby="knowledge-search-title"
+        >
+          <div class="section-heading">
+            <h2 id="knowledge-search-title">Search workspace knowledge</h2>
+            <a class="button" href="/knowledge-agents">Manage knowledge</a>
+          </div>
+          <div class="knowledge-search-toolbar">
+            <label for="knowledge-everything-search"
+              >Search knowledge<input
+                id="knowledge-everything-search"
+                type="search"
+                placeholder="Search content, names, rules or references"
+            /></label>
+            <label for="knowledge-source-filter"
+              >Source<select id="knowledge-source-filter">
+                <option value="all">All sources</option>
+                <option value="reference">Reference knowledge</option>
+                <option value="memory">Workflow memory</option>
+                <option value="rule">Business rules</option>
+                <option value="standard">Standards</option>
+              </select></label
+            >
+          </div>
+          <p id="knowledge-search-status" class="section-copy" role="status">
+            Loading accessible knowledge…
+          </p>
+          <div id="knowledge-search-results" class="library-grid"></div>
+        </section>
         <section data-knowledge-view="saved" class="knowledge-card" aria-labelledby="reuse-title">
           <div class="section-heading">
             <div>
@@ -348,7 +429,11 @@
             column counts matching suite lookups. Saved entries are revalidated before reuse.
           </p>
         </section>
-        <section data-knowledge-view="domain" class="knowledge-card finance-tools" aria-labelledby="finance-tools-title">
+        <section
+          data-knowledge-view="domain"
+          class="knowledge-card finance-tools"
+          aria-labelledby="finance-tools-title"
+        >
           <div class="section-heading">
             <div>
               <span class="section-kicker">Auto-finance domain</span>
@@ -369,12 +454,33 @@
             </div>
           </div>
           <h3>Explore domain knowledge</h3>
-          <p class="section-copy">Read the reference documents used by the agents. Product and lifecycle guidance remains subject to business review; each document identifies its scope and sources.</p>
-          <label>Search knowledge <input id="domain-library-search" type="search" placeholder="Product, journey or concept" /></label>
-          <p id="domain-library-status" class="section-copy" role="status">Loading reference documents…</p>
-          <div id="domain-library-filters" class="library-filters" aria-label="Knowledge topics"></div>
+          <p class="section-copy">
+            Read the reference documents used by the agents. Product and lifecycle guidance remains
+            subject to business review; each document identifies its scope and sources.
+          </p>
+          <label
+            >Search knowledge
+            <input
+              id="domain-library-search"
+              type="search"
+              placeholder="Product, journey or concept"
+          /></label>
+          <p id="domain-library-status" class="section-copy" role="status">
+            Loading reference documents…
+          </p>
+          <div
+            id="domain-library-filters"
+            class="library-filters"
+            aria-label="Knowledge topics"
+          ></div>
           <div id="domain-library" class="library-grid"></div>
-          <article id="domain-reader" class="domain-reader" hidden aria-labelledby="domain-reader-title" tabindex="-1"></article>
+          <article
+            id="domain-reader"
+            class="domain-reader"
+            hidden
+            aria-labelledby="domain-reader-title"
+            tabindex="-1"
+          ></article>
           <details class="finance-rule-view">
             <summary>Business rules and traceability configuration</summary>
             <div id="finance-rules"></div>
@@ -385,7 +491,7 @@
               approval or test coverage.
             </p>
           </details>
-          </section>
+        </section>
         <section data-knowledge-view="calculations" class="knowledge-card finance-tools">
           <div class="finance-calculator">
             <h2>Calculation checks</h2>
@@ -426,7 +532,11 @@
             </div>
           </div>
         </section>
-        <section data-knowledge-view="saved" class="knowledge-summary" aria-label="Knowledge summary">
+        <section
+          data-knowledge-view="saved"
+          class="knowledge-summary"
+          aria-label="Knowledge summary"
+        >
           <article>
             <span>Validated test suites</span><strong id="suite-count">—</strong
             ><small>Exact-match suites in memory</small>
@@ -505,7 +615,8 @@
         </section>
         <section
           class="knowledge-card detail-card"
-          data-knowledge-view="saved" id="knowledge-detail"
+          data-knowledge-view="saved"
+          id="knowledge-detail"
           aria-labelledby="detail-title"
           hidden
         >
@@ -519,17 +630,25 @@
           <p class="section-copy" id="detail-summary"></p>
           <pre id="detail-content" class="knowledge-json"></pre>
         </section>
-        <p data-knowledge-view="saved" class="page-status" id="knowledge-status" role="status" aria-live="polite"></p>
+        <p
+          data-knowledge-view="saved"
+          class="page-status"
+          id="knowledge-status"
+          role="status"
+          aria-live="polite"
+        ></p>
         <footer class="app-copyright">© 2026 Sasidhar Rajupalem. All rights reserved.</footer>
       </main>
     </div>
     <script src="/static/scripts/user-profile.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
-    <script src="/static/scripts/knowledge-view.js?v=20261013-approved-history-v2" defer></script>
-    <script src="/static/scripts/navigation.js?v=20261013-combined-finance" defer></script>
-    <script src="/static/scripts/theme.js?v=20260909-theme-flyout" defer></script>
+    <script src="/static/scripts/knowledge-view.js?v=20261110-alignment" defer></script>
+    <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
     <script src="/static/scripts/workspace-profile.js?v=20261010-simplified" defer></script>
-    <script src="/static/scripts/auth.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
+    <script src="/static/scripts/knowledge-overview.js?v=20261110-descriptions" defer></script>
+    <script src="/static/scripts/knowledge-search.js?v=20261110" defer></script>
     <script src="/static/scripts/knowledge.js?v=20261013-approved-history-v2" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
     <script src="/static/scripts/domain-library.js?v=20261013" defer></script>
@@ -538,5 +657,6 @@
     <script src="/static/scripts/finance-tools.js?v=20261009-focused-views" defer></script>
     <script src="/static/scripts/workflow-navigation.js?v=20261013-sidebar-only" defer></script>
     <script src="/static/scripts/role-access.js?v=20261010-simplified" defer></script>
+    <script src="/static/scripts/appearance.js?v=20261110-branding-init" defer></script>
   </body>
 </html>
