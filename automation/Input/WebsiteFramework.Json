@@ -1,0 +1,19 @@
+{
+  "careerpilot": {
+    "description": "Consider you're a senior C# automation tester and build a C# automation framework for this 'https://careerpilot-nrn7.onrender.com' to evaluate its functionalities, and segregate the regression, sanity & smoke tests as well. Build the framework using Selenium, C#, and BDD in a page object model. Use PageFactory with FindsBy element attributes.",
+    "interpret_prompt": true,
+    "requested_workflow": "website-framework"
+  },
+  "loopback": {
+    "description": "Build a Selenium C# BDD automation framework for http://127.0.0.1/"
+  },
+  "credentials": {
+    "description": "Build a Selenium C# BDD automation framework for https://user:password@example.com/"
+  },
+  "multiple": {
+    "description": "Build a Selenium C# BDD framework for https://example.com and https://example.org"
+  },
+  "unsupported": {
+    "description": "Build a Playwright framework for https://example.com/"
+  }
+}

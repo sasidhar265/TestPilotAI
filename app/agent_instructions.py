@@ -53,6 +53,7 @@ GUARDRAIL_FILES = (
 )
 _PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 AGENT_FILES = {
+    "prompt-orchestrator": "prompt-orchestrator.agent.md",
     "business-analyst": "business-analyst.agent.md",
     "requirements-validation": "requirements-validation.agent.md",
     "story-generator": "story-generator.agent.md",

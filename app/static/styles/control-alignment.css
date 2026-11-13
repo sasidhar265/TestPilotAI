@@ -49,7 +49,7 @@
 /* The attached-file and source controls occupy the bottom of this composer. */
 :root body .textarea-wrap > textarea { padding-bottom: 72px !important; }
 :root body .password-field > input { padding-right: 52px !important; }
-:root body :is(button.primary, button.secondary, button.quiet-button,
+:root body :is(button.button, button.primary, button.secondary, button.quiet-button,
   button.stop, button.inspect-button, button.log-toolbar-action,
   .log-view-menu > summary, a.button) {
   box-sizing: border-box;

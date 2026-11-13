@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import pytest
 
+from app.appearance import Appearance
 from app.roles import capabilities
 
 
@@ -61,6 +62,8 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                     }
                 ]
             }
+        elif path == "/api/appearance":
+            result = Appearance().model_dump(mode="json")
         elif path == "/api/workspace/rules":
             result = {"business_rules": []}
         elif path == "/api/auth/profile":
@@ -100,6 +103,14 @@ def test_five_stage_workflow_and_source_invalidation(mode):
                 "prepared_at": "2026-10-13T10:00:00Z",
                 "fingerprint": "fixture",
                 "request_fingerprint": "fixture",
+            }
+        elif path == "/api/workflow/intent":
+            result = {
+                "workflow": "stories",
+                "summary": "Create explicitly requested user stories.",
+                "questions": [],
+                "generation_target": r.request.post_data_json["generation_target"],
+                "testing_type": r.request.post_data_json["manual_testing_type"],
             }
         elif path == "/api/workflow/stories":
             assert r.request.post_data_json["llm_model"] == provider
@@ -237,7 +248,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
         pw.expect(page.get_by_role("tab")).to_have_count(6)
         pw.expect(page.locator(".stage-workspace")).to_be_hidden()
         page.screenshot(path="/tmp/workflow-input.png", full_page=True)
-        pw.expect(page.get_by_role("heading", name="Add requirements")).to_be_visible()
+        pw.expect(page.get_by_role("heading", name="Describe your task")).to_be_visible()
         for control in ("output-target", "manual-testing-type", "llm-model"):
             pw.expect(page.locator(f"#generate-form #{control}")).to_be_visible()
         page.set_viewport_size({"width": 390, "height": 844})
@@ -287,7 +298,9 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             == handoff["request"]["description"]
         )
         pw.expect(page.locator("#generation-overlay")).to_be_visible()
-        pw.expect(page.locator("#generation-overlay-title")).to_contain_text("Generating stories")
+        pw.expect(page.locator("#generation-overlay-title")).to_contain_text(
+            "Understanding your request"
+        )
         pw.expect(page.locator("#background-generation-overlay")).to_be_visible()
         pw.expect(page.locator("#generate")).to_be_disabled()
         pending_stories.pop().fulfill(status=503, json={"detail": "Story provider unavailable"})
@@ -307,7 +320,7 @@ def test_five_stage_workflow_and_source_invalidation(mode):
             page.locator("#stop-generation").click()
         else:
             page.locator("#cancel-generation-overlay").click()
-        pw.expect(page.locator("#status")).to_contain_text("Story generation cancelled")
+        pw.expect(page.locator("#status")).to_contain_text("Task orchestration cancelled")
         pw.expect(page.locator("#generate")).to_be_enabled()
         assert f"/api/generation/{request_id}/cancel" in cancellations
         cancelled_request.fulfill(json=handoff["stories"])

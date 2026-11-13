@@ -2,6 +2,7 @@
 
 let reviewSourceRequest = null;
 const generationOperation = window.createOperationProgress();
+let generationFailureMessage = null;
 let suite = null,
   validationReport = null,
   stepDefinitionArtifact = null,
@@ -108,6 +109,7 @@ async function responseError(response) {
   const reference = response.headers.get("x-request-id");
   const error = new Error(reference ? `${message} Reference ID: ${reference}` : message);
   error.referenceId = reference;
+  generationFailureMessage = error.message;
   return error;
 }
 async function api(path, body, options = {}) {
@@ -288,6 +290,7 @@ function elapsed(ms) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 const generationStages = {
+  orchestrate: {label: "Task orchestration", agent: "OrchestratorAgent", title: "Understanding your request", message: "Choosing the workflow for the outcome you asked for."},
   "ba-review": {label: "BA review", agent: "BA Agent", title: "Reviewing BRD", message: "Assessing the BRD against available auto-finance knowledge."},
   stories: {
     label: "Story generation",
@@ -706,7 +709,7 @@ function renderGenerationOverview() {
   $("generation-next-step").textContent = finished
     ? generationOperation.status === "Completed" ? generationResultSummary?.next || "Review the operation output and recorded evidence."
       : generationOperation.status === "Cancelled" ? "The operation was cancelled. Review any retained output before retrying."
-      : "The operation stopped with an error. Open the activity log for details before retrying."
+      : generationFailureMessage || "The operation stopped with an error. Open the activity log for details before retrying."
     : "Keep this page open. You can continue in the background or cancel the operation.";
   $("generation-view-result").hidden = !finished || !generationResultSummary;
   $("generation-activity-count").textContent = `${$("generation-background-events").querySelectorAll("li:not(.empty-event)").length} updates`;
@@ -877,6 +880,7 @@ async function pollLifecycle(requestId) {
   }
 }
 function startLifecycleFeed(requestId) {
+  generationFailureMessage = null;
   if (activeLifecycleTimer) clearInterval(activeLifecycleTimer);
   activeLifecycleRequestId = requestId;
   lifecyclePollPromise = null;
@@ -927,7 +931,7 @@ function showFile(file) {
       : `${(file.size / 1048576).toFixed(1)} MB`;
   $("source-state").textContent = "Document attached · ready to read";
   $("description").closest(".textarea-wrap").classList.add("has-attachment");
-  $("status").textContent = `${file.name} attached. Select Generate stories when ready.`;
+  $("status").textContent = `${file.name} attached. Select Run task when ready.`;
   syncGenerateAvailability();
   setSourceMenu(false);
 }
@@ -1190,6 +1194,7 @@ $("generate-form").addEventListener("submit", async (e) => {
         "/api/agent/run",
         {
           description,
+          interpret_prompt: true,
           output_format: format,
           generation_target: generationTarget,
           manual_testing_type: manualTestingType,
@@ -1204,6 +1209,14 @@ $("generate-form").addEventListener("submit", async (e) => {
         options,
       );
       const result = await response.json();
+      if (result.workflow === "prompt-result") {
+        window.handlePromptOutcome(result);
+        return;
+      }
+      if (result.workflow === "website-framework") {
+        window.renderWebsiteFramework(result);
+        return;
+      }
       generated = result.suite;
       validation = result.validation;
       trace = result.trace || [];
@@ -1519,7 +1532,7 @@ function finishAgentWorkflow(status) {
   if (!runCompletionNotified) {
     const stage = generationStages[activeGeneration?.kind];
     addNotification(status === "Completed" ? `${stage?.label || "Generation"} completed` : `Operation ${status.toLowerCase()}`,
-      status === "Completed" ? "The operation finished. Review its output and validation evidence in the workspace." : "The operation stopped. Review its status and recorded validation evidence.",
+      status === "Completed" ? "The operation finished. Review its output and validation evidence in the workspace." : generationFailureMessage || "The operation stopped. Review its status and recorded validation evidence.",
       status === "Completed" ? "success" : status === "Cancelled" ? "info" : "error");
     runCompletionNotified = true;
   }
@@ -1665,3 +1678,128 @@ async function loadUserProfile() {
   }
 }
 loadUserProfile();
+
+// Shared by the direct agent submission and the reviewed requirements workspace.
+window.isWebsiteFrameworkPrompt = (text) =>
+  /\b(build|create|generate|set\s+up|scaffold)\b/i.test(text) &&
+  /\b(automation|framework|selenium|playwright)\b/i.test(text) && /https?:\/\//i.test(text);
+let frameworkDownloadUrl = null;
+window.generatedWebsiteFramework = null;
+window.generatedSuitePack = null;
+window.syncGeneratedPackSettings = (metadata = null) => {
+  const config = $("generated-pack-configuration");
+  const active = metadata || window.generatedWebsiteFramework || window.generatedSuitePack;
+  config.hidden = !active;
+  $("automation-language").disabled = Boolean(active);
+  $("automation-language").title = active ? "Language is fixed by the generated automation pack." : "Coding language";
+  if (!active) return;
+  const language = {"C#": "csharp", "Java": "java", "Python": "python", "JavaScript": "javascript", "TypeScript": "typescript", "Ruby": "ruby"}[active.language] || active.language || "csharp";
+  $("automation-language").value = language;
+  $("automation-language").title = "Language is fixed by the generated automation pack.";
+  const fields = {
+    "generated-pack-framework": active.framework,
+    "generated-pack-tool": active.automation_tool,
+    "generated-pack-pattern": active.design_pattern,
+    "generated-pack-runtime": active.target_framework,
+  };
+  for (const [id, value] of Object.entries(fields)) {
+    const control = $(id);
+    control.parentElement.hidden = !value;
+    control.replaceChildren();
+    if (value) control.add(new Option(value, value, true, true));
+    control.disabled = true;
+  }
+};
+window.mapGeneratedSuitePack = (artifact, navigate = true) => {
+  window.generatedSuitePack = artifact;
+  window.syncGeneratedPackSettings();
+  renderStepDefinitions(artifact);
+  window.dispatchEvent(new Event("generated-pack-changed"));
+  if (navigate) window.navigateWorkspace?.("/?view=automation", true);
+};
+window.clearWebsiteFramework = () => {
+  window.generatedWebsiteFramework = null;
+  document.getElementById("website-framework-result")?.remove();
+  if (frameworkDownloadUrl) URL.revokeObjectURL(frameworkDownloadUrl);
+  frameworkDownloadUrl = null;
+  window.syncGeneratedPackSettings?.();
+  window.dispatchEvent(new Event("generated-pack-changed"));
+};
+window.renderWebsiteFramework = (result, navigate = true) => {
+  window.clearWebsiteFramework();
+  suite = null;
+  validationReport = null;
+  reviewSourceRequest = null;
+  resetSuiteFiles();
+  $("results").classList.add("hidden");
+  window.generatedWebsiteFramework = result;
+  window.syncGeneratedPackSettings();
+  const panel = document.createElement("section");
+  panel.id = "website-framework-result";
+  panel.className = "panel";
+  const heading = document.createElement("h3");
+  heading.textContent = "Website automation framework ready for review";
+  const summary = document.createElement("p");
+  summary.textContent = `${result.stack}. ${Object.entries(result.scenario_counts).map(([key, count]) => `${key}: ${count}`).join(" · ")}. Execution: not run.`;
+  const pages = document.createElement("p");
+  pages.textContent = `Page objects: ${(result.page_objects || []).join(", ") || "See the Pages folder in the downloaded framework."}`;
+  const suites = document.createElement("div");
+  suites.className = "framework-suites";
+  for (const suite of result.test_suites || []) {
+    const card = document.createElement("section"); card.className = "framework-suite";
+    const title = document.createElement("h4"); title.textContent = `${suite.name} · ${suite.scenario_count} ${suite.scenario_count === 1 ? "test" : "tests"}`;
+    const path = document.createElement("p"); path.textContent = suite.feature_file;
+    const scenarios = document.createElement("ul"); scenarios.tabIndex = 0;
+    scenarios.setAttribute("aria-label", `${suite.name} test scenarios`);
+    for (const name of suite.scenarios) {
+      const item = document.createElement("li"); item.textContent = name; scenarios.append(item);
+    }
+    const command = document.createElement("code"); command.textContent = suite.command;
+    card.append(title, path, scenarios, command); suites.append(card);
+  }
+  const list = document.createElement("ul");
+  result.limitations.forEach((text) => {
+    const item = document.createElement("li"); item.textContent = text; list.append(item);
+  });
+  const details = document.createElement("details");
+  const label = document.createElement("summary"); label.textContent = "Review website observations and pack files";
+  const evidence = document.createElement("pre");
+  evidence.style.whiteSpace = "pre-wrap";
+  evidence.textContent = `${result.observations}\n\nFiles:\n${result.file_names.join("\n")}`;
+  details.append(label, evidence);
+  const link = document.createElement("a");
+  const bytes = Uint8Array.from(atob(result.archive_base64), char => char.charCodeAt(0));
+  frameworkDownloadUrl = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+  link.href = frameworkDownloadUrl; link.download = result.filename;
+  link.className = "button secondary"; link.textContent = "Download automation framework (.zip)";
+  const fileBrowser = document.createElement("section"); fileBrowser.className = "framework-file-browser";
+  const fileLabel = document.createElement("label"); fileLabel.textContent = "View generated file";
+  const picker = document.createElement("select"); picker.id = "generated-framework-file";
+  const preview = document.createElement("pre"); preview.id = "generated-framework-file-content";
+  preview.tabIndex = 0; preview.setAttribute("aria-label", "Generated file content (read only)");
+  const sourceFiles = result.files || [];
+  sourceFiles.forEach((file, index) => picker.add(new Option(file.path, String(index))));
+  const showFile = () => { preview.textContent = sourceFiles[Number(picker.value)]?.content || "File contents are unavailable in this older pack. Regenerate it to preview files."; };
+  picker.onchange = showFile;
+  const initialFile = sourceFiles.findIndex(file => file.path === "README.md");
+  if (initialFile >= 0) picker.value = String(initialFile);
+  showFile();
+  fileLabel.append(picker); fileBrowser.append(fileLabel, preview);
+  const copy = document.createElement("button"); copy.type = "button"; copy.className = "secondary";
+  copy.textContent = "Copy file"; copy.disabled = !sourceFiles.length;
+  copy.onclick = () => copyText(preview.textContent, sourceFiles[Number(picker.value)]?.path || "Generated file");
+  fileBrowser.append(copy);
+  panel.append(heading, summary, pages, suites, fileBrowser, list, details, link);
+  document.getElementById("automation-workspace").append(panel);
+  window.handleGeneratedFrameworkAction = (action) => {
+    if (!window.generatedWebsiteFramework) return;
+    if (action === "download-csharp-pack") { link.click(); return; }
+    const prefix = action === "view-feature" ? "Features/" : action === "generate-step-definitions" ? "StepDefinitions/" : "";
+    const index = sourceFiles.findIndex(file => prefix ? file.path.startsWith(prefix) && file.path.endsWith(action === "view-feature" ? ".feature" : ".cs") : file.path === "README.md");
+    if (index >= 0) { picker.value = String(index); showFile(); }
+    fileBrowser.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  window.dispatchEvent(new Event("generated-pack-changed"));
+  if (navigate) window.navigateWorkspace?.("/?view=automation", true);
+  document.getElementById("status").textContent = "Framework prepared from website observations. Review and download the pack; tests have not run.";
+};

@@ -142,6 +142,8 @@ function closeSuiteMenus() {
 }
 
 function resetSuiteFiles() {
+  window.generatedSuitePack = null;
+  window.clearWebsiteFramework?.();
   $("pack-run-tray").hidden = true;
   packBackgroundUsed = false;
   window.resetScriptPack?.();
@@ -200,6 +202,7 @@ function syncSuiteFileActions() {
     $(id).disabled = !approved || containsAutomation;
     $(id).title = containsAutomation ? "Available only for manual test suites." : "";
   });
+  if (window.generatedWebsiteFramework || window.generatedSuitePack) window.syncGeneratedPackSettings?.();
 }
 
 function requireApprovedSuite() {
@@ -256,6 +259,7 @@ async function ensureStepDefinitions() {
     throw new Error("Suite or language changed. Try again.");
   if (stepDefinitionCache.has(cacheKey)) {
     stepDefinitionArtifact = stepDefinitionCache.get(cacheKey);
+    window.mapGeneratedSuitePack?.(stepDefinitionArtifact);
     return stepDefinitionArtifact;
   }
   if (stepDefinitionTask) {
@@ -290,7 +294,8 @@ async function ensureStepDefinitions() {
     if (stepDefinitionCache.size > 5) {
       stepDefinitionCache.delete(stepDefinitionCache.keys().next().value);
     }
-    $("status").textContent = "Automation pack is ready to view or download.";
+    window.mapGeneratedSuitePack?.(artifact);
+    $("status").textContent = "Automation pack is ready in the Automation packs tab.";
     return artifact;
   })();
   stepDefinitionTask = task;
@@ -314,7 +319,7 @@ async function ensureStepDefinitions() {
     throw error;
   } finally {
     if (stepDefinitionTask === task) {
-      $("automation-language").disabled = false;
+      $("automation-language").disabled = Boolean(window.generatedSuitePack || window.generatedWebsiteFramework);
       stepDefinitionTask = null;
       stepDefinitionRequest = null;
       clearInterval(stepDefinitionTimer);

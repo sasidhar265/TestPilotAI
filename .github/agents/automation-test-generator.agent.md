@@ -118,13 +118,20 @@ Use sibling folders Reqnroll/, Features/, StepDefinitions/, Hooks/, TestContext/
 Services/, Builders/, Models/, Utilities/, TestResults/Reports/, Input/.
 Keep dependency manifests and README.md at the framework root. Reqnroll is the
 runner/configuration folder name for EVERY language; retain the selected BDD runtime.
-Use Features/*.feature, StepDefinitions/*StepDefinition.<ext>, Hooks/Hooks.<ext>,
+Use Features/**/*.feature, StepDefinitions/*StepDefinition.<ext>, Hooks/Hooks.<ext>,
 TestContext/testcontext.<ext>, Services/*Service.<ext>, Builders/*builder.<ext>,
 Models/*Model.<ext>, Utilities/*Utility.<ext>, and Input/TestData.Json.
 Use the selected language's extension and valid class/module identifiers.
 Put real created artifacts into their role's folder, never Support/, src/, or features/.
 Do not invent unnecessary business models or fixture values to fill unused folders.
 Wire imports, feature discovery, hook registration and test-data loading to these paths.
+For browser UI packs, add Pages/*Page.cs and Pages/Components/*Component.cs.
+For Selenium/C# UI packs, use the compatible DotNetSeleniumExtras.PageObjects.Core
+PageFactory implementation: FindsBy element properties, centralized InitElements after
+page construction, explicit waits and no CacheLookup. Do not add it to API-only packs.
+Encapsulate locators and high-level page actions there; keep assertions in Services and
+thin bindings in StepDefinitions. Use discoverable NUnit category metadata for C# suite
+filters without adding feature tags. Name smoke, sanity and regression features explicitly.
 Runner configuration belongs in Reqnroll; output belongs in TestResults/Reports.
 Python uses the supplied Reqnroll/run.py adapter to stage Behave's conventional runtime
 tree temporarily: author hooks in Hooks/Hooks.py and bindings in StepDefinitions/.

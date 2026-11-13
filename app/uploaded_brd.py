@@ -16,15 +16,15 @@ def _key(settings: Settings) -> bytes:
     return configured.encode() if configured else _PROCESS_KEY
 
 
-def issue_brd_receipt(text: str, settings: Settings) -> str:
+def issue_brd_receipt(text: str, settings: Settings, *, purpose: str = "") -> str:
     expires = int(time.time()) + _RECEIPT_SECONDS
     digest = hashlib.sha256(text.encode()).hexdigest()
     payload = f"{expires}.{digest}"
-    signature = hmac.new(_key(settings), payload.encode(), hashlib.sha256).hexdigest()
+    signature = hmac.new(_key(settings), (purpose + payload).encode(), hashlib.sha256).hexdigest()
     return f"{payload}.{signature}"
 
 
-def verify_brd_receipt(text: str, receipt: str, settings: Settings) -> bool:
+def verify_brd_receipt(text: str, receipt: str, settings: Settings, *, purpose: str = "") -> bool:
     parts = receipt.split(".")
     if len(parts) != 3 or not parts[0].isdigit():
         return False
@@ -33,5 +33,7 @@ def verify_brd_receipt(text: str, receipt: str, settings: Settings) -> bool:
         return False
     if not hmac.compare_digest(digest, hashlib.sha256(text.encode()).hexdigest()):
         return False
-    expected = hmac.new(_key(settings), f"{expires}.{digest}".encode(), hashlib.sha256).hexdigest()
+    expected = hmac.new(
+        _key(settings), f"{purpose}{expires}.{digest}".encode(), hashlib.sha256
+    ).hexdigest()
     return hmac.compare_digest(signature, expected)

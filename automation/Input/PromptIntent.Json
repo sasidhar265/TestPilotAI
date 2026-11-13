@@ -1,0 +1,14 @@
+{
+  "framework-paraphrase": {
+    "description": "I need a reusable C# Selenium setup for https://careerpilot-nrn7.onrender.com with BDD page objects and smoke, sanity and regression groups.",
+    "llm_model": "codex"
+  },
+  "test-cases": {
+    "description": "Write manual test cases for the supplied requirement: a signed-in user can search available jobs by title. Produce test cases directly, without creating user stories.",
+    "llm_model": "codex"
+  },
+  "ambiguous": {
+    "description": "A signed-in user can search available jobs by title.",
+    "llm_model": "codex"
+  }
+}

@@ -1,4 +1,4 @@
-/* Five explicit handoffs. Drafts stay in this workspace while navigating its pages. */
+/* Intent-first task input with reviewed handoffs for explicitly requested artifacts. */
 (() => {
   const state = {
     request: null,
@@ -18,6 +18,8 @@
   };
   let savedBaReport = null;
   let savedRequirementsReport = null;
+  let cachedIntent = null;
+  let websiteSource = null;
   const tabs = [...document.querySelectorAll("[data-stage]")];
   const workspace = document.querySelector(".stage-workspace");
   workspace.before(document.querySelector(".studio-layout"));
@@ -251,6 +253,11 @@
   let revision = 0;
   let latestBrdText = null;
   function sourceChanged() {
+    cachedIntent = null;
+    if (window.generatedSuitePack) resetSuiteFiles();
+    else window.clearWebsiteFramework?.();
+    document.getElementById("task-interpretation")?.remove();
+    if (websiteSource && !$("description").value.includes(websiteSource.description)) websiteSource = null;
     savedBaReport = null;
     savedRequirementsReport = null;
     revision += 1;
@@ -259,9 +266,9 @@
     $("ba-report").hidden = true;
     $("ba-status").textContent = "Source changed. Run BA review again for the current input.";
     $("requirements-validation-report").hidden = true;
-    if (!state.request) return;
+    if (!state.request && !suite) return;
     invalidate(1);
-    status("Requirements changed. Generate stories again to refresh downstream stages.");
+    status("Input changed. Select Run task to start again with the current task.");
   }
   ["description", "business-rules", "requirement-file", "business-rules-file"].forEach((id) =>
     $(id).addEventListener("input", sourceChanged),
@@ -338,6 +345,7 @@
       await task(current);
     } catch (error) {
       outcome = operation?.cancelled ? "Cancelled" : "Failed";
+      generationFailureMessage = operation?.cancelled ? null : error.message;
       status(operation?.cancelled ? `${generationStages[kind].label} cancelled.` : error.message);
       if (kind === "ba-review") $("ba-status").textContent = operation?.cancelled ? "BA review cancelled." : error.message;
     } finally {
@@ -369,15 +377,19 @@
     const target = selectedGenerationTarget();
     return {
       ...state.request,
-      finance_calculation: window.financeCalculationContext?.() || null,
-      finance_product_id: $("finance-domain-product")?.value || null,
-      finance_journey_ids: $("finance-domain-journey")?.value
-        ? [$("finance-domain-journey").value]
-        : [],
+      ...sourceFinanceContext(),
       generation_target: target,
       output_format: target === "manual" ? "normal" : "bdd",
       manual_testing_type: $("manual-testing-type").value,
       llm_model: $("llm-model").value || "auto-fallback",
+    };
+  }
+  function sourceFinanceContext() {
+    if (websiteSource) return { finance_calculation: null, finance_product_id: null, finance_journey_ids: [] };
+    return {
+      finance_calculation: window.financeCalculationContext?.() || null,
+      finance_product_id: $("finance-domain-product")?.value || null,
+      finance_journey_ids: $("finance-domain-journey")?.value ? [$("finance-domain-journey").value] : [],
     };
   }
   async function readRequirementSource(current) {
@@ -406,16 +418,16 @@
     current();
     return {
       description,
+      generation_target: selectedGenerationTarget(),
+      manual_testing_type: $("manual-testing-type").value,
       business_rules: parseBusinessRules(),
       llm_model: $("llm-model").value || "auto-fallback",
       additional_context: "",
-      finance_calculation: window.financeCalculationContext?.() || null,
-      finance_product_id: $("finance-domain-product")?.value || null,
-      finance_journey_ids: $("finance-domain-journey")?.value
-        ? [$("finance-domain-journey").value]
-        : [],
+      ...sourceFinanceContext(),
       uploaded_brd_text: uploadedBrdText,
       uploaded_brd_receipt: uploadedBrdReceipt,
+      website_source_text: websiteSource?.description || null,
+      website_source_receipt: websiteSource?.website_source_receipt || null,
     };
   }
   function renderRequirementsValidation(report) {
@@ -592,6 +604,44 @@
       renderRequirementsValidation(report);
       status(report.message);
     });
+  function renderIntent(intent) {
+    document.getElementById("task-interpretation")?.remove();
+    const panel = document.createElement("section");
+    panel.id = "task-interpretation";
+    panel.className = "panel";
+    const heading = document.createElement("h3");
+    heading.textContent = "How I understood your request";
+    const summary = document.createElement("p"); summary.textContent = intent.summary;
+    panel.append(heading, summary);
+    for (const question of intent.questions || []) {
+      const item = document.createElement("p"); item.textContent = question; panel.append(item);
+    }
+    $("generate-form").after(panel);
+  }
+  window.handlePromptOutcome = (outcome) => {
+    state.request = outcome.source_request;
+    renderIntent(outcome.intent);
+    if (outcome.intent.workflow === "clarify") {
+      status(outcome.intent.questions.join(" "));
+    } else if (outcome.intent.workflow === "website-framework") {
+      window.renderWebsiteFramework(outcome.result);
+    } else if (outcome.intent.workflow === "business-analysis") {
+      renderBaReport(outcome.result);
+      status("Requirements review ready.");
+    } else if (outcome.intent.workflow === "stories") {
+      state.request = outcome.source_request;
+      state.stories = outcome.result;
+      renderStories(); show(2);
+      status("Stories ready. Review them to continue.");
+    } else {
+      reviewSourceRequest = outcome.source_request;
+      validationReport = outcome.result.validation;
+      render(outcome.result.suite);
+      recordSuiteValidation(validationReport, suite);
+      show(4);
+      status("Requested test cases ready for review.");
+    }
+  };
   $("generate-form").addEventListener(
     "submit",
     (event) => {
@@ -601,6 +651,35 @@
         "Reading source requirements…",
         async (current) => {
           const source = await readRequirementSource(current);
+          status("Orchestrator is understanding the requested outcome…");
+          const intentKey = JSON.stringify(source);
+          const intent = cachedIntent?.key === intentKey
+            ? cachedIntent.intent : await post("intent", source);
+          current();
+          cachedIntent = { key: intentKey, intent };
+          renderIntent(intent);
+          if (intent.workflow === "clarify" || intent.questions.length) {
+            status(intent.questions.join(" ") || intent.summary);
+            return;
+          }
+          source.generation_target = intent.generation_target;
+          source.manual_testing_type = intent.testing_type;
+          if (intent.workflow !== "stories") {
+            invalidate(1);
+            if (intent.workflow === "business-analysis") {
+              renderBaReport(await post("ba-review", source));
+              current();
+              status("Requirements review ready.");
+            } else {
+              const result = await (await api("/api/agent/run", {
+                ...source, interpret_prompt: true, requested_workflow: intent.workflow,
+              }, transportOptions())).json();
+              current();
+              result.intent = intent;
+              window.handlePromptOutcome(result);
+            }
+            return;
+          }
           invalidate(2);
           state.request = source;
           status("Story Agent is converting requirements into stories…");
@@ -616,7 +695,7 @@
           if (!activeGeneration?.background)
             workspace.scrollIntoView({ behavior: "smooth", block: "start" });
         },
-        "stories",
+        "orchestrate",
       );
     },
     true,
@@ -1214,6 +1293,7 @@
         dirtyStories:[...state.dirtyStories], acceptedScenarios:[...state.acceptedScenarios],
         dirtyScenarios:[...state.dirtyScenarios]}, suite, validationReport, reviewSourceRequest,
         executionSummary, stepDefinitionArtifact, savedBaReport, savedRequirementsReport, latestBrdText,
+        websiteSource, generatedFramework: window.generatedWebsiteFramework, generatedSuitePack: window.generatedSuitePack,
         caseSelections: [...document.querySelectorAll("#cases .case-check")].map(control => control.checked),
         feedback: Object.fromEntries(["stage-execution-results", "stage-manual"].map(id => [id, $(id).innerHTML])) };
       sessionStorage.setItem(draftKey, JSON.stringify(data));
@@ -1222,6 +1302,7 @@
   document.addEventListener("change", event => {
     if (draftControls.includes(event.target.id)) saveWorkspaceDraft();
   });
+  window.addEventListener("generated-pack-changed", saveWorkspaceDraft);
   window.addEventListener("pagehide", saveWorkspaceDraft);
   window.addEventListener("workspace-page-changed", saveWorkspaceDraft);
   document.addEventListener("click", event => {
@@ -1257,11 +1338,14 @@
       reviewSourceRequest = draft.reviewSourceRequest;
       executionSummary = draft.executionSummary;
       latestBrdText = draft.latestBrdText;
+      websiteSource = draft.websiteSource || null;
       if (state.stories) renderStories();
       if (state.scenarios) renderScenarios();
       if (draft.savedBaReport) renderBaReport(draft.savedBaReport);
       if (draft.savedRequirementsReport) renderRequirementsValidation(draft.savedRequirementsReport);
-      if (draft.stepDefinitionArtifact) renderStepDefinitions(draft.stepDefinitionArtifact);
+      if (draft.generatedFramework) window.renderWebsiteFramework(draft.generatedFramework, false);
+      else if (draft.generatedSuitePack) window.mapGeneratedSuitePack(draft.generatedSuitePack, false);
+      else if (draft.stepDefinitionArtifact) renderStepDefinitions(draft.stepDefinitionArtifact);
       if (state.plan) renderPlan();
       for (const [id, html] of Object.entries(draft.feedback || {})) if ($(id)) $(id).innerHTML = html;
       if (location.pathname === "/") show(({stories:2,scenarios:3,"test-cases":4,execution:5,automation:6})[document.body.dataset.qualityView] || 1, false);

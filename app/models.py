@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -148,6 +149,12 @@ class TestSuite(BaseModel):
 
 
 class GenerateRequest(BaseModel):
+    interpret_prompt: bool = False
+    requested_workflow: (
+        Literal["website-framework", "test-cases", "stories", "business-analysis"] | None
+    ) = None
+    website_source_text: str | None = Field(default=None, max_length=24000)
+    website_source_receipt: str | None = Field(default=None, max_length=200)
     finance_calculation: dict[str, object] | None = None
     finance_product_id: str | None = Field(default=None, max_length=50)
     finance_journey_ids: list[str] = Field(default_factory=list, max_length=20)

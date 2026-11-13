@@ -1,0 +1,7 @@
+{
+  "careerpilot": {"url": "https://careerpilot-nrn7.onrender.com/", "max_pages": 1},
+  "loopback": {"url": "http://127.0.0.1/", "max_pages": 1},
+  "file": {"url": "file:///etc/passwd", "max_pages": 1},
+  "credentials": {"url": "https://user:password@example.com/", "max_pages": 1},
+  "excessive-pages": {"url": "https://careerpilot-nrn7.onrender.com/", "max_pages": 6}
+}

@@ -3,23 +3,24 @@ using Allure.Net.Commons;
 using QualityLifecycle.Automation.Utilities;
 namespace QualityLifecycle.Automation.Services;
 
-public sealed class ApiService : IDisposable
+public sealed class ApiService(HttpClient http) : IDisposable
 {
-    private readonly HttpClient http = new() { BaseAddress = new Uri(ConfigurationUtility.BaseUrl) };
+    public ApiService() : this(new HttpClient { BaseAddress = new Uri(ConfigurationUtility.BaseUrl) }) { }
+
     public HttpResponseMessage? Response
     {
         get; private set;
     }
     public string ResponseBody { get; private set; } = string.Empty;
-    public async Task RequestAsync(HttpRequestMessage request)
+    public async Task RequestAsync(HttpRequestMessage request, CancellationToken token = default)
     {
         var requestBody = request.Content is null
             ? string.Empty
             : await request.Content.ReadAsStringAsync();
         AddAttachment("API request", FormatRequest(request, requestBody));
         Response?.Dispose();
-        Response = await http.SendAsync(request);
-        ResponseBody = await Response.Content.ReadAsStringAsync();
+        Response = await http.SendAsync(request, token);
+        ResponseBody = await Response.Content.ReadAsStringAsync(token);
         AddAttachment("API response", FormatResponse(Response, ResponseBody));
     }
 

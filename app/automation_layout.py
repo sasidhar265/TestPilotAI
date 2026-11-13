@@ -36,9 +36,10 @@ def validate_layout(files: Sequence[SourceFile]) -> None:
 
 
 def validate_layout_paths(paths: Iterable[str]) -> None:
-    roots = {folder.split("/")[0] for folder in FOLDERS}
+    roots = {folder.split("/")[0] for folder in FOLDERS} | {"Pages"}
     root_files = {
         "README.md",
+        ".gitignore",
         "requirements.txt",
         "pyproject.toml",
         "pom.xml",
@@ -79,6 +80,8 @@ def validate_layout_paths(paths: Iterable[str]) -> None:
             stem = path.stem.casefold().replace("_", "")
             if path.name == "__init__.py":
                 continue
+            if folder == "Pages" and not stem.endswith(("page", "component")):
+                raise ValueError(f"{name} must name a Page or Component")
             expected = suffixes.get(folder)
             if expected and not stem.endswith(expected):
                 raise ValueError(f"{name} must use the {folder} filename convention")
@@ -86,7 +89,7 @@ def validate_layout_paths(paths: Iterable[str]) -> None:
                 raise ValueError("Lifecycle hooks must be named Hooks")
             if folder == "TestContext" and stem != "testcontext":
                 raise ValueError("Shared context must be named testcontext")
-            if folder not in {*suffixes, "Hooks", "TestContext", "Reqnroll"}:
+            if folder not in {*suffixes, "Hooks", "TestContext", "Reqnroll", "Pages"}:
                 raise ValueError(f"Source code does not belong in {folder}")
 
 

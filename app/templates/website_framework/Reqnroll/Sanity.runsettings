@@ -1,0 +1,7 @@
+<RunSettings>
+  <RunConfiguration>
+    <ResultsDirectory>../TestResults/Reports</ResultsDirectory>
+    <TestCaseFilter>TestCategory=Sanity</TestCaseFilter>
+  </RunConfiguration>
+  <LoggerRunSettings><Loggers><Logger friendlyName="trx" enabled="True" /></Loggers></LoggerRunSettings>
+</RunSettings>

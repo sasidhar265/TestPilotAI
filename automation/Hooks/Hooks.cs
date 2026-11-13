@@ -12,6 +12,6 @@ public sealed class Hooks(AutomationContext context)
         {
             await context.Browser.DisposeAsync();
         }
-        finally { context.Api.Dispose(); }
+        finally { context.Dispose(); }
     }
 }

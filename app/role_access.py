@@ -31,6 +31,8 @@ BA_WRITES = frozenset(
     {
         "/api/auth/logout",
         "/api/workflow/requirements/document",
+        "/api/workflow/requirements/website",
+        "/api/workflow/intent",
         "/api/workflow/ba-review",
         "/api/workflow/validate-requirements",
         "/api/workflow/brd/pdf",

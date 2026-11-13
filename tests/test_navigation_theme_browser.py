@@ -4,12 +4,14 @@ from pathlib import Path
 
 import pytest
 
+from app.appearance import Appearance
+
 
 @pytest.mark.skipif(os.environ.get("RUN_BROWSER_TESTS") != "1", reason="Opt-in browser check")
 @pytest.mark.parametrize(
     "name", ["index", "documentation", "user-guide", "knowledge", "logs", "users", "api-docs"]
 )
-def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
+def test_collapsed_sidebar_theme_toggle_stays_visible_and_persists(name):
     root = Path(__file__).parents[1] / "app/static"
     sync_playwright = pytest.importorskip("playwright.sync_api").sync_playwright
     with sync_playwright() as pw:
@@ -30,6 +32,8 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
                     "username": "admin",
                     "is_admin": True,
                 }
+            elif path == "/api/appearance":
+                data = Appearance().model_dump(mode="json")
             elif path in ["/api/agents", "/api/admin/users"]:
                 data = []
             elif path == "/api/logs":
@@ -66,7 +70,7 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
         page.route("**/*", route)
         page.goto("http://localhost/")
         for destination in (
-            "/project-dashboard",
+            "/agent-information",
             "/",
             "/progress",
             "/quality-lifecycle",
@@ -79,21 +83,21 @@ def test_collapsed_sidebar_theme_options_escape_sidebar_and_persist(name):
             assert page.locator(f'.primary-nav a[href="{destination}"]').count() == 1
         assert page.locator("main").evaluate("e => getComputedStyle(e).paddingLeft") == "40px"
         page.locator("#sidebar-toggle").click()
-        for theme in ["dark", "light", "system"]:
-            page.locator("#theme-gear").click()
-            button = page.locator(f'[data-theme-option="{theme}"]')
+        for theme in ["dark", "light"]:
+            button = page.locator("#floating-theme-toggle")
             box = button.bounding_box()
             hit = button.evaluate(
                 "(e)=>{const r=e.getBoundingClientRect();"
                 "return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}"
             )
-            assert page.locator("#theme-menu").evaluate("(e)=>e.parentElement===document.body")
+            assert button.evaluate("(e)=>e.parentElement===document.body")
+            assert box["width"] >= 44 and box["height"] >= 44
             assert box["x"] >= page.locator(".sidebar").bounding_box()["width"]
             assert page.locator(".sidebar").evaluate("(e)=>e.scrollLeft") == 0
-            assert hit, f"{name}: theme option clipped or covered"
+            assert hit, f"{name}: theme toggle clipped or covered"
             button.click(timeout=3000)
             assert page.evaluate("localStorage.getItem('quality-lifecycle-studio-theme')") == theme
-            assert page.locator("#theme-menu").is_hidden()
+            assert page.locator("html").get_attribute("data-theme") == theme
         page.reload()
         assert page.locator("#sidebar-toggle").get_attribute("aria-expanded") == "false"
         if name in {"documentation", "user-guide", "knowledge", "logs", "api-docs"}:

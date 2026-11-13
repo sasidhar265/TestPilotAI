@@ -116,6 +116,8 @@ class RequirementsValidationAgent:
         self.runner = ArtifactGenerationRunner(self.settings)
 
     async def assess(self, request: GenerateRequest) -> RequirementsReport:
+        from app.services.website_inspection import verified_website_source
+
         # Supplied rules are candidate requirements, never approval evidence.
         fingerprint = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
         baseline_fingerprint = "unavailable"
@@ -151,6 +153,16 @@ class RequirementsValidationAgent:
             if request.additional_context.strip():
                 chunks.append(request.additional_context.strip())
             units = {f"REQ-{index:03d}": text for index, text in enumerate(chunks, 1)}
+            if request.website_source_text or request.website_source_receipt:
+                text = request.website_source_text or ""
+                if (
+                    not text
+                    or text not in request.description
+                    or not verified_website_source(
+                        text, request.website_source_receipt or "", self.settings
+                    )
+                ):
+                    return report("Website source verification failed. Inspect the website again.")
             if len(units) > 1000:
                 return report(
                     "Requirements blocked: split this source into at most 1,000 lines and rules."
@@ -173,6 +185,24 @@ class RequirementsValidationAgent:
                 for s in sources
             ]
             if not sources:
+                if request.website_source_text:
+                    source_metadata = [
+                        {
+                            "id": "INSPECTED-WEBSITE",
+                            "title": "Reviewed website observations for this workflow",
+                            "status": "observed_only",
+                            "fingerprint": hashlib.sha256(
+                                request.website_source_text.encode()
+                            ).hexdigest(),
+                        }
+                    ]
+                    result = report(
+                        "Website observations verified as this workflow's source. "
+                        "Expected business behavior requires owner review; business approval "
+                        "and regulatory compliance were not assessed."
+                    )
+                    result.status = "aligned"
+                    return result
                 if request.uploaded_brd_receipt or request.uploaded_brd_text:
                     document = request.uploaded_brd_text or ""
                     if (
@@ -271,6 +301,7 @@ class RequirementsValidationAgent:
     async def require(self, request: GenerateRequest) -> RequirementsReport:
         report = await self.assess(request)
         uploaded = any(s.get("id") == "UPLOADED-BRD" for s in report.sources)
+        website = any(s.get("id") == "INSPECTED-WEBSITE" for s in report.sources)
         aligned = report.status == "aligned"
         outcomes = {
             status: sum(f.status == status for f in report.findings)
@@ -288,7 +319,12 @@ class RequirementsValidationAgent:
             ]
             if unresolved:
                 basis += " Findings: " + labels(unresolved) + "."
-        if aligned and not uploaded:
+        if aligned and website:
+            basis += (
+                " Checked the server-issued website receipt and unchanged observations. "
+                "This verifies extraction, not expected business behavior or business approval."
+            )
+        elif aligned and not uploaded:
             basis += (
                 f" Assessed {len(report.requirements)} requirement units; every unit was aligned. "
                 "Checked source approval and effective dates, complete requirement coverage, "
@@ -307,7 +343,12 @@ class RequirementsValidationAgent:
         )
         cited = {e.source_id for f in report.findings for e in f.evidence}
         for source in report.sources:
-            if uploaded:
+            if website:
+                reference = (
+                    f"{source['title']} · Observed website HTML · SHA-256 "
+                    f"{source.get('fingerprint', 'unavailable')} · Business approval not assessed."
+                )
+            elif uploaded:
                 reference = (
                     f"{source['title']} · User-provided BRD · SHA-256 "
                     f"{source.get('fingerprint', 'unavailable')} · Business approval not assessed."
@@ -333,7 +374,7 @@ class RequirementsValidationAgent:
             )
             if linked:
                 reference += " Supports: " + labels(linked) + "."
-            elif uploaded:
+            elif uploaded or website:
                 reference += f" Source for {len(report.requirements)} requirement units."
             publish_lifecycle_event(
                 "Requirements Validation Agent",

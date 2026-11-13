@@ -33,10 +33,10 @@
     <link rel="stylesheet" href="/static/styles/finance-tools.css?v=20261009" />
     <link rel="stylesheet" href="/static/styles/workflow-navigation.css?v=20261013-simplified-navigation" />
     <link rel="stylesheet" href="/static/styles/typography.css?v=20261009-type-scale" />
-    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261010-shared-controls" />
+    <link rel="stylesheet" href="/static/styles/control-alignment.css?v=20261112-screen-alignment" />
     <link rel="stylesheet" href="/static/styles/role-access.css?v=20261009-roles" />
     <link rel="stylesheet" href="/static/styles/appearance.css?v=20261110-branding-init" />
-    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261110-audit" />
+    <link rel="stylesheet" href="/static/styles/ui-spacing.css?v=20261112-automation-pack-handoff" />
     <link rel="stylesheet" href="/static/styles/brand.css?v=20261110-brand-alignment" />
   </head>
   <body data-access-pending="true">
@@ -749,11 +749,11 @@
             <section class="panel composer ba-workspace" id="test-studio">
               <div class="panel-head">
                 <div>
-                  <span class="section-kicker">Business analysis</span>
-                  <h2>Add requirements</h2>
+                  <span class="section-kicker">Quality engineering workspace</span>
+                  <h2>Describe your task</h2>
                   <p>
-                    Paste a vehicle finance requirement or attach your quotation BRD. Review
-                    stories, scenarios and test cases, then capture execution evidence.
+                    Describe the outcome you need. The orchestrator chooses the matching workflow
+                    or asks for clarification: frameworks, test cases, stories or a requirements review.
                   </p>
                 </div>
                 <span class="secure">PRIVATE BY DESIGN</span>
@@ -763,14 +763,14 @@
 
               <form id="generate-form">
                 <label class="field-label" for="description"
-                  >Requirements or acceptance criteria</label
+                  >What would you like to build or test?</label
                 >
                 <div class="textarea-wrap">
                   <textarea
                     id="description"
                     minlength="10"
                     aria-describedby="description-help"
-                    placeholder="Example: Test PCP quotation validation for deposit, term and annual mileage using the approved limits, request contract and expected financial results…"
+                    placeholder="Example: Build a Selenium C# BDD framework for https://example.com using page objects, with smoke, sanity and regression tests. Or paste requirements to create test cases…"
                   ></textarea>
                   <span class="file-preview attached-requirement hidden" id="file-preview"
                     ><span class="file-badge" id="file-type"></span
@@ -861,8 +861,9 @@
                   </div>
                 </div>
                 <p class="field-help" id="description-help">
-                  Include the finance product, customer context, vehicle details and approved
-                  business rules. Supply expected calculations and limits where applicable.
+                  Paste requirements, or ask “Build a Selenium C# BDD framework for https://example.com
+                  using page objects, with smoke, sanity and regression tests.” Website framework
+                  requests use observed public pages; business-rule testing needs approved requirements.
                 </p>
 
 
@@ -993,20 +994,20 @@
                       <span class="stop-icon"></span><span>Stop</span>
                     </button>
                     <button class="primary" id="generate" type="submit" disabled>
-                      <span>Generate stories</span><span class="arrow">→</span>
+                      <span>Run task</span><span class="arrow">→</span>
                     </button>
                   </div>
                 </div>
               </form>
-              <p id="ba-status" role="status">Add requirements or attach a BRD to begin the business analyst review.</p>
+              <p id="ba-status" role="status">For business analysis, add requirements or attach a BRD, then select Review BRD.</p>
               <section id="ba-report" aria-label="BA review outcome" hidden></section>
               <details class="ba-approved-check"><summary>Approved-source alignment check</summary>
                 <section class="requirements-check" aria-labelledby="requirements-check-title">
                   <div>
                     <h3 id="requirements-check-title">Approved-source alignment check</h3>
                     <p>
-                      Requirements must align with approved business sources before stories, test
-                      cases or generated-suite execution can proceed.
+                      Business-requirement workflows need approved sources. Direct website
+                      framework requests use observed public pages and do not require this check.
                     </p>
                   </div>
                   <button class="secondary" id="validate-requirements" type="button">
@@ -1022,7 +1023,7 @@
               </details>
               <div class="run-state" aria-live="polite">
                 <div class="status" id="status">
-                  <span class="status-dot"></span>Agent ready. Add requirements to begin.
+                  <span class="status-dot"></span>Ready. Describe a task or attach a document to begin.
                 </div>
                 <div class="timer hidden" id="timer" role="timer">00:00</div>
               </div>
@@ -1324,6 +1325,15 @@
               <button class="secondary" type="button" data-suite-action="download-csharp-pack" disabled>Download automation pack</button>
               <button class="primary" type="button" data-suite-action="open-script-pack" disabled>Build test scripts</button>
             </div>
+            <section id="generated-pack-configuration" hidden aria-label="Generated pack settings">
+              <p>These settings describe the generated pack and are locked. Start a new generation to change them.</p>
+              <div class="pack-configuration-grid">
+                <label>Test framework<select id="generated-pack-framework" disabled></select></label>
+                <label>Browser automation<select id="generated-pack-tool" disabled></select></label>
+                <label>Design pattern<select id="generated-pack-pattern" disabled></select></label>
+                <label>Target runtime<select id="generated-pack-runtime" disabled></select></label>
+              </div>
+            </section>
           </section>
         </div>
         <div data-workspace-page="/project-dashboard" hidden>
@@ -2150,22 +2160,22 @@
     <script src="/static/scripts/workflow-stages.js?v=20261010-shared" defer></script>
     <script src="/static/scripts/operation-progress.js?v=20261013-indeterminate" defer></script>
     <script src="/static/scripts/guest.js?v=20260927-privacy" defer></script>
-    <script src="/static/scripts/workspace-pages.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/workspace-pages.js?v=20261112-automation-pack-handoff" defer></script>
     <script src="/static/scripts/navigation.js?v=20261110-requirements-home" defer></script>
     <script src="/static/scripts/theme.js?v=20261110-floating-toggle" defer></script>
     <script src="/static/scripts/auth.js?v=20261110-preview" defer></script>
-    <script src="/static/scripts/index.js?v=20261110-requirements-home" defer></script>
+    <script src="/static/scripts/index.js?v=20261112-automation-pack-handoff" defer></script>
     <script src="/static/scripts/suite-review.js?v=20261013-popup-overview" defer></script>
     <script src="/static/scripts/usage-dashboard.js?v=20261009-automation-alignment-20260919" defer></script>
     <script src="/static/scripts/execution-failures.js?v=20260922" defer></script>
     <script src="/static/scripts/dashboard.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/execution-logs.js?v=20260927-privacy" defer></script>
     <script src="/static/scripts/stlc-report.js?v=20260911-plan1" defer></script>
-    <script src="/static/scripts/suite-files.js?v=20261013-script-option" defer></script>
+    <script src="/static/scripts/suite-files.js?v=20261112-automation-pack-handoff" defer></script>
     <script src="/static/scripts/script-packs.js?v=20261013-performance-reporting" defer></script>
     <script src="/static/scripts/brd-pdf.js?v=20260922-readable-pdf" defer></script>
     <script src="/static/scripts/knowledge-markdown.js?v=20261013" defer></script>
-    <script src="/static/scripts/workflow.js?v=20261110-requirements-drafts" defer></script>
+    <script src="/static/scripts/workflow.js?v=20261112-automation-pack-handoff" defer></script>
     <script src="/static/scripts/finance-explorer.js?v=20261013-combined-finance" defer></script>
     <script src="/static/scripts/project-dashboard.js?v=20261013-approved-history-v2" defer></script>
     <script src="/static/scripts/finance-selection.js?v=20261010-guest-preview" defer></script>

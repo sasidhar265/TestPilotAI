@@ -100,16 +100,30 @@
   ["feature-file-view", "step-definitions"].forEach((id) => automation.append(document.getElementById(id)));
   document.getElementById("automation-workspace-actions").prepend(document.querySelector(".automation-language-control"));
   const syncAutomation = () => {
+    const generated = window.generatedWebsiteFramework;
     const available = !document.getElementById("results").classList.contains("hidden");
-    document.getElementById("automation-workspace-status").textContent = available ? `Active suite: ${document.getElementById("feature").textContent}. Review the selected test cases before building or downloading scripts.` : "Create test cases to build, inspect and download automation files.";
+    document.getElementById("automation-workspace-status").textContent = generated
+      ? `Generated pack for ${generated.target_url || "the supplied website"}. Settings are locked to its generated configuration. Execution: not run.`
+      : window.generatedSuitePack ? "Generated automation pack ready. Settings match the generated files and are locked."
+      : available ? `Active suite: ${document.getElementById("feature").textContent}. Review the selected test cases before building or downloading scripts.`
+      : "Create test cases or request a website framework to inspect and download automation files.";
     document.querySelectorAll("[data-suite-action]").forEach((button) => {
-      const original = document.getElementById(button.dataset.suiteAction);
-      button.disabled = !available || original.disabled || original.getAttribute("aria-disabled") === "true";
+      const action = button.dataset.suiteAction;
+      const original = document.getElementById(action);
+      button.disabled = generated
+        ? action === "open-script-pack" || (action !== "download-csharp-pack" && !generated.files?.length)
+        : !available || original.disabled || original.getAttribute("aria-disabled") === "true";
+      if (action === "generate-step-definitions") button.textContent = generated ? "View bindings" : "Generate bindings";
     });
+    if (generated || window.generatedSuitePack) window.syncGeneratedPackSettings?.();
   };
   document.querySelectorAll("[data-suite-action]").forEach((button) => {
-    button.addEventListener("click", () => document.getElementById(button.dataset.suiteAction).click());
+    button.addEventListener("click", () => {
+      if (window.generatedWebsiteFramework) window.handleGeneratedFrameworkAction(button.dataset.suiteAction);
+      else document.getElementById(button.dataset.suiteAction).click();
+    });
   });
+  window.addEventListener("generated-pack-changed", syncAutomation);
   ["view-feature", "generate-step-definitions", "view-csharp-pack"].forEach((id) => {
     document.getElementById(id).addEventListener("click", () => {
       if (document.body.dataset.qualityView !== "automation") window.navigateWorkspace("/?view=automation", false);

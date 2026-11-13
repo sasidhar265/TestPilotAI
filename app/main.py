@@ -29,6 +29,7 @@ from app.agents.lifecycle_agents import (
 )
 from app.agents.multilanguage_agent import MultiLanguageAgent
 from app.agents.output_agent import OutputAgent
+from app.agents.prompt_orchestrator import PromptOrchestrator, PromptResult
 from app.agents.reqnroll_step_definition_agent import (
     ReqnRollStepDefinitionAgent,
     StepDefinitionArtifact,
@@ -125,6 +126,12 @@ from app.services.model_access import (
     inspect_model_access,
 )
 from app.services.stlc import LifecycleError
+from app.services.website_framework import (
+    WebsiteFrameworkResult,
+    build_website_framework,
+    framework_target,
+)
+from app.services.website_inspection import WebsiteInspectionError
 from app.stlc_routes import router as stlc_router
 from app.tls import configure_default_ca_bundle
 from app.user_routes import router as user_router
@@ -816,11 +823,11 @@ async def save_review_feedback(
     return {"review_id": review_id, "status": "saved"}
 
 
-@app.post("/api/agent/run", response_model=AgentRunResult)
+@app.post("/api/agent/run", response_model=AgentRunResult | WebsiteFrameworkResult | PromptResult)
 async def run_agent(
     request: GenerateRequest,
     pipeline: MultiAgentTestPipeline = Depends(get_multi_agent_pipeline),
-) -> AgentRunResult:
+) -> AgentRunResult | WebsiteFrameworkResult | PromptResult:
     """Run the deterministic DecisionAgent routing flow and its governed specialists."""
     request_id = request_id_context.get()
     lifecycle_events.start(request_id)
@@ -832,6 +839,11 @@ async def run_agent(
     )
     generation_cancellations.register(request_id, "agent_test_case_generation")
     try:
+        if request.interpret_prompt:
+            return await PromptOrchestrator(get_settings()).run(request, pipeline)
+        target = framework_target(request)
+        if target:
+            return await build_website_framework(request, target, get_settings())
         result = await pipeline.run(request)
         return AgentRunResult(
             source_request=request,
@@ -839,6 +851,9 @@ async def run_agent(
             validation=result.validation,
             trace=list(getattr(result, "trace", ())),
         )
+    except WebsiteInspectionError as error:
+        publish_lifecycle_event("Website Framework Agent", "discovery", "failed", str(error))
+        raise HTTPException(422, str(error)) from error
     except CopilotGenerationError as error:
         publish_lifecycle_event(
             "OrchestratorAgent",

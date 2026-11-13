@@ -140,3 +140,205 @@
     right: auto;
   }
 }
+
+/* Shared alignment for headers, cards and the prompt workspace. */
+@media screen {
+  :root {
+    --panel-inset: 24px;
+    --section-gap: 24px;
+  }
+
+  .topbar > div:first-child {
+    flex: 1 1 20rem;
+  }
+  .topbar .top-actions {
+    align-self: flex-start;
+    min-height: var(--control-height, 44px);
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .topbar .top-actions :is(.settings-shortcut, .notification-bell, .avatar) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .topbar .api-link {
+    box-sizing: border-box;
+    min-height: 44px;
+    justify-content: center;
+    margin-block: 0;
+  }
+
+  :is(.panel-head, .results-header, .stage-heading, .ka-card-heading) {
+    gap: 16px;
+  }
+  .panel-head > div:first-child {
+    flex: 1 1 18rem;
+    min-width: 0;
+  }
+  :is(.composer, .knowledge-card, .settings-card, .users-card, .stage-panel) {
+    padding: var(--panel-inset);
+  }
+  :is(.panel-head, .settings-card-heading, .ka-card-heading) > :is(.secure, .settings-badge, .status-badge) {
+    align-self: flex-start;
+  }
+  :is(.ka-toolbar, .pm-toolbar, .graph-toolbar, .log-page-controls, .agent-directory-tools) {
+    column-gap: 12px;
+    row-gap: 16px;
+    min-width: 0;
+  }
+  :is(.ka-toolbar, .pm-toolbar, .graph-controls, .generation-options) > label {
+    min-width: 0;
+  }
+
+  .context-panel.workspace-context-bar {
+    align-items: start;
+    padding: var(--panel-inset);
+    gap: 24px;
+  }
+  .workspace-context-bar .context-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 16px;
+  }
+  .workspace-context-bar .context-list > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-block: 0;
+  }
+  .workspace-context-bar .context-list :is(dt, dd) {
+    margin: 0;
+    line-height: 1.5;
+  }
+  .workspace-context-bar .context-list dt {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  /* Keep save actions after the fields, without covering cards while scrolling. */
+  .settings-actions {
+    position: static;
+    inset: auto;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: var(--section-gap);
+    align-items: center;
+  }
+
+  :is(#test-studio #task-interpretation, #automation-workspace #website-framework-result) {
+    padding: var(--panel-inset);
+    margin-top: var(--section-gap);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  :is(#test-studio #task-interpretation, #automation-workspace #website-framework-result) h3 {
+    margin: 0 0 12px;
+  }
+  :is(#test-studio #task-interpretation, #automation-workspace #website-framework-result) p {
+    margin: 0 0 12px;
+    line-height: 1.6;
+  }
+  #website-framework-result details {
+    margin-block: 16px;
+  }
+  #website-framework-result pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 900px) {
+    .context-panel.workspace-context-bar {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 820px) {
+    .topbar > div:first-child {
+      flex-basis: auto;
+    }
+    .topbar .top-actions {
+      justify-content: flex-start;
+      align-self: stretch;
+    }
+    .topbar .top-actions :is(#profile-toggle, .notification-bell) {
+      width: auto;
+      padding-inline: 12px;
+      gap: 8px;
+    }
+  }
+  @media (max-width: 700px) {
+    :root {
+      --panel-inset: 18px;
+      --section-gap: 20px;
+    }
+    .workspace-context-bar .context-list {
+      grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+    }
+    .panel-head > div:first-child {
+      flex-basis: 100%;
+    }
+    .settings-actions > button {
+      flex: 1 1 140px;
+    }
+    #website-framework-result > a.button {
+      width: 100%;
+    }
+  }
+}
+
+/* Generated frameworks expose their concrete suites next to the download. */
+.framework-suites {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+  margin-block: 20px;
+}
+.framework-suite {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.framework-suite h4 { margin: 0 0 12px; }
+.framework-suite ul {
+  max-height: 16rem;
+  overflow-y: auto;
+  padding-inline-start: 20px;
+  line-height: 1.6;
+}
+.framework-suite li + li { margin-top: 8px; }
+.framework-suite code { white-space: normal; overflow-wrap: anywhere; }
+
+.pack-configuration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 16px;
+  margin-block: 16px 24px;
+}
+.pack-configuration-grid label, .framework-file-browser label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+}
+.pack-configuration-grid select, .framework-file-browser select { width: 100%; }
+#generated-pack-configuration p { color: var(--muted); line-height: 1.6; }
+.framework-file-browser { min-width: 0; margin-block: 20px; }
+.framework-file-browser pre {
+  max-height: 32rem;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  font-size: 0.8rem;
+}
+
+.pack-configuration-grid label[hidden] { display: none; }

@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from app.agents.business_analyst import BAReport, BusinessAnalystAgent
 from app.agents.context_converter_agent import ContextConverterAgent
+from app.agents.prompt_orchestrator import PromptIntent, PromptOrchestrator
 from app.agents.requirements_validation import RequirementsReport, RequirementsValidationAgent
 from app.agents.runner import CopilotGenerationError
 from app.agents.test_case_validator import TestCaseValidatorAgent
@@ -31,6 +32,12 @@ from app.observability import (
 from app.pdf_exporter import brd_draft_to_pdf
 from app.services import MultiAgentTestPipeline
 from app.services.document_ingestion import DocumentIngestionError, DocumentIngestionService
+from app.services.website_inspection import (
+    WebsiteInspection,
+    WebsiteInspectionError,
+    WebsiteInspectionService,
+    WebsiteRequest,
+)
 from app.uploaded_brd import issue_brd_receipt
 from app.workflow_models import (
     JiraStoriesRequest,
@@ -49,6 +56,24 @@ class ExecutionPlanRequest(SuiteRequest):
 
 Config = Annotated[Settings, Depends(get_settings)]
 Pipeline = Annotated[MultiAgentTestPipeline, Depends(get_multi_agent_pipeline)]
+
+
+@router.post("/intent", response_model=PromptIntent)
+async def interpret_prompt(request: GenerateRequest, settings: Config) -> PromptIntent:
+    with stage_operation("Understanding request", complete=False):
+        try:
+            return await PromptOrchestrator(settings).interpret(request)
+        except CopilotGenerationError as error:
+            raise HTTPException(503, str(error)) from error
+
+
+@router.post("/requirements/website", response_model=WebsiteInspection)
+async def inspect_website(request: WebsiteRequest, settings: Config) -> WebsiteInspection:
+    with stage_operation("Website inspection"):
+        try:
+            return await WebsiteInspectionService().inspect(request, settings)
+        except WebsiteInspectionError as error:
+            raise HTTPException(422, str(error)) from error
 
 
 @router.post("/knowledge-context")

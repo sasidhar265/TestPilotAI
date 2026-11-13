@@ -14,6 +14,7 @@ from app.agents.reqnroll_step_definition_agent import (
     StepDefinitionRequest,
 )
 from app.agents.test_case_validator import ValidationReport
+from app.appearance import Appearance
 from app.config import Settings
 from app.models import ExportFormat
 from app.models import TestSuite as Suite
@@ -95,6 +96,8 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
                     ]
                 }
             )
+        elif path == "/api/appearance":
+            route.fulfill(json=Appearance().model_dump(mode="json"))
         elif path == "/api/workspace/rules":
             route.fulfill(json={"business_rules": []})
         elif path == "/api/workspace/standards":
@@ -207,6 +210,10 @@ def test_suite_view_and_download_menus(tmp_path) -> None:
             page.locator("#download-csharp-pack").click()
         assert download.value.suggested_filename.endswith(".zip")
         assert paths.count("/api/step-definitions/languages/pack") == 1
+        playwright.expect(page.locator("#automation-language")).to_have_value("csharp")
+        playwright.expect(page.locator("#automation-language")).to_be_disabled()
+        playwright.expect(page.locator("#generated-pack-framework")).to_have_value("ReqnRoll")
+        playwright.expect(page.locator("#generated-pack-framework")).to_be_disabled()
         page.evaluate("window.navigateWorkspace('/?view=test-cases', false)")
         page.locator("#suite-download-menu summary").click()
         with page.expect_download() as download:

@@ -286,3 +286,40 @@ dotnet test automation/QualityLifecycle.Automation.csproj \
 Set `QUALITY_LIFECYCLE_BASE_URL` and `API_AUTH_TOKEN` as above. These runs exercise
 the repository API application; they do not establish results for separately generated
 customer packs or external AI providers.
+
+
+## Direct website framework routing
+
+`Features/WebsiteFramework.feature` exercises `/api/agent/run` with the supplied CareerPilot
+prompt and verifies the ZIP, Selenium dependencies, page object, bindings, smoke feature and
+explicit not-run status. Four rejection cases cover loopback, credentials, multiple URLs
+and unsupported stacks. Input/WebsiteFramework.Json contains the approved prompts; the
+request builder and service use HttpClient. Existing website-inspection scenarios remain.
+
+Run against a separately configured local app:
+
+```sh
+QUALITY_LIFECYCLE_BASE_URL=http://127.0.0.1:8001 dotnet test automation/QualityLifecycle.Automation.csproj --filter 'FullyQualifiedName~DirectWebsiteFrameworkRequests|FullyQualifiedName~PublicWebsiteInspectionForUITestDesign' --results-directory automation/TestResults/Reports
+```
+
+This verifies the application API. Generated Selenium packs must also be executed separately
+in their target environment; repository results do not establish that they pass.
+
+
+## Prompt interpretation
+
+`Features/PromptIntent.feature` exercises the real structured AI intent endpoint using
+the explicit Codex route pinned to gpt-6-astra. It checks a paraphrased framework request,
+direct test cases and clarification for a bare requirement. Requests are in
+Input/PromptIntent.Json with executable bindings, a request builder and HttpClient service.
+These scenarios require the configured mandatory model to be accessible to the server.
+Run with `--filter FullyQualifiedName~UnderstandTheRequestedTaskOutcome`. Mocked Python
+checks verify dispatch and provider propagation separately; they do not establish live
+model availability or live classification results.
+
+
+Generated website packs now expose named Pages/*Page.cs classes, shared components,
+category feature folders, native appearance-selection cases and NUnit category metadata.
+The live framework API scenario asserts those files and the returned suite/page manifest.
+Generated browser tests run in their own project and target environment; their TRX reports
+are independent from this repository API project's results.

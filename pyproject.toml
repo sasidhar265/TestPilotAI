@@ -97,6 +97,8 @@ app = [
   "documentation/*.md",
   "templates/reqnroll/*.cs",
   "templates/framework/*",
+  "templates/website_framework/**/*",
+  "templates/website_framework/*",
   "static/*.html",
   "static/scripts/*.js",
   "static/styles/*.css",

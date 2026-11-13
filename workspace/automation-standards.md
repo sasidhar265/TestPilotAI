@@ -30,6 +30,18 @@ TestResults/Reports/      actual execution reports
 Input/                    TestData.Json and CaseData.Json
 ```
 
+Selenium/C# UI packs use the compatible community PageFactory implementation with
+`[FindsBy]` element properties, centralized `PageFactory.InitElements` after construction,
+explicit waits and no `[CacheLookup]`. Keep its Selenium dependencies compatible and
+verify the complete generated BDD suite. API-only packs need no PageFactory dependency.
+
+UI frameworks additionally use `Pages/` for concrete `*Page.cs` page objects and
+`Pages/Components/` for reusable `*Component.cs` controls. Keep locators and page actions
+there, assertions in Services, and bindings in StepDefinitions. Group browser suite
+features under Features/Smoke, Features/Sanity and Features/Regression, with discoverable
+NUnit category metadata for C# filters and no Gherkin tags. These folders supplement
+the shared structure; API-only packs do not need page objects.
+
 Keep project/dependency manifests and README.md at the root. Retain `Reqnroll` as the
 configuration folder name for all languages, while using the selected language's BDD runtime.
 Use appropriate extensions (.cs, .java, .py, .js, .ts, .rb). Do not generate alternate

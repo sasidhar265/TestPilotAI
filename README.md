@@ -22,6 +22,82 @@ generates safe synthetic test data, exports Xray-ready CSV/Excel/JSON through th
 Converter Agent, and can attach the CSV to a Jira Cloud
 story with a summary comment.
 
+Requirements are entered through the main text box or document upload. The separate
+**Inspect a website** UI section has been removed.
+
+The main input now asks the orchestrator to interpret the requested outcome before generation.
+`POST /api/workflow/intent` returns a structured AI interpretation: website framework,
+test cases, explicitly requested stories, requirements review or clarification. The selected
+provider is retained under the mandatory model policy. An unavailable provider returns an
+error; it does not silently fall back to stories. Ambiguous inputs show questions without
+starting downstream generation. A bare BRD or requirement no longer implies story creation.
+
+The UI displays “How I understood your request” and routes to that artifact. API clients can
+use `/api/agent/run` with `interpret_prompt: true` for the same interpretation and dispatch,
+returning a `prompt-result` envelope with `intent`, `source_request` and `result`.
+A structured `requested_workflow` can explicitly select a supported artifact after interpretation;
+it does not approve business sources or permit execution. Legacy requests omitting
+`interpret_prompt` retain their existing response contracts. Uploaded documents are extracted
+before interpretation. Business-source and suite validation still apply to business testing.
+
+An explicit prompt such as “Build a Selenium C# BDD automation framework for
+https://example.com using a page object model, with smoke, sanity and regression tests”
+uses the direct website-framework workflow. Server-side routing in `POST /api/agent/run`
+inspects public HTML and returns a downloadable ZIP with executable observed-page checks,
+page objects, bindings, input evidence and runner configuration. It does not require a
+finance BRD or pass through stories/scenarios. No AI call is needed for these structural
+checks. The response is identified by `workflow: "website-framework"`; `execution_status`
+is `not_run`. Existing test-generation responses retain their suite/validation shape.
+
+The direct route builds a .NET 10 Selenium/C#/ReqnRoll framework with concrete page
+objects in `Pages/`, `[FindsBy]` element properties initialised by the community
+DotNetSeleniumExtras.PageObjects.Core PageFactory, reusable components in `Pages/Components/`,
+assertions in Services,
+scenario-scoped browser setup and failure screenshots. `Features/Smoke/Smoke.feature`,
+`Features/Sanity/Sanity.feature` and `Features/Regression/Regression.feature` contain
+named tests. NUnit fixture metadata provides real `TestCategory=Smoke`, `Sanity` and
+`Regression` filters without Gherkin tags. The unfiltered default command runs every test.
+Completed frameworks open automatically in **Automation packs**. That tab lists concrete
+page objects and all suite scenarios, previews the exact generated files as read-only text,
+and downloads the existing ZIP. Language and framework dropdowns are populated from the
+pack and disabled; website packs also lock Selenium, page-object design and target runtime.
+These settings describe the artifact and cannot be amended independently of its files.
+Changing the source starts a fresh generation context. Pack results survive workspace
+navigation and tab-scoped/account-scoped draft recovery on reload, subject to browser storage.
+The file picker remains available for browsing source; it does not edit configuration.
+
+Smoke checks public page titles/readiness. Sanity checks published navigation between
+discovered pages, native appearance selections with observed options, and document readiness.
+Regression checks published headings, controls, dropdown options and page contracts. Input
+fixtures and a page-object map retain the source evidence. Browser configuration defaults to
+Chrome, with Firefox/Edge factories available for separately configured target environments.
+The generator inspects at most five public pages; it does not claim full functional coverage.
+Review and execute the downloaded project against the approved target. Login, submissions,
+JavaScript-only journeys and business-rule assertions need additional evidence and expected
+behavior. Unsupported stacks and multiple targets return an actionable error. Ordinary
+requirements and uploaded BRDs retain business-source validation.
+
+Website inspection remains available through the API for clients supplying reviewed
+observations as a requirements source. Receipts verify extraction only and do not establish
+business approval. Existing business baseline checks still apply, and generated automation
+packs require review and target execution.
+
+Inspection collects titles, headings, links and control metadata from up to three same-origin HTML
+pages (API maximum five). It does not execute JavaScript, sign in, submit forms, or run tests.
+JavaScript-only sites may yield little evidence; provide their journeys and selectors separately.
+Public URLs on ports 80/443 without embedded credentials or query parameters are supported.
+Private, loopback and metadata addresses are blocked, including through DNS and redirects.
+Temporary HTTP 429/502/503/504 responses are retried at most three times, within the
+existing 45-second discovery limit. Every attempt revalidates public DNS and redirects.
+Other errors fail immediately. The operation summary shows the target error and request
+reference. Retrying unchanged input reuses its completed intent interpretation; changes to
+input or provider/settings require a new interpretation.
+Requests have page-size, redirect and time limits; target cookies and workspace credentials are
+never forwarded. The API is `POST /api/workflow/requirements/website` with
+`{"url":"https://example.com/","max_pages":3}`. The result includes `pages`, `warnings`,
+`description`, and `website_source_receipt`. Pass the description as `website_source_text` and
+include it unchanged in generation's `description`, together with `website_source_receipt`.
+
 Requirements can be pasted or uploaded as Word (`.docx`), text PDF, Excel (`.xlsx`), Apple
 Pages (`.pages`), Apple Numbers (`.numbers`), PNG, or JPEG. Pages/Numbers packages are read from
 Quick Look previews or legacy XML when available; binary-only IWA packages must first be exported
