@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="90e34738-ed13-40d1-8bf2-875ed7143258" name="@MacBookAir 2026-11-12 23:16:15" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-12T23:16:15.2202500+00:00" queuing="2026-11-12T23:16:15.2202510+00:00" start="2026-11-12T23:16:12.8822570+00:00" finish="2026-11-12T23:16:15.7969650+00:00" />
+  <TestSettings name="default" id="6816d756-0574-498d-9e2a-c908e628014b">
+    <Deployment runDeploymentRoot="_MacBookAir_2026-11-12_23_16_15" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="31407414-b661-4638-afbc-00678c6d94a5" testId="efd4e365-6084-8814-5f56-3aed43459429" testName="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-002&quot;,&quot;loopback&quot;,&quot;public internet&quot;,&quot;1&quot;,null)" computerName="MacBookAir" duration="00:00:00.5468820" startTime="2026-11-12T23:16:14.0491850+00:00" endTime="2026-11-12T23:16:14.5959820+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31407414-b661-4638-afbc-00678c6d94a5">
+      <Output>
+        <StdOut>Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.3s)
+When I build the "loopback" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("loopback") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "public internet"
+-&gt; done: WorkflowStepDefinition.AssertResponse("public internet") (0.0s)</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d94566f0-50f6-4e98-8f76-c22be8e1f66f" testId="b3779be0-e71f-63ed-b79b-e498c232d4bd" testName="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-005&quot;,&quot;unsupported&quot;,&quot;currently support Selenium&quot;,&quot;4&quot;,null)" computerName="MacBookAir" duration="00:00:00.0115720" startTime="2026-11-12T23:16:14.6495890+00:00" endTime="2026-11-12T23:16:14.6611600+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d94566f0-50f6-4e98-8f76-c22be8e1f66f">
+      <Output>
+        <StdOut>Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "unsupported" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("unsupported") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "currently support Selenium"
+-&gt; done: WorkflowStepDefinition.AssertResponse("currently support...") (0.0s)</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d329ef15-2a30-4b90-8f19-be0002ce9023" testId="493d5fd6-9821-2102-f7a5-66fcdcf33f9f" testName="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-003&quot;,&quot;credentials&quot;,&quot;without credentials&quot;,&quot;2&quot;,null)" computerName="MacBookAir" duration="00:00:00.0288140" startTime="2026-11-12T23:16:14.5980470+00:00" endTime="2026-11-12T23:16:14.6268600+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d329ef15-2a30-4b90-8f19-be0002ce9023">
+      <Output>
+        <StdOut>Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "credentials" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("credentials") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "without credentials"
+-&gt; done: WorkflowStepDefinition.AssertResponse("without credentials") (0.0s)</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d683fcda-9f88-4662-8d55-2a8a232ad15c" testId="3cc062b5-71e4-144b-56dd-df332bcb9745" testName="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-004&quot;,&quot;multiple&quot;,&quot;one target&quot;,&quot;3&quot;,null)" computerName="MacBookAir" duration="00:00:00.0226170" startTime="2026-11-12T23:16:14.6269080+00:00" endTime="2026-11-12T23:16:14.6495230+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d683fcda-9f88-4662-8d55-2a8a232ad15c">
+      <Output>
+        <StdOut>Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "multiple" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("multiple") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "one target"
+-&gt; done: WorkflowStepDefinition.AssertResponse("one target") (0.0s)</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="653422d3-d92e-4ba8-9a51-8679ec7dc055" testId="fc3dcfb1-51ba-67e8-f618-2ab9f7665392" testName="TC_FRAMEWORK_001_BuildTheRequestedCareerPilotFrameworkDirectly" computerName="MacBookAir" duration="00:00:00.9744000" startTime="2026-11-12T23:16:14.6626490+00:00" endTime="2026-11-12T23:16:15.6370100+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="653422d3-d92e-4ba8-9a51-8679ec7dc055">
+      <Output>
+        <StdOut>Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "careerpilot" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("careerpilot") (0.9s)
+Then the response status is 200
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(200) (0.0s)
+And the website framework is a downloadable Selenium CSharp BDD page object pack
+-&gt; done: WebsiteFrameworkStepDefinition.AssertPack() (0.0s)</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-005&quot;,&quot;unsupported&quot;,&quot;currently support Selenium&quot;,&quot;4&quot;,null)" storage="/users/sasidhar/personal/works/testpilotai/testpilotai/automation/bin/debug/net8.0/qualitylifecycle.automation.dll" id="b3779be0-e71f-63ed-b79b-e498c232d4bd">
+      <Execution id="d94566f0-50f6-4e98-8f76-c22be8e1f66f" />
+      <TestMethod codeBase="/Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll" adapterTypeName="executor://nunit3testexecutor/" className="QualityLifecycle.Automation.Features.DirectWebsiteFrameworkRequestsFeature" name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-005&quot;,&quot;unsupported&quot;,&quot;currently support Selenium&quot;,&quot;4&quot;,null)" />
+    </UnitTest>
+    <UnitTest name="TC_FRAMEWORK_001_BuildTheRequestedCareerPilotFrameworkDirectly" storage="/users/sasidhar/personal/works/testpilotai/testpilotai/automation/bin/debug/net8.0/qualitylifecycle.automation.dll" id="fc3dcfb1-51ba-67e8-f618-2ab9f7665392">
+      <Execution id="653422d3-d92e-4ba8-9a51-8679ec7dc055" />
+      <TestMethod codeBase="/Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll" adapterTypeName="executor://nunit3testexecutor/" className="QualityLifecycle.Automation.Features.DirectWebsiteFrameworkRequestsFeature" name="TC_FRAMEWORK_001_BuildTheRequestedCareerPilotFrameworkDirectly" />
+    </UnitTest>
+    <UnitTest name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-004&quot;,&quot;multiple&quot;,&quot;one target&quot;,&quot;3&quot;,null)" storage="/users/sasidhar/personal/works/testpilotai/testpilotai/automation/bin/debug/net8.0/qualitylifecycle.automation.dll" id="3cc062b5-71e4-144b-56dd-df332bcb9745">
+      <Execution id="d683fcda-9f88-4662-8d55-2a8a232ad15c" />
+      <TestMethod codeBase="/Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll" adapterTypeName="executor://nunit3testexecutor/" className="QualityLifecycle.Automation.Features.DirectWebsiteFrameworkRequestsFeature" name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-004&quot;,&quot;multiple&quot;,&quot;one target&quot;,&quot;3&quot;,null)" />
+    </UnitTest>
+    <UnitTest name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-003&quot;,&quot;credentials&quot;,&quot;without credentials&quot;,&quot;2&quot;,null)" storage="/users/sasidhar/personal/works/testpilotai/testpilotai/automation/bin/debug/net8.0/qualitylifecycle.automation.dll" id="493d5fd6-9821-2102-f7a5-66fcdcf33f9f">
+      <Execution id="d329ef15-2a30-4b90-8f19-be0002ce9023" />
+      <TestMethod codeBase="/Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll" adapterTypeName="executor://nunit3testexecutor/" className="QualityLifecycle.Automation.Features.DirectWebsiteFrameworkRequestsFeature" name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-003&quot;,&quot;credentials&quot;,&quot;without credentials&quot;,&quot;2&quot;,null)" />
+    </UnitTest>
+    <UnitTest name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-002&quot;,&quot;loopback&quot;,&quot;public internet&quot;,&quot;1&quot;,null)" storage="/users/sasidhar/personal/works/testpilotai/testpilotai/automation/bin/debug/net8.0/qualitylifecycle.automation.dll" id="efd4e365-6084-8814-5f56-3aed43459429">
+      <Execution id="31407414-b661-4638-afbc-00678c6d94a5" />
+      <TestMethod codeBase="/Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll" adapterTypeName="executor://nunit3testexecutor/" className="QualityLifecycle.Automation.Features.DirectWebsiteFrameworkRequestsFeature" name="CaseId_RejectAnInvalidDirectFrameworkRequest(&quot;TC-FRAMEWORK-002&quot;,&quot;loopback&quot;,&quot;public internet&quot;,&quot;1&quot;,null)" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="efd4e365-6084-8814-5f56-3aed43459429" executionId="31407414-b661-4638-afbc-00678c6d94a5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b3779be0-e71f-63ed-b79b-e498c232d4bd" executionId="d94566f0-50f6-4e98-8f76-c22be8e1f66f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="493d5fd6-9821-2102-f7a5-66fcdcf33f9f" executionId="d329ef15-2a30-4b90-8f19-be0002ce9023" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3cc062b5-71e4-144b-56dd-df332bcb9745" executionId="d683fcda-9f88-4662-8d55-2a8a232ad15c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fc3dcfb1-51ba-67e8-f618-2ab9f7665392" executionId="653422d3-d92e-4ba8-9a51-8679ec7dc055" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="5" executed="5" passed="5" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>NUnit Adapter 4.6.0.0: Test execution started
+Running selected tests in /Users/sasidhar/Personal/Works/TestPilotAI/TestPilotAI/automation/bin/Debug/net8.0/QualityLifecycle.Automation.dll
+   NUnit3TestExecutor discovered 5 of 5 NUnit test cases using Current Discovery mode, Non-Explicit run
+Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.3s)
+When I build the "loopback" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("loopback") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "public internet"
+-&gt; done: WorkflowStepDefinition.AssertResponse("public internet") (0.0s)
+
+Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "credentials" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("credentials") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "without credentials"
+-&gt; done: WorkflowStepDefinition.AssertResponse("without credentials") (0.0s)
+
+Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "multiple" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("multiple") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "one target"
+-&gt; done: WorkflowStepDefinition.AssertResponse("one target") (0.0s)
+
+Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "unsupported" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("unsupported") (0.0s)
+Then the response status is 422
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(422) (0.0s)
+And the workflow response contains "currently support Selenium"
+-&gt; done: WorkflowStepDefinition.AssertResponse("currently support...") (0.0s)
+
+Given the Quality Lifecycle Studio is available
+-&gt; done: WorkspaceStepDefinition.VerifyAvailability() (0.0s)
+When I build the "careerpilot" website framework
+-&gt; done: WebsiteFrameworkStepDefinition.Build("careerpilot") (0.9s)
+Then the response status is 200
+-&gt; done: WorkspaceStepDefinition.AssertResponseStatus(200) (0.0s)
+And the website framework is a downloadable Selenium CSharp BDD page object pack
+-&gt; done: WebsiteFrameworkStepDefinition.AssertPack() (0.0s)
+
+NUnit Adapter 4.6.0.0: Test execution complete
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
